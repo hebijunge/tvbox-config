@@ -1027,7 +1027,7 @@ def main() -> int:
                 if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
                     merged[gk] = rewrite_gh(cfg[gk])
                     if gk == "spider":
-                        spider_origin_info = (name, url.rsplit("/", 1)[0] + "/")
+                        spider_origin_info = (name, u["url"].rsplit("/", 1)[0] + "/")
             print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
                   f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p}) "
                   f"{rec['bytes']}B #{rec['sha256']}", flush=True)
@@ -1147,6 +1147,28 @@ def main() -> int:
     dep_stats = collect_and_rewrite_deps(tvbox, site_origin_name, spider_origin_info)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
+
+    # ---- 拆分产物：vod.json（点播）+ live.json（直播）----
+    # vod.json = tvbox 去掉 lives（保留 spider / wallpaper / sites / parses 等点播相关字段）；
+    # live.json = {"lives": [...]}，并确保汇总 lives/ 目录的分类文件条目（央视/卫视/港台/其他）。
+    vod = {k: v for k, v in tvbox.items() if k != "lives"}
+    live = {"lives": [l for l in lives if isinstance(l, dict) and l.get("name")]}
+    for key, label in CATEGORY_LABELS:
+        name = f"Guovin·{label}"
+        path = os.path.join(LIVES_DIR, f"live_{key}.txt")
+        if os.path.exists(path) and not any(l.get("name") == name for l in live["lives"]):
+            live["lives"].append({
+                "name": name, "type": 0,
+                "url": f"{REPO_RAW}/lives/live_{key}.txt",
+                "epg": "https://live.fanmingming.cn/e.xml",
+            })
+    with open("vod.json", "w", encoding="utf-8") as f:
+        json.dump(vod, f, ensure_ascii=False, indent=1)
+    with open("live.json", "w", encoding="utf-8") as f:
+        json.dump(live, f, ensure_ascii=False, indent=1)
+    print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
+          f" / live.json（{len(live['lives'])} 条直播源）/ list.json", flush=True)
+
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)
 
@@ -1164,7 +1186,7 @@ def main() -> int:
 
     # ---- status.json（增强：上游健康度 + 产物指纹） ----
     products = {}
-    for p in ("tvbox.json", "list.json", "status.json", CHECKS_FILE,
+    for p in ("tvbox.json", "vod.json", "live.json", "list.json", "status.json", CHECKS_FILE,
               os.path.join(LIVES_DIR, "live.txt"), os.path.join(LIVES_DIR, "live_cctv.txt"),
               os.path.join(LIVES_DIR, "live_weishi.txt"), os.path.join(LIVES_DIR, "live_gangtai.txt"),
               os.path.join(LIVES_DIR, "live_other.txt")):
@@ -1213,7 +1235,7 @@ def main() -> int:
     with open("status.json", "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=1)
 
-    print(f"[6/6] 输出完成：tvbox.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
+    print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
           flush=True)
     return 0
 
