@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-18 07:21:20 +08:00",
+ "generated_at": "2026-09-18 07:42:57 +08:00",
  "summary": {
   "interfaces_total": 45,
   "interfaces_usable": 36,
@@ -7,18 +7,18 @@
   "interfaces_partial": 2,
   "interfaces_dead": 7,
   "sites_total": 1028,
-  "sites_kept": 1028,
+  "sites_kept": 968,
   "sites_short": 23,
-  "sites_adult": 95,
-  "sites_tested": 0,
-  "sites_tested_pass": 0,
-  "sites_removed": 0,
-  "sites_untested": 1028,
+  "sites_adult": 81,
+  "sites_tested": 204,
+  "sites_tested_pass": 144,
+  "sites_removed": 60,
+  "sites_untested": 824,
   "lives": 135,
   "parses": 83,
   "deps_total": 398,
-  "deps_collected": 378,
-  "deps_rewritten": 483
+  "deps_collected": 369,
+  "deps_rewritten": 469
  },
  "upstreams_health": {
   "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
@@ -33,46 +33,53 @@
   "dead": 6,
   "disabled": 1,
   "blacklisted": 0,
-  "disabled_now": [],
+  "disabled_now": [
+   "qist/duanju",
+   "qist/duoduo",
+   "qist/wogg",
+   "gao/duanju",
+   "nxppru/duanju",
+   "cluntop/duanju"
+  ],
   "snapshot_files": 38,
   "snapshot_pruned": []
  },
  "lives_by_category": {
   "cctv": {
-   "channels": 34,
-   "urls": 100,
+   "channels": 32,
+   "urls": 93,
    "input_urls": 207,
-   "speed_tested": false
+   "speed_tested": true
   },
   "weishi": {
-   "channels": 43,
-   "urls": 123,
+   "channels": 41,
+   "urls": 113,
    "input_urls": 246,
-   "speed_tested": false
+   "speed_tested": true
   },
   "gangtai": {
-   "channels": 13,
-   "urls": 32,
+   "channels": 6,
+   "urls": 8,
    "input_urls": 48,
-   "speed_tested": false
+   "speed_tested": true
   },
   "other": {
-   "channels": 411,
-   "urls": 758,
+   "channels": 181,
+   "urls": 241,
    "input_urls": 926,
-   "speed_tested": false
+   "speed_tested": true
   }
  },
  "products": {
   "note": "产物 sha256 指纹（前 12 位）与字节数",
   "items": {
    "tvbox.json": {
-    "bytes": 313105,
-    "sha256": "dbc0f92f7962"
+    "bytes": 295065,
+    "sha256": "a63edaf661e9"
    },
    "vod.json": {
-    "bytes": 277096,
-    "sha256": "ce33b2575bda"
+    "bytes": 259056,
+    "sha256": "cd96e431b8ca"
    },
    "live.json": {
     "bytes": 36011,
@@ -83,40 +90,40 @@
     "sha256": "7c46faea6f40"
    },
    "adult.json": {
-    "bytes": 54306,
-    "sha256": "fc8fc496dbba"
+    "bytes": 47796,
+    "sha256": "405dacd39fa7"
    },
    "list.json": {
-    "bytes": 19556,
-    "sha256": "5de61e24ccb3"
+    "bytes": 19560,
+    "sha256": "e927d8e2030b"
    },
    "status.json": {
-    "bytes": 26503,
-    "sha256": "66c1c518735a"
+    "bytes": 24333,
+    "sha256": "c509dca5ad86"
    },
    "checks.json": {
-    "bytes": 20786,
-    "sha256": "631ae4f3f54e"
+    "bytes": 20790,
+    "sha256": "b78b8da0391b"
    },
    "lives/live.txt": {
-    "bytes": 78017,
-    "sha256": "eee38289c39a"
+    "bytes": 34916,
+    "sha256": "9714ddebb16c"
    },
    "lives/live_cctv.txt": {
-    "bytes": 8237,
-    "sha256": "d6a3e45b362a"
+    "bytes": 6509,
+    "sha256": "a48c5a54b057"
    },
    "lives/live_weishi.txt": {
-    "bytes": 9415,
-    "sha256": "ce2e05d3f0ee"
+    "bytes": 9044,
+    "sha256": "50d9f0eb4e68"
    },
    "lives/live_gangtai.txt": {
-    "bytes": 1894,
-    "sha256": "07284ffbf454"
+    "bytes": 464,
+    "sha256": "56c4d4bf820e"
    },
    "lives/live_other.txt": {
-    "bytes": 58471,
-    "sha256": "95fa8659aa39"
+    "bytes": 18899,
+    "sha256": "f40d7c4a90fe"
    }
   }
  },
@@ -126,7 +133,7 @@
    "url": "https://raw.githubusercontent.com/ccAzy/juhe-tvapi/main/config.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 49980,
    "sha256": "bf2bf6cc6e12",
    "sites": 107,
@@ -139,14 +146,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:37"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/jsm",
    "url": "https://raw.githubusercontent.com/qist/tvbox/master/jsm.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 47845,
    "sha256": "166d33ec3429",
    "sites": 149,
@@ -159,7 +166,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:37"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/js",
@@ -179,7 +186,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:37"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/dianshi",
@@ -199,7 +206,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/fty",
@@ -219,14 +226,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/XYQ",
    "url": "https://raw.githubusercontent.com/qist/tvbox/master/XYQ.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 19198,
    "sha256": "701eabdf0716",
    "sites": 49,
@@ -239,14 +246,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/0821",
    "url": "https://raw.githubusercontent.com/qist/tvbox/master/0821.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 23882,
    "sha256": "e6ad00dd38ff",
    "sites": 86,
@@ -259,7 +266,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/0825",
@@ -279,7 +286,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/0826",
@@ -299,7 +306,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/0827",
@@ -319,7 +326,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/367",
@@ -339,14 +346,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/9918",
    "url": "https://raw.githubusercontent.com/qist/tvbox/master/9918.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 14844,
    "sha256": "0a99c448723d",
    "sites": 61,
@@ -359,7 +366,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "qist/99188",
@@ -379,7 +386,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/js",
@@ -399,14 +406,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/XYQ",
    "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/XYQ.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "ghproxy",
+   "channel": "direct",
    "bytes": 19203,
    "sha256": "82db008c0fa4",
    "sites": 49,
@@ -419,7 +426,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/0821",
@@ -439,7 +446,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/0825",
@@ -459,7 +466,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/0826",
@@ -479,14 +486,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "gao/0827",
    "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0827.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 9973,
    "sha256": "1c2b6b2f9aa0",
    "sites": 33,
@@ -499,14 +506,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "cluntop/jsm",
    "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/jsm.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "direct",
+   "channel": "ghproxy",
    "bytes": 38829,
    "sha256": "c843b53c4826",
    "sites": 76,
@@ -519,7 +526,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:30"
   },
   {
    "name": "cluntop/box",
@@ -539,7 +546,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "cluntop/fun",
@@ -559,7 +566,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "cluntop/aa",
@@ -579,7 +586,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "cluntop/bb",
@@ -599,14 +606,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "cluntop/wv",
    "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/wv.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "ghproxy",
+   "channel": "direct",
    "bytes": 3406,
    "sha256": "67f0882ad97b",
    "sites": 14,
@@ -619,7 +626,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "cluntop/yt",
@@ -659,7 +666,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/jsm",
@@ -679,7 +686,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/js",
@@ -699,14 +706,14 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/dianshi",
    "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/dianshi.json",
    "kind": "tvbox",
    "http_ms": 0,
-   "channel": "ghproxy",
+   "channel": "direct",
    "bytes": 23736,
    "sha256": "5b236636b4e6",
    "sites": 49,
@@ -719,7 +726,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/fty",
@@ -739,7 +746,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/XYQ",
@@ -759,7 +766,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/0821",
@@ -779,7 +786,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/0825",
@@ -799,7 +806,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/0826",
@@ -819,7 +826,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "nxppru/0827",
@@ -839,7 +846,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "top98",
@@ -859,7 +866,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "guovin-gd-ipv4",
@@ -879,7 +886,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "guovin-release",
@@ -899,7 +906,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 07:21:38"
+   "last_ok_at": "2026-09-18 07:43:31"
   },
   {
    "name": "qist/duanju",
@@ -918,7 +925,7 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   },
   {
@@ -938,7 +945,7 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   },
   {
@@ -958,7 +965,7 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   },
   {
@@ -978,7 +985,7 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   },
   {
@@ -998,7 +1005,7 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   },
   {
@@ -1018,11 +1025,372 @@
    "grade": "不可用",
    "error": "HTTPError: HTTP Error 404: NOT FOUND",
    "status": "dead",
-   "fail_count": 2,
+   "fail_count": 3,
    "last_ok_at": ""
   }
  ],
- "removed_sites": [],
+ "removed_sites": [
+  {
+   "key": "ruyi",
+   "name": "如意资源",
+   "api": "https://cj.rycjapi.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "ikun",
+   "name": "iKun资源",
+   "api": "https://ikunzyapi.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "youku",
+   "name": "优酷资源",
+   "api": "https://api.ukuapi.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "moduzy",
+   "name": "魔都影视",
+   "api": "https://www.moduzy.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "feifan1",
+   "name": "非凡线路1",
+   "api": "http://ffzy1.tv/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "yilingba2",
+   "name": "1080JSON",
+   "api": "https://api.1080zyku.com/inc/apijson.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "yinghua",
+   "name": "樱花资源",
+   "api": "https://m3u8.apiyhzy.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "bubugao",
+   "name": "步步高资源",
+   "api": "https://api.yparse.com/api/json",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "api_1",
+   "name": "TV-1080资源",
+   "api": "https://api.1080zyku.com/inc/api_mac10.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "lzi2",
+   "name": "量子资源",
+   "api": "https://cj.lzcaiji.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "yzzy",
+   "name": "优质资源",
+   "api": "https://api.yzzy-api.com/inc/apijson.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "30e07a544ffe9b6069a1ba66d6442ca9",
+   "name": "24-樱花",
+   "api": "https://api.apiyhzy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "9d8b0f25e739dc88f3a9aa3ccd54b1a5",
+   "name": "50-淘片",
+   "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "f333ebedb73901ca466a8ebc6aeab0da",
+   "name": "52-淘片",
+   "api": "https://taopianapi.com/cjapi/mc/vod/json/m3u8.html",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "🐹dxawi_IK",
+   "name": "🐹dxawi·IK",
+   "api": "https://ikunzyapi.com/api.php/provide/vod/from/ikm3u8/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "心魔📚在线_csp_xml_ikun",
+   "name": "心魔📚在线·❤ikun资源",
+   "api": "https://ikunzyapi.com/api.php/provide/vod/from/ikm3u8/at/json",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "卧龙资源",
+   "name": "影视 • 卧龙资源[直连]",
+   "api": "https://wolongzyw.com/api.php/provide/vod/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "U酷资源風",
+   "name": "影视 • 尤酷[直连]",
+   "api": "https://api.ukuapi.com/api.php/provide/vod/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "金蝉采集",
+   "name": "影视 • 金蝉",
+   "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "小绵阳采集",
+   "name": "影视 • 小绵阳",
+   "api": "https://vs.okcdn100.top/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "789采集",
+   "name": "789采集",
+   "api": "https://zy.jinchancaiji.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "haiwaikan",
+   "name": "海外看┃采集",
+   "api": "https://haiwaikan.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "快帆",
+   "name": "快帆┃采集",
+   "api": "https://api.kuaifan.tv/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "乐视",
+   "name": "乐视",
+   "api": "https://leshiapi.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "madouse.la",
+   "name": "★魔法(直连)",
+   "api": "http://madouse.la/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "lajiaozy.com",
+   "name": "辣椒(FQ)",
+   "api": "https://apilj.com/api.php/provide/vod/at/json/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "wmcj8.com",
+   "name": "成人05",
+   "api": "http://wmcj8.com/inc/sapi.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "apilj.com",
+   "name": "成人06",
+   "api": "http://apilj.com/api.php/provide/vod/at/json/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "91md.me",
+   "name": "成人07",
+   "api": "http://91md.me/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "api.11bat.com",
+   "name": "成人15",
+   "api": "http://api.11bat.com/api.php/provide/vod/at/xml",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "afasu.com",
+   "name": "成人25",
+   "api": "http://www.afasu.com/api/xml.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "bt4.cc",
+   "name": "★91麻豆②(直连)",
+   "api": "http://bt4.cc/api.php/provide/vod/from/mdm3u8/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "lbapiby.com",
+   "name": "★AIvin(直连)",
+   "api": "http://lbapiby.com/api.php/provide/vod/at/xml",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "api.maozyapi.com",
+   "name": "成人16",
+   "api": "https://api.maozyapi.com/inc/apijson_vod.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "apittzy.com",
+   "name": "成人18",
+   "api": "https://apittzy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "kkzy.me",
+   "name": "成人23",
+   "api": "https://kkzy.me/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "shayuapi.com",
+   "name": "成人24",
+   "api": "https://shayuapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "api.apilyzy.com",
+   "name": "成人27",
+   "api": "https://api.apilyzy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "黑木耳",
+   "name": "黑木耳 | 采集",
+   "api": "https://json02.heimuer.xyz/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "旺旺",
+   "name": "旺旺 | 采集",
+   "api": "https://api.wwzy.tv/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "艾旦",
+   "name": "艾旦 | 采集",
+   "api": "https://www.lovedan.net/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "四个圈",
+   "name": "四圈 | 采集",
+   "api": "https://pg.fenwe078.cf/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "精品资源站",
+   "name": "精品 | 采集",
+   "api": "https://www.jingpinx.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "AIvin",
+   "name": "AIvin | 采集",
+   "api": "http://lbapiby.com/api.php/provide/vod/at/xml",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "沙鱼",
+   "name": "沙鱼 | 采集",
+   "api": "https://shayuapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "麻豆视频",
+   "name": "麻豆 | 采集",
+   "api": "https://91md.me/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "松视开通3",
+   "name": "松视3 | 采集",
+   "api": "https://api.sexnguon.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "*抖阴视频",
+   "name": "*抖阴 | 采集",
+   "api": "https://www.888dav.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "奥斯卡",
+   "name": "奥斯卡 | 采集",
+   "api": "https://aosikazy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "zp066",
+   "name": "花椒 | 采集",
+   "api": "https://api.apilyzy.com/api.php/provide/vod/at/xml/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "鲨鱼",
+   "name": "鲨鱼 | 采集",
+   "api": "https://shayuapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "易看",
+   "name": "易看 | 采集",
+   "api": "https://api.yikanapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "性爱",
+   "name": "性爱 | 采集",
+   "api": "https://api.sexnguon.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "小湿妹",
+   "name": "湿妹 | 采集",
+   "api": "http://www.afasu.com/api/xml.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "奶茶",
+   "name": "奶茶 | 采集",
+   "api": "https://caiji.naichaapi.com/inc/api.php",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "辣椒",
+   "name": "辣椒 | 采集",
+   "api": "https://apilj.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "奶香香",
+   "name": "奶香 | 采集",
+   "api": "https://naixxzy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "探探",
+   "name": "探探 | 采集",
+   "api": "https://apittzy.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "芒果专场",
+   "name": "芒果 | 采集",
+   "api": "https://mgzyz1.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "523专场",
+   "name": "523 | 采集",
+   "api": "https://523zyw.me/inc/apijson_vod.php",
+   "reason": "验活连续两次失败"
+  }
+ ],
  "top_interfaces": [
   {
    "name": "qist/js",
