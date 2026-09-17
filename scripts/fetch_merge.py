@@ -1,19 +1,30 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-TVBox 配置每日拉取合并脚本（stdlib only，无第三方依赖）
+TVBox 配置每日拉取合并脚本 v2（stdlib only，无第三方依赖）
 
-流程：拉取上游清单 → 可用性测试与分级 → 合并去重（按 key，先到先得不覆盖）
-      → 测速验活（type 0/1 直连站点）→ 失效自动剔除 → 输出 tvbox.json / list.json / status.json
+流程：拉取上游清单（一上游一适配器）→ 内容质量门槛（最小字节/行数 + sha256 指纹）
+      → 连续不过自动停用（黑白名单三层）→ 合并去重（按 key，先到先得不覆盖）
+      → 测速验活（type 0/1 直连站点）→ 失效自动剔除
+      → 直播源分类测速优选（央视/卫视/港台分组 txt）
+      → 快照存档（snapshot/<日期>/）→ 输出 tvbox.json / list.json / status.json / checks.json
+      → README 可用性锚点回写
 
-输出：
-  tvbox.json   合并后的统一配置
-  list.json    上游接口清单（含每条测试记录）
-  status.json  状态可视化（总量、分级、站点验活统计、剔除明细）
+对应第二期调研路线图：
+  P0 上游验活门槛（joevess 教训 + Guovin 机制）
+  P0 直播源上游收编（Guovin/iptv-api gd 分支 + Releases 双通道）
+  P1 每日快照存档（kimwang1978/collect-txt 模式）
+  P1 黑白名单分文件（kimwang + Guovin 模式）
+  P1 分类测速优选（Supprise0901/TVBox_live 模式）
+  P1 checks.json 校验产物 + 内容指纹 + 通过时间（azhansy/ds-tvbox 模式）
+  P2 一上游一适配器（HerbertHe/iptv-sources 模式）
+  P2 域名替换层（hl128k/tvbox 思路）
 """
+import hashlib
 import json
 import os
 import re
+import shutil
 import sys
 import time
 import urllib.request
@@ -29,50 +40,92 @@ CONCURRENCY = int(os.environ.get("CONCURRENCY", "20"))
 MAX_BODY = 4096             # 验活最多读取字节数
 GHPROXY = "https://ghproxy.net/"
 
-# 上游清单：顺序即合并优先级，同名 key 先到先得、后续不覆盖（不误伤已有源）
+REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
+
+# ---- P0：内容质量门槛参数 ----
+MIN_BYTES_TVBOX = int(os.environ.get("MIN_BYTES_TVBOX", "512"))    # 配置类上游最小字节数
+MIN_ITEMS_TVBOX = int(os.environ.get("MIN_ITEMS_TVBOX", "1"))      # 至少含多少条 sites/lives/parses
+MIN_BYTES_M3U = int(os.environ.get("MIN_BYTES_M3U", "1024"))       # m3u 类上游最小字节数
+MIN_ENTRIES_M3U = int(os.environ.get("MIN_ENTRIES_M3U", "50"))     # m3u 至少多少条频道
+
+# ---- P0/P1：连续失败自动停用（黑白名单）----
+STATE_FILE = os.environ.get("STATE_FILE", "state/upstreams_state.json")
+BLACKLIST_AUTO = os.environ.get("BLACKLIST_AUTO", "state/blacklist_auto.txt")
+BLACKLIST_MANUAL = os.environ.get("BLACKLIST_MANUAL", "state/blacklist_manual.txt")
+WHITELIST_MANUAL = os.environ.get("WHITELIST_MANUAL", "state/whitelist_manual.txt")
+FAIL_LIMIT = int(os.environ.get("UPSTREAM_FAIL_LIMIT", "3"))       # 连续 N 次不达标自动停用
+
+# ---- P1：快照存档 ----
+SNAPSHOT_DIR = os.environ.get("SNAPSHOT_DIR", "snapshot")
+SNAPSHOT_RETENTION_DAYS = int(os.environ.get("SNAPSHOT_RETENTION_DAYS", "14"))
+
+# ---- P1：直播分类测速优选 ----
+LIVE_SPEEDTEST = os.environ.get("LIVE_SPEEDTEST", "1") == "1"
+LIVE_TIMEOUT = int(os.environ.get("LIVE_TIMEOUT", "4"))
+LIVE_CONCURRENCY = int(os.environ.get("LIVE_CONCURRENCY", "24"))
+LIVE_MAX_URLS = int(os.environ.get("LIVE_MAX_URLS", "1200"))       # 单轮测速 URL 总量上限
+LIVE_PER_CHANNEL = int(os.environ.get("LIVE_PER_CHANNEL", "3"))    # 每频道保留条数
+LIVES_DIR = os.environ.get("LIVES_DIR", "lives")
+CHECKS_FILE = os.environ.get("CHECKS_FILE", "checks.json")
+DOMAIN_MAP_FILE = os.environ.get("DOMAIN_MAP_FILE", "state/domain_map.json")
+README_FILE = os.environ.get("README_FILE", "README.md")
+
+# 上游清单（点播配置类）：顺序即合并优先级，同名 key 先到先得、后续不覆盖（不误伤已有源）
+# 一上游一适配器：kind 决定拉取后如何解析（tvbox=json 配置 / m3u=直播列表）
 UPSTREAMS = [
-    ("juhe-tvapi",  "https://raw.githubusercontent.com/ccAzy/juhe-tvapi/main/config.json"),
-    ("qist/jsm",    "https://raw.githubusercontent.com/qist/tvbox/master/jsm.json"),
-    ("qist/js",     "https://raw.githubusercontent.com/qist/tvbox/master/js.json"),
-    ("qist/dianshi","https://raw.githubusercontent.com/qist/tvbox/master/dianshi.json"),
-    ("qist/fty",    "https://raw.githubusercontent.com/qist/tvbox/master/fty.json"),
-    ("qist/XYQ",    "https://raw.githubusercontent.com/qist/tvbox/master/XYQ.json"),
-    ("qist/0821",   "https://raw.githubusercontent.com/qist/tvbox/master/0821.json"),
-    ("qist/0825",   "https://raw.githubusercontent.com/qist/tvbox/master/0825.json"),
-    ("qist/0826",   "https://raw.githubusercontent.com/qist/tvbox/master/0826.json"),
-    ("qist/0827",   "https://raw.githubusercontent.com/qist/tvbox/master/0827.json"),
-    ("qist/367",    "https://raw.githubusercontent.com/qist/tvbox/master/367.json"),
-    ("qist/9918",   "https://raw.githubusercontent.com/qist/tvbox/master/9918.json"),
-    ("qist/99188",  "https://raw.githubusercontent.com/qist/tvbox/master/99188.json"),
-    ("gao/js",      "https://raw.githubusercontent.com/gaotianliuyun/gao/master/js.json"),
-    ("gao/XYQ",     "https://raw.githubusercontent.com/gaotianliuyun/gao/master/XYQ.json"),
-    ("gao/0821",    "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0821.json"),
-    ("gao/0825",    "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0825.json"),
-    ("gao/0826",    "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0826.json"),
-    ("gao/0827",    "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0827.json"),
-    ("cluntop/jsm", "https://raw.githubusercontent.com/cluntop/tvbox/main/jsm.json"),
-    ("cluntop/box", "https://raw.githubusercontent.com/cluntop/tvbox/main/box.json"),
-    ("cluntop/fun", "https://raw.githubusercontent.com/cluntop/tvbox/main/fun.json"),
-    ("cluntop/aa",  "https://raw.githubusercontent.com/cluntop/tvbox/main/aa.json"),
-    ("cluntop/bb",  "https://raw.githubusercontent.com/cluntop/tvbox/main/bb.json"),
-    ("cluntop/wv",  "https://raw.githubusercontent.com/cluntop/tvbox/main/wv.json"),
-    ("cluntop/yt",  "https://raw.githubusercontent.com/cluntop/tvbox/main/yt.json"),
-    ("cluntop/test","https://raw.githubusercontent.com/cluntop/tvbox/main/test.json"),
-    ("nxppru/jsm",  "https://raw.githubusercontent.com/nxppru/tvbox/master/jsm.json"),
-    ("nxppru/js",   "https://raw.githubusercontent.com/nxppru/tvbox/master/js.json"),
-    ("nxppru/dianshi","https://raw.githubusercontent.com/nxppru/tvbox/master/dianshi.json"),
-    ("nxppru/fty",  "https://raw.githubusercontent.com/nxppru/tvbox/master/fty.json"),
-    ("nxppru/XYQ",  "https://raw.githubusercontent.com/nxppru/tvbox/master/XYQ.json"),
-    ("nxppru/0821", "https://raw.githubusercontent.com/nxppru/tvbox/master/0821.json"),
-    ("nxppru/0825", "https://raw.githubusercontent.com/nxppru/tvbox/master/0825.json"),
-    ("nxppru/0826", "https://raw.githubusercontent.com/nxppru/tvbox/master/0826.json"),
-    ("nxppru/0827", "https://raw.githubusercontent.com/nxppru/tvbox/master/0827.json"),
-    ("top98",       "http://home.jundie.top:81/top98.json"),
+    {"name": "juhe-tvapi", "kind": "tvbox",
+     "url": "https://raw.githubusercontent.com/ccAzy/juhe-tvapi/main/config.json"},
+    {"name": "qist/jsm", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/jsm.json"},
+    {"name": "qist/js", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/js.json"},
+    {"name": "qist/dianshi", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/dianshi.json"},
+    {"name": "qist/fty", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/fty.json"},
+    {"name": "qist/XYQ", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/XYQ.json"},
+    {"name": "qist/0821", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/0821.json"},
+    {"name": "qist/0825", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/0825.json"},
+    {"name": "qist/0826", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/0826.json"},
+    {"name": "qist/0827", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/0827.json"},
+    {"name": "qist/367", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/367.json"},
+    {"name": "qist/9918", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/9918.json"},
+    {"name": "qist/99188", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/99188.json"},
+    {"name": "gao/js", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/js.json"},
+    {"name": "gao/XYQ", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/XYQ.json"},
+    {"name": "gao/0821", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0821.json"},
+    {"name": "gao/0825", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0825.json"},
+    {"name": "gao/0826", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0826.json"},
+    {"name": "gao/0827", "kind": "tvbox", "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/0827.json"},
+    {"name": "cluntop/jsm", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/jsm.json"},
+    {"name": "cluntop/box", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/box.json"},
+    {"name": "cluntop/fun", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/fun.json"},
+    {"name": "cluntop/aa", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/aa.json"},
+    {"name": "cluntop/bb", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/bb.json"},
+    {"name": "cluntop/wv", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/wv.json"},
+    {"name": "cluntop/yt", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/yt.json"},
+    {"name": "cluntop/test", "kind": "tvbox", "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/test.json"},
+    {"name": "nxppru/jsm", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/jsm.json"},
+    {"name": "nxppru/js", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/js.json"},
+    {"name": "nxppru/dianshi", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/dianshi.json"},
+    {"name": "nxppru/fty", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/fty.json"},
+    {"name": "nxppru/XYQ", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/XYQ.json"},
+    {"name": "nxppru/0821", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0821.json"},
+    {"name": "nxppru/0825", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0825.json"},
+    {"name": "nxppru/0826", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0826.json"},
+    {"name": "nxppru/0827", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0827.json"},
+    {"name": "top98", "kind": "tvbox", "url": "http://home.jundie.top:81/top98.json"},
 ]
+
+# P0：直播源上游（Guovin/iptv-api 双通道产物，2026-09-17 实测 200 且为社区公共上游）
+LIVE_UPSTREAMS = [
+    {"name": "guovin-gd-ipv4", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/ipv4/result.m3u"},
+    {"name": "guovin-release", "kind": "m3u",
+     "url": "https://github.com/Guovin/iptv-api/releases/download/playlist-latest/result.m3u"},
+]
+
+ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS
 
 
 def strip_comments_and_clean(text: str) -> str:
-    """去 BOM、去 // 与 /* */ 注释（状态机，不误伤字符串内 //）、去尾随逗号。"""
+    """去 BOM、去行注释与块注释（状态机，不误伤字符串内双斜杠）、去尾随逗号。"""
     if text.startswith("\ufeff"):
         text = text[1:]
     out = []
@@ -132,24 +185,365 @@ def http_get(url: str, timeout: int, max_bytes: int = 0):
     return r.status, data, int((time.time() - t0) * 1000)
 
 
-def fetch_config(url: str):
-    """两通道重试：直连 → ghproxy（仅 GitHub 链接）。返回 (cfg_dict, http_ms, channel) 或 (None, 0, err)。"""
+# ---------------- P2：域名替换层 ----------------
+
+def load_domain_map() -> dict:
+    try:
+        with open(DOMAIN_MAP_FILE, "r", encoding="utf-8") as f:
+            m = json.load(f)
+        if isinstance(m, dict):
+            return {str(k): str(v) for k, v in m.items() if k and v and not str(k).startswith("_")}
+    except Exception:  # noqa: BLE001
+        pass
+    return {}
+
+
+DOMAIN_MAP = {}
+
+
+def map_domain(value):
+    """对 URL 字符串应用 state/domain_map.json 的域名/前缀替换（上游换域名时改写而非丢源）。"""
+    if not DOMAIN_MAP or not isinstance(value, str):
+        return value
+    for old, new in DOMAIN_MAP.items():
+        if old in value:
+            value = value.replace(old, new)
+    return value
+
+
+# ---------------- P0：拉取与解析（一上游一适配器） ----------------
+
+def fetch_raw(url: str):
+    """两通道重试：直连 → ghproxy（仅 GitHub 链接）。返回 (raw_bytes, channel) 或 (None, err)。"""
     attempts = [url]
     if "github" in url:
         attempts.append(gh_url(url))
     last_err = ""
     for ch, u in enumerate(attempts):
         try:
-            status, raw, ms = http_get(u, FETCH_TIMEOUT)
-            txt = raw.decode("utf-8", "replace")
-            cfg = json.loads(strip_comments_and_clean(txt))
-            if not isinstance(cfg, dict):
-                raise ValueError("top-level is not an object")
-            return cfg, ms, ("direct" if ch == 0 else "ghproxy")
+            status, raw, _ms = http_get(u, FETCH_TIMEOUT)
+            return raw, ("direct" if ch == 0 else "ghproxy")
         except Exception as e:  # noqa: BLE001
             last_err = f"{type(e).__name__}: {e}"[:120]
-    return None, 0, last_err
+    return None, last_err
 
+
+def parse_tvbox(raw: bytes):
+    """适配器：TVBox json 配置。返回 dict。"""
+    txt = raw.decode("utf-8", "replace")
+    cfg = json.loads(strip_comments_and_clean(txt))
+    if not isinstance(cfg, dict):
+        raise ValueError("top-level is not an object")
+    return cfg
+
+
+EXTINF_RE = re.compile(r"^#EXTINF:?\s*-?\d+\s*(.*)$")
+
+
+def parse_m3u(raw: bytes):
+    """适配器：m3u/txt 直播列表。返回 [(频道名, 分组, url)]。"""
+    txt = raw.decode("utf-8", "replace")
+    entries = []
+    attr_name = None
+    group = ""
+    for line in txt.splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        if line.startswith("#EXTINF"):
+            m = EXTINF_RE.match(line)
+            rest = m.group(1) if m else ""
+            gm = re.search(r'group-title="([^"]*)"', rest)
+            group = gm.group(1).strip() if gm else ""
+            attr_name = rest.rsplit(",", 1)[-1].strip() if "," in rest else rest.strip()
+            continue
+        if line.startswith("#"):
+            continue
+        if attr_name:
+            entries.append((attr_name, group, line))
+            attr_name = None
+    return entries
+
+
+PARSERS = {"tvbox": parse_tvbox, "m3u": parse_m3u}
+
+
+def evaluate_upstream(u: dict, raw):
+    """P0 质量门槛。返回 (ok, status, detail, error)。
+    status: ok / degraded（解析成功但不达门槛，不参与合并）/ dead（拉取或解析失败）。"""
+    try:
+        parser = PARSERS[u["kind"]]
+    except KeyError:
+        return False, "dead", {}, f"unknown kind {u.get('kind')}"
+    if raw is None:
+        return False, "dead", {}, "fetch failed"
+    if len(raw) < (MIN_BYTES_M3U if u["kind"] == "m3u" else MIN_BYTES_TVBOX):
+        return False, "degraded", {}, f"too small ({len(raw)} bytes)"
+    try:
+        parsed = parser(raw)
+    except Exception as e:  # noqa: BLE001
+        return False, "dead", {}, f"{type(e).__name__}: {e}"[:120]
+    if u["kind"] == "tvbox":
+        n = sum(len(parsed.get(k) or []) for k in ("sites", "lives", "parses"))
+        if n < MIN_ITEMS_TVBOX:
+            return False, "degraded", {"items": n}, "no usable items"
+        return True, "ok", {"items": n, "cfg": parsed}, ""
+    else:
+        if len(parsed) < MIN_ENTRIES_M3U:
+            return False, "degraded", {"entries": len(parsed)}, f"only {len(parsed)} entries"
+        return True, "ok", {"entries": len(parsed)}, ""
+
+
+# ---------------- P0/P1：状态、黑白名单 ----------------
+
+def load_state() -> dict:
+    try:
+        with open(STATE_FILE, "r", encoding="utf-8") as f:
+            s = json.load(f)
+        return s if isinstance(s, dict) else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def save_state(state: dict):
+    os.makedirs(os.path.dirname(STATE_FILE) or ".", exist_ok=True)
+    with open(STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(state, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+
+def read_name_list(path: str) -> list:
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return [ln.strip() for ln in f if ln.strip() and not ln.strip().startswith("#")]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def record_result(state: dict, name: str, ok: bool, whitelist_manual: list) -> str:
+    """更新连续失败计数；达阈值自动停用（手动白名单保护）。返回 'ok'/'disabled_now'/'failing'。"""
+    now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S")
+    ent = state.get(name) if isinstance(state.get(name), dict) else {}
+    if ok:
+        ent.update({"fail_count": 0, "last_ok_at": now, "disabled": False, "disabled_reason": ""})
+        state[name] = ent
+        return "ok"
+    fc = int(ent.get("fail_count", 0)) + 1
+    ent["fail_count"] = fc
+    ent["last_fail_at"] = now
+    disabled_now = ""
+    if fc >= FAIL_LIMIT and name not in whitelist_manual and not ent.get("disabled"):
+        ent["disabled"] = True
+        ent["disabled_reason"] = f"连续 {fc} 次不达标，自动停用"
+        disabled_now = "disabled_now"
+    state[name] = ent
+    return disabled_now or "failing"
+
+
+def sync_blacklist_auto(state: dict):
+    """把自动停用的上游回写 blacklist_auto.txt（自动层）。"""
+    names = sorted(n for n, v in state.items() if isinstance(v, dict) and v.get("disabled"))
+    os.makedirs(os.path.dirname(BLACKLIST_AUTO) or ".", exist_ok=True)
+    with open(BLACKLIST_AUTO, "w", encoding="utf-8") as f:
+        f.write("# 自动黑名单：连续不达标自动停用的上游（由脚本维护，勿手工编辑）\n")
+        for n in names:
+            f.write(n + "\n")
+
+
+def enabled_of(u: dict, state: dict, blacklist_manual: list, whitelist_manual: list):
+    """返回 (是否拉取, 状态标签)。手动黑名单 > 自动停用（白名单可豁免自动停用）> 启用。"""
+    name = u["name"]
+    if name in blacklist_manual:
+        return False, "blacklisted"
+    ent = state.get(name) if isinstance(state.get(name), dict) else {}
+    if ent.get("disabled") and name not in whitelist_manual:
+        return False, "disabled"
+    return True, "enabled"
+
+
+# ---------------- P1：快照存档 ----------------
+
+def snapshot_save(name: str, kind: str, raw: bytes, now: datetime) -> str:
+    date_dir = os.path.join(SNAPSHOT_DIR, now.strftime("%Y-%m-%d"))
+    os.makedirs(date_dir, exist_ok=True)
+    ext = "m3u" if kind == "m3u" else "json"
+    path = os.path.join(date_dir, f"{re.sub(r'[^A-Za-z0-9_.-]', '_', name)}__{now.strftime('%H%M%S')}.{ext}")
+    with open(path, "wb") as f:
+        f.write(raw)
+    return path
+
+
+def snapshot_prune(keep_days: int) -> list:
+    """只保留最近 keep_days 个日期目录，控制仓库体积。"""
+    if not os.path.isdir(SNAPSHOT_DIR) or keep_days <= 0:
+        return []
+    dates = sorted(d for d in os.listdir(SNAPSHOT_DIR)
+                   if os.path.isdir(os.path.join(SNAPSHOT_DIR, d)) and re.match(r"^\d{4}-\d{2}-\d{2}$", d))
+    removed = []
+    for d in dates[:-keep_days]:
+        shutil.rmtree(os.path.join(SNAPSHOT_DIR, d), ignore_errors=True)
+        removed.append(d)
+    return removed
+
+
+# ---------------- P1：直播分类测速优选 ----------------
+
+def category_of(channel: str, group: str) -> str:
+    text = f"{group} {channel}"
+    up = text.upper()
+    if re.search(r"CCTV|CGTN|CETV|央视", up):
+        return "cctv"
+    if "卫视" in text:
+        return "weishi"
+    if re.search(r"香港|台湾|凤凰|TVB|翡翠|明珠|澳门|港台|星空|华视|中天|东森|民视|三立|TVBS|HKTW|HK\b|TW\b", up):
+        return "gangtai"
+    return "other"
+
+
+CATEGORY_LABELS = [("cctv", "央视"), ("weishi", "卫视"), ("gangtai", "港台"), ("other", "其他")]
+
+
+def speed_test(entries, limit: int) -> dict:
+    """并发测速，返回 {url: latency_ms}（失败的 URL 不在结果里）。"""
+    urls = []
+    seen = set()
+    for _name, _group, url in entries:
+        if url not in seen:
+            seen.add(url)
+            urls.append(url)
+    if limit > 0 and len(urls) > limit:
+        urls = urls[:limit]  # 顺序即上游优先级，截前 limit 个
+    lat = {}
+    print(f"    测速 {len(urls)} 条直播 URL（并发 {LIVE_CONCURRENCY}，单条 {LIVE_TIMEOUT}s）...", flush=True)
+
+    def probe(u):
+        try:
+            st, body, ms = http_get(u, LIVE_TIMEOUT, 2048)
+            if st == 200 and body:
+                return u, ms
+        except Exception:  # noqa: BLE001
+            pass
+        return u, None
+
+    with cf.ThreadPoolExecutor(LIVE_CONCURRENCY) as ex:
+        for u, ms in ex.map(probe, urls):
+            if ms is not None:
+                lat[u] = ms
+    return lat
+
+
+def build_live_outputs(entries) -> dict:
+    """分类 →（可选测速排序）→ 每频道取前 N 条 → 输出 lives/*.txt。返回分类统计 dict。"""
+    os.makedirs(LIVES_DIR, exist_ok=True)
+    lat = speed_test(entries, LIVE_MAX_URLS) if LIVE_SPEEDTEST else {}
+
+    per_cat = {k: [] for k, _ in CATEGORY_LABELS}
+    for name, group, url in entries:
+        per_cat[category_of(name, group)].append((name, url))
+
+    stats = {}
+    for key, label in CATEGORY_LABELS:
+        items = per_cat[key]
+        if lat:
+            by_ch = {}
+            for name, url in items:
+                ms = lat.get(url)
+                if ms is None:
+                    continue  # 测速失败剔除
+                by_ch.setdefault(name, []).append((ms, url))
+            ranked = []
+            for name in sorted(by_ch):
+                for ms, url in sorted(by_ch[name])[:LIVE_PER_CHANNEL]:
+                    ranked.append((name, url, ms))
+        else:
+            seen_ch = {}
+            ranked = []
+            for name, url in items:
+                seen_ch.setdefault(name, [])
+                if len(seen_ch[name]) < LIVE_PER_CHANNEL:
+                    seen_ch[name].append(url)
+                    ranked.append((name, url, None))
+        stats[key] = {"channels": len({n for n, _u, _ms in ranked}), "urls": len(ranked),
+                      "input_urls": len(items), "speed_tested": bool(lat)}
+        if not ranked:
+            continue
+        path = os.path.join(LIVES_DIR, f"live_{key}.txt")
+        with open(path, "w", encoding="utf-8") as f:
+            f.write(f"{label},#genre#\n")
+            for name, url, _ms in ranked:
+                f.write(f"{name},{url}\n")
+        print(f"    {label}: {stats[key]['channels']} 频道 / {stats[key]['urls']} 条 -> {path}", flush=True)
+
+    with open(os.path.join(LIVES_DIR, "live.txt"), "w", encoding="utf-8") as f:
+        for key, _label in CATEGORY_LABELS:
+            p = os.path.join(LIVES_DIR, f"live_{key}.txt")
+            if os.path.exists(p):
+                with open(p, "r", encoding="utf-8") as pf:
+                    f.write(pf.read())
+    return stats
+
+
+# ---------------- P1：checks.json + README 回写 ----------------
+
+def sha12(b: bytes) -> str:
+    return hashlib.sha256(b).hexdigest()[:12]
+
+
+def write_checks(records: list, generated_at: str) -> dict:
+    order = {"ok": 0, "degraded": 1, "dead": 2, "disabled": 3, "blacklisted": 4}
+    recs = sorted(records, key=lambda r: order.get(r.get("status"), 5))
+    doc = {
+        "generated_at": generated_at,
+        "note": "每条含最近检测时间、内容 sha256 指纹（前 12 位）、字节数与连续失败计数（azhansy/ds-tvbox checks.json 模式）",
+        "summary": {
+            "total": len(recs),
+            "ok": sum(1 for r in recs if r["status"] == "ok"),
+            "degraded": sum(1 for r in recs if r["status"] == "degraded"),
+            "dead": sum(1 for r in recs if r["status"] == "dead"),
+            "disabled": sum(1 for r in recs if r["status"] == "disabled"),
+            "blacklisted": sum(1 for r in recs if r["status"] == "blacklisted"),
+        },
+        "upstreams": recs,
+    }
+    with open(CHECKS_FILE, "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, indent=1)
+    return doc
+
+
+ICONS = {"ok": "🟢", "degraded": "🟡", "dead": "🔴", "disabled": "⚫", "blacklisted": "🚫"}
+STATUS_CN = {"ok": "可用", "degraded": "降级", "dead": "失效", "disabled": "已停用", "blacklisted": "黑名单"}
+
+
+def update_readme_availability(records: list) -> bool:
+    """README 内 availability:start/end 锚点间回写可用性表（laoma2053 模式）。"""
+    try:
+        with open(README_FILE, "r", encoding="utf-8") as f:
+            content = f.read()
+    except Exception:  # noqa: BLE001
+        return False
+    lines = ["| 上游 | 状态 | 字节数 | 指纹 | 连续失败 | 最近通过 |",
+             "|------|------|--------|------|----------|----------|"]
+    for r in records:
+        lines.append(
+            "| {name} | {icon} {st} | {bt} | `{fp}` | {fc} | {ok_at} |".format(
+                name=r.get("name", ""), icon=ICONS.get(r.get("status"), "⚪"),
+                st=STATUS_CN.get(r.get("status"), r.get("status", "")),
+                bt=r.get("bytes", 0) or "-", fp=r.get("sha256", "") or "-",
+                fc=r.get("fail_count", 0), ok_at=r.get("last_ok_at", "-") or "-"))
+    table = "\n".join(lines)
+    start = "<!-- availability:start -->"
+    end = "<!-- availability:end -->"
+    if start in content and end in content:
+        pre = content.split(start, 1)[0]
+        post = content.split(end, 1)[1]
+        content = f"{pre}{start}\n{table}\n{end}{post}"
+    else:
+        content = content.rstrip() + f"\n\n## 上游可用性（自动回写）\n\n{start}\n{table}\n{end}\n"
+    with open(README_FILE, "w", encoding="utf-8") as f:
+        f.write(content)
+    return True
+
+
+# ---------------- 合并辅助（保持既有口径） ----------------
 
 def grade_of(nsites: int, valid: bool) -> str:
     if not valid or nsites <= 0:
@@ -172,9 +566,9 @@ def merge_key_parse(p: dict):
 
 
 def rewrite_gh(value):
-    """对 site/live/parse 字段里的 GitHub 原链统一加 ghproxy.net 前缀。"""
+    """对 site/live/parse 字段里的 GitHub 原链统一加 ghproxy.net 前缀（先过域名替换层）。"""
     if isinstance(value, str):
-        return gh_url(value)
+        return gh_url(map_domain(value))
     if isinstance(value, list):
         return [rewrite_gh(v) for v in value]
     if isinstance(value, dict):
@@ -182,88 +576,137 @@ def rewrite_gh(value):
     return value
 
 
-GH_FIELDS_SITE = ("api", "ext", "jar")
-GH_FIELDS_LIVE = ("url",)
-GH_FIELDS_PARSE = ("url", "ext")
-
-
 def main() -> int:
+    global DOMAIN_MAP
+    DOMAIN_MAP = load_domain_map()
     now = datetime.now(BEIJING)
     generated_at = now.strftime("%Y-%m-%d %H:%M:%S") + " +08:00"
 
-    interfaces = []          # 每条上游的测试记录
+    state = load_state()
+    blacklist_manual = read_name_list(BLACKLIST_MANUAL)
+    whitelist_manual = read_name_list(WHITELIST_MANUAL)
+
+    interfaces = []          # 每条上游的测试记录（list.json，保持原字段）
+    checks = []              # P1 校验状态记录（checks.json）
     merged: dict = {}        # 全局字段
     sites_by_key: dict = {}
     lives_by_name: dict = {}
     parses_by_name: dict = {}
 
-    print(f"[1/4] 拉取 {len(UPSTREAMS)} 个上游 ...", flush=True)
-    with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
-        results = list(ex.map(fetch_config, [u for _, u in UPSTREAMS]))
+    print(f"[1/6] 拉取 {len(ALL_UPSTREAMS)} 个上游（含 {len(LIVE_UPSTREAMS)} 个直播源上游）...", flush=True)
+    fetchable = []
+    for u in ALL_UPSTREAMS:
+        ok, tag = enabled_of(u, state, blacklist_manual, whitelist_manual)
+        fetchable.append((u, ok, tag))
 
-    for (name, url), (cfg, ms, info) in zip(UPSTREAMS, results):
+    def do_fetch(item):
+        u, ok, _tag = item
+        if not ok:
+            return u, None, "skipped"
+        raw, info = fetch_raw(u["url"])
+        return u, raw, info
+
+    with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
+        fetched = list(ex.map(do_fetch, fetchable))
+
+    snapshot_paths = []
+    disabled_now_list = []
+    for (u, fetchable_ok, tag), (u2, raw, info) in zip(fetchable, fetched):
+        name, kind = u["name"], u["kind"]
+        state_ent = state.get(name) if isinstance(state.get(name), dict) else {}
         rec = {
-            "name": name,
-            "url": url,
-            "http_ms": ms,
-            "channel": info if cfg else "",
+            "name": name, "url": u["url"], "kind": kind,
+            "http_ms": 0, "channel": "", "bytes": 0, "sha256": "",
             "sites": 0, "lives": 0, "parses": 0,
             "merged_sites": 0, "merged_lives": 0, "merged_parses": 0,
-            "grade": "不可用",
-            "error": "",
+            "grade": "不可用", "error": "",
+            "status": tag, "fail_count": int(state_ent.get("fail_count", 0)),
+            "last_ok_at": state_ent.get("last_ok_at", ""),
         }
-        if cfg is None:
-            rec["error"] = info
+        if not fetchable_ok:
+            checks.append(rec)
             interfaces.append(rec)
-            print(f"  FAIL {name}: {info}", flush=True)
+            print(f"  SKIP {name}（{STATUS_CN.get(tag, tag)}）", flush=True)
             continue
 
-        cfg_sites = cfg.get("sites") or []
-        cfg_sites = [s for s in cfg_sites if isinstance(s, dict) and s.get("key") and s.get("api")]
-        cfg_lives = [l for l in (cfg.get("lives") or []) if isinstance(l, dict) and l.get("name")]
-        cfg_parses = [p for p in (cfg.get("parses") or []) if isinstance(p, dict) and p.get("name")]
+        if raw is not None:
+            rec["bytes"] = len(raw)
+            rec["sha256"] = sha12(raw)
+            snapshot_paths.append(snapshot_save(name, kind, raw, now))
 
-        added_s = added_l = added_p = 0
-        for s in cfg_sites:
-            k = merge_key_site(s)
-            if k and k not in sites_by_key:
-                sites_by_key[k] = rewrite_gh(s)
-                added_s += 1
-        for l in cfg_lives:
-            k = merge_key_live(l)
-            if k and k not in lives_by_name:
-                lives_by_name[k] = rewrite_gh(l)
-                added_l += 1
-        for p in cfg_parses:
-            k = merge_key_parse(p)
-            if k and k not in parses_by_name:
-                parses_by_name[k] = rewrite_gh(p)
-                added_p += 1
+        ok_eval, status_tag, detail, err = evaluate_upstream(u, raw)
+        rec["status"] = status_tag
+        rec["error"] = err or ""
+        outcome = record_result(state, name, ok_eval, whitelist_manual)
+        if outcome == "disabled_now":
+            disabled_now_list.append(name)
+        rec["fail_count"] = int(state[name].get("fail_count", 0))
+        rec["last_ok_at"] = state[name].get("last_ok_at", "")
+        if raw is None:
+            rec["error"] = info
 
-        valid = bool(cfg_sites)
-        rec.update(
-            sites=len(cfg_sites), lives=len(cfg_lives), parses=len(cfg_parses),
-            merged_sites=added_s, merged_lives=added_l, merged_parses=added_p,
-            grade=grade_of(len(cfg_sites), valid),
-        )
-        for gk in ("spider", "wallpaper"):
-            if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
-                merged[gk] = rewrite_gh(cfg[gk])
+        if not ok_eval:
+            checks.append(rec)
+            interfaces.append(rec)
+            print(f"  {'DEGRADED' if status_tag == 'degraded' else 'FAIL'} {name}: {err or info}", flush=True)
+            continue
+
+        # ---- 合并 ----
+        if kind == "tvbox":
+            cfg = detail["cfg"]
+            cfg_sites = [s for s in (cfg.get("sites") or [])
+                         if isinstance(s, dict) and s.get("key") and s.get("api")]
+            cfg_lives = [l for l in (cfg.get("lives") or []) if isinstance(l, dict) and l.get("name")]
+            cfg_parses = [p for p in (cfg.get("parses") or []) if isinstance(p, dict) and p.get("name")]
+            added_s = added_l = added_p = 0
+            for s in cfg_sites:
+                k = merge_key_site(s)
+                if k and k not in sites_by_key:
+                    sites_by_key[k] = rewrite_gh(s)
+                    added_s += 1
+            for l in cfg_lives:
+                k = merge_key_live(l)
+                if k and k not in lives_by_name:
+                    lives_by_name[k] = rewrite_gh(l)
+                    added_l += 1
+            for p in cfg_parses:
+                k = merge_key_parse(p)
+                if k and k not in parses_by_name:
+                    parses_by_name[k] = rewrite_gh(p)
+                    added_p += 1
+            valid = bool(cfg_sites)
+            rec.update(
+                sites=len(cfg_sites), lives=len(cfg_lives), parses=len(cfg_parses),
+                merged_sites=added_s, merged_lives=added_l, merged_parses=added_p,
+                grade=grade_of(len(cfg_sites), valid), channel=info,
+            )
+            for gk in ("spider", "wallpaper"):
+                if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
+                    merged[gk] = rewrite_gh(cfg[gk])
+            print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
+                  f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p}) "
+                  f"{rec['bytes']}B #{rec['sha256']}", flush=True)
+        else:
+            print(f"  OK   {name}: {detail['entries']} 条频道 {rec['bytes']}B #{rec['sha256']}", flush=True)
+        checks.append(rec)
         interfaces.append(rec)
-        print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
-              f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p}) {ms}ms", flush=True)
 
-    usable = [r for r in interfaces if r["grade"] != "不可用"]
-    if not usable:
-        print("所有上游均不可用，中止（不产出配置）", flush=True)
+    sync_blacklist_auto(state)
+    save_state(state)
+    if disabled_now_list:
+        print(f"  本轮自动停用：{', '.join(disabled_now_list)}", flush=True)
+
+    usable_config = [r for r in interfaces if r["kind"] == "tvbox" and r["grade"] != "不可用"]
+    if not usable_config:
+        print("所有配置类上游均不可用，中止（不产出配置）", flush=True)
         return 1
 
     sites = list(sites_by_key.values())
     lives = list(lives_by_name.values())
     parses = list(parses_by_name.values())
-    print(f"[2/4] 合并完成：{len(sites)} sites / {len(lives)} lives / {len(parses)} parses", flush=True)
+    print(f"[2/6] 合并完成：{len(sites)} sites / {len(lives)} lives / {len(parses)} parses", flush=True)
 
-    # ---- 测速验活：仅 type 0/1 且 api 为 http(s) 的直连站点，失败重试一次，仍失败剔除 ----
+    # ---- [3/6] 测速验活：仅 type 0/1 且 api 为 http(s) 的直连站点 ----
     def testable(s: dict) -> bool:
         return s.get("type") in (0, 1) and isinstance(s.get("api"), str) and s["api"].startswith("http")
 
@@ -285,7 +728,7 @@ def main() -> int:
     limit = int(os.environ.get("SITE_LIMIT", "0"))
     if limit > 0:
         to_test = to_test[:limit]
-    print(f"[3/4] 站点验活：{len(to_test)}/{len(sites)} 个直连站点，并发 {CONCURRENCY} ...", flush=True)
+    print(f"[3/6] 站点验活：{len(to_test)}/{len(sites)} 个直连站点，并发 {CONCURRENCY} ...", flush=True)
     t0 = time.time()
     verdict = {}
     with cf.ThreadPoolExecutor(CONCURRENCY) as ex:
@@ -314,23 +757,83 @@ def main() -> int:
     tested_pass = sum(1 for v in verdict.values() if v)
     print(f"    通过 {tested_pass}/{len(to_test)}，剔除 {len(removed)}，保留 {len(kept_sites)} 站点", flush=True)
 
+    # ---- [4/6] 直播源分类测速优选 ----
+    print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
+    m3u_entries = []
+    for (u, fetchable_ok, tag), (u2, raw, info) in zip(fetchable, fetched):
+        if u["kind"] != "m3u" or raw is None:
+            continue
+        try:
+            for name, group, url in parse_m3u(raw):
+                # 过滤 Guovin 列表头的「更新时间」伪频道与纯日期条目
+                if re.search(r"更新时间|update.?time", group, re.I):
+                    continue
+                if re.match(r"^\d{4}-\d{2}-\d{2}", name):
+                    continue
+                m3u_entries.append((name, group, url))
+        except Exception:  # noqa: BLE001
+            pass
+    seen_pairs = set()
+    dedup_entries = []
+    for name, group, url in m3u_entries:
+        pk = (name, url)
+        if pk not in seen_pairs:
+            seen_pairs.add(pk)
+            dedup_entries.append((name, group, url))
+    print(f"    共 {len(m3u_entries)} 条，去重后 {len(dedup_entries)} 条", flush=True)
+    live_stats = {}
+    if dedup_entries:
+        live_stats = build_live_outputs(dedup_entries)
+        for key, label in CATEGORY_LABELS:
+            entry_name = f"Guovin·{label}"
+            if os.path.exists(os.path.join(LIVES_DIR, f"live_{key}.txt")) and entry_name not in lives_by_name:
+                lives_by_name[entry_name] = rewrite_gh({
+                    "name": entry_name, "type": 0,
+                    "url": f"{REPO_RAW}/lives/live_{key}.txt",
+                    "epg": "https://live.fanmingming.cn/e.xml",
+                })
+    lives = list(lives_by_name.values())
+
+    # ---- [5/6] 产出配置 ----
     tvbox = dict(merged)
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
-    for fname, obj in (("tvbox.json", tvbox), ("list.json", interfaces), ("status.json", None)):
-        if obj is not None:
-            with open(fname, "w", encoding="utf-8") as f:
-                json.dump(obj, f, ensure_ascii=False, indent=1)
+    with open("tvbox.json", "w", encoding="utf-8") as f:
+        json.dump(tvbox, f, ensure_ascii=False, indent=1)
+    with open("list.json", "w", encoding="utf-8") as f:
+        json.dump(interfaces, f, ensure_ascii=False, indent=1)
+
+    checks_doc = write_checks(checks, generated_at)
+    update_readme_availability(checks)
+
+    # ---- 快照合并产物 + 保留期清理 ----
+    merged_dir = os.path.join(SNAPSHOT_DIR, now.strftime("%Y-%m-%d"))
+    os.makedirs(merged_dir, exist_ok=True)
+    with open(os.path.join(merged_dir, f"tvbox_merged__{now.strftime('%H%M%S')}.json"), "wb") as f:
+        f.write(open("tvbox.json", "rb").read())
+    pruned = snapshot_prune(SNAPSHOT_RETENTION_DAYS)
+    if pruned:
+        print(f"    快照清理：移除 {', '.join(pruned)}（保留最近 {SNAPSHOT_RETENTION_DAYS} 天）", flush=True)
+
+    # ---- status.json（增强：上游健康度 + 产物指纹） ----
+    products = {}
+    for p in ("tvbox.json", "list.json", "status.json", CHECKS_FILE,
+              os.path.join(LIVES_DIR, "live.txt"), os.path.join(LIVES_DIR, "live_cctv.txt"),
+              os.path.join(LIVES_DIR, "live_weishi.txt"), os.path.join(LIVES_DIR, "live_gangtai.txt"),
+              os.path.join(LIVES_DIR, "live_other.txt")):
+        if os.path.exists(p):
+            b = open(p, "rb").read()
+            products[p] = {"bytes": len(b), "sha256": sha12(b)}
 
     status = {
         "generated_at": generated_at,
         "summary": {
             "interfaces_total": len(interfaces),
-            "interfaces_usable": len(usable),
-            "interfaces_full": sum(1 for r in usable if r["grade"] == "完全可用"),
-            "interfaces_partial": sum(1 for r in usable if r["grade"] == "部分可用"),
-            "interfaces_dead": len(interfaces) - len(usable),
+            "interfaces_usable": len(usable_config),
+            "interfaces_full": sum(1 for r in usable_config if r["grade"] == "完全可用"),
+            "interfaces_partial": sum(1 for r in usable_config if r["grade"] == "部分可用"),
+            "interfaces_dead": sum(1 for r in interfaces if r["kind"] == "tvbox" and r["grade"] == "不可用"),
             "sites_total": len(sites),
             "sites_kept": len(kept_sites),
             "sites_tested": len(to_test),
@@ -340,17 +843,29 @@ def main() -> int:
             "lives": len(lives),
             "parses": len(parses),
         },
+        "upstreams_health": {
+            "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
+            "threshold": {"fail_limit": FAIL_LIMIT,
+                          "min_bytes_tvbox": MIN_BYTES_TVBOX, "min_bytes_m3u": MIN_BYTES_M3U},
+            **checks_doc["summary"],
+            "disabled_now": disabled_now_list,
+            "snapshot_files": len(snapshot_paths),
+            "snapshot_pruned": pruned,
+        },
+        "lives_by_category": live_stats,
+        "products": {"note": "产物 sha256 指纹（前 12 位）与字节数", "items": products},
         "interfaces": interfaces,
         "removed_sites": removed,
         "top_interfaces": sorted(
             ({"name": r["name"], "sites": r["sites"], "http_ms": r["http_ms"], "grade": r["grade"]}
-             for r in usable), key=lambda x: (-x["sites"], x["http_ms"]),
+             for r in usable_config), key=lambda x: (-x["sites"], x["http_ms"]),
         )[:15],
     }
     with open("status.json", "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=1)
 
-    print(f"[4/4] 输出完成：tvbox.json / list.json / status.json @ {generated_at}", flush=True)
+    print(f"[6/6] 输出完成：tvbox.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
+          flush=True)
     return 0
 
 

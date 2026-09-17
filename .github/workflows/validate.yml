@@ -1,0 +1,42 @@
+name: validate-sources
+# 独立验活工作流（P2 双 workflow 拆分）：只验活、更新 checks.json/黑白名单/README，不产出配置
+# 每日北京时间 00:30 运行，与 daily-fetch（06:00/18:00）频率解耦
+
+on:
+  schedule:
+    - cron: "30 16 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: validate-sources
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 全量上游验活（质量门槛 + 连续失败自动停用）
+        run: python scripts/check_upstreams.py
+
+      - name: 提交并推送（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add checks.json README.md state/
+          if git diff --cached --quiet; then
+            echo "本轮无变更，跳过提交"
+          else
+            git commit -m "chore: validate sources $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push
+          fi

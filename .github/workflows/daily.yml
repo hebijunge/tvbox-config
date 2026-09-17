@@ -1,5 +1,6 @@
 name: daily-fetch
 # 每日两次：北京时间 06:00（UTC 22:00）与 18:00（UTC 10:00），支持手动触发
+# P2：refresh（本工作流，拉取+合并+发布）与 validate（validate.yml，独立验活）拆分——azhansy/ds-tvbox 模式
 
 on:
   schedule:
@@ -17,7 +18,7 @@ concurrency:
 jobs:
   fetch-merge:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 40
     steps:
       - uses: actions/checkout@v4
 
@@ -25,7 +26,7 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: 拉取上游并合并生成配置
+      - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks）
         env:
           CONCURRENCY: "24"
         run: python scripts/fetch_merge.py
@@ -34,10 +35,33 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tvbox.json list.json status.json
+          git add tvbox.json list.json status.json checks.json README.md \
+                  lives/ state/ snapshot/ candidate_upstreams.json
           if git diff --cached --quiet; then
             echo "本轮无变更，跳过提交"
           else
             git commit -m "chore: daily update $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
             git push
+          fi
+
+      - name: 发布到 Releases（latest 标签，Guovin 双通道模式）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FILES=""
+          for f in tvbox.json list.json status.json checks.json \
+                   lives/live.txt lives/live_cctv.txt lives/live_weishi.txt \
+                   lives/live_gangtai.txt lives/live_other.txt; do
+            [ -f "$f" ] && FILES="$FILES $f"
+          done
+          NOTES="自动发布于 $(date -u '+%Y-%m-%d %H:%M UTC')。
+          产物：tvbox.json（统一配置）、lives/*（央视/卫视/港台分类直播）、checks.json（上游校验状态）。
+          固定引用本 Release：https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json"
+          if gh release view latest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload latest $FILES -R "$GITHUB_REPOSITORY" --clobber
+            gh release edit latest -R "$GITHUB_REPOSITORY" --title "TVBox 配置 latest" --notes "$NOTES"
+          else
+            gh release create latest $FILES -R "$GITHUB_REPOSITORY" \
+              --title "TVBox 配置 latest" --notes "$NOTES"
           fi

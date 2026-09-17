@@ -1,0 +1,42 @@
+name: radar-scan
+# 源雷达（P2）：每周一北京时间 11:00 扫描导航仓（QingNing/ngo5/dongyubin）README，
+# 提取候选上游并验活，写入 radar/candidates.json，人工确认后收编
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: radar-scan
+  cancel-in-progress: false
+
+jobs:
+  radar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 扫描导航仓候选上游
+        run: python scripts/radar_scan.py
+
+      - name: 提交并推送（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add radar/candidates.json
+          if git diff --cached --quiet; then
+            echo "本轮无变更，跳过提交"
+          else
+            git commit -m "chore: radar scan $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push
+          fi

@@ -1,0 +1,31 @@
+name: issue-to-pr
+# 用户提 issue 推荐上游 → 自动验活 → 可用者写入 candidate_upstreams.json 并自动开 PR
+# （laoma2053/awesome-zhuiju-free 模式；凭据用 GITHUB_TOKEN，不落明文）
+
+on:
+  issues:
+    types: [opened, reopened]
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  submit-upstream:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 验活并自动登记候选 / 开 PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: python scripts/issue_to_pr.py

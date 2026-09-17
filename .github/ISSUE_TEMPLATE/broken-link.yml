@@ -1,0 +1,11 @@
+name: 报告失效源
+description: 上游配置或直播源已失效
+labels: [broken-link]
+body:
+  - type: textarea
+    id: detail
+    attributes:
+      label: 失效说明
+      description: 哪个源、什么现象（404 / 空内容 / 全部无法播放等）
+    validations:
+      required: true

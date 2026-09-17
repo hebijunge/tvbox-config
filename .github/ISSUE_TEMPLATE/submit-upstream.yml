@@ -1,0 +1,21 @@
+name: 上游源推荐
+description: 推荐新的 TVBox 配置 / 直播源地址，自动验活后收录
+labels: [upstream-suggestion]
+body:
+  - type: textarea
+    id: urls
+    attributes:
+      label: 上游地址
+      description: 每行一个 http(s) 链接（TVBox 配置 json 或直播 m3u/txt）。提交后机器人自动验活并回评结果。
+      placeholder: |
+        https://example.com/tvbox.json
+        https://example.com/live.m3u
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 备注
+      description: 来源、内容说明（可选）
+    validations:
+      required: false
