@@ -177,6 +177,8 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
         return "jar"
     if content[:3] == b"dex\n":
         return "jar"
+    if content[:2] == b"\x1f\x8b":
+        return "data"  # gzip 数据文件（如 pikpakclass.db.gz 分享码库）
     try:
         text = content.decode("utf-8")
     except UnicodeDecodeError:
@@ -189,10 +191,10 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
             json.loads(text)
             return "json"
         except Exception:
-            return "json" if dep_lenient_json(text) else "unknown"
+            return "json" if dep_lenient_json(text) else "data"
     if re.search(r"\b(function|var|let|const|import|export|require)\b", text[:4000]) or "=>" in text[:1000]:
         return "js"
-    return "unknown"
+    return "data"  # 其余可解码纯文本（TSV 分享码库等）视为数据文件
 
 
 def dep_download(url: str):
@@ -246,9 +248,14 @@ def dep_local_path(origin: str, url: str) -> str:
         if not name or len(name) > 80:
             name = hashlib.md5(url.encode()).hexdigest()[:12]
         return f"{DEPS_DIR}/remote/{name}"
-    rel = url.split("://", 1)[1]
-    rel = rel.split("/", 1)[1] if "/" in rel else rel
-    return f"{DEPS_DIR}/{origin}/{rel}"
+    u = urllib.parse.urlparse(url)
+    segs = u.path.lstrip("/").split("/")
+    if u.netloc == "raw.githubusercontent.com" and len(segs) > 3:
+        segs = segs[3:]  # 剥离 owner/repo/branch，路径与仓库已入库布局一致
+    path = "/".join(segs)
+    if not path:
+        path = hashlib.md5(url.encode()).hexdigest()[:12]
+    return f"{DEPS_DIR}/{origin}/{path}"
 
 
 def load_manifest() -> dict:
@@ -294,11 +301,13 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             v = s.get(field)
             if isinstance(v, str):
                 hint = "jar" if field == "jar" else ("js" if v.lower().split("?")[0].endswith(".js") else "json")
-                add_ref(hint, v, origin, base)
+                for seg in (v.split("$$$") if "$$$" in v else [v]):
+                    add_ref(hint, seg, origin, base)
             elif isinstance(v, dict):
                 for v2 in v.values():
                     if isinstance(v2, str):
-                        add_ref("json", v2, origin, base)
+                        for seg in (v2.split("$$$") if "$$$" in v2 else [v2]):
+                            add_ref("json", seg, origin, base)
 
     # ---- 2. 并发下载/校验/入库 ----
     def work(e):
@@ -388,6 +397,30 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             elif isinstance(v, dict):
                 vals = [(field, k2, v2) for k2, v2 in v.items() if isinstance(v2, str)]
             for f0, k2, raw in vals:
+                if "$$$" in raw:
+                    segs = raw.split("$$$")
+                    changed = False
+                    for si, seg in enumerate(segs):
+                        r = is_file_ref(seg)
+                        if not r:
+                            continue
+                        base2 = UPSTREAM_BASES.get(origin, "")
+                        url2 = urllib.parse.urljoin(base2, r[1]) if r[0] == "rel" else r[1]
+                        rec2 = ok_map.get(f"{origin}|{url2}")
+                        if not rec2:
+                            continue
+                        md52 = md5_of(rec2["local"])
+                        if md52 is None:
+                            continue
+                        segs[si] = f"./{rec2['local']}"
+                        changed = True
+                        stats["rewritten"] += 1
+                    if changed:
+                        if k2 is None:
+                            s[f0] = "$$$".join(segs)
+                        else:
+                            s[f0][k2] = "$$$".join(segs)
+                    continue
                 r = is_file_ref(raw)
                 if not r:
                     continue
