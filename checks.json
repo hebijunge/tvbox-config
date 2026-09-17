@@ -1,105 +1,15 @@
 {
  "generated_at": "2026-09-17 22:59:40 +08:00",
+ "note": "每条含最近检测时间、内容 sha256 指纹（前 12 位）、字节数与连续失败计数（azhansy/ds-tvbox checks.json 模式）",
  "summary": {
-  "interfaces_total": 39,
-  "interfaces_usable": 36,
-  "interfaces_full": 34,
-  "interfaces_partial": 2,
-  "interfaces_dead": 1,
-  "sites_total": 1028,
-  "sites_kept": 995,
-  "sites_tested": 204,
-  "sites_tested_pass": 171,
-  "sites_removed": 33,
-  "sites_untested": 824,
-  "lives": 135,
-  "parses": 83
- },
- "upstreams_health": {
-  "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
-  "threshold": {
-   "fail_limit": 3,
-   "min_bytes_tvbox": 512,
-   "min_bytes_m3u": 1024
-  },
   "total": 39,
   "ok": 38,
   "degraded": 1,
   "dead": 0,
   "disabled": 0,
-  "blacklisted": 0,
-  "disabled_now": [],
-  "snapshot_files": 39,
-  "snapshot_pruned": []
+  "blacklisted": 0
  },
- "lives_by_category": {
-  "cctv": {
-   "channels": 32,
-   "urls": 93,
-   "input_urls": 207,
-   "speed_tested": true
-  },
-  "weishi": {
-   "channels": 40,
-   "urls": 114,
-   "input_urls": 246,
-   "speed_tested": true
-  },
-  "gangtai": {
-   "channels": 7,
-   "urls": 15,
-   "input_urls": 48,
-   "speed_tested": true
-  },
-  "other": {
-   "channels": 170,
-   "urls": 231,
-   "input_urls": 926,
-   "speed_tested": true
-  }
- },
- "products": {
-  "note": "产物 sha256 指纹（前 12 位）与字节数",
-  "items": {
-   "tvbox.json": {
-    "bytes": 296427,
-    "sha256": "61bc79747a14"
-   },
-   "list.json": {
-    "bytes": 16997,
-    "sha256": "be82174136d2"
-   },
-   "status.json": {
-    "bytes": 18682,
-    "sha256": "0ec1cabeabb6"
-   },
-   "checks.json": {
-    "bytes": 18107,
-    "sha256": "b9b0c0865c33"
-   },
-   "lives/live.txt": {
-    "bytes": 32193,
-    "sha256": "36ef787c4df7"
-   },
-   "lives/live_cctv.txt": {
-    "bytes": 5890,
-    "sha256": "997c77bcfbe6"
-   },
-   "lives/live_weishi.txt": {
-    "bytes": 8033,
-    "sha256": "7c829fcbcd0d"
-   },
-   "lives/live_gangtai.txt": {
-    "bytes": 802,
-    "sha256": "23dc046eccba"
-   },
-   "lives/live_other.txt": {
-    "bytes": 17468,
-    "sha256": "a466cf4a7609"
-   }
-  }
- },
- "interfaces": [
+ "upstreams": [
   {
    "name": "juhe-tvapi",
    "url": "https://raw.githubusercontent.com/ccAzy/juhe-tvapi/main/config.json",
@@ -601,26 +511,6 @@
    "last_ok_at": "2026-09-17 22:59:41"
   },
   {
-   "name": "cluntop/yt",
-   "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/yt.json",
-   "kind": "tvbox",
-   "http_ms": 0,
-   "channel": "",
-   "bytes": 233,
-   "sha256": "be96d747fd4f",
-   "sites": 0,
-   "lives": 0,
-   "parses": 0,
-   "merged_sites": 0,
-   "merged_lives": 0,
-   "merged_parses": 0,
-   "grade": "不可用",
-   "error": "too small (233 bytes)",
-   "status": "degraded",
-   "fail_count": 1,
-   "last_ok_at": ""
-  },
-  {
    "name": "cluntop/test",
    "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/test.json",
    "kind": "tvbox",
@@ -879,298 +769,26 @@
    "status": "ok",
    "fail_count": 0,
    "last_ok_at": "2026-09-17 22:59:41"
-  }
- ],
- "removed_sites": [
-  {
-   "key": "yinghua",
-   "name": "樱花资源",
-   "api": "https://m3u8.apiyhzy.com/api.php/provide/vod",
-   "reason": "验活连续两次失败"
   },
   {
-   "key": "bubugao",
-   "name": "步步高资源",
-   "api": "https://api.yparse.com/api/json",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "iqiyi_2",
-   "name": "爱奇艺",
-   "api": "https://iqiyizyapi.com/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "30e07a544ffe9b6069a1ba66d6442ca9",
-   "name": "24-樱花",
-   "api": "https://api.apiyhzy.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "9d8b0f25e739dc88f3a9aa3ccd54b1a5",
-   "name": "50-淘片",
-   "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "f333ebedb73901ca466a8ebc6aeab0da",
-   "name": "52-淘片",
-   "api": "https://taopianapi.com/cjapi/mc/vod/json/m3u8.html",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "卧龙资源",
-   "name": "影视 • 卧龙资源[直连]",
-   "api": "https://wolongzyw.com/api.php/provide/vod/?ac=list",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "金蝉采集",
-   "name": "影视 • 金蝉",
-   "api": "https://zy.jinchancaiji.com/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "小绵阳采集",
-   "name": "影视 • 小绵阳",
-   "api": "https://vs.okcdn100.top/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "789采集",
-   "name": "789采集",
-   "api": "https://zy.jinchancaiji.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "haiwaikan",
-   "name": "海外看┃采集",
-   "api": "https://haiwaikan.com/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "快帆",
-   "name": "快帆┃采集",
-   "api": "https://api.kuaifan.tv/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "乐视",
-   "name": "乐视",
-   "api": "https://leshiapi.com/api.php/provide/vod",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "wmcj8.com",
-   "name": "成人05",
-   "api": "http://wmcj8.com/inc/sapi.php",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "lbapiby.com",
-   "name": "★AIvin(直连)",
-   "api": "http://lbapiby.com/api.php/provide/vod/at/xml",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "api.maozyapi.com",
-   "name": "成人16",
-   "api": "https://api.maozyapi.com/inc/apijson_vod.php",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "apittzy.com",
-   "name": "成人18",
-   "api": "https://apittzy.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "kkzy.me",
-   "name": "成人23",
-   "api": "https://kkzy.me/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "api.apilyzy.com",
-   "name": "成人27",
-   "api": "https://api.apilyzy.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "黑木耳",
-   "name": "黑木耳 | 采集",
-   "api": "https://json02.heimuer.xyz/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "旺旺",
-   "name": "旺旺 | 采集",
-   "api": "https://api.wwzy.tv/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "四个圈",
-   "name": "四圈 | 采集",
-   "api": "https://pg.fenwe078.cf/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "AIvin",
-   "name": "AIvin | 采集",
-   "api": "http://lbapiby.com/api.php/provide/vod/at/xml",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "松视开通3",
-   "name": "松视3 | 采集",
-   "api": "https://api.sexnguon.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "*抖阴视频",
-   "name": "*抖阴 | 采集",
-   "api": "https://www.888dav.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "奥斯卡",
-   "name": "奥斯卡 | 采集",
-   "api": "https://aosikazy.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "zp066",
-   "name": "花椒 | 采集",
-   "api": "https://api.apilyzy.com/api.php/provide/vod/at/xml/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "易看",
-   "name": "易看 | 采集",
-   "api": "https://api.yikanapi.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "性爱",
-   "name": "性爱 | 采集",
-   "api": "https://api.sexnguon.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "奶茶",
-   "name": "奶茶 | 采集",
-   "api": "https://caiji.naichaapi.com/inc/api.php",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "探探",
-   "name": "探探 | 采集",
-   "api": "https://apittzy.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "芒果专场",
-   "name": "芒果 | 采集",
-   "api": "https://mgzyz1.com/api.php/provide/vod/",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "523专场",
-   "name": "523 | 采集",
-   "api": "https://523zyw.me/inc/apijson_vod.php",
-   "reason": "验活连续两次失败"
-  }
- ],
- "top_interfaces": [
-  {
-   "name": "qist/js",
-   "sites": 298,
+   "name": "cluntop/yt",
+   "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/yt.json",
+   "kind": "tvbox",
    "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "gao/js",
-   "sites": 298,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "nxppru/js",
-   "sites": 298,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "qist/dianshi",
-   "sites": 150,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "qist/jsm",
-   "sites": 149,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "qist/0825",
-   "sites": 135,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "gao/0825",
-   "sites": 135,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "nxppru/0825",
-   "sites": 135,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "juhe-tvapi",
-   "sites": 107,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "qist/367",
-   "sites": 106,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "qist/0821",
-   "sites": 86,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "gao/0821",
-   "sites": 86,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "nxppru/0821",
-   "sites": 86,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "cluntop/box",
-   "sites": 82,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "cluntop/fun",
-   "sites": 82,
-   "http_ms": 0,
-   "grade": "完全可用"
+   "channel": "",
+   "bytes": 233,
+   "sha256": "be96d747fd4f",
+   "sites": 0,
+   "lives": 0,
+   "parses": 0,
+   "merged_sites": 0,
+   "merged_lives": 0,
+   "merged_parses": 0,
+   "grade": "不可用",
+   "error": "too small (233 bytes)",
+   "status": "degraded",
+   "fail_count": 1,
+   "last_ok_at": ""
   }
  ]
 }
