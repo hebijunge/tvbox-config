@@ -1,0 +1,43 @@
+name: daily-fetch
+# 每日两次：北京时间 06:00（UTC 22:00）与 18:00（UTC 10:00），支持手动触发
+
+on:
+  schedule:
+    - cron: "0 22 * * *"
+    - cron: "0 10 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: daily-fetch
+  cancel-in-progress: false
+
+jobs:
+  fetch-merge:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 拉取上游并合并生成配置
+        env:
+          CONCURRENCY: "24"
+        run: python scripts/fetch_merge.py
+
+      - name: 提交并推送（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add tvbox.json list.json status.json
+          if git diff --cached --quiet; then
+            echo "本轮无变更，跳过提交"
+          else
+            git commit -m "chore: daily update $(date -u +%Y-%m-%d)"
+            git push
+          fi
