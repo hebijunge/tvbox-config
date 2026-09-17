@@ -123,6 +123,313 @@ LIVE_UPSTREAMS = [
 
 ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS
 
+UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in UPSTREAMS if u.get("kind") == "tvbox"}
+
+
+# ==================== 依赖收集（jar / js / json 库文件） ====================
+DEPS_DIR = "deps"
+MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
+DEP_TIMEOUT = 25
+DEP_MAX_BYTES = 8 * 1024 * 1024
+DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "8"))
+# 沙箱/CI 网络受限时可跳过站点验活或强制用缓存
+SKIP_SITE_TEST = os.environ.get("SKIP_SITE_TEST", "0") == "1"
+SKIP_REFRESH = os.environ.get("SKIP_REFRESH", "0") == "1"
+
+_IDNA_CACHE = {}
+
+
+def _idna_host(host: str) -> str:
+    """中文域名手动 punycode（urllib 对部分中文域名内置 idna 会抛错）。"""
+    if host.isascii():
+        return host
+    if host in _IDNA_CACHE:
+        return _IDNA_CACHE[host]
+    labels = []
+    for lab in host.split("."):
+        if lab.isascii():
+            labels.append(lab)
+        else:
+            try:
+                labels.append("xn--" + lab.encode("punycode").decode())
+            except Exception:
+                labels.append(lab)
+    out = ".".join(labels)
+    _IDNA_CACHE[host] = out
+    return out
+
+
+def dep_lenient_json(text: str) -> bool:
+    if text.startswith("\ufeff"):
+        text = text[1:]
+    text = re.sub(r"^\s*//.*$", "", text, flags=re.M)
+    text = re.sub(r",\s*([}\]])", r"\1", text)
+    try:
+        json.loads(text)
+        return True
+    except Exception:
+        return False
+
+
+def dep_classify(kind_hint: str, content: bytes) -> str:
+    """按内容判定依赖类型: jar / js / json / unknown（伪装扩展名靠内容识别）。"""
+    if content[:4] in (b"PK\x03\x04", b"PK\x05\x06"):
+        return "jar"
+    if content[:3] == b"dex\n":
+        return "jar"
+    try:
+        text = content.decode("utf-8")
+    except UnicodeDecodeError:
+        return "unknown"
+    low = text[:2000].lower()
+    if "<html" in low or "<!doctype" in low:
+        return "unknown"
+    if kind_hint == "json":
+        try:
+            json.loads(text)
+            return "json"
+        except Exception:
+            return "json" if dep_lenient_json(text) else "unknown"
+    if re.search(r"\b(function|var|let|const|import|export|require)\b", text[:4000]) or "=>" in text[:1000]:
+        return "js"
+    return "unknown"
+
+
+def dep_download(url: str):
+    """原 URL → ghproxy 兜底。返回 (bytes, channel) 或 (None, err)。"""
+    import urllib.parse
+    attempts = [url]
+    wrapped = gh_url(url) if "github" in url else url
+    if wrapped != url:
+        attempts.append(wrapped)
+    elif re.match(r"^https?://(raw\.)?githubusercontent\.com/", url):
+        attempts.append(GHPROXY + url)
+    attempts = [
+        urllib.parse.quote(u, safe="%/:=&?~#+!$,;'@()*[]|") if not u.isascii() else u
+        for u in attempts
+    ]
+    last = ""
+    for u in attempts:
+        try:
+            status, data, _ = http_get(u, DEP_TIMEOUT, DEP_MAX_BYTES)
+            if status == 200 and data:
+                return data, ("direct" if u == attempts[0] else "ghproxy")
+            last = f"HTTP {status}"
+        except Exception as e:  # noqa: BLE001
+            last = f"{type(e).__name__}: {e}"[:120]
+    return None, last
+
+
+def is_file_ref(v: str):
+    """识别配置字符串里的依赖文件引用。返回 ('rel'|'abs', path) 或 None。"""
+    v = v.strip()
+    if not v or "{name}" in v or "{cateId}" in v or "{catePg}" in v:
+        return None
+    base = v.split(";")[0]
+    if "$$$" in base:
+        return None
+    if base.startswith("./") or base.startswith("../") or base.startswith("/"):
+        return ("rel", base)
+    if re.match(r"^https?://", base):
+        host = urllib.parse.urlparse(base).netloc
+        if "127.0.0.1" in host or "localhost" in host:
+            return None
+        path = base.split("?")[0].lower()
+        if path.endswith((".js", ".jar", ".zip", ".php")):
+            return ("abs", base)
+    return None
+
+
+def dep_local_path(origin: str, url: str) -> str:
+    if origin == "remote":
+        name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or ""
+        if not name or len(name) > 80:
+            name = hashlib.md5(url.encode()).hexdigest()[:12]
+        return f"{DEPS_DIR}/remote/{name}"
+    rel = url.split("://", 1)[1]
+    rel = rel.split("/", 1)[1] if "/" in rel else rel
+    return f"{DEPS_DIR}/{origin}/{rel}"
+
+
+def load_manifest() -> dict:
+    try:
+        with open(MANIFEST_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return {}
+
+
+def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict):
+    """收集 tvbox 配置中的 jar/js/json 依赖到 deps/ 并把引用改写为仓库相对路径。
+    site_origin: key -> origin 名；spider_origin: (origin 名, base url)
+    返回统计 dict；同时更新 deps/manifest.json。"""
+    import urllib.parse
+
+    manifest = load_manifest()
+    now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00")
+
+    # ---- 1. 生成 (origin, url) 待收集清单 ----
+    entries = []  # (kind_hint, url, origin)
+
+    def add_ref(kind_hint: str, ref: str, origin: str, base: str):
+        r = is_file_ref(ref)
+        if not r:
+            return
+        where, pathv = r
+        url = urllib.parse.urljoin(base, pathv) if where == "rel" else pathv
+        e = (kind_hint, url, origin)
+        if e not in entries:
+            entries.append(e)
+
+    if isinstance(tvbox.get("spider"), str) and spider_origin:
+        add_ref("jar", tvbox["spider"].split(";md5;")[0], spider_origin[0], spider_origin[1])
+    for s in tvbox.get("sites", []):
+        origin = site_origin.get(s.get("key"))
+        if not origin:
+            continue
+        base = UPSTREAM_BASES.get(origin, "")
+        if not base:
+            continue
+        for field in ("jar", "ext"):
+            v = s.get(field)
+            if isinstance(v, str):
+                hint = "jar" if field == "jar" else ("js" if v.lower().split("?")[0].endswith(".js") else "json")
+                add_ref(hint, v, origin, base)
+            elif isinstance(v, dict):
+                for v2 in v.values():
+                    if isinstance(v2, str):
+                        add_ref("json", v2, origin, base)
+
+    # ---- 2. 并发下载/校验/入库 ----
+    def work(e):
+        kind_hint, url, origin = e
+        lp = dep_local_path(origin, url)
+        fp = os.path.join(lp)
+        rec = {"key": f"{origin}|{url}", "url": url, "origin": origin, "local": lp,
+               "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": ""}
+        if os.path.exists(fp) and os.path.getsize(fp) > 0:
+            content = open(fp, "rb").read()
+        else:
+            content, ch = dep_download(url)
+            rec["channel"] = ch if content else str(ch)
+            if content is None:
+                rec["err"] = str(ch)
+                return rec
+        hint = {"jar": "jar", "zip": "jar", "js": "js", "json": "json", "php": "jar"}.get(
+            url.lower().split("?")[0].rsplit(".", 1)[-1], "")
+        kind = dep_classify(hint, content)
+        rec["kind"] = kind
+        rec["size"] = len(content)
+        rec["md5"] = hashlib.md5(content).hexdigest()
+        if kind == "unknown":
+            rec["err"] = f"content not js/jar/json ({content[:24]!r})"
+            return rec
+        os.makedirs(os.path.dirname(fp), exist_ok=True)
+        open(fp, "wb").write(content)
+        rec["ok"] = True
+        return rec
+
+    ok_map: dict = {}
+    print(f"[deps] 收集 {len(entries)} 个依赖（并发 {DEP_CONCURRENCY}）...", flush=True)
+    with cf.ThreadPoolExecutor(DEP_CONCURRENCY) as ex:
+        futs = {ex.submit(work, e): e for e in entries}
+        for i, fut in enumerate(cf.as_completed(futs), 1):
+            rec = fut.result()
+            if rec["ok"]:
+                ok_map[rec["key"]] = rec
+            if i % 50 == 0:
+                print(f"  ... {i}/{len(entries)}", flush=True)
+
+    # ---- 3. 失败项回退：manifest 缓存 ----
+    for e in entries:
+        key = f"{e[2]}|{e[1]}"
+        if key not in ok_map and SKIP_REFRESH and key in manifest:
+            m = manifest[key]
+            if os.path.exists(m["local"]):
+                ok_map[key] = {"key": key, "url": e[1], "origin": e[2], "local": m["local"],
+                               "ok": True, "kind": m["kind"], "md5": m["md5"],
+                               "size": m.get("size", 0), "err": "", "channel": "manifest-cache"}
+
+    # ---- 4. 改写引用 ----
+    stats = {"total": len(entries), "collected": len(ok_map), "rewritten": 0, "kept": 0, "spider": 0}
+    missing = []
+
+    def md5_of(local: str):
+        if not os.path.exists(local):
+            missing.append(local)
+            return None
+        with open(local, "rb") as f:
+            return hashlib.md5(f.read()).hexdigest()
+
+    if isinstance(tvbox.get("spider"), str) and spider_origin:
+        key = f"{spider_origin[0]}|{tvbox['spider'].split(';md5;')[0] if is_file_ref(tvbox['spider'].split(';md5;')[0]) else tvbox['spider']}"
+        # spider 的 url 已在 entries 里以 (origin, base) 生成，直接按 url 查
+        sk = None
+        for e in entries:
+            if e[2] == spider_origin[0] and e[0] == "jar":
+                sk = ok_map.get(f"{e[2]}|{e[1]}")
+                if sk:
+                    break
+        if sk:
+            md5v = md5_of(sk["local"])
+            if md5v:
+                tvbox["spider"] = f"./{sk['local']};md5;{md5v}"
+                stats["spider"] = 1
+
+    for s in tvbox.get("sites", []):
+        origin = site_origin.get(s.get("key"))
+        if not origin:
+            continue
+        for field in ("jar", "ext"):
+            v = s.get(field)
+            vals = []
+            if isinstance(v, str):
+                vals = [(field, None, v)]
+            elif isinstance(v, dict):
+                vals = [(field, k2, v2) for k2, v2 in v.items() if isinstance(v2, str)]
+            for f0, k2, raw in vals:
+                r = is_file_ref(raw)
+                if not r:
+                    continue
+                base = UPSTREAM_BASES.get(origin, "")
+                url = urllib.parse.urljoin(base, r[1]) if r[0] == "rel" else r[1]
+                rec = ok_map.get(f"{origin}|{url}")
+                if not rec:
+                    stats["kept"] += 1
+                    continue
+                md5v = md5_of(rec["local"])
+                if md5v is None:
+                    stats["kept"] += 1
+                    continue
+                if f0 == "jar":
+                    had = ";md5;" in raw
+                    new = f"./{rec['local']};md5;{md5v}" if had else f"./{rec['local']}"
+                    if k2 is None:
+                        s[f0] = new
+                    else:
+                        s[f0][k2] = new
+                else:
+                    new = f"./{rec['local']}"
+                    if k2 is None:
+                        s[f0] = new
+                    else:
+                        s[f0][k2] = new
+                stats["rewritten"] += 1
+    if missing:
+        print(f"  [deps] WARN 缺失本地文件 {len(missing)} 个，如 {missing[:3]}", flush=True)
+
+    # ---- 5. 更新 manifest ----
+    for rec in ok_map.values():
+        manifest[rec["key"]] = {"url": rec["url"], "origin": rec["origin"], "local": rec["local"],
+                                "md5": rec["md5"], "kind": rec["kind"], "size": rec["size"],
+                                "channel": rec.get("channel", ""), "updated_at": now}
+    os.makedirs(DEPS_DIR, exist_ok=True)
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=1)
+    print(f"[deps] 完成：收集 {stats['collected']}/{stats['total']}，改写 {stats['rewritten']} 处引用，"
+          f"spider {'已修复' if stats['spider'] else '未变'}", flush=True)
+    return stats
+
 
 def strip_comments_and_clean(text: str) -> str:
     """去 BOM、去行注释与块注释（状态机，不误伤字符串内双斜杠）、去尾随逗号。"""
@@ -589,6 +896,8 @@ def main() -> int:
     interfaces = []          # 每条上游的测试记录（list.json，保持原字段）
     checks = []              # P1 校验状态记录（checks.json）
     merged: dict = {}        # 全局字段
+    spider_origin_info = None
+    site_origin_name: dict = {}   # site key -> 来源上游名
     sites_by_key: dict = {}
     lives_by_name: dict = {}
     parses_by_name: dict = {}
@@ -663,6 +972,7 @@ def main() -> int:
                 k = merge_key_site(s)
                 if k and k not in sites_by_key:
                     sites_by_key[k] = rewrite_gh(s)
+                    site_origin_name[k] = name
                     added_s += 1
             for l in cfg_lives:
                 k = merge_key_live(l)
@@ -683,6 +993,8 @@ def main() -> int:
             for gk in ("spider", "wallpaper"):
                 if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
                     merged[gk] = rewrite_gh(cfg[gk])
+                    if gk == "spider":
+                        spider_origin_info = (name, url.rsplit("/", 1)[0] + "/")
             print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
                   f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p}) "
                   f"{rec['bytes']}B #{rec['sha256']}", flush=True)
@@ -724,7 +1036,7 @@ def main() -> int:
                 pass
         return False
 
-    to_test = [s for s in sites if testable(s)]
+    to_test = [] if SKIP_SITE_TEST else [s for s in sites if testable(s)]
     limit = int(os.environ.get("SITE_LIMIT", "0"))
     if limit > 0:
         to_test = to_test[:limit]
@@ -799,6 +1111,7 @@ def main() -> int:
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    dep_stats = collect_and_rewrite_deps(tvbox, site_origin_name, spider_origin_info)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
     with open("list.json", "w", encoding="utf-8") as f:
@@ -842,6 +1155,9 @@ def main() -> int:
             "sites_untested": len(sites) - len(to_test),
             "lives": len(lives),
             "parses": len(parses),
+            "deps_total": dep_stats["total"],
+            "deps_collected": dep_stats["collected"],
+            "deps_rewritten": dep_stats["rewritten"],
         },
         "upstreams_health": {
             "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
