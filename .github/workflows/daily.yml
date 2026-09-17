@@ -35,7 +35,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tvbox.json vod.json live.json list.json status.json checks.json README.md \
+          git add tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json README.md \
                   lives/ state/ snapshot/ candidate_upstreams.json
           if git diff --cached --quiet; then
             echo "本轮无变更，跳过提交"
@@ -50,13 +50,13 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           FILES=""
-          for f in tvbox.json vod.json live.json list.json status.json checks.json \
+          for f in tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json \
                    lives/live.txt lives/live_cctv.txt lives/live_weishi.txt \
                    lives/live_gangtai.txt lives/live_other.txt; do
             [ -f "$f" ] && FILES="$FILES $f"
           done
           NOTES="自动发布于 $(date -u '+%Y-%m-%d %H:%M UTC')。
-          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、lives/*（央视/卫视/港台分类直播）、checks.json（上游校验状态）。
+          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、short.json（短剧独立配置）、adult.json（成人独立配置）、lives/*（央视/卫视/港台分类直播）、checks.json（上游校验状态）。
           固定引用本 Release：https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json"
           if gh release view latest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload latest $FILES -R "$GITHUB_REPOSITORY" --clobber

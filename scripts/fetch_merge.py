@@ -121,9 +121,68 @@ LIVE_UPSTREAMS = [
      "url": "https://github.com/Guovin/iptv-api/releases/download/playlist-latest/result.m3u"},
 ]
 
-ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS
+# 试探性短剧/成人专项上游：失败/降级均不影响主流程（自动黑名单保护）
+# 2026-09-18 实测 GitHub 搜索后，仅找到 duanju_juhe.js（猫/河马/星芽/牛牛 聚合）的 js 源片段
+# 与若干订阅链接列表（非 json 配置），故此处仅尝试 jsm.json 系仓库下可能存在的
+# duanju/duoduo 类 tvbox 配置分支。命中则纳入 short.json；否则被自动停用。
+SHORTS_ADULT_UPSTREAMS = [
+    {"name": "qist/duanju", "kind": "tvbox", "category": "short",
+     "url": "https://raw.githubusercontent.com/qist/tvbox/master/duanju.json"},
+    {"name": "qist/duoduo", "kind": "tvbox", "category": "short",
+     "url": "https://raw.githubusercontent.com/qist/tvbox/master/duoduo.json"},
+    {"name": "qist/wogg", "kind": "tvbox", "category": "adult",
+     "url": "https://raw.githubusercontent.com/qist/tvbox/master/wogg.json"},
+    {"name": "gao/duanju", "kind": "tvbox", "category": "short",
+     "url": "https://raw.githubusercontent.com/gaotianliuyun/gao/master/duanju.json"},
+    {"name": "nxppru/duanju", "kind": "tvbox", "category": "short",
+     "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/duanju.json"},
+    {"name": "cluntop/duanju", "kind": "tvbox", "category": "short",
+     "url": "https://raw.githubusercontent.com/cluntop/tvbox/main/duanju.json"},
+]
 
-UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in UPSTREAMS if u.get("kind") == "tvbox"}
+ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT_UPSTREAMS
+
+UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAMS + SHORTS_ADULT_UPSTREAMS) if u.get("kind") == "tvbox"}
+
+
+# ==================== 短剧/成人分类（独立收录 short.json / adult.json） ====================
+# 关键词来源：现有 tvbox.json 22 条短剧站点 + 39 条成人站点的 name/key/api 关键字汇总（2026-09-18 扫描）
+# 命中规则：name 或 key 含任一关键词则归入；name/key 均不命中时扫描 api 主机/路径作为兜底
+SHORT_KEYWORDS = [
+    "短剧", "微短剧", "短剧场",   # 中文
+    "duanju", "duanjucat", "duanjumao", "shortplay", "short_play",  # 拼音/英文
+    "七猫", "河马", "围观", "好看", "星芽", "果果", "红果", "黄果", "黄豆",
+    "锦鲤", "偷乐", "上头", "聚合短剧",
+]
+ADULT_KEYWORDS = [
+    "成人", "18+", "porn", "麻豆", "果冻", "天美", "精东", "色播", "传媒",
+    "花活", "丝袜", "美腿", "hsck", "91", "jav", "1024",
+    "色花糖", "非凡", "量子", "蓝鹰", "木偶", "盘Ta", "panta",
+    "PikPak", "磁力", "玩偶", "朱古力", "Missav", "missav",
+    "半日", "Xojav", "JavBus", "JavDb",
+]
+
+
+def classify_site(s) -> str:
+    """返回 'short' / 'adult' / 'vod'。短剧与成人为独立收录分类，其余保持 vod。"""
+    if not isinstance(s, dict):
+        return "vod"
+    name = s.get("name") or ""
+    key = s.get("key") or ""
+    api = s.get("api") or ""
+    ext = s.get("ext")
+    ext_str = ""
+    if isinstance(ext, str):
+        ext_str = ext
+    elif isinstance(ext, dict):
+        ext_str = json.dumps(ext, ensure_ascii=False)
+    target = f"{name} {key} {api} {ext_str}".lower()
+    # 优先短剧匹配（避免成人站点关键词误吞）
+    if any(kw.lower() in target for kw in SHORT_KEYWORDS):
+        return "short"
+    if any(kw.lower() in target for kw in ADULT_KEYWORDS):
+        return "adult"
+    return "vod"
 
 
 # ==================== 依赖收集（jar / js / json 库文件） ====================
@@ -1166,7 +1225,28 @@ def main() -> int:
         json.dump(vod, f, ensure_ascii=False, indent=1)
     with open("live.json", "w", encoding="utf-8") as f:
         json.dump(live, f, ensure_ascii=False, indent=1)
+
+    # ---- 拆分产物：short.json（短剧）+ adult.json（成人），独立收录不剥离 vod ----
+    # vod.json 保持完整（含所有点播站点）；short/adult 为分类独立配置。
+    # parses 复用 vod 全集：TVBox 站点不引用 parses（playUrl/jar 才是站点自有播放方式），
+    # parses 是全局播放器池，单独配置需自带全集才不至于某些解析器不可用。
+    short_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "short"]
+    adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "adult"]
+    short_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
+    short_doc["sites"] = short_sites
+    if not short_doc.get("spider"):
+        short_doc.pop("spider", None)
+    adult_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
+    adult_doc["sites"] = adult_sites
+    if not adult_doc.get("spider"):
+        adult_doc.pop("spider", None)
+    with open("short.json", "w", encoding="utf-8") as f:
+        json.dump(short_doc, f, ensure_ascii=False, indent=1)
+    with open("adult.json", "w", encoding="utf-8") as f:
+        json.dump(adult_doc, f, ensure_ascii=False, indent=1)
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
+          f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
+          f" / adult.json（{len(adult_sites)} sites + {len(parses)} parses）"
           f" / live.json（{len(live['lives'])} 条直播源）/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
@@ -1186,7 +1266,8 @@ def main() -> int:
 
     # ---- status.json（增强：上游健康度 + 产物指纹） ----
     products = {}
-    for p in ("tvbox.json", "vod.json", "live.json", "list.json", "status.json", CHECKS_FILE,
+    for p in ("tvbox.json", "vod.json", "live.json", "short.json", "adult.json",
+              "list.json", "status.json", CHECKS_FILE,
               os.path.join(LIVES_DIR, "live.txt"), os.path.join(LIVES_DIR, "live_cctv.txt"),
               os.path.join(LIVES_DIR, "live_weishi.txt"), os.path.join(LIVES_DIR, "live_gangtai.txt"),
               os.path.join(LIVES_DIR, "live_other.txt")):
@@ -1204,6 +1285,8 @@ def main() -> int:
             "interfaces_dead": sum(1 for r in interfaces if r["kind"] == "tvbox" and r["grade"] == "不可用"),
             "sites_total": len(sites),
             "sites_kept": len(kept_sites),
+            "sites_short": len(short_sites),
+            "sites_adult": len(adult_sites),
             "sites_tested": len(to_test),
             "sites_tested_pass": tested_pass,
             "sites_removed": len(removed),
@@ -1235,7 +1318,7 @@ def main() -> int:
     with open("status.json", "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=1)
 
-    print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
+    print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / short.json / adult.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
           flush=True)
     return 0
 
