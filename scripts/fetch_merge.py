@@ -111,6 +111,15 @@ UPSTREAMS = [
     {"name": "nxppru/0826", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0826.json"},
     {"name": "nxppru/0827", "kind": "tvbox", "url": "https://raw.githubusercontent.com/nxppru/tvbox/master/0827.json"},
     {"name": "top98", "kind": "tvbox", "url": "http://home.jundie.top:81/top98.json"},
+    # ---- 2026-09-19 接K20260729 清单验活后新增（实测报告：飞书云文档 WinbdkIMEoGWfNxVTrVcqtpGnxs）----
+    # 王二小 kstore：96 sites（spider 2026-09-17 版），直连 152ms；容灾备选 http://tv.999888987.xyz/（63 sites 旧版）暂不收
+    {"name": "wex/newwex", "kind": "tvbox", "url": "https://9280.kstore.vip/newwex.json"},
+    # PG：74 sites / 29 lives；spider 为相对路径 ./pg.jar，依赖同源 jar（依赖收集失败时走自动黑名单）
+    {"name": "pg/jsm", "kind": "tvbox", "url": "https://www.252035.xyz/p/jsm.json"},
+    # 肥猫：39 sites；必须用 /tv 路径（根路径 / 为损坏配置）；IDN 域名已转 punycode 供 urllib 直连
+    {"name": "fatcat/tv", "kind": "tvbox", "url": "http://xn--z7x900a.net/tv"},
+    # 老刘备：234 sites（容错解析通过）；ghproxy.net 为单点依赖，失效时会被自动停用
+    {"name": "liu673cn/m", "kind": "tvbox", "url": "https://ghproxy.net/https://raw.githubusercontent.com/liu673cn/box/main/m.json"},
 ]
 
 # P0：直播源上游（Guovin/iptv-api 双通道产物，2026-09-17 实测 200 且为社区公共上游）
