@@ -903,6 +903,64 @@ def speed_test(entries, limit: int) -> dict:
     return lat
 
 
+# ---------------- P0：本地相对路径依赖核验（防死引用写入配置） ----------------
+
+LOCAL_REF_RE = re.compile(r"\./[A-Za-z0-9_\-.\/\u4e00-\u9fff%]+")
+
+
+def _collect_local_refs(entry) -> list:
+    """从站点条目收集 ./ 开头的本地相对路径引用（api/jar/ext 及 ext dict 值）。
+
+    ext 可能是 $$$ 组合串（csp_XBPQ 系：本地路径$$$目标URL$$$参数...），需分段后逐段识别，
+    不能把整串当一个本地路径。
+    """
+    refs: list = []
+
+    def scan(v: str):
+        for seg in v.split("$$$"):
+            seg = seg.strip()
+            if seg.startswith("./"):
+                refs.append(seg)
+            else:
+                refs.extend(m.group(0) for m in LOCAL_REF_RE.finditer(seg))
+
+    if not isinstance(entry, dict):
+        return refs
+    for field in ("api", "jar", "ext"):
+        v = entry.get(field)
+        if isinstance(v, str):
+            scan(v)
+        elif isinstance(v, dict):
+            for v2 in v.values():
+                if isinstance(v2, str):
+                    scan(v2)
+    return sorted(set(r[2:] for r in refs if r.startswith("./")))
+
+
+def _missing_local_refs(entry, repo_dir: str) -> list:
+    return [p for p in _collect_local_refs(entry)
+            if not os.path.isfile(os.path.join(repo_dir, p))]
+
+
+def filter_local_ref_sites(sites: list, repo_dir: str, target: str, registry: dict) -> list:
+    """写入配置前核验站点 ./ 本地依赖在仓库中真实存在；缺失则剔除该站点并登记到 registry。
+
+    registry 由调用方写入 status.json 的 local_ref_audit，防止每日拉取把死引用写回配置。
+    """
+    kept, drops = [], []
+    for s in sites:
+        missing = _missing_local_refs(s, repo_dir)
+        if missing:
+            drops.append({"key": s.get("key"), "name": s.get("name"), "missing": missing})
+        else:
+            kept.append(s)
+    if drops:
+        registry[target] = drops
+        print(f"    [local-ref] {target}: 剔除 {len(drops)} 个死引用站点: "
+              + ", ".join((d["key"] or "?") for d in drops), flush=True)
+    return kept
+
+
 def build_live_outputs(entries) -> dict:
     """分类 →（可选测速排序）→ 每频道取前 N 条 → 输出 lives/*.txt。返回分类统计 dict。"""
     os.makedirs(LIVES_DIR, exist_ok=True)
@@ -1329,6 +1387,16 @@ def main() -> int:
     # parses 是全局播放器池，单独配置需自带全集才不至于某些解析器不可用。
     short_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "short"]
     adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "adult"]
+    # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
+    # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
+    local_ref_audit: dict = {}
+    _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, repo_dir)}
+                  for s in (vod.get("sites") or []) if _missing_local_refs(s, repo_dir)]
+    if _vod_drops:
+        local_ref_audit["vod.json(仅记录)"] = _vod_drops
+        print(f"    [local-ref] vod.json: 审计发现 {len(_vod_drops)} 个死引用站点（仅记录不剔除）", flush=True)
+    short_sites = filter_local_ref_sites(short_sites, repo_dir, "short.json", local_ref_audit)
+    adult_sites = filter_local_ref_sites(adult_sites, repo_dir, "adult.json", local_ref_audit)
     short_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
     short_doc["sites"] = short_sites
     if not short_doc.get("spider"):
@@ -1405,6 +1473,10 @@ def main() -> int:
             "snapshot_pruned": pruned,
         },
         "lives_by_category": live_stats,
+        "local_ref_audit": {
+            "note": "写入前核验站点 ./ 本地依赖；short/adult 死引用站点已剔除，vod 仅记录",
+            "dropped": local_ref_audit,
+        },
         "products": {"note": "产物 sha256 指纹（前 12 位）与字节数", "items": products},
         "interfaces": interfaces,
         "removed_sites": removed,
