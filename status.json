@@ -1,24 +1,24 @@
 {
- "generated_at": "2026-09-18 22:02:25 +08:00",
+ "generated_at": "2026-09-19 07:24:11 +08:00",
  "summary": {
-  "interfaces_total": 45,
-  "interfaces_usable": 36,
-  "interfaces_full": 34,
+  "interfaces_total": 49,
+  "interfaces_usable": 40,
+  "interfaces_full": 38,
   "interfaces_partial": 2,
   "interfaces_dead": 7,
-  "sites_total": 1023,
-  "sites_kept": 990,
-  "sites_short": 17,
+  "sites_total": 1312,
+  "sites_kept": 1270,
+  "sites_short": 24,
   "sites_adult": 35,
-  "sites_tested": 199,
-  "sites_tested_pass": 166,
-  "sites_removed": 33,
-  "sites_untested": 824,
-  "lives": 135,
-  "parses": 83,
-  "deps_total": 398,
-  "deps_collected": 369,
-  "deps_rewritten": 469
+  "sites_tested": 212,
+  "sites_tested_pass": 170,
+  "sites_removed": 42,
+  "sites_untested": 1100,
+  "lives": 143,
+  "parses": 101,
+  "deps_total": 530,
+  "deps_collected": 486,
+  "deps_rewritten": 675
  },
  "upstreams_health": {
   "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
@@ -27,38 +27,38 @@
    "min_bytes_tvbox": 512,
    "min_bytes_m3u": 1024
   },
-  "total": 45,
-  "ok": 38,
+  "total": 49,
+  "ok": 42,
   "degraded": 0,
   "dead": 0,
   "disabled": 7,
   "blacklisted": 0,
   "disabled_now": [],
-  "snapshot_files": 38,
+  "snapshot_files": 42,
   "snapshot_pruned": []
  },
  "lives_by_category": {
   "cctv": {
-   "channels": 33,
-   "urls": 93,
+   "channels": 32,
+   "urls": 92,
    "input_urls": 194,
    "speed_tested": true
   },
   "weishi": {
-   "channels": 41,
-   "urls": 115,
+   "channels": 40,
+   "urls": 112,
    "input_urls": 246,
    "speed_tested": true
   },
   "gangtai": {
-   "channels": 9,
-   "urls": 21,
+   "channels": 8,
+   "urls": 20,
    "input_urls": 42,
    "speed_tested": true
   },
   "other": {
-   "channels": 197,
-   "urls": 270,
+   "channels": 189,
+   "urls": 255,
    "input_urls": 906,
    "speed_tested": true
   }
@@ -376,20 +376,6 @@
      ]
     },
     {
-     "key": "apple",
-     "name": "apple[js]",
-     "missing": [
-      "js/apple.js"
-     ]
-    },
-    {
-     "key": "金牌影院",
-     "name": "金牌[js]",
-     "missing": [
-      "js/金牌影视.js"
-     ]
-    },
-    {
      "key": "py_maple",
      "name": "枫叶[py]",
      "missing": [
@@ -415,6 +401,20 @@
      "name": "瓜子[py]",
      "missing": [
       "py/guazi.py"
+     ]
+    },
+    {
+     "key": "py_pianku4k",
+     "name": "片库[py]",
+     "missing": [
+      "py/pianku4k.py"
+     ]
+    },
+    {
+     "key": "py_huavod",
+     "name": "华视[py]",
+     "missing": [
+      "py/huavod.py"
      ]
     },
     {
@@ -520,6 +520,20 @@
      "name": "剧OK[py]",
      "missing": [
       "py/juok3.py"
+     ]
+    },
+    {
+     "key": "apple",
+     "name": "apple[js]",
+     "missing": [
+      "js/apple.js"
+     ]
+    },
+    {
+     "key": "金牌影院",
+     "name": "金牌[js]",
+     "missing": [
+      "js/金牌影视.js"
      ]
     },
     {
@@ -808,6 +822,372 @@
      "missing": [
       "py/yt_clun.py"
      ]
+    },
+    {
+     "key": "FourKFox",
+     "name": "4KFox|网盘|磁力",
+     "missing": [
+      "lib/4kfox.txt",
+      "lib/tokenm.json"
+     ]
+    },
+    {
+     "key": "FourKFM",
+     "name": "4K影库|网盘|磁力",
+     "missing": [
+      "lib/4kfm.txt",
+      "lib/tokenm.json"
+     ]
+    },
+    {
+     "key": "Hmxz",
+     "name": "海绵|网盘",
+     "missing": [
+      "lib/hmxz.txt",
+      "lib/tokenm.json"
+     ]
+    },
+    {
+     "key": "Leijing",
+     "name": "雷鲸|网盘",
+     "missing": [
+      "lib/leijing.txt",
+      "lib/tokenm.json"
+     ]
+    },
+    {
+     "key": "儿童",
+     "name": "📚┃儿童┃启蒙",
+     "missing": [
+      "api/drpy2.min.js",
+      "js/兔小贝.js"
+     ]
+    },
+    {
+     "key": "csp_XYQBiu_斗鱼",
+     "name": "🐟┃斗鱼┃直播",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "云播影视",
+     "name": "☁️┃云播┃影视",
+     "missing": [
+      "lib/TVB云播.js",
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "虎虎1",
+     "name": "🐯┃虎虎┃影视",
+     "missing": [
+      "lib/虎虎.json"
+     ]
+    },
+    {
+     "key": "csp_兄弟",
+     "name": "💢┃兄弟┃影视",
+     "missing": [
+      "libs/hccx/兄弟.json"
+     ]
+    },
+    {
+     "key": "聚短视频js",
+     "name": "📽️聚短┃视频",
+     "missing": [
+      "lib/短视频.js"
+     ]
+    },
+    {
+     "key": "drpy_js_lf_p2p",
+     "name": "💣┃磁力p2p┃搜索",
+     "missing": [
+      "libs/js/lf_p2p1_min.js"
+     ]
+    },
+    {
+     "key": "圣城影视",
+     "name": "🏰┃圣城┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "爱看影视",
+     "name": "❤┃爱看┃蓝光",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_007",
+     "name": "🕵‍┃特工┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_低端",
+     "name": "🔥┃低端┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "奇优",
+     "name": " 🍩┃奇优┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "nangua",
+     "name": "🎃┃南瓜┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_骚火电影",
+     "name": "🔥┃骚火┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_荐片",
+     "name": "⏳┃荐片┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_Lib",
+     "name": "🍲┃Lib┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_czsapp",
+     "name": "🏭️┃厂长┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_大师兄",
+     "name": "🐵┃师兄┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_电影先生",
+     "name": "🤵┃电影┃先生",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_Xinsj",
+     "name": "🐠┃视觉┃影院",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_农民",
+     "name": "👨‍🌾┃农民┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_bzys",
+     "name": "🌋┃B站┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_555",
+     "name": "🌟┃三五┃影视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_iqiyi",
+     "name": "🥝┃爱奇异(官)",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_youku",
+     "name": "🥔┃优酷(官)",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_qq",
+     "name": "🐧┃腾讯(官)",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_mgtv",
+     "name": "🥭┃芒果(官)",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_搜狗",
+     "name": "🚛┃搜狗(官)",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_360影视",
+     "name": "📺┃360(官) ",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_奇珍异兽",
+     "name": "🦍┃奇珍┃异兽",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_腾云驾雾",
+     "name": "☁️┃腾云┃驾雾",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "dr_百忙无果",
+     "name": "🍋┃百忙┃无果",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "csp_玖摇",
+     "name": "🅱️┃4K┃剧院",
+     "missing": [
+      "libs/hccx/4k剧院.json"
+     ]
+    },
+    {
+     "key": "js_4KHDR",
+     "name": "🧲世界磁力┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_6V",
+     "name": "✡️六维磁力┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_磁力熊",
+     "name": "🐻‍贝尔磁力┃Js",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_酷吧",
+     "name": "😎酷吧磁力┃Js",
+     "missing": [
+      "lib/dr/kuba.js",
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "csp_qiumi",
+     "name": "⚽ Jrs┃球迷",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "csp_310直播",
+     "name": "⚽310┃看球",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "酷奇js",
+     "name": "🎤酷奇┃MV",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_武享吧",
+     "name": "🥎┃格斗┃直播",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_a8音乐",
+     "name": "🎸┃奥迪┃音乐",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "csp_聚短视频",
+     "name": "📽️聚短┃视频",
+     "missing": [
+      "libs/js/drpy2.min.js",
+      "libs/js/短视频.js"
+     ]
+    },
+    {
+     "key": "dr_童趣",
+     "name": "🧗‍┃童趣┃播视",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "js_B站精简",
+     "name": "🅱️┃哔哩┃精简",
+     "missing": [
+      "libs/js/drpy2.min.js"
+     ]
+    },
+    {
+     "key": "csp_Bili_meishi",
+     "name": "🅱️┃美食┃合集",
+     "missing": [
+      "libs/hccx/美食合集.json"
+     ]
+    },
+    {
+     "key": "js_哔哩直播",
+     "name": "🅱️┃哔哩┃直播",
+     "missing": [
+      "libs/js/drpy2.min.js",
+      "libs/哔哩直播.js"
+     ]
     }
    ],
    "short.json": [
@@ -860,56 +1240,56 @@
   "note": "产物 sha256 指纹（前 12 位）与字节数",
   "items": {
    "tvbox.json": {
-    "bytes": 301897,
-    "sha256": "f7547456cfa2"
+    "bytes": 386794,
+    "sha256": "2d9f92181ca8"
    },
    "vod.json": {
-    "bytes": 265888,
-    "sha256": "a7d76b4d1bfb"
+    "bytes": 348682,
+    "sha256": "e815037c484d"
    },
    "live.json": {
-    "bytes": 18897,
-    "sha256": "079ca24256f0"
+    "bytes": 19149,
+    "sha256": "43e6a2f79505"
    },
    "short.json": {
-    "bytes": 25902,
-    "sha256": "c11bad03f9fd"
+    "bytes": 33791,
+    "sha256": "9a4fee200ae1"
    },
    "adult.json": {
-    "bytes": 42304,
-    "sha256": "785ab2a0765e"
+    "bytes": 48129,
+    "sha256": "41e9a5da7d4b"
    },
    "list.json": {
-    "bytes": 19360,
-    "sha256": "08f7cc07983e"
+    "bytes": 21026,
+    "sha256": "e354d397841c"
    },
    "status.json": {
-    "bytes": 43550,
-    "sha256": "5aae57302eb6"
+    "bytes": 43756,
+    "sha256": "f1c1fe254e79"
    },
    "checks.json": {
-    "bytes": 20590,
-    "sha256": "e314093ca8f6"
+    "bytes": 22336,
+    "sha256": "b3a2c2419d86"
    },
    "lives/live.txt": {
-    "bytes": 34550,
-    "sha256": "5dd246e75846"
+    "bytes": 33961,
+    "sha256": "d837b5cce38d"
    },
    "lives/live_cctv.txt": {
-    "bytes": 5615,
-    "sha256": "2472e4bbda99"
+    "bytes": 5874,
+    "sha256": "cf2372df36e0"
    },
    "lives/live_weishi.txt": {
-    "bytes": 7139,
-    "sha256": "142cc2a41f72"
+    "bytes": 8063,
+    "sha256": "54c4d9822181"
    },
    "lives/live_gangtai.txt": {
-    "bytes": 1237,
-    "sha256": "1a42b24f4081"
+    "bytes": 1101,
+    "sha256": "441eb203099c"
    },
    "lives/live_other.txt": {
-    "bytes": 20559,
-    "sha256": "0d6b33e5b5ea"
+    "bytes": 18923,
+    "sha256": "83d4caa936cc"
    }
   }
  },
@@ -932,7 +1312,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/jsm",
@@ -952,7 +1332,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/js",
@@ -972,7 +1352,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/dianshi",
@@ -992,7 +1372,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/fty",
@@ -1012,7 +1392,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/XYQ",
@@ -1032,7 +1412,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/0821",
@@ -1052,7 +1432,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/0825",
@@ -1072,7 +1452,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/0826",
@@ -1092,7 +1472,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/0827",
@@ -1112,7 +1492,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/367",
@@ -1132,7 +1512,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/9918",
@@ -1152,7 +1532,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "qist/99188",
@@ -1172,7 +1552,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/js",
@@ -1192,7 +1572,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/XYQ",
@@ -1212,7 +1592,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/0821",
@@ -1232,7 +1612,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/0825",
@@ -1252,7 +1632,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/0826",
@@ -1272,7 +1652,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "gao/0827",
@@ -1292,7 +1672,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/jsm",
@@ -1300,19 +1680,19 @@
    "kind": "tvbox",
    "http_ms": 0,
    "channel": "direct",
-   "bytes": 38829,
-   "sha256": "c843b53c4826",
+   "bytes": 39195,
+   "sha256": "536f05f30f9f",
    "sites": 76,
-   "lives": 33,
+   "lives": 34,
    "parses": 0,
    "merged_sites": 23,
-   "merged_lives": 32,
+   "merged_lives": 33,
    "merged_parses": 0,
    "grade": "完全可用",
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/box",
@@ -1320,19 +1700,19 @@
    "kind": "tvbox",
    "http_ms": 0,
    "channel": "direct",
-   "bytes": 33826,
-   "sha256": "85f9e3b32dde",
-   "sites": 82,
+   "bytes": 37191,
+   "sha256": "8bd8e97001a0",
+   "sites": 84,
    "lives": 16,
-   "parses": 11,
-   "merged_sites": 70,
+   "parses": 21,
+   "merged_sites": 72,
    "merged_lives": 12,
-   "merged_parses": 8,
+   "merged_parses": 11,
    "grade": "完全可用",
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/fun",
@@ -1352,7 +1732,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/aa",
@@ -1372,7 +1752,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/bb",
@@ -1392,7 +1772,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/wv",
@@ -1412,7 +1792,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "cluntop/yt",
@@ -1452,7 +1832,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/jsm",
@@ -1472,7 +1852,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/js",
@@ -1492,7 +1872,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/dianshi",
@@ -1512,7 +1892,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/fty",
@@ -1532,7 +1912,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/XYQ",
@@ -1552,7 +1932,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/0821",
@@ -1572,7 +1952,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/0825",
@@ -1592,7 +1972,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/0826",
@@ -1612,7 +1992,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "nxppru/0827",
@@ -1632,7 +2012,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
   },
   {
    "name": "top98",
@@ -1652,7 +2032,87 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:13"
+  },
+  {
+   "name": "wex/newwex",
+   "url": "https://9280.kstore.vip/newwex.json",
+   "kind": "tvbox",
+   "http_ms": 0,
+   "channel": "direct",
+   "bytes": 33812,
+   "sha256": "ad206e1624f1",
+   "sites": 96,
+   "lives": 2,
+   "parses": 4,
+   "merged_sites": 88,
+   "merged_lives": 0,
+   "merged_parses": 4,
+   "grade": "完全可用",
+   "error": "",
+   "status": "ok",
+   "fail_count": 0,
+   "last_ok_at": "2026-09-19 07:24:13"
+  },
+  {
+   "name": "pg/jsm",
+   "url": "https://www.252035.xyz/p/jsm.json",
+   "kind": "tvbox",
+   "http_ms": 0,
+   "channel": "direct",
+   "bytes": 34366,
+   "sha256": "aca21bfad0bf",
+   "sites": 74,
+   "lives": 28,
+   "parses": 0,
+   "merged_sites": 5,
+   "merged_lives": 3,
+   "merged_parses": 0,
+   "grade": "完全可用",
+   "error": "",
+   "status": "ok",
+   "fail_count": 0,
+   "last_ok_at": "2026-09-19 07:24:14"
+  },
+  {
+   "name": "fatcat/tv",
+   "url": "http://xn--z7x900a.net/tv",
+   "kind": "tvbox",
+   "http_ms": 0,
+   "channel": "direct",
+   "bytes": 16274,
+   "sha256": "df88abef0151",
+   "sites": 39,
+   "lives": 2,
+   "parses": 4,
+   "merged_sites": 27,
+   "merged_lives": 1,
+   "merged_parses": 2,
+   "grade": "完全可用",
+   "error": "",
+   "status": "ok",
+   "fail_count": 0,
+   "last_ok_at": "2026-09-19 07:24:14"
+  },
+  {
+   "name": "liu673cn/m",
+   "url": "https://ghproxy.net/https://raw.githubusercontent.com/liu673cn/box/main/m.json",
+   "kind": "tvbox",
+   "http_ms": 0,
+   "channel": "direct",
+   "bytes": 57874,
+   "sha256": "784d1e374385",
+   "sites": 234,
+   "lives": 3,
+   "parses": 27,
+   "merged_sites": 167,
+   "merged_lives": 3,
+   "merged_parses": 9,
+   "grade": "完全可用",
+   "error": "",
+   "status": "ok",
+   "fail_count": 0,
+   "last_ok_at": "2026-09-19 07:24:14"
   },
   {
    "name": "guovin-gd-ipv4",
@@ -1672,7 +2132,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:14"
   },
   {
    "name": "guovin-release",
@@ -1692,7 +2152,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-18 22:02:27"
+   "last_ok_at": "2026-09-19 07:24:14"
   },
   {
    "name": "qist/duanju",
@@ -1835,6 +2295,12 @@
    "reason": "验活连续两次失败"
   },
   {
+   "key": "fbfa5eed414e1f6137f2496a68005ef5",
+   "name": "43-HG",
+   "api": "https://hong.hgyx.vip/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
    "key": "9d8b0f25e739dc88f3a9aa3ccd54b1a5",
    "name": "50-淘片",
    "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
@@ -1844,12 +2310,6 @@
    "key": "f333ebedb73901ca466a8ebc6aeab0da",
    "name": "52-淘片",
    "api": "https://taopianapi.com/cjapi/mc/vod/json/m3u8.html",
-   "reason": "验活连续两次失败"
-  },
-  {
-   "key": "请勿贩卖📚在线_采集集合",
-   "name": "请勿贩卖📚在线·采集集合",
-   "api": "http://zhangqun1818.serv00.net/cj/cjjh.php",
    "reason": "验活连续两次失败"
   },
   {
@@ -1892,6 +2352,12 @@
    "key": "乐视",
    "name": "乐视",
    "api": "https://leshiapi.com/api.php/provide/vod",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "jkunzy.com",
+   "name": "💕jkun(直连)",
+   "api": "https://jkunzyapi.com/api.php/provide/vod/?ac=list",
    "reason": "验活连续两次失败"
   },
   {
@@ -2013,6 +2479,54 @@
    "name": "523 | 采集",
    "api": "https://523zyw.me/inc/apijson_vod.php",
    "reason": "验活连续两次失败"
+  },
+  {
+   "key": "csp_小胡",
+   "name": "👒┃小胡┃资源┃",
+   "api": "http://c.小胡.icu/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "taopian",
+   "name": "🕹️淘片┃采集",
+   "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "49zy",
+   "name": "🦁┃四九┃资源",
+   "api": "https://49zy1.com/api.php/provide/vod/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "feisu",
+   "name": "🛰️飞速┃采集",
+   "api": "https://www.feisuzyapi.com/api.php/provide/vod/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "奇虎资源",
+   "name": "🐯┃奇虎┃采集",
+   "api": "https://caiji.qhzyapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "可可资源",
+   "name": "⛱┃可可┃采集",
+   "api": "https://kekezy1.com/api.php/provide/vod/?ac=list",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "暴风采集",
+   "name": "🌪️暴风影音",
+   "api": "https://app.bfzyapi.com/api.php/provide/vod/",
+   "reason": "验活连续两次失败"
+  },
+  {
+   "key": "MV_vod",
+   "name": "🎶明星┃MV",
+   "api": "https://mv.wogg.link/mv/vod",
+   "reason": "验活连续两次失败"
   }
  ],
  "top_interfaces": [
@@ -2031,6 +2545,12 @@
   {
    "name": "nxppru/js",
    "sites": 298,
+   "http_ms": 0,
+   "grade": "完全可用"
+  },
+  {
+   "name": "liu673cn/m",
+   "sites": 234,
    "http_ms": 0,
    "grade": "完全可用"
   },
@@ -2077,6 +2597,12 @@
    "grade": "完全可用"
   },
   {
+   "name": "wex/newwex",
+   "sites": 96,
+   "http_ms": 0,
+   "grade": "完全可用"
+  },
+  {
    "name": "qist/0821",
    "sites": 86,
    "http_ms": 0,
@@ -2091,18 +2617,6 @@
   {
    "name": "nxppru/0821",
    "sites": 86,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "cluntop/box",
-   "sites": 82,
-   "http_ms": 0,
-   "grade": "完全可用"
-  },
-  {
-   "name": "cluntop/fun",
-   "sites": 82,
    "http_ms": 0,
    "grade": "完全可用"
   }
