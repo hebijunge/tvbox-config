@@ -154,12 +154,83 @@ SHORT_KEYWORDS = [
     "七猫", "河马", "围观", "好看", "星芽", "果果", "红果", "黄果", "黄豆",
     "锦鲤", "偷乐", "上头", "聚合短剧",
 ]
+ADULT_LIVE_SOURCES = [
+    # fish2018/lib 成人直播/成人影片（每个都在 sandbox 实测过 http 200 + 至少一条流抽样通过）
+    ("18+合集",   "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/18+.txt",        10679),
+    ("live18",     "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/live18.txt",    8917),
+    ("pron",       "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/pron.m3u",         64),
+    ("国产传媒",   "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/几个传媒.txt",   3331),
+    ("成人传媒",   "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/成人传媒.txt",   2980),
+    ("成人电影",   "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/成人电影.txt",  14873),
+    ("18资源丰富", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/18资源丰富.txt", 5564),
+    ("花活",       "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/花活.txt",        2540),
+    ("天美传媒816", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/天美传媒816.txt", 23),
+    ("果冻传媒816", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/果冻传媒816.txt", 63),
+    ("精东影业816", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/精东影业816.txt", 24),
+    ("麻豆传媒816", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/麻豆传媒816.txt", 12),
+    ("星空传媒816", "https://ghproxy.net/https://raw.githubusercontent.com/fish2018/lib/main/txt/星空传媒816.txt", 46),
+]
+
+
+def build_curated_lives(repo_dir: str):
+    """产出 lives/live_verified.txt + 聚合精选 entry + 优质第三方 live entries + 成人 lives。
+    调用本函数后，写入 live.json / adult.json 时各取所需。"""
+    import os as _os
+    sys.path.insert(0, _os.path.join(repo_dir, "scripts"))
+    try:
+        import live_aggregate as _la  # noqa: WPS433
+        _la.main(repo=repo_dir, out_txt=_os.path.join("lives", "live_verified.txt"),
+                 out_json="live_channels.json")
+    except Exception as e:  # 单次聚合失败不影响主流程
+        print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
+
+    ver_txt_url = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt"
+    curated = [{
+        "name": "聚合·央视卫视港台精选",
+        "type": 1,
+        "url": ver_txt_url,
+        "ua": "TVBox",
+        "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+    }]
+
+    # 优质第三方直播源（来自本次会话 live_probe 实测 status=ok）
+    THIRD_PARTY_OK = {
+        "Guovin·央视": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
+        "Guovin·卫视": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_satellite.txt",
+        "Guovin·港台": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_hkmo_tw.txt",
+        "Guovin·其他": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
+        "Guovin·总集": "https://ghproxy.net/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
+        "YY·轮播":    "https://sub.ottiptv.cc/yylunbo.m3u",
+        "虎牙一起看":  "https://sub.ottiptv.cc/huyayqk.m3u",
+        "斗鱼一起看":  "https://sub.ottiptv.cc/douyuyqk.m3u",
+        "B站直播":     "https://sub.ottiptv.cc/bililive.m3u",
+        "咪咕歌手":    "https://mgtv.ottiptv.cc/mglist.m3u",
+    }
+    for nm, u in THIRD_PARTY_OK.items():
+        curated.append({"name": nm, "type": 1, "url": u})
+
+    adult_lives = []
+    for name, url, ch_count in ADULT_LIVE_SOURCES:
+        adult_lives.append({
+            "name": "成人·" + name,
+            "type": 1,
+            "url": url,
+            "group": "成人直播",
+            "channels": ch_count,
+        })
+    return curated, adult_lives
+
+
 ADULT_KEYWORDS = [
+    # 明确成人/色情关键词（收紧：去除通用资源站误匹配）
     "成人", "18+", "porn", "麻豆", "果冻", "天美", "精东", "色播", "传媒",
-    "花活", "丝袜", "美腿", "hsck", "91", "jav", "1024",
-    "色花糖", "非凡", "量子", "蓝鹰", "木偶", "盘Ta", "panta",
-    "PikPak", "磁力", "玩偶", "朱古力", "Missav", "missav",
-    "半日", "Xojav", "JavBus", "JavDb",
+    "花活", "丝袜", "美腿", "hsck", "jav", "1024", "91porn", "91md", "91panta", "91splt", "91bobo", "91精品",
+    "色花糖", "玩偶", "朱古力", "Missav", "missav",
+    "Xojav", "JavBus", "JavDb", "涩涩", "Websites",
+    # 扩张：常见成人站点标志词
+    "xvideos", "pornhub", "xhamster", "hdsemj", "tokyo-hot",
+    # 限定形容词（"敏感词"语义强）— 仅作为最后防线
+    "裸聊", "裸播", "黄播", "黄网", "瑟瑟情",
 ]
 
 
@@ -176,7 +247,9 @@ def classify_site(s) -> str:
         ext_str = ext
     elif isinstance(ext, dict):
         ext_str = json.dumps(ext, ensure_ascii=False)
-    target = f"{name} {key} {api} {ext_str}".lower()
+    # 跳过纯 MD5 key（上游用 32 位 hex 当 key，会与关键字如 "91"/"jav" 误撞）
+    key_use = "" if (len(key) == 32 and all(c in "0123456789abcdef" for c in key.lower())) else key
+    target = f"{name} {key_use} {api} {ext_str}".lower()
     # 优先短剧匹配（避免成人站点关键词误吞）
     if any(kw.lower() in target for kw in SHORT_KEYWORDS):
         return "short"
@@ -1212,15 +1285,39 @@ def main() -> int:
     # live.json = {"lives": [...]}，并确保汇总 lives/ 目录的分类文件条目（央视/卫视/港台/其他）。
     vod = {k: v for k, v in tvbox.items() if k != "lives"}
     live = {"lives": [l for l in lives if isinstance(l, dict) and l.get("name")]}
-    for key, label in CATEGORY_LABELS:
-        name = f"Guovin·{label}"
-        path = os.path.join(LIVES_DIR, f"live_{key}.txt")
-        if os.path.exists(path) and not any(l.get("name") == name for l in live["lives"]):
-            live["lives"].append({
-                "name": name, "type": 0,
-                "url": f"{REPO_RAW}/lives/live_{key}.txt",
-                "epg": "https://live.fanmingming.cn/e.xml",
+    # ---- 直播重构：以本次实测聚合为主入口（央视/卫视/港台分组 + 核心频道多线路）----
+    repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    curated_lives, adult_lives = build_curated_lives(repo_dir)
+    # 1. 移除 live.json 里已知不可用的相对路径 / 本地代理条目；保留其余第三方作为备用
+    _REJECT_PREFIX = ("http://127.0.0.1", "http://localhost", "http://0.0.0.0")
+    _ALLOWED_SCHEME = ("http://", "https://")
+    cleaned = []
+    for l in live["lives"]:
+        u = (l.get("url") or "")
+        if not u:
+            continue
+        if not u.startswith(_ALLOWED_SCHEME):
+            continue
+        if any(u.startswith(p) for p in _REJECT_PREFIX):
+            continue
+        # 折叠双协议
+        while "https://https://" in u or "http://http://" in u:
+            u = u.replace("https://https://", "https://", 1)
+            u = u.replace("http://http://", "http://", 1)
+        l["url"] = u
+        # 成人主题 lives 一律下放到 adult.json
+        if any(k in (l.get("name") or "").lower() for k in ("传媒816", "18+", "成人", "pron", "live18")):
+            adult_lives.append({
+                "name": l.get("name"), "type": l.get("type", 1),
+                "url": l.get("url"), "group": "成人直播",
             })
+            continue
+        cleaned.append(l)
+    # 聚合精选 + 第三方实测 ok 在前；其余按名字升序保留
+    live["lives"] = curated_lives + sorted(
+        [l for l in cleaned if l not in curated_lives],
+        key=lambda x: (x.get("name") or "")
+    )
     with open("vod.json", "w", encoding="utf-8") as f:
         json.dump(vod, f, ensure_ascii=False, indent=1)
     with open("live.json", "w", encoding="utf-8") as f:
@@ -1237,6 +1334,7 @@ def main() -> int:
     if not short_doc.get("spider"):
         short_doc.pop("spider", None)
     adult_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
+    adult_doc["lives"] = adult_lives
     adult_doc["sites"] = adult_sites
     if not adult_doc.get("spider"):
         adult_doc.pop("spider", None)
@@ -1247,7 +1345,7 @@ def main() -> int:
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / adult.json（{len(adult_sites)} sites + {len(parses)} parses）"
-          f" / live.json（{len(live['lives'])} 条直播源）/ list.json", flush=True)
+          f" / live.json（{len(live['lives'])} 条直播源 / 其中聚合 1 条 + 第三方精选）/ adult.json lives（{len(adult_lives)} 条）/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)
