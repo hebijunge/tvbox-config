@@ -4,9 +4,10 @@
 TVBox 配置每日拉取合并脚本 v2（stdlib only，无第三方依赖）
 
 流程：拉取上游清单（一上游一适配器）→ 内容质量门槛（最小字节/行数 + sha256 指纹）
-      → 连续不过自动停用（黑白名单三层）→ 合并去重（按 key，先到先得不覆盖）
-      → 测速验活（type 0/1 直连站点）→ 失效自动剔除
-      → 直播源分类测速优选（央视/卫视/港台分组 txt）
+      → 连续不过自动停用（黑白名单三层）+ 停用上游低频探活回捞
+      → 合并去重（按 key 冲突时健康度仲裁 + api/ext 指纹二级去重 + 同内容镜像短路）
+      → 测速验活（type 0/1 直连站点）→ 连续 N 轮失败才剔除（站点验活历史记忆，通过自动回捞）
+      → 直播源分类测速优选（央视/卫视/港台分组 txt，测速全挂频道保底收录）
       → 快照存档（snapshot/<日期>/）→ 输出 tvbox.json / list.json / status.json / checks.json
       → README 可用性锚点回写
 
@@ -38,7 +39,10 @@ FETCH_TIMEOUT = 15          # 单次拉取超时（秒）
 TEST_TIMEOUT = 6            # 站点验活单次超时（秒）
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "20"))
 MAX_BODY = 4096             # 验活最多读取字节数
-GHPROXY = "https://ghproxy.net/"
+# O7 ghproxy 单点依赖缓解：拉取侧按镜像列表依次轮换；产出配置改写固定用主镜像（静态 JSON 无法做客户端容灾）
+GH_MIRRORS = [m.strip() for m in os.environ.get(
+    "GH_MIRRORS", "https://ghproxy.net/,https://gh-proxy.com/,https://ghfast.top/").split(",") if m.strip()]
+GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://ghproxy.net/"
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
@@ -54,6 +58,13 @@ BLACKLIST_AUTO = os.environ.get("BLACKLIST_AUTO", "state/blacklist_auto.txt")
 BLACKLIST_MANUAL = os.environ.get("BLACKLIST_MANUAL", "state/blacklist_manual.txt")
 WHITELIST_MANUAL = os.environ.get("WHITELIST_MANUAL", "state/whitelist_manual.txt")
 FAIL_LIMIT = int(os.environ.get("UPSTREAM_FAIL_LIMIT", "3"))       # 连续 N 次不达标自动停用
+PROBE_INTERVAL_DAYS = int(os.environ.get("DISABLED_PROBE_DAYS", "7"))  # O2 停用上游每隔 N 天探活回捞
+
+# O3 站点验活历史记忆（连续 N 轮失败才剔除，通过自动回捞）
+SITE_STATE_FILE = os.environ.get("SITE_STATE_FILE", "state/sites_state.json")
+SITE_FAIL_LIMIT = int(os.environ.get("SITE_FAIL_LIMIT", "3"))
+# 短剧/成人分类人工覆盖表：{"<site key>": "short|adult|vod"}，优先级高于关键词分类
+CATEGORY_OVERRIDE_FILE = os.environ.get("CATEGORY_OVERRIDE_FILE", "state/category_overrides.json")
 
 # ---- P1：快照存档 ----
 SNAPSHOT_DIR = os.environ.get("SNAPSHOT_DIR", "snapshot")
@@ -65,12 +76,14 @@ LIVE_TIMEOUT = int(os.environ.get("LIVE_TIMEOUT", "4"))
 LIVE_CONCURRENCY = int(os.environ.get("LIVE_CONCURRENCY", "24"))
 LIVE_MAX_URLS = int(os.environ.get("LIVE_MAX_URLS", "1200"))       # 单轮测速 URL 总量上限
 LIVE_PER_CHANNEL = int(os.environ.get("LIVE_PER_CHANNEL", "3"))    # 每频道保留条数
+LIVE_FALLBACK_CHANNELS = int(os.environ.get("LIVE_FALLBACK_CHANNELS", "100"))  # O6 测速全挂频道的保底收录上限
 LIVES_DIR = os.environ.get("LIVES_DIR", "lives")
 CHECKS_FILE = os.environ.get("CHECKS_FILE", "checks.json")
 DOMAIN_MAP_FILE = os.environ.get("DOMAIN_MAP_FILE", "state/domain_map.json")
 README_FILE = os.environ.get("README_FILE", "README.md")
 
-# 上游清单（点播配置类）：顺序即合并优先级，同名 key 先到先得、后续不覆盖（不误伤已有源）
+# 上游清单（点播配置类）：顺序仍影响收录次序，但同名 key 冲突时按来源健康分仲裁（O1）——
+# 最近成功时间新、连续失败少的上游接管；健康分相同保持先到先得（不误伤已有源、避免抖动）
 # 一上游一适配器：kind 决定拉取后如何解析（tvbox=json 配置 / m3u=直播列表）
 UPSTREAMS = [
     {"name": "juhe-tvapi", "kind": "tvbox",
@@ -243,12 +256,15 @@ ADULT_KEYWORDS = [
 ]
 
 
-def classify_site(s) -> str:
-    """返回 'short' / 'adult' / 'vod'。短剧与成人为独立收录分类，其余保持 vod。"""
+def classify_site(s, overrides: dict = None) -> str:
+    """返回 'short' / 'adult' / 'vod'。短剧与成人为独立收录分类，其余保持 vod。
+    人工覆盖表（state/category_overrides.json，key -> 分类）优先于关键词匹配。"""
     if not isinstance(s, dict):
         return "vod"
     name = s.get("name") or ""
     key = s.get("key") or ""
+    if overrides and key and key in overrides:
+        return overrides[key]
     api = s.get("api") or ""
     ext = s.get("ext")
     ext_str = ""
@@ -339,24 +355,21 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
 
 
 def dep_download(url: str):
-    """原 URL → ghproxy 兜底。返回 (bytes, channel) 或 (None, err)。"""
+    """原 URL → ghproxy 镜像列表轮换兜底。返回 (bytes, channel) 或 (None, err)。"""
     import urllib.parse
     attempts = [url]
-    wrapped = gh_url(url) if "github" in url else url
-    if wrapped != url:
-        attempts.append(wrapped)
-    elif re.match(r"^https?://(raw\.)?githubusercontent\.com/", url):
-        attempts.append(GHPROXY + url)
+    if "github" in url and "ghproxy" not in url:
+        attempts.extend(m + url for m in GH_MIRRORS)
     attempts = [
         urllib.parse.quote(u, safe="%/:=&?~#+!$,;'@()*[]|") if not u.isascii() else u
         for u in attempts
     ]
     last = ""
-    for u in attempts:
+    for i, u in enumerate(attempts):
         try:
             status, data, _ = http_get(u, DEP_TIMEOUT, DEP_MAX_BYTES)
             if status == 200 and data:
-                return data, ("direct" if u == attempts[0] else "ghproxy")
+                return data, ("direct" if i == 0 else "mirror")
             last = f"HTTP {status}"
         except Exception as e:  # noqa: BLE001
             last = f"{type(e).__name__}: {e}"[:120]
@@ -647,8 +660,8 @@ def strip_comments_and_clean(text: str) -> str:
 
 
 def gh_url(u: str) -> str:
-    """GitHub 链接换 ghproxy 通道（脚本拉取用备用通道）。"""
-    if "ghproxy" in u:
+    """GitHub 链接换 ghproxy 主镜像通道（产出配置改写用；拉取侧走 GH_MIRRORS 列表轮换）。"""
+    if "ghproxy" in u or not GH_MIRRORS:
         return u
     if re.match(r"^https?://(raw\.)?githubusercontent\.com/", u) or re.match(
         r"^https?://github\.com/[^/]+/[^/]+/(raw|releases|archive)/", u
@@ -683,27 +696,49 @@ DOMAIN_MAP = {}
 
 
 def map_domain(value):
-    """对 URL 字符串应用 state/domain_map.json 的域名/前缀替换（上游换域名时改写而非丢源）。"""
+    """对 URL 字符串应用 state/domain_map.json 的域名/前缀替换（上游换域名时改写而非丢源）。
+
+    O 小点加固：完整 URL 按 host 边界匹配替换（避免子串误伤路径/其他域名）；
+    非 URL 字符串回退到原子串替换行为。
+    """
     if not DOMAIN_MAP or not isinstance(value, str):
         return value
     for old, new in DOMAIN_MAP.items():
-        if old in value:
-            value = value.replace(old, new)
+        if old and old in value:
+            value = _replace_host(value, old, new)
     return value
+
+
+def _replace_host(value: str, old: str, new: str) -> str:
+    m = re.match(r"^(https?://)([^/?#]+)(.*)$", value, re.I)
+    if not m:
+        return value.replace(old, new)
+    scheme, netloc, rest = m.groups()
+    host = netloc.rsplit("@", 1)[-1].split(":")[0]
+    if host == old:
+        new_host = new
+    elif host.endswith("." + old):
+        new_host = host[: -len(old)] + new
+    else:
+        return value
+    return f"{scheme}{netloc.replace(host, new_host, 1)}{rest}"
 
 
 # ---------------- P0：拉取与解析（一上游一适配器） ----------------
 
 def fetch_raw(url: str):
-    """两通道重试：直连 → ghproxy（仅 GitHub 链接）。返回 (raw_bytes, channel) 或 (None, err)。"""
+    """多通道重试：直连 → ghproxy 镜像列表逐个轮换（仅 GitHub 链接）。返回 (raw_bytes, channel) 或 (None, err)。"""
     attempts = [url]
-    if "github" in url:
-        attempts.append(gh_url(url))
+    if "github" in url and "ghproxy" not in url:
+        attempts.extend(m + url for m in GH_MIRRORS)
     last_err = ""
     for ch, u in enumerate(attempts):
         try:
             status, raw, _ms = http_get(u, FETCH_TIMEOUT)
-            return raw, ("direct" if ch == 0 else "ghproxy")
+            if ch == 0:
+                return raw, "direct"
+            import urllib.parse
+            return raw, f"mirror:{urllib.parse.urlparse(u).netloc}"
         except Exception as e:  # noqa: BLE001
             last_err = f"{type(e).__name__}: {e}"[:120]
     return None, last_err
@@ -830,15 +865,90 @@ def sync_blacklist_auto(state: dict):
             f.write(n + "\n")
 
 
+def load_site_state() -> dict:
+    try:
+        with open(SITE_STATE_FILE, "r", encoding="utf-8") as f:
+            s = json.load(f)
+        return s if isinstance(s, dict) else {}
+    except Exception:  # noqa: BLE001
+        return {}
+
+
+def save_site_state(site_state: dict):
+    os.makedirs(os.path.dirname(SITE_STATE_FILE) or ".", exist_ok=True)
+    with open(SITE_STATE_FILE, "w", encoding="utf-8") as f:
+        json.dump(site_state, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+
+def apply_site_verdict(site_state: dict, key: str, name: str, ok: bool, now: str) -> dict:
+    """O3 站点验活历史记忆：连续 SITE_FAIL_LIMIT 轮失败才从配置剔除；任一轮通过即复位（自动回捞）。"""
+    ent = site_state.get(key) if isinstance(site_state.get(key), dict) else {}
+    ent["name"] = name
+    ent.setdefault("removed", False)
+    if ok:
+        ent["fails"] = 0
+        ent["last_ok_at"] = now
+        ent["removed"] = False
+        ent.pop("removed_at", None)
+    else:
+        ent["fails"] = int(ent.get("fails", 0)) + 1
+        ent["last_fail_at"] = now
+        if ent["fails"] >= SITE_FAIL_LIMIT and not ent.get("removed"):
+            ent["removed"] = True
+            ent["removed_at"] = now
+    site_state[key] = ent
+    return ent
+
+
+def load_category_overrides() -> dict:
+    """人工分类覆盖表：{"<site key>": "short|adult|vod"}，优先级高于关键词自动分类。"""
+    try:
+        with open(CATEGORY_OVERRIDE_FILE, "r", encoding="utf-8") as f:
+            m = json.load(f)
+        if isinstance(m, dict):
+            return {str(k): str(v) for k, v in m.items()
+                    if str(v) in ("short", "adult", "vod")}
+    except Exception:  # noqa: BLE001
+        pass
+    return {}
+
+
 def enabled_of(u: dict, state: dict, blacklist_manual: list, whitelist_manual: list):
-    """返回 (是否拉取, 状态标签)。手动黑名单 > 自动停用（白名单可豁免自动停用）> 启用。"""
+    """返回 (是否拉取, 状态标签)。手动黑名单 > 自动停用（白名单可豁免自动停用）> 启用。
+    O2：自动停用超过 PROBE_INTERVAL_DAYS 的上游低频探活一次，成功即自动回捞。"""
     name = u["name"]
     if name in blacklist_manual:
         return False, "blacklisted"
     ent = state.get(name) if isinstance(state.get(name), dict) else {}
     if ent.get("disabled") and name not in whitelist_manual:
+        last_fail = ent.get("last_fail_at", "") or ""
+        if PROBE_INTERVAL_DAYS > 0 and last_fail:
+            try:
+                now_naive = datetime.now(BEIJING).replace(tzinfo=None)
+                dt = now_naive - datetime.strptime(last_fail, "%Y-%m-%d %H:%M:%S")
+                if dt.days >= PROBE_INTERVAL_DAYS:
+                    return True, "probe"
+            except ValueError:
+                pass
         return False, "disabled"
     return True, "enabled"
+
+
+def upstream_score(name: str, state: dict) -> float:
+    """O1 健康度仲裁分：最近成功时间为主（当天 100，每过一天 -10），连续失败每次 -5。
+    无成功记录 = 0 分（新上游首轮成功后即达 ~100，可参与同 key 仲裁）。"""
+    ent = state.get(name)
+    if not isinstance(ent, dict):
+        return 0.0
+    fc = int(ent.get("fail_count", 0) or 0)
+    ok_at = ent.get("last_ok_at", "") or ""
+    try:
+        # last_ok_at 为北京本地时间字符串（naive），统一按 naive 比较
+        now_naive = datetime.now(BEIJING).replace(tzinfo=None)
+        days = (now_naive - datetime.strptime(ok_at, "%Y-%m-%d %H:%M:%S")).days
+    except (ValueError, TypeError):
+        return 0.0
+    return max(0.0, 100.0 - days * 10.0) - fc * 5.0
 
 
 # ---------------- P1：快照存档 ----------------
@@ -993,6 +1103,19 @@ def build_live_outputs(entries) -> dict:
             for name in sorted(by_ch):
                 for ms, url in sorted(by_ch[name])[:LIVE_PER_CHANNEL]:
                     ranked.append((name, url, ms))
+            # O6 保底：所有线路测速全挂的频道（多为跑批网络环境误杀）按字母序收录在组尾
+            tested_channels = set(by_ch)
+            fallback_ch = {}
+            for name, url in items:
+                if name not in tested_channels:
+                    fallback_ch.setdefault(name, []).append(url)
+            fallback_used = 0
+            for name in sorted(fallback_ch):
+                if fallback_used >= LIVE_FALLBACK_CHANNELS:
+                    break
+                for url in fallback_ch[name][:LIVE_PER_CHANNEL]:
+                    ranked.append((name, url, None))
+                    fallback_used += 1
         else:
             seen_ch = {}
             ranked = []
@@ -1002,7 +1125,8 @@ def build_live_outputs(entries) -> dict:
                     seen_ch[name].append(url)
                     ranked.append((name, url, None))
         stats[key] = {"channels": len({n for n, _u, _ms in ranked}), "urls": len(ranked),
-                      "input_urls": len(items), "speed_tested": bool(lat)}
+                      "input_urls": len(items), "speed_tested": bool(lat),
+                      "fallback_urls": (sum(1 for _n, _u, ms in ranked if ms is None) if lat else 0)}
         if not ranked:
             continue
         path = os.path.join(LIVES_DIR, f"live_{key}.txt")
@@ -1049,7 +1173,8 @@ def write_checks(records: list, generated_at: str) -> dict:
 
 
 ICONS = {"ok": "🟢", "degraded": "🟡", "dead": "🔴", "disabled": "⚫", "blacklisted": "🚫"}
-STATUS_CN = {"ok": "可用", "degraded": "降级", "dead": "失效", "disabled": "已停用", "blacklisted": "黑名单"}
+STATUS_CN = {"ok": "可用", "degraded": "降级", "dead": "失效", "disabled": "已停用",
+             "blacklisted": "黑名单", "probe": "🔵探活", "mirror": "镜像"}
 
 
 def update_readme_availability(records: list) -> bool:
@@ -1104,6 +1229,41 @@ def merge_key_parse(p: dict):
     return p.get("name")
 
 
+def site_fingerprint(s: dict) -> str:
+    """O4 二级去重指纹：api + ext 内容（不同 key、功能相同的镜像/复刻站点）。"""
+    api = (s.get("api") or "").strip().rstrip("/")
+    ext = s.get("ext")
+    if isinstance(ext, dict):
+        ext_s = json.dumps(ext, ensure_ascii=False, sort_keys=True)
+    elif isinstance(ext, str):
+        ext_s = ext.strip()
+    else:
+        ext_s = ""
+    return hashlib.sha1(f"{api}\n{ext_s}".encode("utf-8")).hexdigest()[:16]
+
+
+def secondary_dedup_sites(sites_by_key: dict, site_origin_name: dict, site_origin_score: dict) -> list:
+    """O4 二级去重：api+ext 指纹相同的站点只留一份，保留来源健康分高者（同分保留先收录者）。
+    返回剔除明细列表。"""
+    groups: dict = {}
+    for k, s in sites_by_key.items():
+        groups.setdefault(site_fingerprint(s), []).append(k)
+    dropped = []
+    for keys in groups.values():
+        if len(keys) < 2:
+            continue
+        keys.sort(key=lambda k: (-(site_origin_score.get(k) or 0.0), k))
+        keeper = keys[0]
+        for k in keys[1:]:
+            dropped.append({"dropped_key": k, "kept_key": keeper,
+                            "dropped_origin": site_origin_name.get(k, ""),
+                            "kept_origin": site_origin_name.get(keeper, "")})
+            sites_by_key.pop(k, None)
+            site_origin_name.pop(k, None)
+            site_origin_score.pop(k, None)
+    return dropped
+
+
 def rewrite_gh(value):
     """对 site/live/parse 字段里的 GitHub 原链统一加 ghproxy.net 前缀（先过域名替换层）。"""
     if isinstance(value, str):
@@ -1122,6 +1282,8 @@ def main() -> int:
     generated_at = now.strftime("%Y-%m-%d %H:%M:%S") + " +08:00"
 
     state = load_state()
+    site_state = load_site_state()          # O3 站点验活历史
+    category_overrides = load_category_overrides()  # 人工分类覆盖表
     blacklist_manual = read_name_list(BLACKLIST_MANUAL)
     whitelist_manual = read_name_list(WHITELIST_MANUAL)
 
@@ -1130,6 +1292,11 @@ def main() -> int:
     merged: dict = {}        # 全局字段
     spider_origin_info = None
     site_origin_name: dict = {}   # site key -> 来源上游名
+    site_origin_score: dict = {}  # site key -> 来源上游健康分（O1 同 key 仲裁）
+    live_origin_score: dict = {}  # live name -> 来源上游健康分
+    parse_origin_score: dict = {} # parse name -> 来源上游健康分
+    seen_sha: dict = {}           # 内容 sha12 -> 首个上游名（O5 镜像短路）
+    mirror_count = 0
     sites_by_key: dict = {}
     lives_by_name: dict = {}
     parses_by_name: dict = {}
@@ -1174,6 +1341,21 @@ def main() -> int:
             rec["bytes"] = len(raw)
             rec["sha256"] = sha12(raw)
             snapshot_paths.append(snapshot_save(name, kind, raw, now))
+            # O5 同内容镜像短路：配置内容与已处理上游 sha256 一致时跳过解析合并
+            if kind == "tvbox" and rec["sha256"] and rec["sha256"] in seen_sha:
+                rec["mirror_of"] = seen_sha[rec["sha256"]]
+                rec["status"] = "ok"
+                rec["grade"] = "镜像"
+                record_result(state, name, True, whitelist_manual)  # 健康分照常刷新，主域失效时可接管
+                rec["fail_count"] = 0
+                rec["last_ok_at"] = state[name].get("last_ok_at", "")
+                checks.append(rec)
+                interfaces.append(rec)
+                mirror_count += 1
+                print(f"  MIRROR {name}: 内容与 {rec['mirror_of']} 一致（sha {rec['sha256']}），跳过合并", flush=True)
+                continue
+            if rec["sha256"]:
+                seen_sha[rec["sha256"]] = name
 
         ok_eval, status_tag, detail, err = evaluate_upstream(u, raw)
         rec["status"] = status_tag
@@ -1200,22 +1382,45 @@ def main() -> int:
             cfg_lives = [l for l in (cfg.get("lives") or []) if isinstance(l, dict) and l.get("name")]
             cfg_parses = [p for p in (cfg.get("parses") or []) if isinstance(p, dict) and p.get("name")]
             added_s = added_l = added_p = 0
+            repl_s = repl_l = repl_p = 0
+            sc = upstream_score(name, state)
             for s in cfg_sites:
                 k = merge_key_site(s)
-                if k and k not in sites_by_key:
+                if not k:
+                    continue
+                if k not in sites_by_key:
                     sites_by_key[k] = rewrite_gh(s)
                     site_origin_name[k] = name
+                    site_origin_score[k] = sc
                     added_s += 1
+                elif sc > site_origin_score.get(k, -10 ** 9):
+                    # O1 健康度仲裁：来源更健康的上游接管同 key 站点（同分保持先到先得，避免抖动）
+                    sites_by_key[k] = rewrite_gh(s)
+                    site_origin_name[k] = name
+                    site_origin_score[k] = sc
+                    repl_s += 1
             for l in cfg_lives:
                 k = merge_key_live(l)
-                if k and k not in lives_by_name:
+                if not k:
+                    continue
+                if k not in lives_by_name:
                     lives_by_name[k] = rewrite_gh(l)
+                    live_origin_score[k] = sc
                     added_l += 1
+                elif sc > live_origin_score.get(k, -10 ** 9):
+                    lives_by_name[k] = rewrite_gh(l)
+                    repl_l += 1
             for p in cfg_parses:
                 k = merge_key_parse(p)
-                if k and k not in parses_by_name:
+                if not k:
+                    continue
+                if k not in parses_by_name:
                     parses_by_name[k] = rewrite_gh(p)
+                    parse_origin_score[k] = sc
                     added_p += 1
+                elif sc > parse_origin_score.get(k, -10 ** 9):
+                    parses_by_name[k] = rewrite_gh(p)
+                    repl_p += 1
             valid = bool(cfg_sites)
             rec.update(
                 sites=len(cfg_sites), lives=len(cfg_lives), parses=len(cfg_parses),
@@ -1228,7 +1433,7 @@ def main() -> int:
                     if gk == "spider":
                         spider_origin_info = (name, u["url"].rsplit("/", 1)[0] + "/")
             print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
-                  f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p}) "
+                  f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p} repl {repl_s}/{repl_l}/{repl_p}) "
                   f"{rec['bytes']}B #{rec['sha256']}", flush=True)
         else:
             print(f"  OK   {name}: {detail['entries']} 条频道 {rec['bytes']}B #{rec['sha256']}", flush=True)
@@ -1245,6 +1450,9 @@ def main() -> int:
         print("所有配置类上游均不可用，中止（不产出配置）", flush=True)
         return 1
 
+    dup_drops = secondary_dedup_sites(sites_by_key, site_origin_name, site_origin_score)
+    if dup_drops:
+        print(f"    二级去重：剔除 {len(dup_drops)} 个 api/ext 指纹重复站点（保留健康来源）", flush=True)
     sites = list(sites_by_key.values())
     lives = list(lives_by_name.values())
     parses = list(parses_by_name.values())
@@ -1290,14 +1498,24 @@ def main() -> int:
 
     removed = []
     kept_sites = []
+    now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     for s in sites:
         if testable(s) and verdict.get(s["key"]) is False:
-            removed.append({
-                "key": s.get("key"), "name": s.get("name"),
-                "api": s.get("api"), "reason": "验活连续两次失败",
-            })
+            # O3 站点验活历史：连续 SITE_FAIL_LIMIT 轮失败才剔除；未达阈值暂留观察
+            ent = apply_site_verdict(site_state, s.get("key") or "", s.get("name") or "", False, now_str)
+            if ent.get("removed"):
+                removed.append({
+                    "key": s.get("key"), "name": s.get("name"),
+                    "api": s.get("api"),
+                    "reason": f"连续 {ent.get('fails', 0)} 轮验活失败（>= {SITE_FAIL_LIMIT} 轮剔除）",
+                })
+            else:
+                kept_sites.append(s)
         else:
+            if testable(s):
+                apply_site_verdict(site_state, s.get("key") or "", s.get("name") or "", True, now_str)
             kept_sites.append(s)
+    save_site_state(site_state)
     tested_pass = sum(1 for v in verdict.values() if v)
     print(f"    通过 {tested_pass}/{len(to_test)}，剔除 {len(removed)}，保留 {len(kept_sites)} 站点", flush=True)
 
@@ -1394,8 +1612,8 @@ def main() -> int:
     # vod.json 保持完整（含所有点播站点）；short/adult 为分类独立配置。
     # parses 复用 vod 全集：TVBox 站点不引用 parses（playUrl/jar 才是站点自有播放方式），
     # parses 是全局播放器池，单独配置需自带全集才不至于某些解析器不可用。
-    short_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "short"]
-    adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s) == "adult"]
+    short_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "short"]
+    adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "adult"]
     # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
     # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
     local_ref_audit: dict = {}
@@ -1466,6 +1684,8 @@ def main() -> int:
             "sites_tested_pass": tested_pass,
             "sites_removed": len(removed),
             "sites_untested": len(sites) - len(to_test),
+            "sites_secondary_dedup": len(dup_drops),
+            "mirrors_skipped": mirror_count,
             "lives": len(lives),
             "parses": len(parses),
             "deps_total": dep_stats["total"],
@@ -1480,6 +1700,23 @@ def main() -> int:
             "disabled_now": disabled_now_list,
             "snapshot_files": len(snapshot_paths),
             "snapshot_pruned": pruned,
+        },
+        "spider": {
+            "note": "O7b 全局 spider 来源与指纹（清单最前可用上游，依赖本地化后指向 deps/）",
+            "origin": (spider_origin_info or ("", ""))[0],
+            "value": tvbox.get("spider", "") if isinstance(tvbox.get("spider"), str) else "",
+        },
+        "site_verdicts": {
+            "note": f"O3 站点验活历史记忆；连续 {SITE_FAIL_LIMIT} 轮失败剔除，通过自动复位回捞",
+            "tracked": len(site_state),
+            "removed": sum(1 for v in site_state.values() if isinstance(v, dict) and v.get("removed")),
+        },
+        "runtime": {
+            "gh_mirrors": GH_MIRRORS,
+            "probe_interval_days": PROBE_INTERVAL_DAYS,
+            "site_fail_limit": SITE_FAIL_LIMIT,
+            "category_overrides": len(category_overrides),
+            "secondary_dedup_dropped": dup_drops[:50],
         },
         "lives_by_category": live_stats,
         "local_ref_audit": {
