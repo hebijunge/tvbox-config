@@ -1,11 +1,10 @@
 name: daily-fetch
-# 每日两次：北京时间 06:00（UTC 22:00）与 18:00（UTC 10:00），支持手动触发
+# 每日一次：北京时间 03:00（UTC 19:00），支持手动触发
 # P2：refresh（本工作流，拉取+合并+发布）与 validate（validate.yml，独立验活）拆分——azhansy/ds-tvbox 模式
 
 on:
   schedule:
-    - cron: "0 22 * * *"
-    - cron: "0 10 * * *"
+    - cron: "0 19 * * *"
   workflow_dispatch:
 
 permissions:
