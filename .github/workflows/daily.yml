@@ -55,6 +55,7 @@ jobs:
           FILES=""
           for f in tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json \
                    stores/duocang.json stores/cms.json stores/app.json stores/pan.json stores/csp.json stores/pan_ck.json \
+                   stores/cms_proxy.json stores/app_proxy.json stores/pan_proxy.json stores/csp_proxy.json \
                    lives/live.txt lives/live_cctv.txt lives/live_weishi.txt \
                    lives/live_gangtai.txt lives/live_other.txt; do
             [ -f "$f" ] && FILES="$FILES $f"

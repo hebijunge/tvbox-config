@@ -1370,21 +1370,22 @@ def cms_speed_test(sites: list) -> dict:
     return lat
 
 
-def _absolutize(v):
-    """子仓内 ./ 相对引用 → REPO_RAW 绝对路径。
+def _absolutize(v, base: str = None):
+    """子仓内 ./ 相对引用 → 仓库绝对路径（默认 REPO_RAW，代理版传镜像前缀 base）。
 
     子仓位于 stores/ 下，TVBox 按配置 URL 解析相对路径，不改写会指向 stores/deps/ 而失效；
     ext 支持 $$$ 组合串，需逐段改写。"""
+    base = base or REPO_RAW
     if isinstance(v, str):
         if "$$$" in v:
-            return "$$$".join(_absolutize(seg) for seg in v.split("$$$"))
+            return "$$$".join(_absolutize(seg, base) for seg in v.split("$$$"))
         if v.startswith("./"):
-            return f"{REPO_RAW}/{v[2:]}"
+            return f"{base}/{v[2:]}"
         return v
     if isinstance(v, list):
-        return [_absolutize(x) for x in v]
+        return [_absolutize(x, base) for x in v]
     if isinstance(v, dict):
-        return {k: _absolutize(x) for k, x in v.items()}
+        return {k: _absolutize(x, base) for k, x in v.items()}
     return v
 
 
@@ -1411,26 +1412,36 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
         # 实测延迟升序，未测出（失败/超时）置尾；同延迟保持原相对顺序
         return [s for _, s in sorted(pairs, key=lambda t: (lat.get(str(t[1].get("api") or ""), 10 ** 9), t[0]))]
 
-    common = {f: _absolutize(vod[f]) for f in ("spider", "wallpaper", "parses", "flags") if vod.get(f) is not None}
+    gh1 = GH_MIRRORS[0].rstrip("/")  # 常量自带尾部斜杠，去重避免出现 //https:// 双斜杠
+    proxy_base = f"{gh1}/{REPO_RAW}"
 
-    def mkdoc(ss):
-        doc = dict(common)
+    def mkdoc(ss, proxy: bool = False):
+        base = proxy_base if proxy else REPO_RAW
+        doc = {f: _absolutize(vod[f], base)
+               for f in ("spider", "wallpaper", "parses", "flags") if vod.get(f) is not None}
         ss2 = []
         for s in ss:
             s2 = dict(s)
             for f in ("jar", "ext"):
                 if f in s2:
-                    s2[f] = _absolutize(s2[f])
+                    s2[f] = _absolutize(s2[f], base)
             ss2.append(s2)
         doc["sites"] = ss2
         return doc
 
     os.makedirs(STORES_DIR, exist_ok=True)
     counts: dict = {}
-    for k, fname in (("cms", "cms.json"), ("app", "app.json"), ("pan", "pan.json"), ("csp", "csp.json")):
+    stores_meta = (("cms", "cms.json", "CMS接口仓(按速度排序)"),
+                   ("app", "app.json", "App接口仓(按速度排序)"),
+                   ("pan", "pan.json", "网盘仓"),
+                   ("csp", "csp.json", "蜘蛛仓(csp)"))
+    for k, fname, _label in stores_meta:
         ss = ordered(kinds.get(k, [])) if k in ("cms", "app") else [s for _, s in kinds.get(k, [])]
         with open(os.path.join(STORES_DIR, fname), "w", encoding="utf-8") as f:
             json.dump(mkdoc(ss), f, ensure_ascii=False, indent=1)
+        # 代理镜像版：spider/ext 等内部引用同样改为镜像前缀，代理线路才能端到端可用
+        with open(os.path.join(STORES_DIR, fname.replace(".json", "_proxy.json")), "w", encoding="utf-8") as f:
+            json.dump(mkdoc(ss, proxy=True), f, ensure_ascii=False, indent=1)
         counts[k] = len(ss)
 
     # 网盘 CK 清单：needs_ck = ext 引用 token.json（需填 CK/账密才出内容）
@@ -1463,12 +1474,12 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
             "endpoints": ck_endpoints,
         }, f, ensure_ascii=False, indent=1)
 
-    entry = [
-        {"sourceName": "CMS接口仓(按速度排序)", "sourceUrl": f"{REPO_RAW}/stores/cms.json"},
-        {"sourceName": "App接口仓(按速度排序)", "sourceUrl": f"{REPO_RAW}/stores/app.json"},
-        {"sourceName": "网盘仓", "sourceUrl": f"{REPO_RAW}/stores/pan.json"},
-        {"sourceName": "蜘蛛仓(csp)", "sourceUrl": f"{REPO_RAW}/stores/csp.json"},
-    ]
+    # 多仓入口：每仓直连 + 代理双线路（代理版子仓内部引用同步走镜像，端到端可用）
+    entry = []
+    for _k, fname, label in stores_meta:
+        raw_url = f"{REPO_RAW}/stores/{fname}"
+        entry.append({"sourceName": label, "sourceUrl": raw_url})
+        entry.append({"sourceName": f"{label}·代理", "sourceUrl": f"{gh1}/{raw_url}"})
     duocang = {
         "storeHouse": entry,
         "urls": [{"url": e["sourceUrl"], "name": e["sourceName"]} for e in entry],
@@ -1483,8 +1494,9 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     print(f"[5.5/6] 多仓：cms {counts['cms']} / app {counts['app']} / pan {counts['pan']} / csp {counts['csp']}"
           f" → stores/（接口测速通过 {len(lat)}/{len(cms_app)}）", flush=True)
     return {
-        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（storeHouse+urls 双格式）",
+        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（storeHouse+urls 双格式，每仓含直连+代理两条线路，代理版子仓 *_proxy.json 内部引用同步走镜像）",
         "counts": counts,
+        "proxy_mirror": gh1,
         "speed_tested": len(cms_app),
         "speed_ok": len(lat),
         "cms_speed_top10": top10("cms"),
@@ -1889,7 +1901,9 @@ def main() -> int:
               os.path.join(LIVES_DIR, "live_other.txt"),
               os.path.join(STORES_DIR, "duocang.json"), os.path.join(STORES_DIR, "cms.json"),
               os.path.join(STORES_DIR, "app.json"), os.path.join(STORES_DIR, "pan.json"),
-              os.path.join(STORES_DIR, "csp.json"), os.path.join(STORES_DIR, "pan_ck.json")):
+              os.path.join(STORES_DIR, "csp.json"), os.path.join(STORES_DIR, "pan_ck.json"),
+              os.path.join(STORES_DIR, "cms_proxy.json"), os.path.join(STORES_DIR, "app_proxy.json"),
+              os.path.join(STORES_DIR, "pan_proxy.json"), os.path.join(STORES_DIR, "csp_proxy.json")):
         if os.path.exists(p):
             b = open(p, "rb").read()
             products[p] = {"bytes": len(b), "sha256": sha12(b)}
