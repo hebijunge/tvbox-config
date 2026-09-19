@@ -1,0 +1,9192 @@
+{
+ "generated_at": "2026-09-19 21:48:08",
+ "note": "root 真机 DexClassLoader 实测 csp 爬虫源五关（首页/分类/搜索/详情/播放）",
+ "summary": {
+  "total": 660,
+  "levels": {
+   "C2": 51,
+   "C3": 39,
+   "C5": 22,
+   "C0": 388,
+   "C?": 14,
+   "C1": 143,
+   "C4": 3
+  }
+ },
+ "sites": [
+  {
+   "key": "fyyy",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 23652,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 48
+   }
+  },
+  {
+   "key": "热播影视",
+   "kind": "csp",
+   "cls": "csp_AppRJ",
+   "level": "C3",
+   "ms": 1173,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 10,
+    "cat_items": 12,
+    "search_hits": 2,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "一起影视",
+   "kind": "csp",
+   "cls": "csp_AppYQK",
+   "level": "C3",
+   "ms": 1698,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 168,
+    "search_hits": 9,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "爱看",
+   "kind": "csp",
+   "cls": "csp_AiKan",
+   "level": "C2",
+   "ms": 384,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 21,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "咕噜",
+   "kind": "csp",
+   "cls": "csp_Gulu",
+   "level": "C5",
+   "ms": 2202,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 12,
+    "cat_items": 21,
+    "search_hits": 16,
+    "detail_raw": 7450,
+    "play_raw_len": 7084,
+    "parse": 0,
+    "play_out": "https://vip.dytt-look.com/20250426/619902_7d60b2a5/index.m3u8",
+    "play_id": "https://vip.dytt-look.com/20250426/619902_7d60b2a5/index.m3u8"
+   }
+  },
+  {
+   "key": "布布",
+   "kind": "csp",
+   "cls": "csp_YunDuo",
+   "level": "C5",
+   "ms": 2855,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 24,
+    "search_hits": 4,
+    "detail_raw": 42238,
+    "play_raw_len": 41353,
+    "parse": 0,
+    "play_out": "http://43.248.3.46:7788/m3u8/pan1.php?token=26b735330f2c6054bf24e46ddc4fdcaa.m3u8",
+    "play_id": "token@PAN1-jAGsnwMdpEfaadyubczQ5KHyHkzXHrju_DradKgPtPyLSOS816_XzuxVhFUeL_pO6GANiFTI0AAKyI3tcYzbLPFEOi4kdqBe_cuB1Cv5AUJVTOVaLXTAYaeTRY7MbOkWvXlrDjRP6PYw7ACZi5utKg==@PAN1"
+   }
+  },
+  {
+   "key": "马猴影视",
+   "kind": "csp",
+   "cls": "csp_App3Q",
+   "level": "C2",
+   "ms": 1979,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 24,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "韩圈",
+   "kind": "csp",
+   "cls": "csp_Hxq",
+   "level": "C5",
+   "ms": 4360,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 24,
+    "search_hits": 21,
+    "detail_raw": 4305,
+    "play_raw_len": 3774,
+    "parse": 0,
+    "play_out": "https://voldn-ser01.51touxiang.com/video/c50SOsBexdPmkDPXUH5TmUaDHLGzvNf4c0LrMKzs.mp4?pid=qBr9%2B1EzhLCScouDsSLh29kQYSMcS3HHfP4o%2BV6F0F0%3D&utk=u_G7ZokvTmCvBtX0mPJOCz&uk=ASs9HPSYy",
+    "play_id": "162VZBMkqKH11IquKII5b0~~0"
+   }
+  },
+  {
+   "key": "剧圈99",
+   "kind": "csp",
+   "cls": "csp_App99",
+   "level": "C3",
+   "ms": 978,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 18,
+    "cat_items": 21,
+    "search_hits": 6,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "半日99",
+   "kind": "csp",
+   "cls": "csp_App99",
+   "level": "C3",
+   "ms": 905,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 21,
+    "search_hits": 18,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "天堂",
+   "kind": "csp",
+   "cls": "csp_AppDrama",
+   "level": "C0",
+   "ms": 87,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "橘汁",
+   "kind": "csp",
+   "cls": "csp_AppDrama",
+   "level": "C0",
+   "ms": 5,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "华谊",
+   "kind": "csp",
+   "cls": "csp_AppDrama",
+   "level": "C0",
+   "ms": 4,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "苹果",
+   "kind": "csp",
+   "cls": "csp_AppDrama",
+   "level": "C0",
+   "ms": 4,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "蓝鹰",
+   "kind": "csp",
+   "cls": "csp_AppQi",
+   "level": "C3",
+   "ms": 790,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 10,
+    "cat_items": 30,
+    "search_hits": 17,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "蓝鸟",
+   "kind": "csp",
+   "cls": "csp_AppQi",
+   "level": "C0",
+   "ms": 29,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "世界",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C3",
+   "ms": 1363,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 30,
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "魔方",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C3",
+   "ms": 1389,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 30,
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "王子",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "茉莉",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 33,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "哔哩合集",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "哔哩视频",
+   "kind": "csp",
+   "cls": "csp_BiliYS",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "玩偶",
+   "kind": "csp",
+   "cls": "csp_Wogg",
+   "level": "C3",
+   "ms": 8118,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 70,
+    "search_hits": 6,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "快映",
+   "kind": "csp",
+   "cls": "csp_PanWebShare",
+   "level": "C3",
+   "ms": 3351,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 72,
+    "search_hits": 7,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "木偶",
+   "kind": "csp",
+   "cls": "csp_PanWebShare",
+   "level": "C3",
+   "ms": 3437,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 72,
+    "search_hits": 4,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "闪电",
+   "kind": "csp",
+   "cls": "csp_PanWebShare",
+   "level": "C2",
+   "ms": 95170,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 72,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "多多",
+   "kind": "csp",
+   "cls": "csp_PanWebShare",
+   "level": "C3",
+   "ms": 78596,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 72,
+    "search_hits": 3,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "虎斑",
+   "kind": "csp",
+   "cls": "csp_PanWebShare",
+   "level": "C3",
+   "ms": 3287,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 72,
+    "search_hits": 7,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "种子",
+   "kind": "csp",
+   "cls": "csp_SeedHub",
+   "level": "C3",
+   "ms": 34459,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 20,
+    "search_hits": 2,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "夸父",
+   "kind": "csp",
+   "cls": "csp_PanWebShareKF",
+   "level": "C3",
+   "ms": 3351,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 32,
+    "search_hits": 16,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "123",
+   "kind": "csp",
+   "cls": "csp_PanWebShare123",
+   "level": "C3",
+   "ms": 108161,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0,
+    "search_hits": 9,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "指南",
+   "kind": "csp",
+   "cls": "csp_4KZhinan",
+   "level": "C3",
+   "ms": 6949,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 50,
+    "search_hits": 2,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "爱盼",
+   "kind": "csp",
+   "cls": "csp_AiPan",
+   "level": "C1",
+   "ms": 121700,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3
+   }
+  },
+  {
+   "key": "移动",
+   "kind": "csp",
+   "cls": "csp_Yidong4K",
+   "level": "C2",
+   "ms": 431,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 9,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "人人",
+   "kind": "csp",
+   "cls": "csp_RenRen",
+   "level": "C2",
+   "ms": 62076,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 10,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "即刻",
+   "kind": "csp",
+   "cls": "csp_Jike",
+   "level": "C2",
+   "ms": 324,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 20
+   }
+  },
+  {
+   "key": "双星",
+   "kind": "csp",
+   "cls": "csp_ShuangXing",
+   "level": "C3",
+   "ms": 2413,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 14,
+    "search_hits": 3,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "七猫短剧",
+   "kind": "csp",
+   "cls": "csp_ShortQimao",
+   "level": "C5",
+   "ms": 1988,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 151,
+    "cat_items": 8,
+    "search_hits": 7,
+    "detail_raw": 13297,
+    "play_raw_len": 12860,
+    "parse": 0,
+    "play_out": "https://cdn-vod-playlet.wtzw.com/asset/55c32ce82ba3286bb85731f5a6f966f6/play_multi_video/6f7310c287644b7c813ab8e2eb7a4a0c/2234dc30627df785f7b7fd155fb3e4c6.m3u8",
+    "play_id": "https://cdn-vod-playlet.wtzw.com/asset/55c32ce82ba3286bb85731f5a6f966f6/play_multi_video/6f7310c287644b7c813ab8e2eb7a4a0c/2234dc30627df785f7b7fd155fb3e4c6.m3u8"
+   }
+  },
+  {
+   "key": "河马短剧",
+   "kind": "csp",
+   "cls": "csp_ShortHema",
+   "level": "C5",
+   "ms": 1584,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 12,
+    "search_hits": 15,
+    "detail_raw": 5355,
+    "play_raw_len": 4860,
+    "parse": 0,
+    "play_out": "https://txonlmfvideo.cbread.cn/28/8x7/87x3/873x9/87390300014/615905482_1/615905482.720p.wzh26506V2.mp4?t=6aafaea0&sign=8c15a96ff8ae7f0ea048b0afa9f612ae",
+    "play_id": "41000309378@615905482"
+   }
+  },
+  {
+   "key": "围观短剧",
+   "kind": "csp",
+   "cls": "csp_ShortWeiguan",
+   "level": "C5",
+   "ms": 1184,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 30,
+    "cat_items": 30,
+    "search_hits": 30,
+    "detail_raw": 31670,
+    "play_raw_len": 31086,
+    "parse": 0,
+    "play_out": "[\"1080P\",\"https:\\/\\/tv-video.cdn.drama.9ddm.com\\/73\\/E8\\/73E8048B485A268B395D203B73222400.mp4?timestamp=1789813257&sign=915dda1d378f0996729e90abfce809cd\",\"720P\",\"https:\\/\\/tv-video",
+    "play_id": "W3sibmFtZSI6IjEwODBQIiwidXJsIjoiaHR0cHM6XC9cL3R2LXZpZGVvLmNkbi5kcmFtYS45ZGRtLmNvbVwvNzNcL0U4XC83M0U4MDQ4QjQ4NUEyNjhCMzk1RDIwM0I3MzIyMjQwMC5tcDQ/dGltZXN0YW1wPTE3ODk4MTMyNTcmc2lnbj05"
+   }
+  },
+  {
+   "key": "好看短剧",
+   "kind": "csp",
+   "cls": "csp_ShortHaokan",
+   "level": "C5",
+   "ms": 31435,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 29,
+    "cat_items": 9,
+    "search_hits": 1,
+    "detail_raw": 2662,
+    "play_raw_len": 2153,
+    "parse": 0,
+    "play_out": "http://vd2.bdstatic.com/mda-shbdwkyy2hy85pvy/1080p/h264_cae/1786528145823942049/mda-shbdwkyy2hy85pvy.mp4?v_from_s=haokan-ui-video-hnb",
+    "play_id": "4742265897354198116|||8466536126850130370"
+   }
+  },
+  {
+   "key": "星芽短剧",
+   "kind": "csp",
+   "cls": "csp_ShortXingya",
+   "level": "C5",
+   "ms": 1715,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 5,
+    "search_hits": 9,
+    "detail_raw": 5875,
+    "play_raw_len": 5502,
+    "parse": 0,
+    "play_out": "http://qcapp.xingya.com.cn/wz_mp40924qingyunian01.mp4?sign=7b2b37583ee89064c948bae6590b9e69&t=6aae9a6a",
+    "play_id": "http://qcapp.xingya.com.cn/wz_mp40924qingyunian01.mp4?sign=7b2b37583ee89064c948bae6590b9e69&t=6aae9a6a"
+   }
+  },
+  {
+   "key": "果果短剧",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 23500,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 30
+   }
+  },
+  {
+   "key": "飞娱影视",
+   "kind": "csp",
+   "cls": "csp_Feiyu",
+   "level": "C3",
+   "ms": 3225,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 20,
+    "search_hits": 14,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "独播影视",
+   "kind": "csp",
+   "cls": "csp_Duboku",
+   "level": "C3",
+   "ms": 94069,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 9,
+    "cat_items": 48,
+    "search_hits": 2,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "厂长影视",
+   "kind": "csp",
+   "cls": "csp_Czsapp",
+   "level": "C2",
+   "ms": 8937,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 25,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "金牌影视",
+   "kind": "csp",
+   "cls": "csp_Jpys",
+   "level": "C3",
+   "ms": 5159,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 48,
+    "search_hits": 3,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "枫叶影视",
+   "kind": "csp",
+   "cls": "csp_FengYe",
+   "level": "C5",
+   "ms": 5831,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 24,
+    "search_hits": 4,
+    "detail_raw": 1176,
+    "play_raw_len": 641,
+    "parse": 0,
+    "play_out": "https://vip.dytt-play.com/20250417/13478_90ccff10/index.m3u8",
+    "play_id": "74893-74893-1-1"
+   }
+  },
+  {
+   "key": "爱看机器人",
+   "kind": "csp",
+   "cls": "csp_Ikanbot",
+   "level": "C3",
+   "ms": 29192,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 24,
+    "search_hits": 10,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "面包影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "永乐影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C5",
+   "ms": 68534,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 72,
+    "search_hits": 4,
+    "detail_raw": 13350,
+    "play_raw_len": 11437,
+    "parse": 0,
+    "play_out": "https://y6fa.um3u8.com/videos/202508/15/689fc9b6f22d5184d975395c/d533g1/index.m3u8",
+    "play_id": "https://www.ylys.tv/play/79134-1-1/"
+   }
+  },
+  {
+   "key": "1905",
+   "kind": "csp",
+   "cls": "csp_Web1905",
+   "level": "C2",
+   "ms": 30631,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 24,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "番社动漫",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "双星99",
+   "kind": "csp",
+   "cls": "csp_App99",
+   "level": "C2",
+   "ms": 654,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 21,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "咕咕动漫",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C2",
+   "ms": 61972,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 30,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "巴士动漫",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 20003,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 36
+   }
+  },
+  {
+   "key": "荐片",
+   "kind": "csp",
+   "cls": "csp_JianPian",
+   "level": "C3",
+   "ms": 24946,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 15,
+    "search_hits": 20,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "New6v",
+   "kind": "csp",
+   "cls": "csp_New6v",
+   "level": "C2",
+   "ms": 2036,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 15,
+    "cat_items": 18,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "迅雷吧",
+   "kind": "csp",
+   "cls": "csp_Xunlei8",
+   "level": "C3",
+   "ms": 22388,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 2,
+    "cat_items": 30,
+    "search_hits": 3,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "阿里云盘",
+   "kind": "csp",
+   "cls": "csp_PanAli",
+   "level": "C1",
+   "ms": 71,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "夸克网盘",
+   "kind": "csp",
+   "cls": "csp_PanQuark",
+   "level": "C1",
+   "ms": 67,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "UC网盘",
+   "kind": "csp",
+   "cls": "csp_PanUC",
+   "level": "C1",
+   "ms": 66,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "百度网盘",
+   "kind": "csp",
+   "cls": "csp_PanBaidu",
+   "level": "C1",
+   "ms": 30313,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "迅雷云盘",
+   "kind": "csp",
+   "cls": "csp_PanXunlei",
+   "level": "C1",
+   "ms": 30687,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "光鸭云盘",
+   "kind": "csp",
+   "cls": "csp_PanGuangya",
+   "level": "C1",
+   "ms": 463,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "天翼云盘",
+   "kind": "csp",
+   "cls": "csp_PanTianyi",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "123云盘",
+   "kind": "csp",
+   "cls": "csp_Pan123",
+   "level": "C1",
+   "ms": 309,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "聚合",
+   "kind": "csp",
+   "cls": "csp_JuheSo",
+   "level": "C0",
+   "ms": 6,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "盘搜",
+   "kind": "csp",
+   "cls": "csp_PanSou",
+   "level": "C0",
+   "ms": 6,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "百酷",
+   "kind": "csp",
+   "cls": "csp_Baiku",
+   "level": "C0",
+   "ms": 4,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "酷乐",
+   "kind": "csp",
+   "cls": "csp_KuLe",
+   "level": "C0",
+   "ms": 2,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "鬼鬼",
+   "kind": "csp",
+   "cls": "csp_GuiGui",
+   "level": "C0",
+   "ms": 2,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "趣盘",
+   "kind": "csp",
+   "cls": "csp_QuPanSo",
+   "level": "C0",
+   "ms": 3,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "88看球",
+   "kind": "csp",
+   "cls": "csp_Sports88",
+   "level": "C1",
+   "ms": 34,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "瓜子体育",
+   "kind": "csp",
+   "cls": "csp_SportsGuazi",
+   "level": "C2",
+   "ms": 66110,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 20
+   }
+  },
+  {
+   "key": "咖啡体育",
+   "kind": "csp",
+   "cls": "csp_SportsKafei",
+   "level": "C2",
+   "ms": 2689,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 30
+   }
+  },
+  {
+   "key": "呦呦DJ",
+   "kind": "csp",
+   "cls": "csp_Djuu",
+   "level": "C2",
+   "ms": 473,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 11,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "蜻蜓FM",
+   "kind": "csp",
+   "cls": "csp_QingtingFM",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "世界听书",
+   "kind": "csp",
+   "cls": "csp_TingShijie",
+   "level": "C5",
+   "ms": 31935,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 11,
+    "cat_items": 120,
+    "search_hits": 16,
+    "detail_raw": 28760,
+    "play_raw_len": 28478,
+    "parse": 0,
+    "play_out": "http://audiopay.cos.tx.xmcdn.com/download/1.0.0/storages/ad4c-audiopay/AC/7E/GKwRIRwKFGdLADX1zgLRnC_e.m4a?sign=1f42b8b60091831dd8a713c54b1aa68e&buy_key=FM&token=1963&timestamp=1789",
+    "play_id": "70|70653"
+   }
+  },
+  {
+   "key": "堇夏听书",
+   "kind": "csp",
+   "cls": "csp_TingJinxia",
+   "level": "C5",
+   "ms": 5339,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 9,
+    "cat_items": 8,
+    "search_hits": 1,
+    "detail_raw": 875,
+    "play_raw_len": 185,
+    "parse": 0,
+    "play_out": "https://oss-links.guoguo.org.cn/uploads/t008/02-庆余年-梁小渔/01.m4a",
+    "play_id": "/wuxiaxuanhuan/2003/0-1.html"
+   }
+  },
+  {
+   "key": "博看听书",
+   "kind": "csp",
+   "cls": "csp_TingBokan",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "戏曲多多",
+   "kind": "csp",
+   "cls": "csp_AppLY",
+   "level": "C2",
+   "ms": 331,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 77,
+    "cat_items": 2
+   }
+  },
+  {
+   "key": "童趣",
+   "kind": "csp",
+   "cls": "csp_TongQu",
+   "level": "C2",
+   "ms": 1005,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 19,
+    "cat_items": 18,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "兔小贝",
+   "kind": "csp",
+   "cls": "csp_TuXiaoBei",
+   "level": "C1",
+   "ms": 1061,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 48,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "贝乐虎",
+   "kind": "csp",
+   "cls": "csp_BeiLeHu",
+   "level": "C2",
+   "ms": 345,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 38,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "哔哩哔哩音乐",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "哔哩哔哩听书",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "哔哩哔哩相声",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "哔哩哔哩小品",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>45s"
+   }
+  },
+  {
+   "key": "哔哩哔哩戏曲",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C2",
+   "ms": 241798,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 50,
+    "cat_items": 20
+   }
+  },
+  {
+   "key": "少儿教育",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 241307,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "小学课堂",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 241687,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "初中课堂",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 226,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "高中课堂",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 648,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "养生堂",
+   "kind": "csp",
+   "cls": "csp_YST",
+   "level": "C2",
+   "ms": 30962,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 9,
+    "cat_items": 264
+   }
+  },
+  {
+   "key": "push_agent",
+   "kind": "csp",
+   "cls": "csp_Push",
+   "level": "C0",
+   "ms": 5,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "豆瓣",
+   "kind": "csp",
+   "cls": "csp_Douban",
+   "level": "C0",
+   "ms": 248,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "TGYunPanLocal",
+   "kind": "csp",
+   "cls": "csp_TGYunPanLocal",
+   "level": "C0",
+   "ms": 555,
+   "flags": {},
+   "evidence": {
+    "err": "NoSuchFieldError: No field e of type Ljava/util/concurrent/ExecutorService; in class Lcom/github/catvod/spider/Init; or its superclasses (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "Youtube",
+   "kind": "csp",
+   "cls": "csp_Youtube",
+   "level": "C0",
+   "ms": 552,
+   "flags": {},
+   "evidence": {
+    "err": "NoSuchFieldError: No field e of type Ljava/util/concurrent/ExecutorService; in class Lcom/github/catvod/spider/Init; or its superclasses (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "FirstAid",
+   "kind": "csp",
+   "cls": "csp_FirstAid",
+   "level": "C2",
+   "ms": 1866,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 8,
+    "cat_items": 19,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "酷狗",
+   "kind": "csp",
+   "cls": "csp_Kugou",
+   "level": "C2",
+   "ms": 30357,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 21
+   }
+  },
+  {
+   "key": "Iktv",
+   "kind": "csp",
+   "cls": "csp_Iktv",
+   "level": "C1",
+   "ms": 64500,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3
+   }
+  },
+  {
+   "key": "Yinyuetai",
+   "kind": "csp",
+   "cls": "csp_Yinyuetai",
+   "level": "C2",
+   "ms": 440,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 20
+   }
+  },
+  {
+   "key": "AliShareEBook",
+   "kind": "csp",
+   "cls": "csp_AliShare",
+   "level": "C0",
+   "ms": 87,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "荐片弹幕版",
+   "kind": "csp",
+   "cls": "csp_Jianpian",
+   "level": "C0",
+   "ms": 1686,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Bdys_spider",
+   "kind": "csp",
+   "cls": "csp_Bdys01",
+   "level": "C0",
+   "ms": 110,
+   "flags": {},
+   "evidence": {
+    "err": "NoSuchFieldError: No static field d of type Ljava/util/concurrent/ExecutorService; in class Lcom/github/catvod/spider/Init; or its superclasses (declaration of 'com.git"
+   }
+  },
+  {
+   "key": "天天",
+   "kind": "csp",
+   "cls": "csp_TTian",
+   "level": "C0",
+   "ms": 77,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "追剧",
+   "kind": "csp",
+   "cls": "csp_TTian",
+   "level": "C0",
+   "ms": 60075,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "NanGua",
+   "kind": "csp",
+   "cls": "csp_NanGua",
+   "level": "C1",
+   "ms": 19284,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "PushShare",
+   "kind": "csp",
+   "cls": "csp_PushShare",
+   "level": "C0",
+   "ms": 3,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PushShare that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "PikPakShare",
+   "kind": "csp",
+   "cls": "csp_PikPakShare",
+   "level": "C0",
+   "ms": 496,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "AliShare",
+   "kind": "csp",
+   "cls": "csp_AliShare",
+   "level": "C0",
+   "ms": 38,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "ThunderShare",
+   "kind": "csp",
+   "cls": "csp_ThunderShare",
+   "level": "C0",
+   "ms": 272,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "QuarkShare",
+   "kind": "csp",
+   "cls": "csp_QuarkShare",
+   "level": "C0",
+   "ms": 53,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "115Share",
+   "kind": "csp",
+   "cls": "csp_P115Share",
+   "level": "C0",
+   "ms": 52,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "UCShare",
+   "kind": "csp",
+   "cls": "csp_UCShare",
+   "level": "C0",
+   "ms": 30,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "SambaShare",
+   "kind": "csp",
+   "cls": "csp_SambaShare",
+   "level": "C0",
+   "ms": 27,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "Wogg",
+   "kind": "csp",
+   "cls": "csp_Wogg",
+   "level": "C0",
+   "ms": 18,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "Wobg",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "yydsys",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "蜡笔网盘",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Mogg",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "土豆",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "小米网盘",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Xinshijue",
+   "kind": "csp",
+   "cls": "csp_Xinshijue",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Xinshijue that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "Moli",
+   "kind": "csp",
+   "cls": "csp_Moli",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Moli that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Bt0",
+   "kind": "csp",
+   "cls": "csp_Bt0",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Bt0 that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catvo"
+   }
+  },
+  {
+   "key": "ddys",
+   "kind": "csp",
+   "cls": "csp_Ddys",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Ddys that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Ppxzy",
+   "kind": "csp",
+   "cls": "csp_Ppxzy",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Ppxzy that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "新6V",
+   "kind": "csp",
+   "cls": "csp_Xb6v",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Xb6v that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "4KHDR",
+   "kind": "csp",
+   "cls": "csp_FourKHDR",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.FourKHDR that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "校长影视",
+   "kind": "csp",
+   "cls": "csp_XiaoZhang",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.XiaoZhang that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "团长资源",
+   "kind": "csp",
+   "cls": "csp_TZFile",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.TZFile that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "Hdhive",
+   "kind": "csp",
+   "cls": "csp_Hdh",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Hdh that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catvo"
+   }
+  },
+  {
+   "key": "Panta",
+   "kind": "csp",
+   "cls": "csp_Panta",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Panta that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "YunPan",
+   "kind": "csp",
+   "cls": "csp_YunPan",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.YunPan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "Wo4k",
+   "kind": "csp",
+   "cls": "csp_Wo4k",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wo4k that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Xpanpan",
+   "kind": "csp",
+   "cls": "csp_Xpanpan",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Xpanpan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "Gaoqing",
+   "kind": "csp",
+   "cls": "csp_Gaoqing",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Gaoqing that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "音范丝",
+   "kind": "csp",
+   "cls": "csp_Gaoqing",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Gaoqing that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "TGYunPan",
+   "kind": "csp",
+   "cls": "csp_TGYunPan",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.TGYunPan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "YingSo",
+   "kind": "csp",
+   "cls": "csp_YingSo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.YingSo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "盘友圈",
+   "kind": "csp",
+   "cls": "csp_Panyq",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Panyq that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "88Pan",
+   "kind": "csp",
+   "cls": "csp_EightEight",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.EightEight that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.githu"
+   }
+  },
+  {
+   "key": "PikaSo",
+   "kind": "csp",
+   "cls": "csp_PikaSo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PikaSo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "csp_HunHePan",
+   "kind": "csp",
+   "cls": "csp_HunHePan",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.HunHePan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "秒搜",
+   "kind": "csp",
+   "cls": "csp_MiaoSou",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.MiaoSou that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "Libvio",
+   "kind": "csp",
+   "cls": "csp_Libvio",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Libvio that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "DaPanSo",
+   "kind": "csp",
+   "cls": "csp_DaPanSo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.DaPanSo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "Qianfan",
+   "kind": "csp",
+   "cls": "csp_Qianfan",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Qianfan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "YunSo",
+   "kind": "csp",
+   "cls": "csp_YunSo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.YunSo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "YunPanOne",
+   "kind": "csp",
+   "cls": "csp_YunPanOne",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.YunPanOne that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "Gitcafe",
+   "kind": "csp",
+   "cls": "csp_Gitcafe",
+   "level": "C0",
+   "ms": 134,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "小紙條",
+   "kind": "csp",
+   "cls": "csp_XiaoZhiTiao",
+   "level": "C0",
+   "ms": 100,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "七夜",
+   "kind": "csp",
+   "cls": "csp_Dovx",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Dovx\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirectori"
+   }
+  },
+  {
+   "key": "盤搜索",
+   "kind": "csp",
+   "cls": "csp_PanSearch",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PanSearch that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "找資源",
+   "kind": "csp",
+   "cls": "csp_Zhaozy",
+   "level": "C0",
+   "ms": 19,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "易搜",
+   "kind": "csp",
+   "cls": "csp_YiSo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.YiSo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "UP云搜",
+   "kind": "csp",
+   "cls": "csp_UpYun",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.UpYun that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "Funletu",
+   "kind": "csp",
+   "cls": "csp_Funletu",
+   "level": "C0",
+   "ms": 30373,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "QuarkPanso",
+   "kind": "csp",
+   "cls": "csp_QuarkPanso",
+   "level": "C0",
+   "ms": 28,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "push_quark",
+   "kind": "csp",
+   "cls": "csp_Quark",
+   "level": "C0",
+   "ms": 1552,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "点我切源",
+   "kind": "csp",
+   "cls": "csp_DouDouGuard",
+   "level": "C0",
+   "ms": 4999,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MDrive",
+   "kind": "csp",
+   "cls": "csp_MyDriveGuard",
+   "level": "C0",
+   "ms": 1444,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "YGP",
+   "kind": "csp",
+   "cls": "csp_YGPGuard",
+   "level": "C0",
+   "ms": 6384,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MTV1",
+   "kind": "csp",
+   "cls": "csp_MusicGuard",
+   "level": "C0",
+   "ms": 6470,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "seed",
+   "kind": "csp",
+   "cls": "csp_SeedhubGuard",
+   "level": "C0",
+   "ms": 3298,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "光影",
+   "kind": "csp",
+   "cls": "csp_T4Guard",
+   "level": "C0",
+   "ms": 125,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "原创",
+   "kind": "csp",
+   "cls": "csp_YCyzGuard",
+   "level": "C0",
+   "ms": 6753,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "厂长",
+   "kind": "csp",
+   "cls": "csp_NewCzGuard",
+   "level": "C0",
+   "ms": 7099,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "海绵",
+   "kind": "csp",
+   "cls": "csp_HmysGuard",
+   "level": "C0",
+   "ms": 6795,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "立播",
+   "kind": "csp",
+   "cls": "csp_LibvioGuard",
+   "level": "C0",
+   "ms": 7088,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "瓜子",
+   "kind": "csp",
+   "cls": "csp_AppgzGuard",
+   "level": "C0",
+   "ms": 287,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "比特",
+   "kind": "csp",
+   "cls": "csp_BttwooGuard",
+   "level": "C0",
+   "ms": 7234,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "糯米",
+   "kind": "csp",
+   "cls": "csp_NmyswvGuard",
+   "level": "C0",
+   "ms": 7246,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "文采",
+   "kind": "csp",
+   "cls": "csp_JpysGuard",
+   "level": "C0",
+   "ms": 7140,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "奶酪",
+   "kind": "csp",
+   "cls": "csp_T4Guard",
+   "level": "C0",
+   "ms": 34,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "热播",
+   "kind": "csp",
+   "cls": "csp_AppTTGuard",
+   "level": "C0",
+   "ms": 6879,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "视界",
+   "kind": "csp",
+   "cls": "csp_App99Guard",
+   "level": "C0",
+   "ms": 6690,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "播客",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 7001,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "剧圈",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 7131,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "奥特",
+   "kind": "csp",
+   "cls": "csp_AueteGuard",
+   "level": "C0",
+   "ms": 7245,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "咕咕",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 6749,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Dm84",
+   "kind": "csp",
+   "cls": "csp_Dm84Guard",
+   "level": "C0",
+   "ms": 7081,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "看球",
+   "kind": "csp",
+   "cls": "csp_KanqiuGuard",
+   "level": "C0",
+   "ms": 7094,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "吃瓜",
+   "kind": "csp",
+   "cls": "csp_LiveGzGuard",
+   "level": "C0",
+   "ms": 568,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "alllive",
+   "kind": "csp",
+   "cls": "csp_AllliveGuard",
+   "level": "C0",
+   "ms": 7042,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MTV",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 7023,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "有声小说",
+   "kind": "csp",
+   "cls": "csp_Tingshu275Guard",
+   "level": "C0",
+   "ms": 6979,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Aid",
+   "kind": "csp",
+   "cls": "csp_FirstAidGuard",
+   "level": "C0",
+   "ms": 6968,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ZPan",
+   "kind": "csp",
+   "cls": "csp_S_zpsGuard",
+   "level": "C0",
+   "ms": 7041,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "JPan",
+   "kind": "csp",
+   "cls": "csp_S_zpsGuard",
+   "level": "C0",
+   "ms": 6781,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "YpanSo",
+   "kind": "csp",
+   "cls": "csp_YpanSoGuard",
+   "level": "C0",
+   "ms": 6761,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BpanSo",
+   "kind": "csp",
+   "cls": "csp_BpanSoGuard",
+   "level": "C0",
+   "ms": 18,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "抠搜",
+   "kind": "csp",
+   "cls": "csp_KkSsGuard",
+   "level": "C0",
+   "ms": 7327,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "UC",
+   "kind": "csp",
+   "cls": "csp_UuSsGuard",
+   "level": "C0",
+   "ms": 7029,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Bili",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 6879,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Biliych",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 6603,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "高中教育",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 6305,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_LocalFile",
+   "kind": "csp",
+   "cls": "csp_LocalFile",
+   "level": "C2",
+   "ms": 66,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 22
+   }
+  },
+  {
+   "key": "csp_Zhaozy",
+   "kind": "csp",
+   "cls": "csp_Zhaozy",
+   "level": "C0",
+   "ms": 19,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_AliPS",
+   "kind": "csp",
+   "cls": "csp_AliPS",
+   "level": "C0",
+   "ms": 3772,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Yisou",
+   "kind": "csp",
+   "cls": "csp_Yisou",
+   "level": "C0",
+   "ms": 79465,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_Upyunso",
+   "kind": "csp",
+   "cls": "csp_Upyunso",
+   "level": "C0",
+   "ms": 11487,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_XYQHiker_影搜",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 215,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "csp_XYQHikerAL_玩偶哥哥",
+   "kind": "csp",
+   "cls": "csp_XYQHikerAL",
+   "level": "C3",
+   "ms": 7220,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 70,
+    "search_hits": 6,
+    "detail_raw": 1204,
+    "play_raw_len": 0
+   }
+  },
+  {
+   "key": "csp_XYQHikerAL_云盘资源",
+   "kind": "csp",
+   "cls": "csp_XYQHikerAL",
+   "level": "C1",
+   "ms": 20561,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "csp_Mp4Mov",
+   "kind": "csp",
+   "cls": "csp_Mp4Mov",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Mp4Mov\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/spider.jar\"],nativeLibraryDirectorie"
+   }
+  },
+  {
+   "key": "csp_SeedHub",
+   "kind": "csp",
+   "cls": "csp_SeedHub",
+   "level": "C1",
+   "ms": 75,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_KubaCL",
+   "kind": "csp",
+   "cls": "csp_KubaCL",
+   "level": "C1",
+   "ms": 2800,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_MeijuTT",
+   "kind": "csp",
+   "cls": "csp_MeijuTT",
+   "level": "C1",
+   "ms": 59,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7
+   }
+  },
+  {
+   "key": "csp_MeijuMi",
+   "kind": "csp",
+   "cls": "csp_MeijuMi",
+   "level": "C2",
+   "ms": 3796,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 17,
+    "cat_items": 15,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Xunlei8",
+   "kind": "csp",
+   "cls": "csp_Xunlei8",
+   "level": "C1",
+   "ms": 40119,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 2
+   }
+  },
+  {
+   "key": "360_spider",
+   "kind": "csp",
+   "cls": "csp_SP360",
+   "level": "C3",
+   "ms": 1025,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 35,
+    "search_hits": 4,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_Czsapp",
+   "kind": "csp",
+   "cls": "csp_Czsapp",
+   "level": "C0",
+   "ms": 39,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Bdys",
+   "kind": "csp",
+   "cls": "csp_Bdys",
+   "level": "C0",
+   "ms": 2783,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_XYQHiker_哔嘀影视",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 4173,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 43
+   }
+  },
+  {
+   "key": "csp_Ddys",
+   "kind": "csp",
+   "cls": "csp_Ddys",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Ddys that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "csp_JianPian",
+   "kind": "csp",
+   "cls": "csp_JianPian",
+   "level": "C3",
+   "ms": 26066,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 15,
+    "search_hits": 20,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "csp_Ikanbot",
+   "kind": "csp",
+   "cls": "csp_Ikanbot",
+   "level": "C1",
+   "ms": 22876,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Bili",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 427,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_兔小贝",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C2",
+   "ms": 1676,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 30,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_兔小贝2",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C2",
+   "ms": 2239,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 44,
+    "cat_items": 266,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_播视童趣",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 13,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 19
+   }
+  },
+  {
+   "key": "csp_Bili幼儿",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C5",
+   "ms": 1414,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 20,
+    "detail_raw": 1448,
+    "play_raw_len": 1035,
+    "parse": 0,
+    "play_out": "[\"清晰 480P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=32&type=mpd\",\"流畅 360P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=16&typ",
+    "play_id": "353534125+1055476003+32:16+清晰 480P:流畅 360P"
+   }
+  },
+  {
+   "key": "csp_Bili少儿",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C5",
+   "ms": 1362,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 20,
+    "detail_raw": 1448,
+    "play_raw_len": 1035,
+    "parse": 0,
+    "play_out": "[\"清晰 480P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=32&type=mpd\",\"流畅 360P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=16&typ",
+    "play_id": "353534125+1055476003+32:16+清晰 480P:流畅 360P"
+   }
+  },
+  {
+   "key": "csp_Bili小学",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C5",
+   "ms": 1163,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 20,
+    "detail_raw": 1448,
+    "play_raw_len": 1035,
+    "parse": 0,
+    "play_out": "[\"清晰 480P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=32&type=mpd\",\"流畅 360P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=16&typ",
+    "play_id": "353534125+1055476003+32:16+清晰 480P:流畅 360P"
+   }
+  },
+  {
+   "key": "csp_Bili初中",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 222,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_Bili高中",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 211,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_Bili短剧",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C5",
+   "ms": 1331,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 20,
+    "detail_raw": 1448,
+    "play_raw_len": 1035,
+    "parse": 0,
+    "play_out": "[\"清晰 480P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=32&type=mpd\",\"流畅 360P\",\"http:\\/\\/127.0.0.1:-1\\/proxy?do=bili&aid=353534125&cid=1055476003&qn=16&typ",
+    "play_id": "353534125+1055476003+32:16+清晰 480P:流畅 360P"
+   }
+  },
+  {
+   "key": "csp_XYQHiker_爱你短剧",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 20076,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 9
+   }
+  },
+  {
+   "key": "csp_XYQHiker_河马短剧",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C2",
+   "ms": 698,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 10,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_短剧屋",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 87,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "csp_XYQHiker_农民影视",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 453,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_七新影视",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 1121,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_可可影视",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 11456,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Yj1211",
+   "kind": "csp",
+   "cls": "csp_Yj1211",
+   "level": "C0",
+   "ms": 6109,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_XYQHiker_虎牙直播",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C2",
+   "ms": 2825,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 120,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "白白",
+   "kind": "csp",
+   "cls": "csp_SbaibaiGuard",
+   "level": "C0",
+   "ms": 4722,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "神车",
+   "kind": "csp",
+   "cls": "csp_AppSKGuard",
+   "level": "C0",
+   "ms": 4574,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Lib",
+   "kind": "csp",
+   "cls": "csp_LibvioGuard",
+   "level": "C0",
+   "ms": 4479,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "zxzj",
+   "kind": "csp",
+   "cls": "csp_ZxzjGuard",
+   "level": "C0",
+   "ms": 5003,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "溢彩",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 5024,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "低端",
+   "kind": "csp",
+   "cls": "csp_DdrkGuard",
+   "level": "C0",
+   "ms": 4962,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "萌米",
+   "kind": "csp",
+   "cls": "csp_AppTTGuard",
+   "level": "C0",
+   "ms": 4969,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "兄弟",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 5094,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "欢视",
+   "kind": "csp",
+   "cls": "csp_AppTTGuard",
+   "level": "C0",
+   "ms": 5407,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "贱贱",
+   "kind": "csp",
+   "cls": "csp_JPJGuard",
+   "level": "C0",
+   "ms": 5309,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Ysj",
+   "kind": "csp",
+   "cls": "csp_YsjGuard",
+   "level": "C0",
+   "ms": 5346,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Anime1",
+   "kind": "csp",
+   "cls": "csp_Anime1Guard",
+   "level": "C0",
+   "ms": 5314,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "926",
+   "kind": "csp",
+   "cls": "csp_kanqiu926Guard",
+   "level": "C0",
+   "ms": 5335,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "88",
+   "kind": "csp",
+   "cls": "csp_Sir88Guard",
+   "level": "C0",
+   "ms": 5332,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "xzso",
+   "kind": "csp",
+   "cls": "csp_XzsoGuard",
+   "level": "C0",
+   "ms": 5382,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "米搜",
+   "kind": "csp",
+   "cls": "csp_MIPanSoGuard",
+   "level": "C0",
+   "ms": 5338,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "夸搜",
+   "kind": "csp",
+   "cls": "csp_PanSearchGuard",
+   "level": "C0",
+   "ms": 5324,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Aliso",
+   "kind": "csp",
+   "cls": "csp_PanSearchGuard",
+   "level": "C0",
+   "ms": 5321,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "YiSo",
+   "kind": "csp",
+   "cls": "csp_YiSoGuard",
+   "level": "C0",
+   "ms": 2483,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_YGP",
+   "kind": "csp",
+   "cls": "csp_YGP",
+   "level": "C2",
+   "ms": 1293,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 30,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "Local",
+   "kind": "csp",
+   "cls": "csp_Local",
+   "level": "C2",
+   "ms": 95,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 22
+   }
+  },
+  {
+   "key": "csp_XPath_企鹅体育",
+   "kind": "csp",
+   "cls": "csp_XPath",
+   "level": "C1",
+   "ms": 1097,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 11,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "Ikanbot",
+   "kind": "csp",
+   "cls": "csp_Ikanbot",
+   "level": "C1",
+   "ms": 3076,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "MeijuTT",
+   "kind": "csp",
+   "cls": "csp_MeijuTT",
+   "level": "C1",
+   "ms": 28,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7
+   }
+  },
+  {
+   "key": "SeedHub",
+   "kind": "csp",
+   "cls": "csp_SeedHub",
+   "level": "C1",
+   "ms": 147,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "Mayiys",
+   "kind": "csp",
+   "cls": "csp_Mayiys",
+   "level": "C0",
+   "ms": 13956,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "星星",
+   "kind": "csp",
+   "cls": "csp_Star",
+   "level": "C0",
+   "ms": 51240,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "影视",
+   "kind": "csp",
+   "cls": "csp_YingShi",
+   "level": "C0",
+   "ms": 134,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "巴士",
+   "kind": "csp",
+   "cls": "csp_Dm84",
+   "level": "C0",
+   "ms": 4243,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "獨播",
+   "kind": "csp",
+   "cls": "csp_XPathMacFilter",
+   "level": "C0",
+   "ms": 13,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AList",
+   "kind": "csp",
+   "cls": "csp_AList",
+   "level": "C1",
+   "ms": 122661,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "WebDAV",
+   "kind": "csp",
+   "cls": "csp_WebDAV",
+   "level": "C0",
+   "ms": 48,
+   "flags": {},
+   "evidence": {
+    "err": "NoClassDefFoundError: Failed resolution of: Lcom/thegrizzlylabs/sardineandroid/DavResource;"
+   }
+  },
+  {
+   "key": "fan",
+   "kind": "csp",
+   "cls": "csp_XPathGuard",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.XPathGuard\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDir"
+   }
+  },
+  {
+   "key": "商店",
+   "kind": "csp",
+   "cls": "csp_Market",
+   "level": "C2",
+   "ms": 80,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 8
+   }
+  },
+  {
+   "key": "賤賤",
+   "kind": "csp",
+   "cls": "csp_Jianpian",
+   "level": "C0",
+   "ms": 575,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "異界",
+   "kind": "csp",
+   "cls": "csp_Ysj",
+   "level": "C1",
+   "ms": 62491,
+   "flags": {
+    "home": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 31
+   }
+  },
+  {
+   "key": "哔哩",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 534,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "JustLive",
+   "kind": "csp",
+   "cls": "csp_JustLive",
+   "level": "C0",
+   "ms": 16,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "雲搜",
+   "kind": "csp",
+   "cls": "csp_UpYun",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.UpYun that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "紙條搜",
+   "kind": "csp",
+   "cls": "csp_XiaoZhiTiao",
+   "level": "C0",
+   "ms": 3,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "664K",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 60224,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "4Kdy",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 60082,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "即看",
+   "kind": "csp",
+   "cls": "csp_AppSxGuard",
+   "level": "C0",
+   "ms": 4947,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Auete",
+   "kind": "csp",
+   "cls": "csp_AueteGuard",
+   "level": "C0",
+   "ms": 4950,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "酷影视",
+   "kind": "csp",
+   "cls": "csp_AppYsV2Guard",
+   "level": "C0",
+   "ms": 4991,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "央视经典",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 4976,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "樱花",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 60084,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "UCsousou",
+   "kind": "csp",
+   "cls": "csp_UuSsGuard",
+   "level": "C0",
+   "ms": 4964,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "PanSso",
+   "kind": "csp",
+   "cls": "csp_PanSsoGuard",
+   "level": "C0",
+   "ms": 816,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "PikPakShare1",
+   "kind": "csp",
+   "cls": "csp_PikPakShare",
+   "level": "C0",
+   "ms": 18,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "PikPakShare18",
+   "kind": "csp",
+   "cls": "csp_PikPakShare",
+   "level": "C0",
+   "ms": 17,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_BtSow",
+   "kind": "csp",
+   "cls": "csp_BtSow",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.BtSow that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "csp_BtSearch",
+   "kind": "csp",
+   "cls": "csp_BtSearch",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.BtSearch that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "csp_Netflav",
+   "kind": "csp",
+   "cls": "csp_Netflav",
+   "level": "C0",
+   "ms": 62779,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SeHuaTang",
+   "kind": "csp",
+   "cls": "csp_SeHuaTang",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.SeHuaTang that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "Xojav",
+   "kind": "csp",
+   "cls": "csp_Xojav",
+   "level": "C0",
+   "ms": 2061,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Cable",
+   "kind": "csp",
+   "cls": "csp_Cable",
+   "level": "C0",
+   "ms": 30125,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AvTime",
+   "kind": "csp",
+   "cls": "csp_AvTime",
+   "level": "C0",
+   "ms": 108,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Top888",
+   "kind": "csp",
+   "cls": "csp_Top888",
+   "level": "C0",
+   "ms": 61226,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_JavBus",
+   "kind": "csp",
+   "cls": "csp_JavBus",
+   "level": "C0",
+   "ms": 3,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.JavBus that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "csp_JavDb",
+   "kind": "csp",
+   "cls": "csp_JavDb",
+   "level": "C0",
+   "ms": 3,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.JavDb that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "18AV",
+   "kind": "csp",
+   "cls": "csp_Eighteen",
+   "level": "C0",
+   "ms": 247560,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Jable",
+   "kind": "csp",
+   "cls": "csp_Jable",
+   "level": "C0",
+   "ms": 61753,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MissAV",
+   "kind": "csp",
+   "cls": "csp_Miss",
+   "level": "C0",
+   "ms": 61049,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Hanime",
+   "kind": "csp",
+   "cls": "csp_Hanime",
+   "level": "C0",
+   "ms": 31022,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xuexi",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 350,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "木星",
+   "kind": "csp",
+   "cls": "csp_AppSx",
+   "level": "C0",
+   "ms": 60567,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "速播",
+   "kind": "csp",
+   "cls": "csp_AppSx",
+   "level": "C0",
+   "ms": 60079,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "南瓜",
+   "kind": "csp",
+   "cls": "csp_NanGua",
+   "level": "C1",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "可可",
+   "kind": "csp",
+   "cls": "csp_Kekys",
+   "level": "C0",
+   "ms": 2284,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "短剧",
+   "kind": "csp",
+   "cls": "csp_Djtt",
+   "level": "C0",
+   "ms": 120545,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "Sso",
+   "kind": "csp",
+   "cls": "csp_PanSso",
+   "level": "C0",
+   "ms": 1619,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "PanSearch",
+   "kind": "csp",
+   "cls": "csp_PanSearch",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PanSearch that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "TGDouban",
+   "kind": "csp",
+   "cls": "csp_TGDouban",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.TGDouban that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "网盘配置",
+   "kind": "csp",
+   "cls": "csp_Config",
+   "level": "C1",
+   "ms": 59,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 11
+   }
+  },
+  {
+   "key": "bili",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 188,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "盘链",
+   "kind": "csp",
+   "cls": "csp_PingLian",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PingLian that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "csp_Qwmp4",
+   "kind": "csp",
+   "cls": "csp_Qwmp4",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Qwmp4 that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "zmi",
+   "kind": "csp",
+   "cls": "csp_Zmi",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Zmi that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catvo"
+   }
+  },
+  {
+   "key": "PanSouGo",
+   "kind": "csp",
+   "cls": "csp_PanSouGo",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PanSouGo that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "光鸭社区",
+   "kind": "csp",
+   "cls": "csp_GuangYaShequ",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.GuangYaShequ that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.git"
+   }
+  },
+  {
+   "key": "HuamuCangShare",
+   "kind": "csp",
+   "cls": "csp_HuamuCangShare",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.HuamuCangShare that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.g"
+   }
+  },
+  {
+   "key": "Guanying",
+   "kind": "csp",
+   "cls": "csp_Guanying",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Guanying that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "FourKZN",
+   "kind": "csp",
+   "cls": "csp_FourKZN",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.FourKZN that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "至臻|网盘",
+   "kind": "csp",
+   "cls": "csp_Wobg",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Wobg that attempts to sub-type erroneous class com.github.catvod.spider.Wogg (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "LIBVIO",
+   "kind": "csp",
+   "cls": "csp_Libvio",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Libvio that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.ca"
+   }
+  },
+  {
+   "key": "HongGuo",
+   "kind": "csp",
+   "cls": "csp_HongGuo",
+   "level": "C2",
+   "ms": 63154,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 27,
+    "cat_items": 23
+   }
+  },
+  {
+   "key": "Guazi",
+   "kind": "csp",
+   "cls": "csp_Guazi",
+   "level": "C2",
+   "ms": 6923,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 30
+   }
+  },
+  {
+   "key": "AlistShare",
+   "kind": "csp",
+   "cls": "csp_AlistShare",
+   "level": "C0",
+   "ms": 3,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.AlistShare that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.githu"
+   }
+  },
+  {
+   "key": "123Share",
+   "kind": "csp",
+   "cls": "csp_P123Share",
+   "level": "C0",
+   "ms": 92,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "189Share",
+   "kind": "csp",
+   "cls": "csp_P189Share",
+   "level": "C0",
+   "ms": 57,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "TianYiSou",
+   "kind": "csp",
+   "cls": "csp_TianYiSou",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.TianYiSou that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "混合盘",
+   "kind": "csp",
+   "cls": "csp_HunHePan",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.HunHePan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "BLSGod",
+   "kind": "csp",
+   "cls": "csp_BLSGod",
+   "level": "C2",
+   "ms": 2250,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 25
+   }
+  },
+  {
+   "key": "飞快影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C5",
+   "ms": 23011,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 40,
+    "search_hits": 13,
+    "detail_raw": 9974,
+    "play_raw_len": 8608,
+    "parse": 0,
+    "play_out": "https://vodcnd12.myqqdd.com/20250220/ScQBdy2s/index.m3u8",
+    "play_id": "http://feikuai.in/vodplay/42026-6-1.html"
+   }
+  },
+  {
+   "key": "人人影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 25471,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "农民影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 6107,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "熊猫影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 8131,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "秀儿影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C3",
+   "ms": 64608,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "search_hits": 15,
+    "detail_raw": 0
+   }
+  },
+  {
+   "key": "毒舌影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 8439,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "星辰影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 22830,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "全网看",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 19412,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "free影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13615,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "喝茶影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 8471,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7
+   }
+  },
+  {
+   "key": "策弛影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 5809,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "茶杯狐影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 36144,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "瓜籽影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 638865,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "来看点播",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 115083,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "布卡影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 32062,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "一帆影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 72354,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "欧乐影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C5",
+   "ms": 75067,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 48,
+    "search_hits": 8,
+    "detail_raw": 2543,
+    "play_raw_len": 1821,
+    "parse": 1,
+    "play_out": "https://www.ifuntv.cc/play/62034-1-1.html",
+    "play_id": "https://www.ifuntv.cc/play/62034-1-1.html"
+   }
+  },
+  {
+   "key": "奇迹",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 6435,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "MXDM",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 62282,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "小镇",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 17979,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "狐狸君",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10817,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "大白鲨",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 12718,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "csp_Sukebei",
+   "kind": "csp",
+   "cls": "csp_Sukebei",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Sukebei that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.c"
+   }
+  },
+  {
+   "key": "TGYunPan18pan",
+   "kind": "csp",
+   "cls": "csp_TGYunPan",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.TGYunPan that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github."
+   }
+  },
+  {
+   "key": "Zuise",
+   "kind": "csp",
+   "cls": "csp_Zuise",
+   "level": "C0",
+   "ms": 3183,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "终端窗口",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C4",
+   "ms": 515,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 1,
+    "search_hits": 1,
+    "detail_raw": 140,
+    "play_raw_len": 11,
+    "parse": 0,
+    "play_id": "call"
+   }
+  },
+  {
+   "key": "csp_Dybj",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 202,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_Dybjt",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 13,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "运行",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C4",
+   "ms": 4,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 1,
+    "search_hits": 1,
+    "detail_raw": 140,
+    "play_raw_len": 11,
+    "parse": 0,
+    "play_id": "call"
+   }
+  },
+  {
+   "key": "UI模块",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 31,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "油管so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C1",
+   "ms": 60403,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "油管webjartv",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 135253,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "哔哩so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C5",
+   "ms": 1744,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 20,
+    "search_hits": 42,
+    "detail_raw": 4348,
+    "play_raw_len": 3916,
+    "parse": 0,
+    "play_out": "data:application/dash+xml;base64,PE1QRCB4bWxucz0idXJuOm1wZWc6ZGFzaDpzY2hlbWE6bXBkOjIwMTEiIHR5cGU9InN0YXRpYyIgbWVkaWFQcmVzZW50YXRpb25EdXJhdGlvbj0iUFQxNjM4LjAwUyIgbWluQnVmZmVyVGltZT0",
+    "play_id": "353534125+1055476003+32:16+清晰 480P:流畅 360P"
+   }
+  },
+  {
+   "key": "华人so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C5",
+   "ms": 12064,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 21,
+    "search_hits": 4,
+    "detail_raw": 5471,
+    "play_raw_len": 3063,
+    "parse": 0,
+    "play_out": "https://pikachu.okokserver.com/link/penny-f52e896e05b34fe784d9c82cbea50175.m3u8",
+    "play_id": "https://cdnhr.b-cdn.net/2/14/qing_yu_nian_1/59808_1/index.m3u8"
+   }
+  },
+  {
+   "key": "爱瓜实验",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 5,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "网页工具",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 20,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "本地服务管理",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 59,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "HuyaLive",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 1,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "TxtLiveList",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 12,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "采集全集",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "音乐实验",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 3,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "听书so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C2",
+   "ms": 970,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 10,
+    "cat_items": 30,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "三三小说",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 4,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "七猫小说",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 4,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "阅读源so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C1",
+   "ms": 109,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "阅读助手",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C0",
+   "ms": 3,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "本地小说so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C2",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 2,
+    "cat_items": 1,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "捡的音乐so",
+   "kind": "csp",
+   "cls": "csp_ProxySpider",
+   "level": "C3",
+   "ms": 3572,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 16,
+    "cat_items": 40,
+    "search_hits": 40,
+    "detail_raw": 2
+   }
+  },
+  {
+   "key": "wv_mcp",
+   "kind": "csp",
+   "cls": "csp_WvMcp",
+   "level": "C2",
+   "ms": 185,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 3,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "wv_3q",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 888,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_ddys",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 87,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_jldj",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 33,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_xhjw",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 38,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_jqqzx",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 41,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_jddzx",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 55,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_aizju",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 56,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_555ys",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 52,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_fktv",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 61,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_xlys",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 54,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "wv_ysp",
+   "kind": "csp",
+   "cls": "csp_WvSpider",
+   "level": "C0",
+   "ms": 44,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "qiletv",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 23858,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "nbys",
+   "kind": "csp",
+   "cls": "csp_Nbys",
+   "level": "C0",
+   "ms": 89,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Alist",
+   "kind": "csp",
+   "cls": "csp_Alist",
+   "level": "C1",
+   "ms": 8,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1
+   }
+  },
+  {
+   "key": "csp_xb_lez",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 2383,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_XBPQ_6080",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>300s"
+   }
+  },
+  {
+   "key": "csp_XBPQ_南瓜影视",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 2782,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_biubiu_短视频",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 3761,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xb_zxzj",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 726,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xb_auete",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 335,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xb_lib",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 35,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xbpq_lgyy",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 1095,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_xb_lgyys",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 87,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_xb_zbk",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 180392,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_xb_ysgc",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 18686,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_xb_cokemv",
+   "kind": "csp",
+   "cls": "csp_XBiu",
+   "level": "C0",
+   "ms": 180325,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0
+   }
+  },
+  {
+   "key": "csp_XBPQ_98影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 8356,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "找资源",
+   "kind": "csp",
+   "cls": "csp_Zhaozy",
+   "level": "C0",
+   "ms": 7,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "upyunsou",
+   "kind": "csp",
+   "cls": "csp_Upyunso",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Upyunso\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/spider.jar\"],nativeLibraryDirectori"
+   }
+  },
+  {
+   "key": "yisou",
+   "kind": "csp",
+   "cls": "csp_Yisou",
+   "level": "C0",
+   "ms": 84919,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AliPS",
+   "kind": "csp",
+   "cls": "csp_AliPS",
+   "level": "C0",
+   "ms": 9319,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "Douban",
+   "kind": "csp",
+   "cls": "csp_NewDouBanGuard",
+   "level": "C0",
+   "ms": 4725,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Wexconfig",
+   "kind": "csp",
+   "cls": "csp_PanConfigGuard",
+   "level": "C0",
+   "ms": 4585,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MyPan",
+   "kind": "csp",
+   "cls": "csp_MyPanGuard",
+   "level": "C0",
+   "ms": 4725,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "花卷",
+   "kind": "csp",
+   "cls": "csp_AiNewHuaJuanGuard",
+   "level": "C0",
+   "ms": 5422,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewGuanYing",
+   "kind": "csp",
+   "cls": "csp_AiNewGuanYingGuard",
+   "level": "C0",
+   "ms": 5211,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiQwMkv",
+   "kind": "csp",
+   "cls": "csp_AiQwMkvGuard",
+   "level": "C0",
+   "ms": 5685,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewPianKu",
+   "kind": "csp",
+   "cls": "csp_AiNewPianKuGuard",
+   "level": "C0",
+   "ms": 5338,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewHuBan",
+   "kind": "csp",
+   "cls": "csp_AiNewHuBanGuard",
+   "level": "C0",
+   "ms": 5393,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewMuOu",
+   "kind": "csp",
+   "cls": "csp_AiNewMuOuGuard",
+   "level": "C0",
+   "ms": 4801,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewDuoDuo",
+   "kind": "csp",
+   "cls": "csp_AiNewDuoDuoGuard",
+   "level": "C0",
+   "ms": 4405,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewJuTou",
+   "kind": "csp",
+   "cls": "csp_AiNewJuTouGuard",
+   "level": "C0",
+   "ms": 4383,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewLibvio",
+   "kind": "csp",
+   "cls": "csp_AiNewLibvioGuard",
+   "level": "C0",
+   "ms": 4407,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "原盘",
+   "kind": "csp",
+   "cls": "csp_AiNewZhiNan4KGuard",
+   "level": "C0",
+   "ms": 4898,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "蜗牛",
+   "kind": "csp",
+   "cls": "csp_AiNewWoNiu4KGuard",
+   "level": "C0",
+   "ms": 5104,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiPan1Me",
+   "kind": "csp",
+   "cls": "csp_AiPan1MeGuard",
+   "level": "C0",
+   "ms": 5055,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AiNewYiDong4K",
+   "kind": "csp",
+   "cls": "csp_AiNewYiDong4KGuard",
+   "level": "C0",
+   "ms": 5060,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexHanXiaoQuan",
+   "kind": "csp",
+   "cls": "csp_WexAiHanXiaoQuanGuard",
+   "level": "C0",
+   "ms": 5039,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiGuaZi",
+   "kind": "csp",
+   "cls": "csp_WexAiGuaZiGuard",
+   "level": "C0",
+   "ms": 4980,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiDuBoKu",
+   "kind": "csp",
+   "cls": "csp_WexAiDuBoKuGuard",
+   "level": "C0",
+   "ms": 4978,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiYueYue",
+   "kind": "csp",
+   "cls": "csp_WexAiYueYueGuard",
+   "level": "C0",
+   "ms": 4984,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiWenCai",
+   "kind": "csp",
+   "cls": "csp_WexAiWenCaiGuard",
+   "level": "C0",
+   "ms": 4974,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexFengYe4K",
+   "kind": "csp",
+   "cls": "csp_WexFengYe4KGuard",
+   "level": "C0",
+   "ms": 4984,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 大师兄",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5104,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 粉猪追剧",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5076,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 咸鱼",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5029,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 追剧达人",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5087,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 小柚子",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5062,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 小柠檬",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5054,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 蒙太奇",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5054,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 零零七影视",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5087,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 小柿子",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 4935,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AppV7 | 小黄人",
+   "kind": "csp",
+   "cls": "csp_WexAppV7Guard",
+   "level": "C0",
+   "ms": 5014,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiYiYs",
+   "kind": "csp",
+   "cls": "csp_WexAiYiYsGuard",
+   "level": "C0",
+   "ms": 4979,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiReBo",
+   "kind": "csp",
+   "cls": "csp_WexAiReBoGuard",
+   "level": "C0",
+   "ms": 5022,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiBoBo",
+   "kind": "csp",
+   "cls": "csp_WexAiBoBoGuard",
+   "level": "C0",
+   "ms": 4993,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "WexAiIkanBot",
+   "kind": "csp",
+   "cls": "csp_WexAiIkanBotGuard",
+   "level": "C0",
+   "ms": 4938,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "LiveAiHuYa",
+   "kind": "csp",
+   "cls": "csp_LiveAiHuYaGuard",
+   "level": "C0",
+   "ms": 5003,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "LiveAiDouYu",
+   "kind": "csp",
+   "cls": "csp_LiveAiDouYuGuard",
+   "level": "C0",
+   "ms": 4985,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "LiveAiBiLi",
+   "kind": "csp",
+   "cls": "csp_LiveAiBiLiGuard",
+   "level": "C0",
+   "ms": 5041,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ManJuAiHongGuo",
+   "kind": "csp",
+   "cls": "csp_ManJuAiHongGuoGuard",
+   "level": "C0",
+   "ms": 5001,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ManJuAiHuoLong",
+   "kind": "csp",
+   "cls": "csp_ManJuAiHuoLongGuard",
+   "level": "C0",
+   "ms": 5073,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ManJuAiQiMao",
+   "kind": "csp",
+   "cls": "csp_ManJuAiQiMaoGuard",
+   "level": "C0",
+   "ms": 5092,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ManJuAiXiFan",
+   "kind": "csp",
+   "cls": "csp_ManJuAiXiFanGuard",
+   "level": "C0",
+   "ms": 5073,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ManJuAiHeMa",
+   "kind": "csp",
+   "cls": "csp_ManJuAiHeMaGuard",
+   "level": "C0",
+   "ms": 5070,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "DuanJuAiHaoKan",
+   "kind": "csp",
+   "cls": "csp_DuanJuAiHaoKanGuard",
+   "level": "C0",
+   "ms": 5211,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "DuanJuAiQiMiao",
+   "kind": "csp",
+   "cls": "csp_DuanJuAiQiMiaoGuard",
+   "level": "C0",
+   "ms": 5059,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "DuanJuAiXingYa",
+   "kind": "csp",
+   "cls": "csp_DuanJuAiXingYaGuard",
+   "level": "C0",
+   "ms": 5058,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "DuanJuAiWeiGuan",
+   "kind": "csp",
+   "cls": "csp_DuanJuAiWeiGuanGuard",
+   "level": "C0",
+   "ms": 5030,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AnimeXiFan",
+   "kind": "csp",
+   "cls": "csp_AnimeXiFanGuard",
+   "level": "C0",
+   "ms": 5037,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AnimeCiYuanCheng",
+   "kind": "csp",
+   "cls": "csp_AnimeCiYuanChengGuard",
+   "level": "C0",
+   "ms": 5266,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "AnimeAiMoDu",
+   "kind": "csp",
+   "cls": "csp_AnimeAiMoDuGuard",
+   "level": "C0",
+   "ms": 5348,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BookHongGuo",
+   "kind": "csp",
+   "cls": "csp_BookHongGuoGuard",
+   "level": "C0",
+   "ms": 4984,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BookHeMa",
+   "kind": "csp",
+   "cls": "csp_BookHeMaGuard",
+   "level": "C0",
+   "ms": 5033,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BookAiShiJie",
+   "kind": "csp",
+   "cls": "csp_BookAiShiJieGuard",
+   "level": "C0",
+   "ms": 5066,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BookAiYueTing",
+   "kind": "csp",
+   "cls": "csp_BookAiYueTingGuard",
+   "level": "C0",
+   "ms": 5049,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "BookAi23TingShu",
+   "kind": "csp",
+   "cls": "csp_BookAi23TingShuGuard",
+   "level": "C0",
+   "ms": 5269,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ChildrenAiBaoBao",
+   "kind": "csp",
+   "cls": "csp_ChildrenAiBaoBaoGuard",
+   "level": "C0",
+   "ms": 5082,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ChildrenAiBeiWa",
+   "kind": "csp",
+   "cls": "csp_ChildrenAiBeiWaGuard",
+   "level": "C0",
+   "ms": 5036,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "ChildrenAiTuTu",
+   "kind": "csp",
+   "cls": "csp_ChildrenAiTuTuGuard",
+   "level": "C0",
+   "ms": 5066,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiTangDou",
+   "kind": "csp",
+   "cls": "csp_MusicAiTangDouGuard",
+   "level": "C0",
+   "ms": 5045,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiLiYuan",
+   "kind": "csp",
+   "cls": "csp_MusicAiLiYuanGuard",
+   "level": "C0",
+   "ms": 5028,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiQingTing",
+   "kind": "csp",
+   "cls": "csp_MusicAiQingTingGuard",
+   "level": "C0",
+   "ms": 4996,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiIKtv",
+   "kind": "csp",
+   "cls": "csp_MusicAiIKtvGuard",
+   "level": "C0",
+   "ms": 4935,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiKuWoa",
+   "kind": "csp",
+   "cls": "csp_MusicAiKuWoaGuard",
+   "level": "C0",
+   "ms": 4993,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAi163",
+   "kind": "csp",
+   "cls": "csp_MusicAi163Guard",
+   "level": "C0",
+   "ms": 4979,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiKuWo",
+   "kind": "csp",
+   "cls": "csp_MusicAiKuWoGuard",
+   "level": "C0",
+   "ms": 4999,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "MusicAiLunHui",
+   "kind": "csp",
+   "cls": "csp_MusicAiLunHuiGuard",
+   "level": "C0",
+   "ms": 4985,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiFeiQiu",
+   "kind": "csp",
+   "cls": "csp_SportAiFeiQiuGuard",
+   "level": "C0",
+   "ms": 4978,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiGuaZi",
+   "kind": "csp",
+   "cls": "csp_SportAiGuaZiGuard",
+   "level": "C0",
+   "ms": 5188,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiKanQiuTong",
+   "kind": "csp",
+   "cls": "csp_SportAiKanQiuTongGuard",
+   "level": "C0",
+   "ms": 5053,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiKanqiu",
+   "kind": "csp",
+   "cls": "csp_SportAiKanqiuGuard",
+   "level": "C0",
+   "ms": 5034,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiKaFei",
+   "kind": "csp",
+   "cls": "csp_SportAiKaFeiGuard",
+   "level": "C0",
+   "ms": 5025,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SportAiWwe",
+   "kind": "csp",
+   "cls": "csp_SportAiWweGuard",
+   "level": "C0",
+   "ms": 5409,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "FakeAi115Share",
+   "kind": "csp",
+   "cls": "csp_FakeAi115ShareGuard",
+   "level": "C0",
+   "ms": 7245,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Emby",
+   "kind": "csp",
+   "cls": "csp_EmbyGuard",
+   "level": "C0",
+   "ms": 7235,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Emby001",
+   "kind": "csp",
+   "cls": "csp_EmbyDiyGuard",
+   "level": "C0",
+   "ms": 7265,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "webdav",
+   "kind": "csp",
+   "cls": "csp_WebDAVGuard",
+   "level": "C0",
+   "ms": 7215,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "DiyVod",
+   "kind": "csp",
+   "cls": "csp_DiyVodGuard",
+   "level": "C0",
+   "ms": 7266,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "biliys",
+   "kind": "csp",
+   "cls": "csp_BiliYsGuard",
+   "level": "C0",
+   "ms": 7242,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "bilibili",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 7220,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "bilixiqu",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 7212,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "biliych",
+   "kind": "csp",
+   "cls": "csp_BiliGuard",
+   "level": "C0",
+   "ms": 7267,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SoAiHaiYin",
+   "kind": "csp",
+   "cls": "csp_SoAiHaiYinGuard",
+   "level": "C0",
+   "ms": 7251,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SoAiPanSoo",
+   "kind": "csp",
+   "cls": "csp_SoAiPanSooGuard",
+   "level": "C0",
+   "ms": 7260,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SoAiQuPanShe",
+   "kind": "csp",
+   "cls": "csp_SoAiQuPanSheGuard",
+   "level": "C0",
+   "ms": 7222,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SoAiAiPanSo",
+   "kind": "csp",
+   "cls": "csp_SoAiAiPanSoGuard",
+   "level": "C0",
+   "ms": 7268,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "SoKaKa",
+   "kind": "csp",
+   "cls": "csp_SoKaKaGuard",
+   "level": "C0",
+   "ms": 7267,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "Nostr",
+   "kind": "csp",
+   "cls": "csp_Nostr",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Nostr\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "FourKFox",
+   "kind": "csp",
+   "cls": "csp_FourKFox",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.FourKFox\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirec"
+   }
+  },
+  {
+   "key": "FourKFM",
+   "kind": "csp",
+   "cls": "csp_FourKFM",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.FourKFM\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirect"
+   }
+  },
+  {
+   "key": "Hmxz",
+   "kind": "csp",
+   "cls": "csp_Hmxz",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Hmxz that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.catv"
+   }
+  },
+  {
+   "key": "Leijing",
+   "kind": "csp",
+   "cls": "csp_Panta",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.Panta that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "csp_FeiMaoUC",
+   "kind": "csp",
+   "cls": "csp_Duopan",
+   "level": "C3",
+   "ms": 60740,
+   "flags": {
+    "home": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 2,
+    "detail_raw": 225,
+    "play_raw_len": 0
+   }
+  },
+  {
+   "key": "csp_Duopan",
+   "kind": "csp",
+   "cls": "csp_Duopan",
+   "level": "C0",
+   "ms": 1366,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Netfixtv",
+   "kind": "csp",
+   "cls": "csp_Duopan",
+   "level": "C0",
+   "ms": 16313,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "潮流",
+   "kind": "csp",
+   "cls": "csp_AppRJ",
+   "level": "C0",
+   "ms": 22,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "肥猫",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 53,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "干饭",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 46,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "光盘",
+   "kind": "csp",
+   "cls": "csp_AppQi",
+   "level": "C0",
+   "ms": 41,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "行动",
+   "kind": "csp",
+   "cls": "csp_AppDrama",
+   "level": "C0",
+   "ms": 64,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "再来",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 27,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "一碗",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 27,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "蔬菜",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 24,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Jpys",
+   "kind": "csp",
+   "cls": "csp_Jpys",
+   "level": "C3",
+   "ms": 4397,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 48,
+    "search_hits": 3,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_Wwys",
+   "kind": "csp",
+   "cls": "csp_Wwys",
+   "level": "C4",
+   "ms": 5745,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 30,
+    "search_hits": 3,
+    "detail_raw": 2567,
+    "play_raw_len": 2195,
+    "parse": 0,
+    "play_id": "https://v.lzcdn28.com/20250923/2326_a9bf234a/index.m3u8"
+   }
+  },
+  {
+   "key": "csp_SaoHuo",
+   "kind": "csp",
+   "cls": "csp_SaoHuo",
+   "level": "C3",
+   "ms": 5641,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 36,
+    "search_hits": 2,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_Gz360",
+   "kind": "csp",
+   "cls": "csp_Gz360",
+   "level": "C3",
+   "ms": 65122,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 30,
+    "search_hits": 100,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_Dm84",
+   "kind": "csp",
+   "cls": "csp_Dm84",
+   "level": "C0",
+   "ms": 2825,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "方舟",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 69,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "番薯",
+   "kind": "csp",
+   "cls": "csp_AppGet",
+   "level": "C0",
+   "ms": 50,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_PanSearch",
+   "kind": "csp",
+   "cls": "csp_PanSearch",
+   "level": "C0",
+   "ms": 3,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.PanSearch that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github"
+   }
+  },
+  {
+   "key": "csp_少儿",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 1191,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 14,
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_小学",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 1086,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 18,
+    "cat_items": 20,
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_初中",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C3",
+   "ms": 1740,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 24,
+    "search_hits": 20,
+    "detail_raw": -1
+   }
+  },
+  {
+   "key": "csp_高中",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 1341,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 29
+   }
+  },
+  {
+   "key": "csp_douban",
+   "kind": "csp",
+   "cls": "csp_DouDou",
+   "level": "C2",
+   "ms": 1410,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 20
+   }
+  },
+  {
+   "key": "csp_Ying",
+   "kind": "csp",
+   "cls": "csp_Ying",
+   "level": "C0",
+   "ms": 25259,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "PanSou",
+   "kind": "csp",
+   "cls": "csp_PanSou",
+   "level": "C0",
+   "ms": 7,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "UpYun",
+   "kind": "csp",
+   "cls": "csp_UpYun",
+   "level": "C0",
+   "ms": 2,
+   "flags": {},
+   "evidence": {
+    "err": "VerifyError: Rejecting class com.github.catvod.spider.UpYun that attempts to sub-type erroneous class com.github.catvod.spider.Push (declaration of 'com.github.cat"
+   }
+  },
+  {
+   "key": "Zhaozy",
+   "kind": "csp",
+   "cls": "csp_Zhaozy",
+   "level": "C0",
+   "ms": 1577,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_Nbys",
+   "kind": "csp",
+   "cls": "csp_NiNi",
+   "level": "C0",
+   "ms": 444,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_trj",
+   "kind": "csp",
+   "cls": "csp_Tangrenjie",
+   "level": "C0",
+   "ms": 1201,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 0,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "P4_绿豆",
+   "kind": "csp",
+   "cls": "csp_Lvdou",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Lvdou\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "csp_MeiJu69",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 2217,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "鑫鑫影视",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 714,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_beijihu",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 66,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "益达影视",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 31984,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "yaya",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 67,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "xgapp",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 10888,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "小白",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 25632,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "BT天堂",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 249611,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 11,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "布谷tv",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 765287,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 14
+   }
+  },
+  {
+   "key": "haokongbu",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 104707,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 19,
+    "cat_items": 36
+   }
+  },
+  {
+   "key": "圣城1080",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 40,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "秋霞",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 5741,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "VidHub",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C5",
+   "ms": 36995,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 72,
+    "search_hits": 11,
+    "detail_raw": 3435,
+    "play_raw_len": 2195,
+    "parse": 1,
+    "play_out": "https://vidhub1.cc/vodplay/264130-1-1.html",
+    "play_id": "https://vidhub1.cc/vodplay/264130-1-1.html"
+   }
+  },
+  {
+   "key": "rarbt",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9821,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "XBPQ_文才",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C3",
+   "ms": 39062,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true,
+    "detail": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0,
+    "search_hits": 2,
+    "detail_raw": 442,
+    "play_raw_len": 0
+   }
+  },
+  {
+   "key": "XBPQ_BaiPiao",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 6202,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "XBPQ_黑狐影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13420,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "XBPQ_电影先生",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 4169,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "XBPQ_麻衣影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 27018,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "相声",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 19863,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 12
+   }
+  },
+  {
+   "key": "评书",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 22910,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 12
+   }
+  },
+  {
+   "key": "netflav",
+   "kind": "csp",
+   "cls": "csp_GM",
+   "level": "C0",
+   "ms": 231,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "123av",
+   "kind": "csp",
+   "cls": "csp_GM",
+   "level": "C0",
+   "ms": 231,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "supjav",
+   "kind": "csp",
+   "cls": "csp_GM",
+   "level": "C0",
+   "ms": 230,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "xojav",
+   "kind": "csp",
+   "cls": "csp_GM",
+   "level": "C0",
+   "ms": 41,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "XMVideo",
+   "kind": "csp",
+   "cls": "csp_XMVideo",
+   "level": "C2",
+   "ms": 1449,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 24,
+    "cat_items": 20,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_xBPQ_超清",
+   "kind": "csp",
+   "cls": "csp_xBPQ",
+   "level": "C1",
+   "ms": 2800,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 10,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_xBPQ_聚优AV解说",
+   "kind": "csp",
+   "cls": "csp_xBPQ",
+   "level": "C1",
+   "ms": 1134,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 1,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_pornhub",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 40244,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 16
+   }
+  },
+  {
+   "key": "youtube_jar",
+   "kind": "csp",
+   "cls": "csp_Youtube",
+   "level": "C2",
+   "ms": 23894,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 2,
+    "cat_items": 8,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_KungFu404",
+   "kind": "csp",
+   "cls": "csp_KungFu404",
+   "level": "C0",
+   "ms": 347,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "APP商店",
+   "kind": "csp",
+   "cls": "csp_Market",
+   "level": "C2",
+   "ms": 139,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 2
+   }
+  },
+  {
+   "key": "csp_nkvlog",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 173,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_Free",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_KmeiJu",
+   "kind": "csp",
+   "cls": "csp_KmeiJu",
+   "level": "C0",
+   "ms": 77,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.KmeiJu\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "csp_SuBaiBai",
+   "kind": "csp",
+   "cls": "csp_SuBaiBai",
+   "level": "C0",
+   "ms": 20,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Ikan",
+   "kind": "csp",
+   "cls": "csp_Ikan",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Ikan\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirectorie"
+   }
+  },
+  {
+   "key": "csp_FengGo",
+   "kind": "csp",
+   "cls": "csp_FengGo",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.FengGo\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "csp_Juqq",
+   "kind": "csp",
+   "cls": "csp_Juqq",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Juqq\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirectorie"
+   }
+  },
+  {
+   "key": "csp_Vidhub2",
+   "kind": "csp",
+   "cls": "csp_Vidhub2",
+   "level": "C?",
+   "ms": null,
+   "flags": {},
+   "evidence": {
+    "err": "timeout>300s"
+   }
+  },
+  {
+   "key": "csp_AppRZ",
+   "kind": "csp",
+   "cls": "csp_AppRZ",
+   "level": "C0",
+   "ms": 1167,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "FreeOK",
+   "kind": "csp",
+   "cls": "csp_FreeOK",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.FreeOK\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "毛驴",
+   "kind": "csp",
+   "cls": "csp_MaoLv",
+   "level": "C0",
+   "ms": 0,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.MaoLv\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirectori"
+   }
+  },
+  {
+   "key": "虎虎1",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C0",
+   "ms": 63,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_SC1080",
+   "kind": "csp",
+   "cls": "csp_SC1080",
+   "level": "C0",
+   "ms": 1,
+   "flags": {},
+   "evidence": {
+    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.SC1080\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_Panda.jar\"],nativeLibraryDirector"
+   }
+  },
+  {
+   "key": "csp_兄弟",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_hanjulao",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "XYQH_JOJO",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 3477,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQHiker_VSYY",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C2",
+   "ms": 8558,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "cat_items": 48,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_XYQ素白白",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 40144,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 52
+   }
+  },
+  {
+   "key": "csp_XYQ电影牛",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C1",
+   "ms": 658,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "P4_Kuaikan",
+   "kind": "csp",
+   "cls": "csp_Kuaikan",
+   "level": "C0",
+   "ms": 30193,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "P4_哔嘀",
+   "kind": "csp",
+   "cls": "csp_Bdys",
+   "level": "C1",
+   "ms": 18621,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 3,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "P4_皮皮虾",
+   "kind": "csp",
+   "cls": "csp_PipiXia",
+   "level": "C1",
+   "ms": 4700,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "蚂蚁",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 30164,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "即可",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 90243,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_赞赞",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 30061,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_加速",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 30061,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_亮亮",
+   "kind": "csp",
+   "cls": "csp_AppYsV2",
+   "level": "C0",
+   "ms": 65,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "cc_乌鸦",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 7547,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "cc_茶杯狐",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10584,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "cc_热播之家",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 85751,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 12
+   }
+  },
+  {
+   "key": "cc_shdy2",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 16184,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5
+   }
+  },
+  {
+   "key": "cc_黑狐",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13593,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "cc_蛋蛋",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 5776,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "cc_相声",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 113279,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 6,
+    "cat_items": 12
+   }
+  },
+  {
+   "key": "cc_评书",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C2",
+   "ms": 112719,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 7,
+    "cat_items": 12
+   }
+  },
+  {
+   "key": "cc_03影院",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 104081,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_蘑菇",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 11960,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_胖虎",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_蛋蛋",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 7,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_达龟",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_黑狐",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 7,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_奇优",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 17574,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_TVB",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 21,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_骚火",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 15,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_农民",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 26,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_疯狗",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 18,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_万达",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 20,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_爱看",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 17,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_七新",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 14,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_超前",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 16,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_玖摇",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_不卡",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 21,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_午舞",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 15,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_视觉",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 15,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_圣城",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_好戏",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_七月",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 8,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_日后",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 7,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_土豪",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 10,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_兔年",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_苹果",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_米爱",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 12,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_非凡",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_量子",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 7,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_nkdyw",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 9,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_555电影",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_voflix",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_nkvod",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 12,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_lkvod",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 12,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "XYQH_电影港",
+   "kind": "csp",
+   "cls": "csp_XYQHiker",
+   "level": "C5",
+   "ms": 4668,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true,
+    "detail": true,
+    "play": true
+   },
+   "evidence": {
+    "home_classes": 14,
+    "cat_items": 10,
+    "search_hits": 2,
+    "detail_raw": 1104,
+    "play_raw_len": 747,
+    "parse": 1,
+    "play_out": "magnet:?xt=urn:btih:64f312352169c88d3dff7ddce69a980e83ed2a22&dn=%e7%ac%ac%e4%ba%8c%e5%ad%a3.%e7%ba%af%e5%87%80%e7%89%88.1080p&tr=udp%3a%2f%2fopentracker.i2p.rocks%3a6969%2fannounce",
+    "play_id": "magnet:?xt=urn:btih:64f312352169c88d3dff7ddce69a980e83ed2a22&dn=%e7%ac%ac%e4%ba%8c%e5%ad%a3.%e7%ba%af%e5%87%80%e7%89%88.1080p&tr=udp%3a%2f%2fopentracker.i2p.rocks%3a6969%2fannounce"
+   }
+  },
+  {
+   "key": "mtv_xp_维奇动漫",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 13,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "csp_酷奇",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 374849,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 10
+   }
+  },
+  {
+   "key": "csp_短剧",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 11,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 4
+   }
+  },
+  {
+   "key": "XBPQ_葡萄",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 57634,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 9,
+    "cat_items": 0
+   }
+  },
+  {
+   "key": "csp_XBPQ_aoaotv",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 120885,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 5,
+    "search_hits": 0
+   }
+  },
+  {
+   "key": "csp_Bili_dashan",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 80393,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 9
+   }
+  },
+  {
+   "key": "csp_Bili_meishi",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C0",
+   "ms": 672,
+   "flags": {
+    "home": false,
+    "search": false
+   },
+   "evidence": {}
+  },
+  {
+   "key": "csp_Bili_youer",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 175,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 89
+   }
+  },
+  {
+   "key": "csp_Bili_xiaoxue",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 143,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 18
+   }
+  },
+  {
+   "key": "csp_Bili_czxx",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 220,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 19
+   }
+  },
+  {
+   "key": "csp_Bili_gaozxx",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 169,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 29
+   }
+  },
+  {
+   "key": "csp_Bili_zyy",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 142,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 14
+   }
+  },
+  {
+   "key": "csp_Bili_xuqu1",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 143,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 48
+   }
+  },
+  {
+   "key": "csp_Bili_TYjs",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 132,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 20
+   }
+  },
+  {
+   "key": "csp_Bili_xiangsh",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 131,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 24
+   }
+  },
+  {
+   "key": "csp_Bili_FBqx",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 144,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 23
+   }
+  },
+  {
+   "key": "csp_Bili_Meinvw",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 155,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 42
+   }
+  },
+  {
+   "key": "csp_Bili_yanchh",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 153,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 103
+   }
+  },
+  {
+   "key": "csp_Bili_Nvtuan",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 135,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 54
+   }
+  },
+  {
+   "key": "csp_Bili_MTV",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 149,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 107
+   }
+  },
+  {
+   "key": "csp_Bili_Yinl2",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 131,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 17
+   }
+  },
+  {
+   "key": "csp_Bili__dapei",
+   "kind": "csp",
+   "cls": "csp_Bili",
+   "level": "C1",
+   "ms": 20294,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 18
+   }
+  },
+  {
+   "key": "短视频",
+   "kind": "csp",
+   "cls": "csp_XBPQ",
+   "level": "C1",
+   "ms": 44639,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "home_classes": 27,
+    "cat_items": 0
+   }
+  }
+ ]
+}

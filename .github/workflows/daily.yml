@@ -33,17 +33,80 @@ jobs:
         continue-on-error: true
         run: python scripts/mirror_probe.py
 
+      - name: 接口实测（L1-L3 + type3 连通性）—— 为去重与排序提供实测数据
+        # 基于上一轮产物跑：探针需要 tvbox.json，而本轮合并又需要探针结论，一轮延迟自洽即可
+        continue-on-error: true
+        run: |
+          python scripts/probe_sites.py --only http --concurrency 24 || true
+          python scripts/probe_spiders.py --concurrency 24 || true
+          python scripts/probe_js.py --concurrency 20 || true
+          python scripts/dedup_mirrors.py || true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
+        # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
+        # 这一路纯 Node+curl，能在 CI 直接跑 → 产物每日自动更新；
+        # csp 真机五关无法在 CI 跑，仍靠手工产出（见 docs/ARCHITECTURE.md 的时效降权说明）。
+        continue-on-error: true
+        run: |
+          cd drpy-sandbox && npm i --no-audit --no-fund
+          cd ..
+          python scripts/drpy_probe.py --workers 5 || true
+
+      - name: 全网上游发现（四路：代码搜索 / 仓库搜索 / 种子递归 / 血统反查）
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python scripts/discover_upstreams.py --max-repos 15 --pages 2 || true
+
+      - name: 候选独有度评估，并按 unique 收编 canary
+        # 必须在 discover 之后：canary 收编标准看「独有站点数」，不是 discover 的 score。
+        # 实测证明 score 与新内容价值无关（score30 的候选带来 17 个新站，score90 只有 3 个），
+        # 按 score 收编会漏掉最有价值的候选。此步会用 unique 版覆盖 discover 写的 score 版。
+        continue-on-error: true
+        run: python scripts/evaluate_candidates.py --min-unique 3 --write-canary || true
+
       - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks）
         env:
           CONCURRENCY: "24"
+          # canary 上游已按「独有站点数 unique>=3」自动收编（不是按 score），
+          # 且失效由自动黑名单兜底，故开启并入。要停用改回 "0" 即可。
+          EXTRA_UPSTREAMS: "1"
         run: python scripts/fetch_merge.py
+
+      - name: 依赖审计（只报告，不删除）
+        continue-on-error: true
+        run: python scripts/dep_audit.py || true
+
+      - name: 入库（接口 / 检测历史 / 依赖关系）
+        # DB 不入库（二进制会让仓库膨胀），健康快照以 exports/health_index.json 文本留档：
+        # 每天 diff 能直接看出哪些源从 healthy 掉成 dead，比二进制友好。
+        continue-on-error: true
+        run: |
+          python scripts/store.py --ingest-sites tvbox.json --ingest-lives tvbox.json \
+            --ingest-probes probe/sites_probe.json probe/spider_probe.json probe/js_probe.json \
+                            probe/csp_probe.json probe/drpy_probe.json \
+            --ingest-upstreams status.json --prune --stats || true
+
+      - name: 导出接口清单（全部 / 仅健康 / 可用 / 按类型 / 健康索引）
+        run: python scripts/export_healthy.py || true
+
+      - name: 健康趋势日报（新增 / 掉线 / 恢复）
+        # 快照需随仓库保留，否则每次都是「首次运行」、永远对比不出变化
+        continue-on-error: true
+        run: python scripts/health_report.py || true
 
       - name: 提交并推送（有变更时）
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json README.md \
-                  lives/ state/ snapshot/ candidate_upstreams.json deps/ stores/
+          # 注意：adult.json 默认不再产出（成人内容不公开托管，见脚本里的 PUBLISH_ADULT 说明），
+          # 这里就不能再 git add 它 —— 文件不存在会让这一步失败。
+          git add tvbox.json vod.json live.json short.json list.json status.json checks.json README.md \
+                  lives/ state/ snapshot/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
           if git diff --cached --quiet; then
             echo "本轮无变更，跳过提交"
           else
@@ -57,15 +120,16 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           FILES=""
-          for f in tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json \
+          for f in tvbox.json vod.json live.json short.json list.json status.json checks.json \
                    stores/duocang.json stores/cms.json stores/app.json stores/pan.json stores/csp.json stores/pan_ck.json \
                    lives/live.txt lives/live_cctv.txt lives/live_weishi.txt \
                    lives/live_gangtai.txt lives/live_other.txt; do
             [ -f "$f" ] && FILES="$FILES $f"
           done
           NOTES="自动发布于 $(date -u '+%Y-%m-%d %H:%M UTC')。
-          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、short.json（短剧独立配置）、adult.json（成人独立配置）、lives/*（央视/卫视/港台分类直播）、stores/duocang.json（多仓入口：CMS·代理 + 蜘蛛仓·代理 两条线路，子仓内部依赖引用一律本仓库路径）、stores/pan_ck.json（网盘 CK 获取指引）、checks.json（上游校验状态）。
-          固定引用本 Release：https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json"
+          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、short.json（短剧独立配置）、lives/*（央视/卫视/港台分类直播）、stores/duocang.json（多仓入口：CMS·代理 + 蜘蛛仓·代理 两条线路，子仓内部依赖引用一律本仓库路径）、stores/pan_ck.json（网盘 CK 获取指引）、checks.json（上游校验状态）。
+          固定引用本 Release：https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json
+          说明：成人分类源自 2026-09-19 起不再公开托管，如需要请本地跑 fetch_merge.py 并设 PUBLISH_ADULT=1。"
           if gh release view latest -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
             gh release upload latest $FILES -R "$GITHUB_REPOSITORY" --clobber
             gh release edit latest -R "$GITHUB_REPOSITORY" --title "TVBox 配置 latest" --notes "$NOTES"

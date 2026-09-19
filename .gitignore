@@ -1,7 +1,15 @@
 __pycache__/
 *.pyc
+node_modules/
 
 live_probe_results.jsonl
 live_channels.json
 adult_lives_checks*.json
 live_checks.json
+
+# SQLite 运行库不入库：二进制会让仓库逐日膨胀。
+# 检测历史的可追溯性改由 exports/health_index.json（纯文本，diff 友好）承担——
+# 每天 diff 能直接看出哪些源从 healthy 掉成 dead。
+state/*.db
+state/*.db-journal
+logs/

@@ -173,6 +173,60 @@ ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT_UPSTREAMS
 
 UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAMS + SHORTS_ADULT_UPSTREAMS) if u.get("kind") == "tvbox"}
 
+# 自动发现产出的 canary 上游（scripts/discover_upstreams.py -> state/extra_upstreams.json）。
+# 默认关闭：自动收编陌生配置会让订阅引入未经审核的内容（含未知 jar/js），
+# 需要显式 EXTRA_UPSTREAMS=1 才并入；开启后失效由现有自动黑名单兜住。
+EXTRA_UPSTREAMS_FILE = os.environ.get("EXTRA_UPSTREAMS_FILE", "state/extra_upstreams.json")
+EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
+
+# ---------------- 成人内容发布开关（默认**不发布**） ----------------
+# 为什么默认关：这份配置是给外部订阅的公开仓库产物，把成人源（含独立的 adult.json）
+# 放进公开仓库有被平台处置、整个仓库被封的风险 —— 而仓库里还有 tvbox.json 等主力产物，
+# 不值得为几十个源冒这个险。关掉时：
+#   1) 成人分类的站点不进 tvbox.json / vod.json；
+#   2) 不写仓库根的 adult.json（改写 ADULT_LOCAL_PATH，该路径不进版本库）；
+#   3) 数据一条不丢，仍留在本地文件里，需要时自己取。
+# 要恢复旧行为（连 adult.json 一起公开）：PUBLISH_ADULT=1
+PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
+ADULT_LOCAL_PATH = os.environ.get("ADULT_LOCAL_PATH", ".workbuddy/adult.local.json")
+
+
+def _dump_adult_local(sites: list, repo_dir: str):
+    """把未发布的成人源写到仓库外的本地路径（`git` 不会收录）。"""
+    try:
+        path = ADULT_LOCAL_PATH
+        if not os.path.isabs(path):
+            path = os.path.join(repo_dir, path)
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump({
+                "generated_at": datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00"),
+                "note": "成人分类站点（未发布到公开仓库，仅本地留档）",
+                "sites": sites,
+            }, f, ensure_ascii=False, indent=1)
+    except OSError as e:
+        print(f"    [adult] 本地留档失败（不影响产出）：{e}", flush=True)
+
+
+
+def load_extra_upstreams() -> list:
+    """读取 canary 上游名单；开关关闭或文件缺失时返回空列表。"""
+    if not EXTRA_UPSTREAMS_ON or not os.path.isfile(EXTRA_UPSTREAMS_FILE):
+        return []
+    try:
+        with open(EXTRA_UPSTREAMS_FILE, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return []
+    out = []
+    for u in doc.get("upstreams", []):
+        url, kind = u.get("url"), u.get("kind")
+        if url and kind in PARSERS:
+            out.append({"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True})
+    if out:
+        print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)
+    return out
+
 
 # ==================== 短剧/成人分类（独立收录 short.json / adult.json） ====================
 # 关键词来源：现有 tvbox.json 22 条短剧站点 + 39 条成人站点的 name/key/api 关键字汇总（2026-09-18 扫描）
@@ -409,20 +463,48 @@ def is_file_ref(v: str):
     return None
 
 
+_WIN_BAD_CHARS = re.compile(r'[<>:"|?*\x00-\x1f]')
+
+
+def _win_safe_seg(seg: str) -> str:
+    """Windows 下把路径段里的非法字符替换掉。
+
+    只有在 `os.name == 'nt'` 时才生效 —— **Linux/CI 行为一字不改**，产物布局保持一致。
+    为什么需要：依赖落库的本地路径是从 URL 的 path 段拼出来的，而镜像前缀 URL
+    （`https://gh-proxy.org/https://raw.githubusercontent.com/...`）的 path 里带 `https:`，
+    在 Windows 上 `os.makedirs` 直接抛 `WinError 123 文件名、目录名或卷标语法不正确`。
+    这类路径在 Linux 上是合法目录名（本仓库里已有 `deps/liu673cn/m/https:/raw...` 这种真实案例），
+    所以问题只在本地 Windows 复现，CI 上永远看不到。
+    """
+    if os.name != "nt":
+        return seg
+    s = _WIN_BAD_CHARS.sub("_", seg)
+    # Windows 还禁止以点或空格结尾，且保留名（CON/PRN/NUL…）也要避开
+    s = s.rstrip(" .")
+    if not s:
+        return "_"
+    if s.upper().split(".")[0] in ("CON", "PRN", "AUX", "NUL",
+                                   "COM1", "COM2", "COM3", "COM4",
+                                   "LPT1", "LPT2", "LPT3"):
+        s = "_" + s
+    return s
+
+
 def dep_local_path(origin: str, url: str) -> str:
     if origin == "remote":
         name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or ""
         if not name or len(name) > 80:
             name = hashlib.md5(url.encode()).hexdigest()[:12]
-        return f"{DEPS_DIR}/remote/{name}"
+        return f"{DEPS_DIR}/remote/{_win_safe_seg(name)}"
     u = urllib.parse.urlparse(url)
     segs = u.path.lstrip("/").split("/")
     if u.netloc == "raw.githubusercontent.com" and len(segs) > 3:
         segs = segs[3:]  # 剥离 owner/repo/branch，路径与仓库已入库布局一致
+    segs = [_win_safe_seg(s) for s in segs if s not in ("", ".")]
     path = "/".join(segs)
     if not path:
         path = hashlib.md5(url.encode()).hexdigest()[:12]
-    return f"{DEPS_DIR}/{origin}/{path}"
+    return f"{DEPS_DIR}/{_win_safe_seg(origin)}/{path}"
 
 
 def load_manifest() -> dict:
@@ -431,6 +513,135 @@ def load_manifest() -> dict:
             return json.load(f)
     except Exception:
         return {}
+
+
+def _spider_canon(ref, origin: str):
+    """把 spider 值归一成绝对 URL，用于判断「是不是同一份包」。
+
+    不能直接比字符串：全局 spider 在上一轮产出里已经被改写成 `./deps/xxx/jar/spider.jar`，
+    而上游原始值写的是 `./jar/spider.jar` —— 字面不同、指向同一份包。
+    """
+    if not isinstance(ref, str) or not ref.strip():
+        return None
+    r = is_file_ref(ref.split(";md5;")[0])
+    if not r:
+        return None
+    where, pathv = r
+    if where == "abs":
+        return pathv
+    base = UPSTREAM_BASES.get(origin, "")
+    return urllib.parse.urljoin(base, pathv) if base else None
+
+
+def _global_spider_url(tvbox: dict, spider_origin: dict):
+    """全局 spider 归一成绝对 URL，用于与各个上游的 spider 比「是不是同一份包」。
+
+    两种来源都要能处理：
+      1) 本次合并刚选定的值 —— 形如 `./jar/spider.jar`，用 spider_origin 的 base 拼；
+      2) 上一轮产出里已被落库改写的值 —— 形如 `./deps/qist/jsm/jar/spider.jar`，
+         这时不能再拿上游 base 去拼（会拼出不存在的路径），而应从 `deps/<上游>/` 反推上游。
+    """
+    sp = tvbox.get("spider")
+    if not isinstance(sp, str) or not sp.strip():
+        return None
+    r = is_file_ref(sp.split(";md5;")[0])
+    if not r:
+        return None
+    where, pathv = r
+    if where == "abs":
+        return pathv
+    p = pathv.lstrip("./")
+    if p.startswith("deps/"):
+        rest = p[len("deps/"):]
+        # 上游名里含 '/'（如 qist/jsm），取最长匹配的那个前缀
+        for k in sorted(UPSTREAM_BASES, key=len, reverse=True):
+            if rest.startswith(k + "/"):
+                # 关键：剥掉 deps/<上游>/ 前缀还原成上游内的相对路径，再按上游 base 拼接。
+                # 直接 urljoin(base, './deps/...') 会拼出一个上游根本不存在的路径。
+                return _spider_canon("./" + rest[len(k) + 1:], k)
+    if spider_origin:
+        return _spider_canon(sp, spider_origin[0])
+    return None
+
+
+def assign_origin_spiders(tvbox: dict, site_origin_name: dict, upstream_spider: dict,
+                          spider_origin: dict = None) -> dict:
+    """让每个源用它「来源上游」声明的那份 spider jar。
+
+    ---- 为什么必须这么做 ----
+    每个上游配置都声明自己的顶层 spider，而且**各不相同**：
+        qist/js、qist/0825  → ./jar/pg_upgraded.jar
+        gao/js、nxppru/js   → ./jar/pg.jar
+        cluntop/aa          → ./jar/pro.jar
+        cluntop/wv          → ./jar/WvSpider.jar
+        qist/0826、qist/fty → ./jar/fan.txt
+        wex/newwex          → http://oss4liview.moji.com/...
+    而合并只能保留一份全局 spider（先到先得）。凡是 `jar` 字段为空、走全局 spider 的源，
+    就会被指向一个**不含它所需爬虫类**的包 —— 客户端加载爬虫时抛 ClassNotFoundException，
+    这些源直接变成「坏的」。实测受影响 256 个爬虫类 / 359 个源，而它们在真实 TVBox 里本来是能用的。
+
+    这跟「合并丢掉上游语义」是同一类问题：合并只留下了站点数据，丢掉了「这个源该配哪份运行时」。
+
+    ---- 做法 ----
+    给这些源的 `jar` 字段补上「它来源上游的那份 spider」原文，后续 collect_and_rewrite_deps 会
+    按 origin 把它落库到 deps/<上游>/... 并改写成仓库内相对路径 + md5，与站点自带 jar 走同一条路。
+    与全局 spider 指向同一份包的不写（省体积）。
+    """
+    if os.environ.get("ORIGIN_SPIDER", "1") != "1":
+        return {"skipped": 1}
+
+    g_url = _global_spider_url(tvbox, spider_origin)
+    stats = {"assigned": 0, "same_as_global": 0, "origin_no_spider": 0, "no_origin": 0,
+             "not_file_ref": 0}
+    for s in tvbox.get("sites") or []:
+        if not isinstance(s, dict) or s.get("jar"):
+            continue                                  # 自带 jar 的源不动
+        api = str(s.get("api") or "")
+        if not (api.startswith("csp_") or api.startswith("./")):
+            continue                                  # 只有 csp/js 爬虫源才吃 spider
+        origin = site_origin_name.get(s.get("key"))
+        if not origin:
+            stats["no_origin"] += 1
+            continue
+        sp = upstream_spider.get(origin)
+        if not isinstance(sp, str) or not sp:
+            stats["origin_no_spider"] += 1
+            continue
+        sp_url = _spider_canon(sp, origin)
+        if not sp_url:
+            stats["not_file_ref"] += 1
+            continue
+        if g_url and sp_url == g_url:
+            stats["same_as_global"] += 1
+            continue
+        s["jar"] = sp
+        stats["assigned"] += 1
+    return stats
+
+
+def prune_unlocalized_jars(tvbox: dict) -> dict:
+    """安全网：把没能落库的 per-site `jar` 撤掉，回退成走全局 spider。
+
+    场景：assign_origin_spiders 给某源补了上游的 spider（如 `./jar/pro.jar`），但该包下载失败 /
+    被自动黑名单拦下 → collect_and_rewrite_deps 会「保留原值」，于是产物里留下一个**相对路径**。
+    客户端拿到 `./jar/pro.jar` 会按配置所在 URL 去解析，多半 404 —— 比不写更糟。
+    所以：确认本地没有对应文件的一律撤掉，宁可回退到全局 spider。
+    """
+    stats = {"checked": 0, "pruned": 0}
+    for s in tvbox.get("sites") or []:
+        if not isinstance(s, dict) or not s.get("jar"):
+            continue
+        stats["checked"] += 1
+        r = is_file_ref(str(s["jar"]).split(";md5;")[0])
+        if not r or r[0] == "abs":
+            continue                                   # 绝对 URL 与本地已改写路径都不动
+        local = r[1].lstrip("./").replace("/", os.sep)
+        if not os.path.exists(local):
+            s.pop("jar", None)
+            stats["pruned"] += 1
+    if stats["pruned"]:
+        print(f"    撤回未能落库的 jar 引用：{stats['pruned']} 个（回退为全局 spider）", flush=True)
+    return stats
 
 
 def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict):
@@ -500,8 +711,14 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         if kind == "unknown":
             rec["err"] = f"content not js/jar/json ({content[:24]!r})"
             return rec
-        os.makedirs(os.path.dirname(fp), exist_ok=True)
-        open(fp, "wb").write(content)
+        try:
+            os.makedirs(os.path.dirname(fp), exist_ok=True)
+            open(fp, "wb").write(content)
+        except OSError as e:
+            # 单条依赖落盘失败（典型：Windows 上 URL 拼出的目录名含非法字符）
+            # 绝不能让它把整轮合并带崩 —— 记成这条失败，其它依赖照常收集。
+            rec["err"] = f"落盘失败 {type(e).__name__}: {str(e)[:80]}"
+            return rec
         rec["ok"] = True
         return rec
 
@@ -1459,6 +1676,106 @@ def secondary_dedup_sites(sites_by_key: dict, site_origin_name: dict, site_origi
     return dropped
 
 
+# ---------------- 三级去重：同库镜像站（片名指纹，证据来自 scripts/probe_sites.py） ----------------
+# 一级按 key、二级按 api+ext 指纹都抓不到「同库换域名/换路径」的重复：
+#   zuidapi.com 与 zuidazy.co、sdzyapi.com 与 xsd.sdzyapi.com、
+#   bfzyapi.com/api.php/provide/vod 与 .../vod/?ac=list
+# probe_sites.py 在 L1 抓到的片名集合做 Jaccard 判定（实测 96 个源里 61 个属镜像冗余），
+# 结果落在 state/mirror_groups.json，合并阶段据此只保留可用性最好的一份。
+MIRROR_GROUPS_FILE = os.environ.get("MIRROR_GROUPS_FILE", "state/mirror_groups.json")
+MIRROR_DEDUP = os.environ.get("MIRROR_DEDUP", "1") == "1"
+
+
+def load_mirror_groups() -> dict:
+    """读取镜像分组，返回 {被剔除的 key: 保留的 key}。文件缺失或关闭开关时返回空。"""
+    if not MIRROR_DEDUP or not os.path.isfile(MIRROR_GROUPS_FILE):
+        return {}
+    try:
+        with open(MIRROR_GROUPS_FILE, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    mapping = {}
+    for g in doc.get("groups", []):
+        keep = (g.get("keep") or {}).get("key")
+        if not keep:
+            continue
+        for d in g.get("drops", []):
+            if d.get("key"):
+                mapping[d["key"]] = keep
+    return mapping
+
+
+def apply_mirror_dedup(sites_by_key: dict, site_origin_name: dict, site_origin_score: dict) -> list:
+    """三级去重：剔除同库镜像站点，保留可用性最好的一份。
+
+    仅当保留者本身还在集合中时才剔除，避免出现「剔了重复、留下的也已被删」的空洞。
+    """
+    mapping = load_mirror_groups()
+    if not mapping:
+        return []
+    dropped = []
+    for key, keep in mapping.items():
+        if key not in sites_by_key or keep not in sites_by_key:
+            continue
+        s = sites_by_key.pop(key)
+        site_origin_name.pop(key, None)
+        site_origin_score.pop(key, None)
+        dropped.append({"dropped_key": key, "kept_key": keep,
+                        "dropped_name": s.get("name"), "reason": "同库镜像（片名指纹）"})
+    return dropped
+
+
+SORT_ENABLED = os.environ.get("SITE_RANK", "1") == "1"
+PROBE_FILE = os.environ.get("PROBE_FILE", "probe/sites_probe.json")
+SPIDER_PROBE_FILE = os.environ.get("SPIDER_PROBE_FILE", "probe/spider_probe.json")
+JS_PROBE_FILE = os.environ.get("JS_PROBE_FILE", "probe/js_probe.json")
+# 真机 csp 实测产物（.workbuddy/csp-test 跑出来后提交进仓库，CI 侧只读复用）
+CSP_PROBE_FILE = os.environ.get("CSP_PROBE_FILE", "probe/csp_probe.json")
+
+
+def apply_rank(tvbox: dict) -> dict:
+    """按「分类 → 搜索可用性 → 实测速度」重排 sites，并写 group / 校正 searchable。
+
+    排序键：分类分组 → 实测可搜优先 → 实测速度升序（无速度的按结构完整度兜底）。
+    探针产物缺失时静默跳过，绝不因为缺测速数据而影响出配置。
+    """
+    if not SORT_ENABLED:
+        return {}
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        from rank_sites import rank_sites  # noqa: PLC0415
+    except ImportError:
+        print("    排序模块不可用（scripts/rank_sites.py 缺失），跳过排序", flush=True)
+        return {}
+
+    def _load(path):
+        if not os.path.isfile(path):
+            return {}
+        try:
+            with open(path, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, json.JSONDecodeError):
+            return {}
+
+    probe, spider = _load(PROBE_FILE), _load(SPIDER_PROBE_FILE)
+    js_probe = _load(JS_PROBE_FILE)
+    csp_probe = _load(CSP_PROBE_FILE)
+    if not probe and not spider and not js_probe and not csp_probe:
+        print("    无探针产物，跳过排序（先跑 scripts/probe_*.py）", flush=True)
+        return {}
+    ranked, stats = rank_sites(tvbox.get("sites") or [], probe, spider, None, js_probe, csp_probe)
+    tvbox["sites"] = ranked
+    groups = {k.split(":", 1)[1]: v for k, v in stats.items() if k.startswith("group:")}
+    speed = {k.split(":", 1)[1]: v for k, v in stats.items() if k.startswith("speed:")}
+    fixes = {k.split(":", 1)[1]: v for k, v in stats.items() if k.startswith("searchable:")}
+    print(f"    分类分组：{groups}", flush=True)
+    print(f"    速度数据：{speed}；searchable 校正：{fixes}", flush=True)
+    return dict(stats)
+
+
 def rewrite_gh(value):
     """对 site/live/parse 字段里的 GitHub 原链统一加主镜像前缀（先过域名替换层）。"""
     if isinstance(value, str):
@@ -1786,6 +2103,7 @@ def main() -> int:
     merged: dict = {}        # 全局字段
     spider_origin_info = None
     site_origin_name: dict = {}   # site key -> 来源上游名
+    upstream_spider: dict = {}     # 上游名 -> 它自己声明的顶层 spider（合并只能留一份全局的，其余靠它补回）
     site_origin_score: dict = {}  # site key -> 来源上游健康分（O1 同 key 仲裁）
     live_origin_score: dict = {}  # live name -> 来源上游健康分
     parse_origin_score: dict = {} # parse name -> 来源上游健康分
@@ -1795,9 +2113,13 @@ def main() -> int:
     lives_by_name: dict = {}
     parses_by_name: dict = {}
 
-    print(f"[1/6] 拉取 {len(ALL_UPSTREAMS)} 个上游（含 {len(LIVE_UPSTREAMS)} 个直播源上游）...", flush=True)
+    active_upstreams = ALL_UPSTREAMS + load_extra_upstreams()
+    for u in active_upstreams:          # canary 上游的相对路径依赖也要能解析
+        if u.get("kind") == "tvbox" and u.get("name") not in UPSTREAM_BASES:
+            UPSTREAM_BASES[u["name"]] = u["url"].rsplit("/", 1)[0] + "/"
+    print(f"[1/6] 拉取 {len(active_upstreams)} 个上游（含 {len(LIVE_UPSTREAMS)} 个直播源上游）...", flush=True)
     fetchable = []
-    for u in ALL_UPSTREAMS:
+    for u in active_upstreams:
         ok, tag = enabled_of(u, state, blacklist_manual, whitelist_manual)
         fetchable.append((u, ok, tag))
 
@@ -1926,6 +2248,10 @@ def main() -> int:
                     merged[gk] = rewrite_gh(cfg[gk])
                     if gk == "spider":
                         spider_origin_info = (name, u["url"].rsplit("/", 1)[0] + "/")
+            # 记下**每个**上游自己的 spider（不管有没有被选成全局），
+            # 供 assign_origin_spiders 给这些源补回它原本该用的那份包
+            if isinstance(cfg.get("spider"), str) and cfg["spider"]:
+                upstream_spider[name] = cfg["spider"]
             print(f"  OK   {name}: sites={len(cfg_sites)} lives={len(cfg_lives)} "
                   f"parses={len(cfg_parses)} (+{added_s}/{added_l}/{added_p} repl {repl_s}/{repl_l}/{repl_p}) "
                   f"{rec['bytes']}B #{rec['sha256']}", flush=True)
@@ -1947,6 +2273,9 @@ def main() -> int:
     dup_drops = secondary_dedup_sites(sites_by_key, site_origin_name, site_origin_score)
     if dup_drops:
         print(f"    二级去重：剔除 {len(dup_drops)} 个 api/ext 指纹重复站点（保留健康来源）", flush=True)
+    mirror_drops = apply_mirror_dedup(sites_by_key, site_origin_name, site_origin_score)
+    if mirror_drops:
+        print(f"    三级去重：剔除 {len(mirror_drops)} 个同库镜像站点（片名指纹，保留可用性最好的一份）", flush=True)
     sites = list(sites_by_key.values())
     lives = list(lives_by_name.values())
     parses = list(parses_by_name.values())
@@ -2013,6 +2342,22 @@ def main() -> int:
     tested_pass = sum(1 for v in verdict.values() if v)
     print(f"    通过 {tested_pass}/{len(to_test)}，剔除 {len(removed)}，保留 {len(kept_sites)} 站点", flush=True)
 
+    # ---- 成人内容发布开关（默认不发布，见 PUBLISH_ADULT 的说明）----
+    adult_excluded_sites: list = []
+    if not PUBLISH_ADULT:
+        before = len(kept_sites)
+        adult_excluded_sites = [s for s in kept_sites if classify_site(s, category_overrides) == "adult"]
+        kept_sites = [s for s in kept_sites if classify_site(s, category_overrides) != "adult"]
+        if adult_excluded_sites:
+            print(f"    [adult] 未发布模式：从主产物剔除 {len(adult_excluded_sites)} 个成人分类站点"
+                  f"（{before} → {len(kept_sites)}）；数据仍写入 {ADULT_LOCAL_PATH}，不进版本库",
+                  flush=True)
+        # repo_dir 直到下方 [4/6] 直播重构段才定义；未发布模式（PUBLISH_ADULT=0，默认）
+        # 在那之前就要写 adult.local.json —— 这里内联计算仓库根，避免读取未绑定局部变量
+        # 抛 UnboundLocalError（实测 canary 开启后全链路在 [3/6] 成人段崩掉，且 CI/本地同份代码都会中招）
+        _dump_adult_local(adult_excluded_sites,
+                          os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
     # ---- [4/6] 直播源分类测速优选 ----
     print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
     m3u_entries = []
@@ -2055,8 +2400,18 @@ def main() -> int:
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    # 关键：给「走全局 spider」的源补回它来源上游那份 spider，否则它们会指向不含所需爬虫类的包
+    osp_stats = assign_origin_spiders(tvbox, site_origin_name, upstream_spider, spider_origin_info)
+    if osp_stats.get("assigned"):
+        print(f"    按来源上游补回 spider 的源：{osp_stats['assigned']} 个"
+              f"（与全局同包 {osp_stats.get('same_as_global', 0)}、上游未声明 "
+              f"{osp_stats.get('origin_no_spider', 0)}）", flush=True)
     dep_stats = collect_and_rewrite_deps(tvbox, site_origin_name, spider_origin_info)
     loc_stats = localize_external_refs(tvbox)
+    # 安全网：没能落库的 per-site jar 撤掉，避免留下客户端解析不了的相对路径
+    prune_unlocalized_jars(tvbox)
+    # 按「分类 → 搜索可用性 → 实测速度」重排站点（实现见 scripts/rank_sites.py）
+    rank_stats = apply_rank(tvbox)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
 
@@ -2111,7 +2466,11 @@ def main() -> int:
     # parses 复用 vod 全集：TVBox 站点不引用 parses（playUrl/jar 才是站点自有播放方式），
     # parses 是全局播放器池，单独配置需自带全集才不至于某些解析器不可用。
     short_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "short"]
-    adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "adult"]
+    if PUBLISH_ADULT:
+        adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "adult"]
+    else:
+        # 未发布模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
+        adult_sites = adult_excluded_sites
     # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
     # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
     local_ref_audit: dict = {}
@@ -2133,12 +2492,18 @@ def main() -> int:
         adult_doc.pop("spider", None)
     with open("short.json", "w", encoding="utf-8") as f:
         json.dump(short_doc, f, ensure_ascii=False, indent=1)
-    with open("adult.json", "w", encoding="utf-8") as f:
-        json.dump(adult_doc, f, ensure_ascii=False, indent=1)
+    if PUBLISH_ADULT:
+        with open("adult.json", "w", encoding="utf-8") as f:
+            json.dump(adult_doc, f, ensure_ascii=False, indent=1)
+        adult_out = f"adult.json（{len(adult_sites)} sites + {len(parses)} parses）"
+    else:
+        # 不写仓库根的 adult.json（公开托管成人内容有封库风险）；
+        # 数据在 kept_sites 过滤那一步已写入 ADULT_LOCAL_PATH
+        adult_out = f"adult.json 未发布（{len(adult_sites)} 个源仅本地留档 {ADULT_LOCAL_PATH}）"
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
-          f" / adult.json（{len(adult_sites)} sites + {len(parses)} parses）"
-          f" / live.json（{len(live['lives'])} 条直播源 / 其中聚合 1 条 + 第三方精选）/ adult.json lives（{len(adult_lives)} 条）/ list.json", flush=True)
+          f" / {adult_out}"
+          f" / live.json（{len(live['lives'])} 条直播源 / 其中聚合 1 条 + 第三方精选）/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)
