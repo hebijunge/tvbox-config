@@ -41,8 +41,10 @@ CONCURRENCY = int(os.environ.get("CONCURRENCY", "20"))
 MAX_BODY = 4096             # 验活最多读取字节数
 # O7 ghproxy 单点依赖缓解：拉取侧按镜像列表依次轮换；产出配置改写固定用主镜像（静态 JSON 无法做客户端容灾）
 GH_MIRRORS = [m.strip() for m in os.environ.get(
-    "GH_MIRRORS", "https://ghproxy.net/,https://gh-proxy.com/,https://ghfast.top/").split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://ghproxy.net/"
+    "GH_MIRRORS",
+    "https://gh.llkk.cc/,https://ghfast.top/,https://gh-proxy.com/,https://ghproxy.net/,"
+    "https://gh.zwy.one/,https://raw.ihtw.moe/,https://ghp.ci/").split(",") if m.strip()]
+GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.llkk.cc/"
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
@@ -635,7 +637,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
 #   与 collect_and_rewrite_deps 同口径：已存在非空文件直接复用（保留现值不回源覆盖）、
 #   下载失败/内容不可识别 → 保留原 URL 不改写。
 
-MIRROR_PREFIX_RE = re.compile(r"^(https?://[^/]*(?:ghproxy|gh-proxy|ghfast|moeyy)[^/]*)/(https?://)")
+MIRROR_PREFIX_RE = re.compile(r"^(https?://[^/]*(?:ghproxy|gh-proxy|ghfast|moeyy|gh\.llkk\.cc|gh\.zwy\.one|raw\.ihtw\.moe|ghp\.ci)[^/]*)/(https?://)")
 
 
 import urllib.parse
@@ -848,8 +850,8 @@ def strip_comments_and_clean(text: str) -> str:
 
 
 def gh_url(u: str) -> str:
-    """GitHub 链接换 ghproxy 主镜像通道（产出配置改写用；拉取侧走 GH_MIRRORS 列表轮换）。"""
-    if "ghproxy" in u or not GH_MIRRORS:
+    """GitHub 链接换主镜像通道 GH_MIRRORS[0]（产出配置改写用；拉取侧走 GH_MIRRORS 列表轮换）。"""
+    if not GH_MIRRORS or "ghproxy" in u or any(u.startswith(m.rstrip("/")) for m in GH_MIRRORS):
         return u
     if re.match(r"^https?://(raw\.)?githubusercontent\.com/", u) or re.match(
         r"^https?://github\.com/[^/]+/[^/]+/(raw|releases|archive)/", u
@@ -1453,7 +1455,7 @@ def secondary_dedup_sites(sites_by_key: dict, site_origin_name: dict, site_origi
 
 
 def rewrite_gh(value):
-    """对 site/live/parse 字段里的 GitHub 原链统一加 ghproxy.net 前缀（先过域名替换层）。"""
+    """对 site/live/parse 字段里的 GitHub 原链统一加主镜像前缀（先过域名替换层）。"""
     if isinstance(value, str):
         return gh_url(map_domain(value))
     if isinstance(value, list):
@@ -1562,13 +1564,13 @@ def _absolutize(v, base: str = None):
     """子仓内 ./ 相对引用 → 仓库绝对路径（默认 REPO_RAW，代理版传镜像前缀 base）。
 
     子仓位于 stores/ 下，TVBox 按配置 URL 解析相对路径，不改写会指向 stores/deps/ 而失效；
-    ext 支持 $$$ 组合串，需逐段改写。"""
+    ext 支持 $$$ 组合串，需逐段改写；产物为 raw 链接，经 gh_url 套镜像前缀（用户设备直连不了 raw）。"""
     base = base or REPO_RAW
     if isinstance(v, str):
         if "$$$" in v:
             return "$$$".join(_absolutize(seg, base) for seg in v.split("$$$"))
         if v.startswith("./"):
-            return f"{base}/{v[2:]}"
+            return gh_url(f"{base}/{v[2:]}")
         return v
     if isinstance(v, list):
         return [_absolutize(x, base) for x in v]
@@ -1640,7 +1642,7 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
       stores/csp.json    其余 csp 蜘蛛站
       stores/pan_ck.json 网盘 CK 获取指引（端点实测可达性）
       stores/duocang.json 多仓入口（纯 urls 格式，条目直挂配置本体，只含 CMS/蜘蛛两条代理线路）
-    每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为 REPO_RAW 绝对仓库路径。
+    每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为仓库绝对路径并套镜像前缀。
     """
     sites = vod.get("sites") or []
     kinds: dict = {}
