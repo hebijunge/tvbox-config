@@ -357,6 +357,12 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
 def dep_download(url: str):
     """原 URL → ghproxy 镜像列表轮换兜底。返回 (bytes, channel) 或 (None, err)。"""
     import urllib.parse
+    # 非 ASCII 域名（如中文域名）punycode 化：urllib 发请求头走 latin-1，unicode host 必挂 UnicodeEncodeError
+    p = urllib.parse.urlsplit(url)
+    if p.hostname and not p.hostname.isascii():
+        host = _idna_host(p.hostname)
+        netloc = f"{host}:{p.port}" if p.port else host
+        url = urllib.parse.urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment))
     attempts = [url]
     if "github" in url and "ghproxy" not in url:
         attempts.extend(m + url for m in GH_MIRRORS)
@@ -616,6 +622,188 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     print(f"[deps] 完成：收集 {stats['collected']}/{stats['total']}，改写 {stats['rewritten']} 处引用，"
           f"spider {'已修复' if stats['spider'] else '未变'}", flush=True)
     return stats
+
+
+
+# ---------------- 依赖外链落库兜底层：collect_and_rewrite_deps 漏网的外部静态引用 ----------------
+# 背景（2026-09-19 用户指令「依赖文件落库，相关的路径引用改成仓库路径」）：
+#   collect_and_rewrite_deps 只处理 origin 明确、UPSTREAM_BASES 可回溯的站点引用；
+#   去重/合并后 origin 丢失的站点，其 ext 里残留第三方绝对 URL（.js/.json/.txt）。
+#   本层按 URL 兜底：下载 → deps/localized/ 落库 → 引用改写为 ./deps/... 仓库相对路径
+#   （主配置相对路径，子仓经 _absolutize 转为 REPO_RAW 绝对路径）。
+#   API 端点（非静态文件后缀）、127.0.0.1/localhost 本机代理、本仓库自身链接一律不动。
+#   与 collect_and_rewrite_deps 同口径：已存在非空文件直接复用（保留现值不回源覆盖）、
+#   下载失败/内容不可识别 → 保留原 URL 不改写。
+
+MIRROR_PREFIX_RE = re.compile(r"^(https?://[^/]*(?:ghproxy|gh-proxy|ghfast|moeyy)[^/]*)/(https?://)")
+
+
+import urllib.parse
+
+
+def _static_ext_ref(seg: str):
+    """ext 段落识别：第三方静态文件 URL（.js/.json/.txt/.zip）→ 归一化 URL；其余 None。
+
+    .php 端点（dr_py 服务器等）是动态 API 不落库；;md5;/;params; 链只取首段判型。"""
+    s = seg.strip()
+    if not s or s.startswith("./") or s.startswith("../"):
+        return None
+    base = s.split(";")[0]
+    if "$$$" in base or not re.match(r"^https?://", base):
+        return None
+    host = urllib.parse.urlparse(base).netloc
+    if not host or "127.0.0.1" in host or "localhost" in host:
+        return None
+    if "hebijunge/tvbox-config" in base:  # 本仓库自身引用已是仓库路径
+        return None
+    # 镜像前缀归一化：ghproxy/gh-proxy/ghfast/moeyy 前缀剥成裸源 URL 再统一走 dep_download 镜像轮换
+    m = MIRROR_PREFIX_RE.match(base)
+    url = f"{m.group(2)}{base[m.end(2):]}" if m else base
+    path = url.split("?")[0].lower()
+    if not path.endswith((".js", ".json", ".txt", ".zip")):
+        return None
+    return url
+
+
+def localize_external_refs(tvbox: dict) -> dict:
+    """扫描 sites 的 jar/ext，把第三方静态依赖文件下载落库 deps/localized/ 并改写为仓库路径。"""
+    manifest = load_manifest()
+    now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00")
+
+    # ---- 1. 收集唯一 URL（jar 用 is_file_ref 识别含 .jar/.zip/.php；ext 走 _static_ext_ref） ----
+    candidates: dict = {}   # url -> kind_hint
+    api_untouched = 0
+
+    def add(field: str, seg: str):
+        nonlocal api_untouched
+        seg = seg.strip()
+        if not seg:
+            return
+        if field == "jar":
+            r = is_file_ref(seg)
+            if not r or r[0] != "abs":
+                return
+            url = r[1]
+            if "127.0.0.1" in url or "localhost" in url or "hebijunge/tvbox-config" in url:
+                return
+            candidates.setdefault(url, "jar")
+        else:
+            url = _static_ext_ref(seg)
+            if url:
+                hint = "js" if url.lower().split("?")[0].endswith(".js") else (
+                    "jar" if url.lower().split("?")[0].endswith(".zip") else "json")
+                candidates.setdefault(url, hint)
+            elif re.match(r"^https?://", seg.split(";")[0]) and "$$$" not in seg:
+                api_untouched += 1  # API 端点等非静态引用：保持原样
+
+    for s in tvbox.get("sites", []):
+        for field in ("jar", "ext"):
+            v = s.get(field)
+            if isinstance(v, str):
+                for seg in v.split("$$$"):
+                    add(field, seg)
+            elif isinstance(v, dict):
+                for v2 in v.values():
+                    if isinstance(v2, str):
+                        for seg in v2.split("$$$"):
+                            add(field, seg)
+
+    # ---- 2. 下载/复用/校验（并发，与 collect_and_rewrite_deps 同口径） ----
+    def local_path_of(url: str) -> str:
+        name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or ""
+        name = re.sub(r"[^\w.\-\u4e00-\u9fff]+", "_", name)[:60]
+        return f"{DEPS_DIR}/localized/{hashlib.md5(url.encode()).hexdigest()[:10]}-{name}"
+
+    def work(url_kind):
+        url, hint = url_kind
+        lp = local_path_of(url)
+        rec = {"url": url, "local": lp, "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": ""}
+        if os.path.exists(lp) and os.path.getsize(lp) > 0:
+            content = open(lp, "rb").read()
+            rec["channel"] = "keep-existing"
+        else:
+            content, ch = dep_download(url)
+            rec["channel"] = ch if content else str(ch)
+            if content is None:
+                rec["err"] = str(ch)
+                return rec
+        kind = dep_classify(hint, content)
+        if kind == "unknown":  # HTML/伪装内容：不改写，保留原 URL
+            rec["err"] = f"content not js/jar/json ({content[:24]!r})"
+            return rec
+        os.makedirs(os.path.dirname(lp), exist_ok=True)
+        open(lp, "wb").write(content)
+        rec.update({"ok": True, "kind": kind, "size": len(content),
+                    "md5": hashlib.md5(content).hexdigest()})
+        return rec
+
+    ok_map: dict = {}
+    if candidates:
+        print(f"[deps-2] 外链落库兜底：{len(candidates)} 个第三方静态依赖（API 端点 {api_untouched} 处保持不动）...", flush=True)
+        with cf.ThreadPoolExecutor(DEP_CONCURRENCY) as ex:
+            for rec in ex.map(work, candidates.items()):
+                if rec["ok"]:
+                    ok_map[rec["url"]] = rec
+                else:
+                    print(f"  [deps-2] 保留原链 {rec['url'][:80]} ← {rec['err'][:80]}", flush=True)
+
+    # ---- 3. 改写引用 ----
+    stats = {"candidates": len(candidates), "localized": len(ok_map), "rewritten": 0,
+             "kept": 0, "api_endpoints_untouched": api_untouched, "files": len(ok_map)}
+
+    def rewrite_seg(field: str, seg: str) -> str:
+        def ref_of(local: str) -> str:
+            # 引用一律相对仓库根的 ./deps/...（DEPS_DIR 被环境变量指向绝对路径时也能正确改写）
+            return local if not os.path.isabs(local) else os.path.relpath(local)
+        if field == "jar":
+            r = is_file_ref(seg)
+            if not r or r[0] != "abs":
+                return seg
+            rec = ok_map.get(r[1])
+            if not rec:
+                stats["kept"] += 1
+                return seg
+            return f"./{ref_of(rec['local'])};md5;{rec['md5']}" if ";md5;" in seg else f"./{ref_of(rec['local'])}"
+        url = _static_ext_ref(seg)
+        if not url:
+            return seg
+        rec = ok_map.get(url)
+        if not rec:
+            stats["kept"] += 1
+            return seg
+        return f"./{ref_of(rec['local'])}"
+
+    def apply_field(field: str, v):
+        if isinstance(v, str):
+            if "$$$" in v:
+                return "$$$".join(rewrite_seg(field, x) for x in v.split("$$$"))
+            return rewrite_seg(field, v)
+        if isinstance(v, dict):
+            return {k: apply_field(field, v2) for k, v2 in v.items()}
+        return v
+
+    if ok_map:
+        for s in tvbox.get("sites", []):
+            for field in ("jar", "ext"):
+                if field in s:
+                    new = apply_field(field, s[field])
+                    if new != s.get(field):
+                        s[field] = new
+                        stats["rewritten"] += 1
+
+    # ---- 4. manifest 记录（origin=localized，与 collect 共用一份 manifest） ----
+    for rec in ok_map.values():
+        manifest[f"localized|{rec['url']}"] = {"url": rec["url"], "origin": "localized",
+                                               "local": rec["local"], "md5": rec["md5"],
+                                               "kind": rec["kind"], "size": rec["size"],
+                                               "channel": rec.get("channel", ""), "updated_at": now}
+    os.makedirs(DEPS_DIR, exist_ok=True)
+    with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=1)
+    print(f"[deps-2] 完成：落库 {stats['localized']}/{stats['candidates']}，改写 {stats['rewritten']} 个站点字段，"
+          f"保留原链 {stats['kept']} 处，API 端点 {stats['api_endpoints_untouched']} 处未动", flush=True)
+    return stats
+
 
 
 def strip_comments_and_clean(text: str) -> str:
@@ -1398,8 +1586,8 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
       stores/pan.json    网盘类 csp（需 token.json 填 CK 的均在其中，needs_ck 标记）
       stores/csp.json    其余 csp 蜘蛛站
       stores/pan_ck.json 网盘 CK 获取指引（端点实测可达性）
-      stores/duocang.json 多仓入口（纯 urls 格式，条目直挂配置本体，含直连+代理线路）
-    每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为 REPO_RAW 绝对路径。
+      stores/duocang.json 多仓入口（纯 urls 格式，条目直挂配置本体，只含 CMS/蜘蛛两条代理线路）
+    每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为 REPO_RAW 绝对仓库路径。
     """
     sites = vod.get("sites") or []
     kinds: dict = {}
@@ -1413,18 +1601,16 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
         return [s for _, s in sorted(pairs, key=lambda t: (lat.get(str(t[1].get("api") or ""), 10 ** 9), t[0]))]
 
     gh1 = GH_MIRRORS[0].rstrip("/")  # 常量自带尾部斜杠，去重避免出现 //https:// 双斜杠
-    proxy_base = f"{gh1}/{REPO_RAW}"
 
-    def mkdoc(ss, proxy: bool = False):
-        base = proxy_base if proxy else REPO_RAW
-        doc = {f: _absolutize(vod[f], base)
+    def mkdoc(ss):
+        doc = {f: _absolutize(vod[f], REPO_RAW)
                for f in ("spider", "wallpaper", "parses", "flags") if vod.get(f) is not None}
         ss2 = []
         for s in ss:
             s2 = dict(s)
             for f in ("jar", "ext"):
                 if f in s2:
-                    s2[f] = _absolutize(s2[f], base)
+                    s2[f] = _absolutize(s2[f], REPO_RAW)
             ss2.append(s2)
         doc["sites"] = ss2
         return doc
@@ -1439,9 +1625,6 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
         ss = ordered(kinds.get(k, [])) if k in ("cms", "app") else [s for _, s in kinds.get(k, [])]
         with open(os.path.join(STORES_DIR, fname), "w", encoding="utf-8") as f:
             json.dump(mkdoc(ss), f, ensure_ascii=False, indent=1)
-        # 代理镜像版：spider/ext 等内部引用同样改为镜像前缀，代理线路才能端到端可用
-        with open(os.path.join(STORES_DIR, fname.replace(".json", "_proxy.json")), "w", encoding="utf-8") as f:
-            json.dump(mkdoc(ss, proxy=True), f, ensure_ascii=False, indent=1)
         counts[k] = len(ss)
 
     # 网盘 CK 清单：needs_ck = ext 引用 token.json（需填 CK/账密才出内容）
@@ -1478,16 +1661,17 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     # 实测教训（2026-09-19 用户影视仓截图「Json解析失败No value for urls」）：storeHouse+urls 双格式会让
     # 影视仓走 storeHouse 分支、把条目再按「仓」解析（要求 urls），直挂的 sites 配置就会报错；
     # 纯 urls 格式下 App 把条目当配置加载，与参考仓行为一致。
-    # 用户指定（2026-09-19）：入口只保留代理线路，且 App 接口仓、网盘仓不进入口。
-    # 代理线路必须指向 *_proxy.json（内部 spider/ext 引用已同步改写为镜像前缀），
-    # 若指向 ghproxy 前缀的直连版文件，其内部 raw 引用在代理用户网络下会加载失败。
-    # App/网盘仓对应文件仍照常生成，可单独挂载使用。
+    # 用户指定（2026-09-19）：入口只保留 CMS 接口仓与蜘蛛仓两条线路（App 接口仓、网盘仓不进入口，
+    # 对应文件仍照常生成，可单独挂载）；「代理」指入口 JSON 本身经 ghproxy 镜像加速拉取。
+    # 依赖引用一律仓库路径（用户指令「依赖文件落库，相关的路径引用改成仓库路径」）：
+    # 子仓内部 spider/ext 引用为 raw.githubusercontent.com 本仓库绝对路径（_absolutize 产出），
+    # 第三方静态依赖已由 collect_and_rewrite_deps + localize_external_refs 落库 deps/，
+    # 不再生成 *_proxy.json 镜像前缀变体（用户网络实测可达 raw，镜像前缀反而引入单点故障）。
     entry = []
     for k, fname, label in stores_meta:
         if k in ("app", "pan"):
             continue
-        proxy_fname = fname.replace(".json", "_proxy.json")
-        entry.append({"url": f"{gh1}/{REPO_RAW}/stores/{proxy_fname}", "name": f"{label}·代理"})
+        entry.append({"url": f"{gh1}/{REPO_RAW}/stores/{fname}", "name": f"{label}·代理"})
     duocang = {"urls": entry}
     with open(os.path.join(STORES_DIR, "duocang.json"), "w", encoding="utf-8") as f:
         json.dump(duocang, f, ensure_ascii=False, indent=1)
@@ -1499,9 +1683,9 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     print(f"[5.5/6] 多仓：cms {counts['cms']} / app {counts['app']} / pan {counts['pan']} / csp {counts['csp']}"
           f" → stores/（接口测速通过 {len(lat)}/{len(cms_app)}）", flush=True)
     return {
-        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（纯 urls 格式对齐社区标准，直连+代理双线路，代理版子仓 *_proxy.json 内部引用同步走镜像）",
+        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（纯 urls 格式对齐社区标准，只含 CMS/蜘蛛两条代理线路）；子仓内部依赖引用一律本仓库路径（第三方静态依赖已落库 deps/localized/）",
         "counts": counts,
-        "proxy_mirror": gh1,
+        "entry_mirror": gh1,
         "speed_tested": len(cms_app),
         "speed_ok": len(lat),
         "cms_speed_top10": top10("cms"),
@@ -1799,6 +1983,7 @@ def main() -> int:
     tvbox["lives"] = lives
     tvbox["parses"] = parses
     dep_stats = collect_and_rewrite_deps(tvbox, site_origin_name, spider_origin_info)
+    loc_stats = localize_external_refs(tvbox)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
 
@@ -1906,9 +2091,7 @@ def main() -> int:
               os.path.join(LIVES_DIR, "live_other.txt"),
               os.path.join(STORES_DIR, "duocang.json"), os.path.join(STORES_DIR, "cms.json"),
               os.path.join(STORES_DIR, "app.json"), os.path.join(STORES_DIR, "pan.json"),
-              os.path.join(STORES_DIR, "csp.json"), os.path.join(STORES_DIR, "pan_ck.json"),
-              os.path.join(STORES_DIR, "cms_proxy.json"), os.path.join(STORES_DIR, "app_proxy.json"),
-              os.path.join(STORES_DIR, "pan_proxy.json"), os.path.join(STORES_DIR, "csp_proxy.json")):
+              os.path.join(STORES_DIR, "csp.json"), os.path.join(STORES_DIR, "pan_ck.json")):
         if os.path.exists(p):
             b = open(p, "rb").read()
             products[p] = {"bytes": len(b), "sha256": sha12(b)}
@@ -1936,6 +2119,11 @@ def main() -> int:
             "deps_total": dep_stats["total"],
             "deps_collected": dep_stats["collected"],
             "deps_rewritten": dep_stats["rewritten"],
+            "deps_localized_candidates": loc_stats["candidates"],
+            "deps_localized_ok": loc_stats["localized"],
+            "deps_localized_rewritten": loc_stats["rewritten"],
+            "deps_localized_kept": loc_stats["kept"],
+            "deps_api_endpoints_untouched": loc_stats["api_endpoints_untouched"],
         },
         "upstreams_health": {
             "note": "checks.json 的摘要镜像；disabled=连续不达标自动停用，blacklisted=手动黑名单",
