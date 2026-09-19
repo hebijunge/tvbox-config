@@ -1,0 +1,82 @@
+{
+ "note": "网盘 CK 填写指引：CK/账密统一填本仓库 deps/qist/js/lib/token.json（字段见各站点 ck_field）；该文件非空时 daily 保留现值不回源覆盖",
+ "token_file": "./deps/qist/js/lib/token.json",
+ "endpoints": [
+  {
+   "disk": "阿里云盘",
+   "ck_field": "token / open_token",
+   "method": "POST 中转",
+   "api": "http://api.extscreen.com/aliyundrive/token",
+   "note": "open_api_url 默认中转，POST 传 refresh_token 换 open_token",
+   "reachable": true,
+   "http_status": 404
+  },
+  {
+   "disk": "夸克网盘",
+   "ck_field": "quark_cookie",
+   "method": "网页登录",
+   "api": "https://pan.quark.cn",
+   "note": "浏览器登录后 F12 复制 Cookie 全量",
+   "reachable": true,
+   "http_status": 200,
+   "ms": 2918
+  },
+  {
+   "disk": "UC网盘",
+   "ck_field": "uc_cookie",
+   "method": "网页登录",
+   "api": "https://drive.uc.cn",
+   "note": "浏览器登录后 F12 复制 Cookie 全量",
+   "reachable": true,
+   "http_status": 200,
+   "ms": 4474
+  },
+  {
+   "disk": "天翼云盘",
+   "ck_field": "thunder_username/password + captchatoken",
+   "method": "账密+验证码",
+   "api": "https://m.cloud.189.cn/login.html",
+   "note": "账密写入 token.json，登录需验证码",
+   "reachable": true,
+   "http_status": 404
+  },
+  {
+   "disk": "115网盘",
+   "ck_field": "cookie(UID/CID/SEID)",
+   "method": "扫码",
+   "api": "https://qrcodeapi.115.com/api/1.0/user/1.0/qrcode/token/",
+   "note": "扫码拿二维码 → 轮询确认换 cookie",
+   "reachable": true,
+   "http_status": 200,
+   "ms": 2500
+  },
+  {
+   "disk": "PikPak",
+   "ck_field": "pikpak_username/password",
+   "method": "账密",
+   "api": "https://user.mypikpak.com/v1/auth/token",
+   "note": "OAuth password grant，账密直接换 token",
+   "reachable": true,
+   "http_status": 501
+  },
+  {
+   "disk": "移动云盘",
+   "ck_field": "yd_auth",
+   "method": "App 抓包",
+   "api": "https://passport.yun.139.com",
+   "note": "App 登录后抓包取 auth 值",
+   "reachable": false,
+   "err": "URLError: <urlopen error [Errno -2] Name or service not known>"
+  },
+  {
+   "disk": "百度网盘",
+   "ck_field": "cookie(BDUSS)",
+   "method": "网页登录",
+   "api": "https://pan.baidu.com",
+   "note": "浏览器登录后复制 BDUSS",
+   "reachable": true,
+   "http_status": 200,
+   "ms": 2576
+  }
+ ]
+}

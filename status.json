@@ -1,5 +1,5 @@
 {
- "generated_at": "2026-09-19 07:56:50 +08:00",
+ "generated_at": "2026-09-19 08:28:56 +08:00",
  "summary": {
   "interfaces_total": 49,
   "interfaces_usable": 40,
@@ -11,7 +11,7 @@
   "sites_short": 24,
   "sites_adult": 40,
   "sites_tested": 194,
-  "sites_tested_pass": 154,
+  "sites_tested_pass": 156,
   "sites_removed": 0,
   "sites_untested": 1066,
   "sites_secondary_dedup": 52,
@@ -364,14 +364,14 @@
  "lives_by_category": {
   "cctv": {
    "channels": 34,
-   "urls": 97,
+   "urls": 96,
    "input_urls": 194,
    "speed_tested": true,
-   "fallback_urls": 6
+   "fallback_urls": 3
   },
   "weishi": {
    "channels": 43,
-   "urls": 117,
+   "urls": 119,
    "input_urls": 246,
    "speed_tested": true,
    "fallback_urls": 4
@@ -384,12 +384,845 @@
    "fallback_urls": 6
   },
   "other": {
-   "channels": 240,
-   "urls": 352,
+   "channels": 247,
+   "urls": 363,
    "input_urls": 906,
    "speed_tested": true,
    "fallback_urls": 100
   }
+ },
+ "stores": {
+  "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（storeHouse+urls 双格式）",
+  "counts": {
+   "cms": 164,
+   "app": 12,
+   "pan": 138,
+   "csp": 876
+  },
+  "speed_tested": 176,
+  "speed_ok": 143,
+  "cms_speed_top10": [
+   {
+    "name": "鸡坤 | 采集",
+    "ms": 51
+   },
+   {
+    "name": "155 | 采集",
+    "ms": 52
+   },
+   {
+    "name": "155",
+    "ms": 71
+   },
+   {
+    "name": "索尼资源",
+    "ms": 75
+   },
+   {
+    "name": "火速 | 采集",
+    "ms": 107
+   },
+   {
+    "name": "CK",
+    "ms": 117
+   },
+   {
+    "name": "TV-金鹰资源",
+    "ms": 121
+   },
+   {
+    "name": "💕jkun(直连)",
+    "ms": 123
+   },
+   {
+    "name": "鲸鱼资源",
+    "ms": 125
+   },
+   {
+    "name": "影视 • 极速[直连]",
+    "ms": 127
+   }
+  ],
+  "app_speed_top10": [
+   {
+    "name": "湿妹 | 采集",
+    "ms": 214
+   },
+   {
+    "name": "香奶 | 采集",
+    "ms": 270
+   },
+   {
+    "name": "水机 | 采集",
+    "ms": 274
+   },
+   {
+    "name": "★黄AV(直连)",
+    "ms": 275
+   },
+   {
+    "name": "AV | 采集",
+    "ms": 275
+   },
+   {
+    "name": "白嫖 | 采集",
+    "ms": 300
+   },
+   {
+    "name": "🎶明星┃MV",
+    "ms": 317
+   },
+   {
+    "name": "大地 | 采集",
+    "ms": 750
+   },
+   {
+    "name": "请勿贩卖📚在线·采集集合",
+    "ms": 1012
+   }
+  ],
+  "pan_sites": [
+   {
+    "key": "PikPakShare1",
+    "name": "PikPak1",
+    "needs_ck": true
+   },
+   {
+    "key": "PikPakShare18",
+    "name": "PikPak18",
+    "needs_ck": true
+   },
+   {
+    "key": "AliShareEBook",
+    "name": "书籍 | 分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Funletu",
+    "name": "夸克  | 趣盘搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "QuarkPanso",
+    "name": "夸克 | 盘搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "115Share",
+    "name": "弹幕 | 115分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "4KHDR",
+    "name": "弹幕 | 4KHDR[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Moli",
+    "name": "弹幕 | HDmoli[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "PikPakShare",
+    "name": "弹幕 | PikPak分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "SambaShare",
+    "name": "弹幕 | Samba分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "UCShare",
+    "name": "弹幕 | UC分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Bt0",
+    "name": "弹幕 | 不太灵[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "YunPan",
+    "name": "弹幕 | 云盘[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "ddys",
+    "name": "弹幕 | 低端[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Bdys_spider",
+    "name": "弹幕 | 哔滴[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "团长资源",
+    "name": "弹幕 | 团长[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "QuarkShare",
+    "name": "弹幕 | 夸克分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Xpanpan",
+    "name": "弹幕 | 小盘盘[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Hdhive",
+    "name": "弹幕 | 影巢[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "AliShare",
+    "name": "弹幕 | 影视分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "新6V",
+    "name": "弹幕 | 新6V[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Xinshijue",
+    "name": "弹幕 | 新视觉[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "校长影视",
+    "name": "弹幕 | 校长[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Ppxzy",
+    "name": "弹幕 | 皮皮虾[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "yydsys",
+    "name": "弹幕 | 老哥[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "蜡笔网盘",
+    "name": "弹幕 | 蜡笔[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Wobg",
+    "name": "弹幕 | 表哥[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "PushShare",
+    "name": "弹幕 | 资源分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "ThunderShare",
+    "name": "弹幕 | 迅雷分享[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "音范丝",
+    "name": "弹幕 | 音范丝[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Gaoqing",
+    "name": "弹幕 | 高清网[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "TGYunPanLocal",
+    "name": "搜索 | TG[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "YingSo",
+    "name": "磁力 | 影搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "csp_BtSearch",
+    "name": "磁力搜",
+    "needs_ck": true
+   },
+   {
+    "key": "csp_BtSow",
+    "name": "磁力秀",
+    "needs_ck": true
+   },
+   {
+    "key": "88Pan",
+    "name": "网盘 | 88网盘[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Libvio",
+    "name": "网盘 | LIBVIO[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "TGYunPan",
+    "name": "网盘 | TG搜索[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "YunPanOne",
+    "name": "网盘 | 云盘[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Qianfan",
+    "name": "网盘 | 千帆[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "土豆",
+    "name": "网盘 | 土豆[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "DaPanSo",
+    "name": "网盘 | 大盘搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "YunSo",
+    "name": "网盘 | 小云[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "小米网盘",
+    "name": "网盘 | 小米[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Mogg",
+    "name": "网盘 | 木偶哥哥[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "csp_HunHePan",
+    "name": "网盘 | 混合盘[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "PikaSo",
+    "name": "网盘 | 皮卡搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "盘友圈",
+    "name": "网盘 | 盘友圈",
+    "needs_ck": true
+   },
+   {
+    "key": "秒搜",
+    "name": "网盘 | 秒搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Youtube",
+    "name": "视频 | Youtube[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "UP云搜",
+    "name": "阿里 | up云搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "七夜",
+    "name": "阿里 | 七夜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "小紙條",
+    "name": "阿里 | 小紙條[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "找資源",
+    "name": "阿里 | 找資源[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "易搜",
+    "name": "阿里 | 易搜[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "盤搜索",
+    "name": "阿里 | 盤搜索[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "Gitcafe",
+    "name": "阿里 | 纸条[jar]",
+    "needs_ck": true
+   },
+   {
+    "key": "123云盘",
+    "name": "123 • 云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "123Share",
+    "name": "123云盘分享",
+    "needs_ck": false
+   },
+   {
+    "key": "189Share",
+    "name": "189云盘分享",
+    "needs_ck": false
+   },
+   {
+    "key": "FourKFox",
+    "name": "4KFox|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "FourKFM",
+    "name": "4K影库|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "FourKZN",
+    "name": "4K指南|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Alist",
+    "name": "Alist(SP)",
+    "needs_ck": false
+   },
+   {
+    "key": "LIBVIO",
+    "name": "LIBVIO|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "PanSouGo",
+    "name": "PanSouGo|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "TGDouban",
+    "name": "TG豆瓣",
+    "needs_ck": false
+   },
+   {
+    "key": "UC网盘",
+    "name": "UC • 网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "upyunsou",
+    "name": "Up云搜",
+    "needs_ck": false
+   },
+   {
+    "key": "QuarkTZ",
+    "name": "✊️团长网盘┃4K弹幕",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Qwmp4",
+    "name": "七味|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "WebDAV",
+    "name": "云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "光鸭云盘",
+    "name": "光鸭 • 云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "天翼云盘",
+    "name": "天翼 • 云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "TianYiSou",
+    "name": "天逸搜|网盘搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_yyets",
+    "name": "夸克 | 人人影视搜[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_奇妙搜[夸]",
+    "name": "夸克 | 奇妙搜[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "push_quark",
+    "name": "夸克 | 推送",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_校长影视",
+    "name": "夸克 | 校长影视[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_愛盤搜",
+    "name": "夸克 | 爱盘搜[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_趣盤搜",
+    "name": "夸克 | 趣盘搜[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "夸克网盘",
+    "name": "夸克 • 网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "yisou",
+    "name": "宜搜",
+    "needs_ck": false
+   },
+   {
+    "key": "Hmxz",
+    "name": "海绵|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "混合盘",
+    "name": "混合盘|网盘搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "百度网盘",
+    "name": "百度 • 网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "PanSearch",
+    "name": "盘Se┃阿狸",
+    "needs_ck": false
+   },
+   {
+    "key": "盘搜",
+    "name": "盘搜 • 搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "盘链",
+    "name": "盘链|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "AList",
+    "name": "网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "drpy_js_Alist",
+    "name": "网盘 | Alist[js]",
+    "needs_ck": false
+   },
+   {
+    "key": "AlistShare",
+    "name": "网盘分享合集",
+    "needs_ck": false
+   },
+   {
+    "key": "网盘配置",
+    "name": "网盘及彈幕配置",
+    "needs_ck": false
+   },
+   {
+    "key": "HuamuCangShare",
+    "name": "聚影|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "至臻|网盘",
+    "name": "至臻|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "zmi",
+    "name": "蜗牛|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "Guanying",
+    "name": "观影|网盘|磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "迅雷云盘",
+    "name": "迅雷 • 云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "迅雷吧",
+    "name": "迅雷吧 • 磁力",
+    "needs_ck": false
+   },
+   {
+    "key": "阿里云盘",
+    "name": "阿里 • 云盘",
+    "needs_ck": false
+   },
+   {
+    "key": "Leijing",
+    "name": "雷鲸|网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "UpYun",
+    "name": "🌤️Up搜┃搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "YYDSYS",
+    "name": "🍡多多网盘┃4K弹幕",
+    "needs_ck": false
+   },
+   {
+    "key": "ZPan",
+    "name": "🎈盘搜┃四盘",
+    "needs_ck": false
+   },
+   {
+    "key": "SoAiPanSoo",
+    "name": "🎠九七┃综合🎠",
+    "needs_ck": false
+   },
+   {
+    "key": "SoAiAiPanSo",
+    "name": "🎠爱盘┃综合🎠",
+    "needs_ck": false
+   },
+   {
+    "key": "SoAiHaiYin",
+    "name": "🎠盘搜┃综合🎠",
+    "needs_ck": false
+   },
+   {
+    "key": "SoAiQuPanShe",
+    "name": "🎠趣搜┃百度🎠",
+    "needs_ck": false
+   },
+   {
+    "key": "QuarkzzV2",
+    "name": "🏆️夸克至臻┃4K弹幕",
+    "needs_ck": false
+   },
+   {
+    "key": "cloudLJ",
+    "name": "🐋天翼雷鲸┃4K弹幕",
+    "needs_ck": false
+   },
+   {
+    "key": "PanSso",
+    "name": "🐌盘他盘他┃三盘搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "YpanSo",
+    "name": "🐌盘她┃夸父",
+    "needs_ck": false
+   },
+   {
+    "key": "BpanSo",
+    "name": "🐞盘他┃嘟嘟",
+    "needs_ck": false
+   },
+   {
+    "key": "MyPan",
+    "name": "🐮我的┃网盘🐮",
+    "needs_ck": false
+   },
+   {
+    "key": "webdav",
+    "name": "👁️WebDav┃DIY👁️",
+    "needs_ck": false
+   },
+   {
+    "key": "FakeAi115Share",
+    "name": "💓115┃分享💓‍",
+    "needs_ck": false
+   },
+   {
+    "key": "AiPan1Me",
+    "name": "💓盘迷┃4K💓",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Upyunso",
+    "name": "📀UP云搜(搜索)",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_XYQHikerAL_云盘资源",
+    "name": "📀云盘资源(搜索)",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_AliPS",
+    "name": "📀喵狸盘搜(搜索)",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Zhaozy",
+    "name": "📀找资源(搜索)",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Yisou",
+    "name": "📀易搜(搜索)",
+    "needs_ck": false
+   },
+   {
+    "key": "PanSou",
+    "name": "📀盘搜┃搜索",
+    "needs_ck": false
+   },
+   {
+    "key": "UcYunPan",
+    "name": "📁文件┃优视┃资源",
+    "needs_ck": false
+   },
+   {
+    "key": "QuarkYunPan",
+    "name": "📁文件┃夸克┃资源",
+    "needs_ck": false
+   },
+   {
+    "key": "baidu",
+    "name": "📁文件┃百度┃资源",
+    "needs_ck": false
+   },
+   {
+    "key": "AliYunPanV2",
+    "name": "📁文件┃阿里┃资源",
+    "needs_ck": false
+   },
+   {
+    "key": "Zhaozy",
+    "name": "🔍┃阿里┃Zhaozy",
+    "needs_ck": false
+   },
+   {
+    "key": "searchEx",
+    "name": "🔍️聚合盘搜┃4K纯净",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Duopan",
+    "name": "🖍︎┃蜡笔┃影视",
+    "needs_ck": false
+   },
+   {
+    "key": "QuarkLaBiV2",
+    "name": "🖍︎蜡笔资源┃4K弹幕",
+    "needs_ck": false
+   },
+   {
+    "key": "MDrive",
+    "name": "🗂我的云盘┃我配置",
+    "needs_ck": false
+   },
+   {
+    "key": "YiSo",
+    "name": "😹易搜┃阿狸",
+    "needs_ck": false
+   },
+   {
+    "key": "夸搜",
+    "name": "😻夸搜┃夸父",
+    "needs_ck": false
+   },
+   {
+    "key": "Aliso",
+    "name": "🙀盘搜┃阿狸",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_PanSearch",
+    "name": "🚃┃盘搜┃网盘",
+    "needs_ck": false
+   },
+   {
+    "key": "JPan",
+    "name": "🦋易搜┃四盘",
+    "needs_ck": false
+   },
+   {
+    "key": "csp_Xunlei8",
+    "name": "🧲迅雷吧",
+    "needs_ck": false
+   }
+  ],
+  "pan_ck_endpoints": [
+   {
+    "disk": "阿里云盘",
+    "api": "http://api.extscreen.com/aliyundrive/token",
+    "reachable": true,
+    "http_status": 404
+   },
+   {
+    "disk": "夸克网盘",
+    "api": "https://pan.quark.cn",
+    "reachable": true,
+    "http_status": 200
+   },
+   {
+    "disk": "UC网盘",
+    "api": "https://drive.uc.cn",
+    "reachable": true,
+    "http_status": 200
+   },
+   {
+    "disk": "天翼云盘",
+    "api": "https://m.cloud.189.cn/login.html",
+    "reachable": true,
+    "http_status": 404
+   },
+   {
+    "disk": "115网盘",
+    "api": "https://qrcodeapi.115.com/api/1.0/user/1.0/qrcode/token/",
+    "reachable": true,
+    "http_status": 200
+   },
+   {
+    "disk": "PikPak",
+    "api": "https://user.mypikpak.com/v1/auth/token",
+    "reachable": true,
+    "http_status": 501
+   },
+   {
+    "disk": "移动云盘",
+    "api": "https://passport.yun.139.com",
+    "reachable": false,
+    "http_status": null
+   },
+   {
+    "disk": "百度网盘",
+    "api": "https://pan.baidu.com",
+    "reachable": true,
+    "http_status": 200
+   }
+  ]
  },
  "local_ref_audit": {
   "note": "写入前核验站点 ./ 本地依赖；short/adult 死引用站点已剔除，vod 仅记录",
@@ -1589,35 +2422,59 @@
    },
    "list.json": {
     "bytes": 21054,
-    "sha256": "5d341b490309"
+    "sha256": "a0ef210326b9"
    },
    "status.json": {
-    "bytes": 54078,
-    "sha256": "d29dbcc99b6f"
+    "bytes": 55078,
+    "sha256": "6e24130d8e09"
    },
    "checks.json": {
     "bytes": 22366,
-    "sha256": "af2e7f848a49"
+    "sha256": "184c63f153ec"
    },
    "lives/live.txt": {
-    "bytes": 43755,
-    "sha256": "c2b036fbaeb3"
+    "bytes": 44279,
+    "sha256": "0a85fed9908a"
    },
    "lives/live_cctv.txt": {
-    "bytes": 7103,
-    "sha256": "252b0718dbfc"
+    "bytes": 7003,
+    "sha256": "0bb7fe966d13"
    },
    "lives/live_weishi.txt": {
-    "bytes": 8582,
-    "sha256": "3f60e7f41bd0"
+    "bytes": 8657,
+    "sha256": "0dddc24fe23b"
    },
    "lives/live_gangtai.txt": {
-    "bytes": 1503,
-    "sha256": "ac87265af449"
+    "bytes": 1542,
+    "sha256": "8b66ea94db44"
    },
    "lives/live_other.txt": {
-    "bytes": 26567,
-    "sha256": "d001d3d4c6a4"
+    "bytes": 27077,
+    "sha256": "8215ac59cfd4"
+   },
+   "stores/duocang.json": {
+    "bytes": 1158,
+    "sha256": "1a2fc2752180"
+   },
+   "stores/cms.json": {
+    "bytes": 69929,
+    "sha256": "47495681fa85"
+   },
+   "stores/app.json": {
+    "bytes": 30592,
+    "sha256": "7f35a6dfc542"
+   },
+   "stores/pan.json": {
+    "bytes": 73341,
+    "sha256": "0a6bf3a88b73"
+   },
+   "stores/csp.json": {
+    "bytes": 275487,
+    "sha256": "fb04bb88a7d0"
+   },
+   "stores/pan_ck.json": {
+    "bytes": 2342,
+    "sha256": "9879200d79e2"
    }
   }
  },
@@ -1640,7 +2497,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/jsm",
@@ -1660,7 +2517,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/js",
@@ -1680,7 +2537,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/dianshi",
@@ -1700,7 +2557,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/fty",
@@ -1720,7 +2577,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/XYQ",
@@ -1740,7 +2597,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/0821",
@@ -1760,7 +2617,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/0825",
@@ -1780,7 +2637,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/0826",
@@ -1800,7 +2657,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/0827",
@@ -1820,7 +2677,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/367",
@@ -1840,7 +2697,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/9918",
@@ -1860,7 +2717,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/99188",
@@ -1880,7 +2737,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/js",
@@ -1900,7 +2757,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/XYQ",
@@ -1920,7 +2777,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/0821",
@@ -1940,7 +2797,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/0825",
@@ -1960,7 +2817,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/0826",
@@ -1980,7 +2837,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:52"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "gao/0827",
@@ -2000,7 +2857,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/jsm",
@@ -2020,7 +2877,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/box",
@@ -2040,7 +2897,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/fun",
@@ -2060,7 +2917,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/aa",
@@ -2080,7 +2937,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/bb",
@@ -2100,7 +2957,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/wv",
@@ -2120,7 +2977,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "cluntop/yt",
@@ -2160,7 +3017,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/jsm",
@@ -2180,7 +3037,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/js",
@@ -2200,7 +3057,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/dianshi",
@@ -2220,7 +3077,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/fty",
@@ -2240,7 +3097,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/XYQ",
@@ -2260,7 +3117,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53",
+   "last_ok_at": "2026-09-19 08:28:58",
    "mirror_of": "qist/XYQ"
   },
   {
@@ -2281,7 +3138,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/0825",
@@ -2301,7 +3158,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/0826",
@@ -2321,7 +3178,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "nxppru/0827",
@@ -2341,7 +3198,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53",
+   "last_ok_at": "2026-09-19 08:28:58",
    "mirror_of": "gao/0827"
   },
   {
@@ -2362,7 +3219,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "wex/newwex",
@@ -2382,7 +3239,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "pg/jsm",
@@ -2402,7 +3259,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "fatcat/tv",
@@ -2422,7 +3279,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "liu673cn/m",
@@ -2442,7 +3299,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "guovin-gd-ipv4",
@@ -2462,7 +3319,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "guovin-release",
@@ -2482,7 +3339,7 @@
    "error": "",
    "status": "ok",
    "fail_count": 0,
-   "last_ok_at": "2026-09-19 07:56:53"
+   "last_ok_at": "2026-09-19 08:28:58"
   },
   {
    "name": "qist/duanju",
