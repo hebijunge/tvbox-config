@@ -1577,6 +1577,59 @@ def _absolutize(v, base: str = None):
     return v
 
 
+def csp_searchable_filter(sites: list, repo_dir: str) -> tuple:
+    """蜘蛛仓只保留可搜索的接口（2026-09-19 用户指令「核心逻辑只保留可搜索的接口」）。
+
+    信号链（有证据才剔，证据不足保留，不误杀）：
+      1. site 显式 searchable == 0 → 剔（上游明说不支持搜索）
+      2. ext dict 显式 searchable == 0 → 剔
+      3. ext 为本地 ./deps/... 但文件不存在 → 剔（ext 404 站点加载即失败，必然搜不了）
+      4. ext 为本地 .js 且文件在盘上：内容含 searchable: 0 → 剔（drpy js 惯例 0/1/2，取头部 64KB 判定）
+    返回 (kept, dropped, stats)。"""
+    import collections
+    dropped: list = []
+    by_reason: collections.Counter = collections.Counter()
+
+    def drop(s, why):
+        by_reason[why] += 1
+        if len(dropped) < 200:
+            dropped.append({"key": s.get("key"), "name": s.get("name"), "reason": why})
+
+    kept = []
+    for s in sites:
+        if str(s.get("searchable")) == "0":
+            drop(s, "site.searchable=0")
+            continue
+        v = s.get("ext")
+        if isinstance(v, dict):
+            if str(v.get("searchable")) == "0":
+                drop(s, "ext.searchable=0")
+            else:
+                kept.append(s)
+            continue
+        if isinstance(v, str) and v.strip().startswith("./"):
+            p = v.strip().split(";")[0][2:]
+            fp = os.path.join(repo_dir, p)
+            if not os.path.isfile(fp):
+                drop(s, "ext文件缺失(死源)")
+                continue
+            try:
+                with open(fp, "rb") as f:
+                    head = f.read(65536).decode("utf-8", "ignore")
+            except OSError:
+                kept.append(s)
+                continue
+            if re.search(r"searchable\s*[:=]\s*0\b", head):
+                drop(s, "js.searchable=0")
+            else:
+                kept.append(s)
+            continue
+        kept.append(s)  # 无 ext / http ext / 无标注：证据不足，保留
+    stats = {"total": len(sites), "kept": len(kept), "dropped": len(sites) - len(kept),
+             "by_reason": dict(by_reason), "dropped_sample": dropped}
+    return kept, dropped, stats
+
+
 def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     """按接口类型拆分多仓并写 stores/*.json，返回写入 status.json 的摘要。
 
@@ -1621,8 +1674,16 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
                    ("app", "app.json", "App接口仓(按速度排序)"),
                    ("pan", "pan.json", "网盘仓"),
                    ("csp", "csp.json", "蜘蛛仓(csp)"))
+    csp_filter_stats = None
     for k, fname, _label in stores_meta:
-        ss = ordered(kinds.get(k, [])) if k in ("cms", "app") else [s for _, s in kinds.get(k, [])]
+        if k in ("cms", "app"):
+            ss = ordered(kinds.get(k, []))
+        elif k == "csp":
+            # 蜘蛛仓只保留可搜索的接口（用户指令），剔除明细见 status.json
+            ss, _csp_dropped, csp_filter_stats = csp_searchable_filter(
+                [s for _, s in kinds.get(k, [])], repo_dir)
+        else:
+            ss = [s for _, s in kinds.get(k, [])]
         with open(os.path.join(STORES_DIR, fname), "w", encoding="utf-8") as f:
             json.dump(mkdoc(ss), f, ensure_ascii=False, indent=1)
         counts[k] = len(ss)
@@ -1688,6 +1749,11 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
         "entry_mirror": gh1,
         "speed_tested": len(cms_app),
         "speed_ok": len(lat),
+        "csp_searchable_filter": ({"total": csp_filter_stats["total"],
+                                   "kept": csp_filter_stats["kept"],
+                                   "dropped": csp_filter_stats["dropped"],
+                                   "by_reason": csp_filter_stats["by_reason"]}
+                                  if csp_filter_stats else None),
         "cms_speed_top10": top10("cms"),
         "app_speed_top10": top10("app"),
         "pan_sites": pan_rows,
