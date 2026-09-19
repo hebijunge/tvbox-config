@@ -1275,6 +1275,226 @@ def rewrite_gh(value):
     return value
 
 
+
+
+# ---------------- 多仓拆分（stores/）：按接口类型归类 + cms/app 实测排序 + 网盘 CK 清单 ----------------
+
+STORES_DIR = os.environ.get("STORES_DIR", "stores")
+STORE_TIMEOUT = int(os.environ.get("STORE_TIMEOUT", "6"))
+STORE_CONCURRENCY = int(os.environ.get("STORE_CONCURRENCY", "16"))
+# CMS 标准接口形态：api.php 系（type0 xml / type1 json）、provide/vod、inc/api 及苹果CMS 变体
+CMS_API_RE = re.compile(r"api\.php|provide/vod|inc/api|atas\.php", re.I)
+# 网盘类 csp 识别：key / name / ext 三路命中（key、name 任一命中即归网盘仓）
+PAN_KEY_RE = re.compile(
+    r"pan|quark|ucshare|aliyun|thunder|xunlei|pikpak|(^|[^0-9])115|pan123|baidu|tianyi|guangya|"
+    r"panso|pika|hunhe|miaosou|dapan|qianfan|yiso|zhaozy|upyun|funletu|gitcafe|webdav|alist|"
+    r"clouddrive|share|yunpan|yunso|yundisk", re.I)
+PAN_NAME_RE = re.compile(
+    r"网盘|夸克|阿里云|迅雷|天翼|移动云|云盘|115|PikPak|123盘|百度盘|UC盘|盘搜|聚合盘|阿里盘", re.I)
+PAN_EXT_RE = re.compile(
+    r"token\.json|quark|aliyundrive|pikpak|yun\.139|189pc|thunder|mypikpak", re.I)
+
+# 网盘 CK 获取端点表：ck_field 与 token.json 字段一一对应（实测后随 stores/pan_ck.json 发布）。
+# 注：api.extscreen.com/aliyundrive/token 直接来自 token.json 的 open_api_url 字段，其余为各盘官方登录入口。
+PAN_CK_ENDPOINTS = [
+    {"disk": "阿里云盘", "ck_field": "token / open_token", "method": "POST 中转",
+     "api": "http://api.extscreen.com/aliyundrive/token",
+     "note": "open_api_url 默认中转，POST 传 refresh_token 换 open_token"},
+    {"disk": "夸克网盘", "ck_field": "quark_cookie", "method": "网页登录",
+     "api": "https://pan.quark.cn", "note": "浏览器登录后 F12 复制 Cookie 全量"},
+    {"disk": "UC网盘", "ck_field": "uc_cookie", "method": "网页登录",
+     "api": "https://drive.uc.cn", "note": "浏览器登录后 F12 复制 Cookie 全量"},
+    {"disk": "天翼云盘", "ck_field": "thunder_username/password + captchatoken", "method": "账密+验证码",
+     "api": "https://m.cloud.189.cn/login.html", "note": "账密写入 token.json，登录需验证码"},
+    {"disk": "115网盘", "ck_field": "cookie(UID/CID/SEID)", "method": "扫码",
+     "api": "https://qrcodeapi.115.com/api/1.0/user/1.0/qrcode/token/", "note": "扫码拿二维码 → 轮询确认换 cookie"},
+    {"disk": "PikPak", "ck_field": "pikpak_username/password", "method": "账密",
+     "api": "https://user.mypikpak.com/v1/auth/token", "note": "OAuth password grant，账密直接换 token"},
+    {"disk": "移动云盘", "ck_field": "yd_auth", "method": "App 抓包",
+     "api": "https://passport.yun.139.com", "note": "App 登录后抓包取 auth 值"},
+    {"disk": "百度网盘", "ck_field": "cookie(BDUSS)", "method": "网页登录",
+     "api": "https://pan.baidu.com", "note": "浏览器登录后复制 BDUSS"},
+]
+
+
+def store_kind_of(s: dict, overrides: dict) -> str:
+    """站点 → 子仓归类：cms / app / pan / csp。short/adult 已有独立产物（short/adult.json），此处跳过。"""
+    if classify_site(s, overrides) in ("short", "adult"):
+        return "skip"
+    t = s.get("type")
+    if t in (0, 1, "0", "1"):
+        api = str(s.get("api") or "")
+        return "cms" if CMS_API_RE.search(api) else "app"
+    key = str(s.get("key") or "")
+    name = str(s.get("name") or "")
+    ext = s.get("ext")
+    if isinstance(ext, str):
+        ext_s = ext
+    elif ext is None:
+        ext_s = ""
+    else:
+        try:
+            ext_s = json.dumps(ext, ensure_ascii=False)
+        except Exception:  # noqa: BLE001
+            ext_s = ""
+    if PAN_KEY_RE.search(key) or PAN_NAME_RE.search(name) or PAN_EXT_RE.search(ext_s):
+        return "pan"
+    return "csp"
+
+
+def cms_speed_test(sites: list) -> dict:
+    """对 cms/app 站点 api 并发探测（追加 ac=list），返回 {api: ms}（失败不在结果里）。"""
+    apis, seen = [], set()
+    for s in sites:
+        api = str(s.get("api") or "")
+        if api.startswith(("http://", "https://")) and api not in seen:
+            seen.add(api)
+            apis.append(api)
+
+    def probe(api):
+        u = api + ("&" if "?" in api else "?") + "ac=list"
+        try:
+            st, body, ms = http_get(u, STORE_TIMEOUT, 4096)
+            if st == 200 and body:
+                return api, ms
+        except Exception:  # noqa: BLE001
+            pass
+        return api, None
+
+    lat: dict = {}
+    print(f"    多仓：cms/app 接口测速 {len(apis)} 条（并发 {STORE_CONCURRENCY}，超时 {STORE_TIMEOUT}s）...", flush=True)
+    with cf.ThreadPoolExecutor(STORE_CONCURRENCY) as ex:
+        for api, ms in ex.map(probe, apis):
+            if ms is not None:
+                lat[api] = ms
+    return lat
+
+
+def _absolutize(v):
+    """子仓内 ./ 相对引用 → REPO_RAW 绝对路径。
+
+    子仓位于 stores/ 下，TVBox 按配置 URL 解析相对路径，不改写会指向 stores/deps/ 而失效；
+    ext 支持 $$$ 组合串，需逐段改写。"""
+    if isinstance(v, str):
+        if "$$$" in v:
+            return "$$$".join(_absolutize(seg) for seg in v.split("$$$"))
+        if v.startswith("./"):
+            return f"{REPO_RAW}/{v[2:]}"
+        return v
+    if isinstance(v, list):
+        return [_absolutize(x) for x in v]
+    if isinstance(v, dict):
+        return {k: _absolutize(x) for k, x in v.items()}
+    return v
+
+
+def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
+    """按接口类型拆分多仓并写 stores/*.json，返回写入 status.json 的摘要。
+
+    产物：
+      stores/cms.json    CMS 标准接口（type 0/1，api.php 系），按实测延迟升序
+      stores/app.json    App 型接口（type 0/1 非标准 api），按实测延迟升序
+      stores/pan.json    网盘类 csp（需 token.json 填 CK 的均在其中，needs_ck 标记）
+      stores/csp.json    其余 csp 蜘蛛站
+      stores/pan_ck.json 网盘 CK 获取指引（端点实测可达性）
+      stores/duocang.json 多仓入口（storeHouse + urls 双格式）
+    每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为 REPO_RAW 绝对路径。
+    """
+    sites = vod.get("sites") or []
+    kinds: dict = {}
+    for i, s in enumerate(sites):
+        kinds.setdefault(store_kind_of(s, overrides), []).append((i, s))
+    cms_app = kinds.get("cms", []) + kinds.get("app", [])
+    lat = cms_speed_test([s for _, s in cms_app])
+
+    def ordered(pairs):
+        # 实测延迟升序，未测出（失败/超时）置尾；同延迟保持原相对顺序
+        return [s for _, s in sorted(pairs, key=lambda t: (lat.get(str(t[1].get("api") or ""), 10 ** 9), t[0]))]
+
+    common = {f: _absolutize(vod[f]) for f in ("spider", "wallpaper", "parses", "flags") if vod.get(f) is not None}
+
+    def mkdoc(ss):
+        doc = dict(common)
+        ss2 = []
+        for s in ss:
+            s2 = dict(s)
+            for f in ("jar", "ext"):
+                if f in s2:
+                    s2[f] = _absolutize(s2[f])
+            ss2.append(s2)
+        doc["sites"] = ss2
+        return doc
+
+    os.makedirs(STORES_DIR, exist_ok=True)
+    counts: dict = {}
+    for k, fname in (("cms", "cms.json"), ("app", "app.json"), ("pan", "pan.json"), ("csp", "csp.json")):
+        ss = ordered(kinds.get(k, [])) if k in ("cms", "app") else [s for _, s in kinds.get(k, [])]
+        with open(os.path.join(STORES_DIR, fname), "w", encoding="utf-8") as f:
+            json.dump(mkdoc(ss), f, ensure_ascii=False, indent=1)
+        counts[k] = len(ss)
+
+    # 网盘 CK 清单：needs_ck = ext 引用 token.json（需填 CK/账密才出内容）
+    pan_rows = []
+    for _, s in kinds.get("pan", []):
+        ext = s.get("ext")
+        ext_s = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if ext else "")
+        pan_rows.append({"key": s.get("key"), "name": s.get("name"),
+                         "needs_ck": bool(ext_s and "token.json" in ext_s)})
+    pan_rows.sort(key=lambda r: (not r["needs_ck"], str(r["name"])))
+
+    # CK 获取端点实测：服务端有响应（含非 2xx）即算可达
+    ck_endpoints = []
+    for e in PAN_CK_ENDPOINTS:
+        rec = dict(e)
+        try:
+            st, _body, ms = http_get(e["api"], 8, 512)
+            rec.update({"reachable": True, "http_status": st, "ms": ms})
+        except urllib.error.HTTPError as he:
+            # 非 2xx 也是服务端真实响应（POST-only 端点对 GET 回 404/405 属正常）＝域名可达
+            rec.update({"reachable": True, "http_status": he.code})
+        except Exception as ex_:  # noqa: BLE001
+            rec.update({"reachable": False, "err": f"{type(ex_).__name__}: {ex_}"[:120]})
+        ck_endpoints.append(rec)
+    with open(os.path.join(STORES_DIR, "pan_ck.json"), "w", encoding="utf-8") as f:
+        json.dump({
+            "note": "网盘 CK 填写指引：CK/账密统一填本仓库 deps/qist/js/lib/token.json（字段见各站点 ck_field）；"
+                    "该文件非空时 daily 保留现值不回源覆盖",
+            "token_file": "./deps/qist/js/lib/token.json",
+            "endpoints": ck_endpoints,
+        }, f, ensure_ascii=False, indent=1)
+
+    entry = [
+        {"sourceName": "CMS接口仓(按速度排序)", "sourceUrl": f"{REPO_RAW}/stores/cms.json"},
+        {"sourceName": "App接口仓(按速度排序)", "sourceUrl": f"{REPO_RAW}/stores/app.json"},
+        {"sourceName": "网盘仓", "sourceUrl": f"{REPO_RAW}/stores/pan.json"},
+        {"sourceName": "蜘蛛仓(csp)", "sourceUrl": f"{REPO_RAW}/stores/csp.json"},
+    ]
+    duocang = {
+        "storeHouse": entry,
+        "urls": [{"url": e["sourceUrl"], "name": e["sourceName"]} for e in entry],
+    }
+    with open(os.path.join(STORES_DIR, "duocang.json"), "w", encoding="utf-8") as f:
+        json.dump(duocang, f, ensure_ascii=False, indent=1)
+
+    def top10(k):
+        return [{"name": s.get("name"), "ms": lat[str(s.get("api") or "")]}
+                for s in ordered(kinds.get(k, []))[:10] if str(s.get("api") or "") in lat]
+
+    print(f"[5.5/6] 多仓：cms {counts['cms']} / app {counts['app']} / pan {counts['pan']} / csp {counts['csp']}"
+          f" → stores/（接口测速通过 {len(lat)}/{len(cms_app)}）", flush=True)
+    return {
+        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（storeHouse+urls 双格式）",
+        "counts": counts,
+        "speed_tested": len(cms_app),
+        "speed_ok": len(lat),
+        "cms_speed_top10": top10("cms"),
+        "app_speed_top10": top10("app"),
+        "pan_sites": pan_rows,
+        "pan_ck_endpoints": [{"disk": e["disk"], "api": e["api"], "reachable": e.get("reachable", False),
+                              "http_status": e.get("http_status")} for e in ck_endpoints],
+    }
+
+
 def main() -> int:
     global DOMAIN_MAP
     DOMAIN_MAP = load_domain_map()
@@ -1608,6 +1828,9 @@ def main() -> int:
     with open("live.json", "w", encoding="utf-8") as f:
         json.dump(live, f, ensure_ascii=False, indent=1)
 
+    # ---- 多仓拆分：stores/{cms,app,pan,csp,duocang,pan_ck}.json ----
+    stores_summary = build_stores(vod, category_overrides, repo_dir)
+
     # ---- 拆分产物：short.json（短剧）+ adult.json（成人），独立收录不剥离 vod ----
     # vod.json 保持完整（含所有点播站点）；short/adult 为分类独立配置。
     # parses 复用 vod 全集：TVBox 站点不引用 parses（playUrl/jar 才是站点自有播放方式），
@@ -1663,7 +1886,10 @@ def main() -> int:
               "list.json", "status.json", CHECKS_FILE,
               os.path.join(LIVES_DIR, "live.txt"), os.path.join(LIVES_DIR, "live_cctv.txt"),
               os.path.join(LIVES_DIR, "live_weishi.txt"), os.path.join(LIVES_DIR, "live_gangtai.txt"),
-              os.path.join(LIVES_DIR, "live_other.txt")):
+              os.path.join(LIVES_DIR, "live_other.txt"),
+              os.path.join(STORES_DIR, "duocang.json"), os.path.join(STORES_DIR, "cms.json"),
+              os.path.join(STORES_DIR, "app.json"), os.path.join(STORES_DIR, "pan.json"),
+              os.path.join(STORES_DIR, "csp.json"), os.path.join(STORES_DIR, "pan_ck.json")):
         if os.path.exists(p):
             b = open(p, "rb").read()
             products[p] = {"bytes": len(b), "sha256": sha12(b)}
@@ -1719,6 +1945,7 @@ def main() -> int:
             "secondary_dedup_dropped": dup_drops[:50],
         },
         "lives_by_category": live_stats,
+        "stores": stores_summary,
         "local_ref_audit": {
             "note": "写入前核验站点 ./ 本地依赖；short/adult 死引用站点已剔除，vod 仅记录",
             "dropped": local_ref_audit,
@@ -1734,7 +1961,7 @@ def main() -> int:
     with open("status.json", "w", encoding="utf-8") as f:
         json.dump(status, f, ensure_ascii=False, indent=1)
 
-    print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / short.json / adult.json / list.json / status.json / checks.json / lives/* @ {generated_at}",
+    print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / short.json / adult.json / list.json / status.json / checks.json / lives/* / stores/* @ {generated_at}",
           flush=True)
     return 0
 
