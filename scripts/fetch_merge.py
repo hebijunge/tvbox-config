@@ -1478,14 +1478,16 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     # 实测教训（2026-09-19 用户影视仓截图「Json解析失败No value for urls」）：storeHouse+urls 双格式会让
     # 影视仓走 storeHouse 分支、把条目再按「仓」解析（要求 urls），直挂的 sites 配置就会报错；
     # 纯 urls 格式下 App 把条目当配置加载，与参考仓行为一致。
-    # 用户指定（2026-09-19）：入口只保留代理线路，且 App 接口仓、网盘仓不进入口
-    # （stores/ 下对应文件仍照常生成，可单独挂载使用）。
+    # 用户指定（2026-09-19）：入口只保留代理线路，且 App 接口仓、网盘仓不进入口。
+    # 代理线路必须指向 *_proxy.json（内部 spider/ext 引用已同步改写为镜像前缀），
+    # 若指向 ghproxy 前缀的直连版文件，其内部 raw 引用在代理用户网络下会加载失败。
+    # App/网盘仓对应文件仍照常生成，可单独挂载使用。
     entry = []
     for k, fname, label in stores_meta:
         if k in ("app", "pan"):
             continue
-        raw_url = f"{REPO_RAW}/stores/{fname}"
-        entry.append({"url": f"{gh1}/{raw_url}", "name": f"{label}·代理"})
+        proxy_fname = fname.replace(".json", "_proxy.json")
+        entry.append({"url": f"{gh1}/{REPO_RAW}/stores/{proxy_fname}", "name": f"{label}·代理"})
     duocang = {"urls": entry}
     with open(os.path.join(STORES_DIR, "duocang.json"), "w", encoding="utf-8") as f:
         json.dump(duocang, f, ensure_ascii=False, indent=1)
