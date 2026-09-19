@@ -97,6 +97,21 @@ def main():
     dead = [r for r in results if not r["alive"]]
     ordered = ok_both + ok_small
 
+    # MIRROR_PIN：用户侧手动钉首位（仓库 Actions Variable / 环境变量皆可）。
+    # 探测视角是 CI runner 的网络，不代表用户手机侧；用户实测更快者可钉住首位，其余仍自动重排。
+    pin = os.environ.get("MIRROR_PIN", "").strip()
+    if pin:
+        pinned = None
+        rest = []
+        for r in ordered:
+            if r["prefix"].rstrip("/") == pin.rstrip("/"):
+                pinned = r
+            else:
+                rest.append(r)
+        if pinned:
+            ordered = [pinned] + rest
+            print(f"MIRROR_PIN 生效：首位固定为 {pin.rstrip('/')}")
+
     summary = {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "first": ordered[0]["prefix"].rstrip("/") if ordered else None,
