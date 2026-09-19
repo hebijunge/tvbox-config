@@ -29,6 +29,10 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 镜像复测并动态重排 GH_MIRRORS（实测延迟/吞吐，首位=运行时前缀；失败回退默认顺序）
+        continue-on-error: true
+        run: python scripts/mirror_probe.py
+
       - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks）
         env:
           CONCURRENCY: "24"
