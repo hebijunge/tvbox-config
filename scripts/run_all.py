@@ -54,6 +54,7 @@ STAGES = [
     ("7b 导出清单", ["scripts/export_healthy.py"], True, {}),
     ("7c 健康日报", ["scripts/health_report.py"], True, {}),
     ("7d 依赖审计", ["scripts/dep_audit.py"], True, {}),
+    ("8 本地接口包(离线zip)", ["scripts/pack_local.py"], True, {}),
 ]
 
 
