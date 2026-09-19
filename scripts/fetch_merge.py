@@ -40,11 +40,16 @@ TEST_TIMEOUT = 6            # 站点验活单次超时（秒）
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "20"))
 MAX_BODY = 4096             # 验活最多读取字节数
 # O7 ghproxy 单点依赖缓解：拉取侧按镜像列表依次轮换；产出配置改写固定用主镜像（静态 JSON 无法做客户端容灾）
+# 镜像排序依据（2026-09-19 实测本项目文件）：gh-proxy.com TTFB 657ms/1551KB/s 双优；
+# gh.zwy.one 624KB/s（用户侧 Release 实测 7119KB/s）；ghproxy.cxkpro.top 434KB/s（用户侧 5292KB/s）；
+# v6.gh-proxy.org 260KB/s；ghproxy.net 47KB/s（慢管但稳定）；ghfast.top/gh.llkk.cc/rwa.ihtw.moe/ghp.ci
+# 沙箱侧限流/502 不可作首选，留作轮换兜底（GitHub runner 与用户侧网络画像不同，可能表现更好）。
 GH_MIRRORS = [m.strip() for m in os.environ.get(
     "GH_MIRRORS",
-    "https://gh.llkk.cc/,https://ghfast.top/,https://gh-proxy.com/,https://ghproxy.net/,"
-    "https://gh.zwy.one/,https://raw.ihtw.moe/,https://ghp.ci/").split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.llkk.cc/"
+    "https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,https://v6.gh-proxy.org/,"
+    "https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,https://raw.ihtw.moe/,https://ghp.ci/"
+).split(",") if m.strip()]
+GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh-proxy.com/"
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
