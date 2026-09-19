@@ -60,6 +60,8 @@ jobs:
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
+          # Gitee 文件树 API 配额用（搜索 API 已被平台禁，曲线方案只需配额）
+          GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: python scripts/discover_upstreams.py --max-repos 15 --pages 2 || true
 
       - name: 候选独有度评估，并按 unique 收编 canary
