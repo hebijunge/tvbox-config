@@ -1398,7 +1398,7 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
       stores/pan.json    网盘类 csp（需 token.json 填 CK 的均在其中，needs_ck 标记）
       stores/csp.json    其余 csp 蜘蛛站
       stores/pan_ck.json 网盘 CK 获取指引（端点实测可达性）
-      stores/duocang.json 多仓入口（storeHouse + urls 双格式）
+      stores/duocang.json 多仓入口（纯 urls 格式，条目直挂配置本体，含直连+代理线路）
     每个子仓自带 spider/parses/wallpaper/flags 可独立挂载；./ 相对依赖改写为 REPO_RAW 绝对路径。
     """
     sites = vod.get("sites") or []
@@ -1474,16 +1474,16 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
             "endpoints": ck_endpoints,
         }, f, ensure_ascii=False, indent=1)
 
-    # 多仓入口：每仓直连 + 代理双线路（代理版子仓内部引用同步走镜像，端到端可用）
+    # 多仓入口：对齐社区标准格式（参考 z.qiqiv.cn/123.txt）——顶层只有 urls、条目直挂配置本体。
+    # 实测教训（2026-09-19 用户影视仓截图「Json解析失败No value for urls」）：storeHouse+urls 双格式会让
+    # 影视仓走 storeHouse 分支、把条目再按「仓」解析（要求 urls），直挂的 sites 配置就会报错；
+    # 纯 urls 格式下 App 把条目当配置加载，与参考仓行为一致。
     entry = []
     for _k, fname, label in stores_meta:
         raw_url = f"{REPO_RAW}/stores/{fname}"
-        entry.append({"sourceName": label, "sourceUrl": raw_url})
-        entry.append({"sourceName": f"{label}·代理", "sourceUrl": f"{gh1}/{raw_url}"})
-    duocang = {
-        "storeHouse": entry,
-        "urls": [{"url": e["sourceUrl"], "name": e["sourceName"]} for e in entry],
-    }
+        entry.append({"url": raw_url, "name": label})
+        entry.append({"url": f"{gh1}/{raw_url}", "name": f"{label}·代理"})
+    duocang = {"urls": entry}
     with open(os.path.join(STORES_DIR, "duocang.json"), "w", encoding="utf-8") as f:
         json.dump(duocang, f, ensure_ascii=False, indent=1)
 
@@ -1494,7 +1494,7 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     print(f"[5.5/6] 多仓：cms {counts['cms']} / app {counts['app']} / pan {counts['pan']} / csp {counts['csp']}"
           f" → stores/（接口测速通过 {len(lat)}/{len(cms_app)}）", flush=True)
     return {
-        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（storeHouse+urls 双格式，每仓含直连+代理两条线路，代理版子仓 *_proxy.json 内部引用同步走镜像）",
+        "note": "按接口类型拆分多仓：cms/app 按实测延迟升序；stores/duocang.json 为多仓入口（纯 urls 格式对齐社区标准，直连+代理双线路，代理版子仓 *_proxy.json 内部引用同步走镜像）",
         "counts": counts,
         "proxy_mirror": gh1,
         "speed_tested": len(cms_app),
