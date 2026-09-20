@@ -134,9 +134,31 @@ def write_canary(repo, picked, out_rel, min_unique):
 
     score 已被证明与「能带来多少新站点」无关：score 30 的候选带来 17 个独有站点，
     score 90 的只带来 3 个。所以收编标准必须是 unique。
+    手动黑名单（state/blacklist_manual.txt，与 fetch_merge 同一份）：name 或 url 命中
+    即永不收编——否则收编池重建时已拉黑的上游会换个名字混回来。
     """
-    ups, skipped_live = [], []
+    bl_path = os.path.join(repo, "state", "blacklist_manual.txt")
+    bl = []
+    if os.path.isfile(bl_path):
+        for ln in open(bl_path, encoding="utf-8"):
+            ln = ln.strip()
+            if ln and not ln.startswith("#"):
+                bl.append(ln)
+
+    def banned(c):
+        url, name = str(c.get("url", "")), str(c.get("name", ""))
+        for x in bl:
+            if x == url or x == name:
+                return True
+            if len(x) >= 8 and (x in url or url in x):
+                return True
+        return False
+
+    ups, skipped_live, skipped_black = [], [], []
     for i, c in enumerate(picked, 1):
+        if banned(c):
+            skipped_black.append(c)
+            continue
         if kind_of(c) == "live":
             skipped_live.append(c)
             continue
