@@ -1,0 +1,259 @@
+[
+    {
+        "id": "tab_push_api",
+        "type": "tab",
+        "label": "API - Push",
+        "disabled": false,
+        "info": "POST /api/register-push e POST /api/unregister-push, ambos por set_push().\n\nSubstitui o flow antigo de register-push: apague os nos antigos dessa rota antes do deploy, senao ficam duas rotas /api/register-push registradas.\n\nO no de configuracao do PostgreSQL nao esta neste arquivo; os nos apontam para o id existente (pg_secdb)."
+    },
+    {
+        "id": "push_reg_in",
+        "type": "http in",
+        "z": "tab_push_api",
+        "name": "POST /api/register-push",
+        "url": "/api/register-push",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 100,
+        "wires": [
+            [
+                "push_prep"
+            ]
+        ]
+    },
+    {
+        "id": "push_unreg_in",
+        "type": "http in",
+        "z": "tab_push_api",
+        "name": "POST /api/unregister-push",
+        "url": "/api/unregister-push",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 180,
+        "wires": [
+            [
+                "push_prep"
+            ]
+        ]
+    },
+    {
+        "id": "push_prep",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "sessao + token",
+        "func": "// Bearer <token de sessao> no cabecalho; o token FCM vem no corpo.\n// A mesma funcao atende as duas rotas: a URL diz se e para remover.\nconst auth = (msg.req && msg.req.headers && msg.req.headers.authorization) || '';\nconst sess = auth.replace(/^Bearer\\s+/i, '').trim();\nconst fcm = String((msg.payload || {}).fcm_token || '').trim();\nif (!sess || !fcm) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'missing' };\n    return [null, msg];\n}\nconst remover = String(msg.req.url || '').indexOf('unregister') >= 0;\nmsg.params = [sess, fcm, remover];\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "x": 450,
+        "y": 140,
+        "wires": [
+            [
+                "pg_push"
+            ],
+            [
+                "push_resp"
+            ]
+        ]
+    },
+    {
+        "id": "pg_push",
+        "type": "postgresql",
+        "z": "tab_push_api",
+        "name": "set_push",
+        "query": "SELECT set_push($1, $2, $3) AS status",
+        "postgreSQLConfig": "pg_secdb",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 680,
+        "y": 120,
+        "wires": [
+            [
+                "push_out"
+            ]
+        ]
+    },
+    {
+        "id": "push_out",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "resposta",
+        "func": "const row = (msg.payload && msg.payload[0]) || {};\nif (row.status === 'ok') {\n    msg.statusCode = 200;\n    msg.payload = { ok: true };\n} else {\n    msg.statusCode = 401;\n    msg.payload = { error: row.status || 'unauthorized' };\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "x": 880,
+        "y": 120,
+        "wires": [
+            [
+                "push_resp"
+            ]
+        ]
+    },
+    {
+        "id": "push_resp",
+        "type": "http response",
+        "z": "tab_push_api",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 1060,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "notify_set_in",
+        "type": "http in",
+        "z": "tab_push_api",
+        "name": "POST /api/push-notify",
+        "url": "/api/push-notify",
+        "method": "post",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 260,
+        "wires": [
+            [
+                "notify_prep_set"
+            ]
+        ]
+    },
+    {
+        "id": "notify_get_in",
+        "type": "http in",
+        "z": "tab_push_api",
+        "name": "GET /api/push-notify",
+        "url": "/api/push-notify",
+        "method": "get",
+        "upload": false,
+        "swaggerDoc": "",
+        "x": 200,
+        "y": 360,
+        "wires": [
+            [
+                "notify_prep_get"
+            ]
+        ]
+    },
+    {
+        "id": "notify_prep_set",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "valida e limpa",
+        "func": "// Preferencia de notificacao DESTE celular. A identidade do aparelho e o\n// proprio token FCM -- ja e a chave primaria de push_tokens, nao foi preciso\n// inventar um id de celular.\nconst auth = (msg.req && msg.req.headers && msg.req.headers.authorization) || '';\nconst sess = auth.replace(/^Bearer\\s+/i, '').trim();\nconst body = msg.payload || {};\nconst fcm = String(body.fcm_token || '').trim();\nconst notify = body.notify;\nif (!sess || !fcm || typeof notify !== 'object' || notify === null) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'missing' };\n    return [null, msg];\n}\n// So as chaves conhecidas, e so booleano: o corpo vem do celular e vai para\n// uma coluna jsonb, entao nada de gravar o que chegar.\nconst permitidas = ['motion', 'camera_offline', 'tvbox_offline'];\nconst limpo = {};\nfor (const k of permitidas) {\n    if (typeof notify[k] === 'boolean') limpo[k] = notify[k];\n}\nmsg.params = [sess, fcm, JSON.stringify(limpo)];\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 260,
+        "wires": [
+            [
+                "pg_notify_set"
+            ],
+            [
+                "push_resp"
+            ]
+        ]
+    },
+    {
+        "id": "notify_prep_get",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "valida",
+        "func": "// GET nao tem corpo: o token FCM vem na query string.\nconst auth = (msg.req && msg.req.headers && msg.req.headers.authorization) || '';\nconst sess = auth.replace(/^Bearer\\s+/i, '').trim();\nconst fcm = String(((msg.req && msg.req.query) || {}).fcm_token || '').trim();\nif (!sess || !fcm) {\n    msg.statusCode = 400;\n    msg.payload = { error: 'missing' };\n    return [null, msg];\n}\nmsg.params = [sess, fcm];\nreturn [msg, null];",
+        "outputs": 2,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 450,
+        "y": 360,
+        "wires": [
+            [
+                "pg_notify_get"
+            ],
+            [
+                "push_resp"
+            ]
+        ]
+    },
+    {
+        "id": "pg_notify_set",
+        "type": "postgresql",
+        "z": "tab_push_api",
+        "name": "set_push_notify",
+        "query": "SELECT set_push_notify($1, $2, $3::jsonb) AS status",
+        "postgreSQLConfig": "pg_secdb",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 680,
+        "y": 260,
+        "wires": [
+            [
+                "notify_out_set"
+            ]
+        ]
+    },
+    {
+        "id": "pg_notify_get",
+        "type": "postgresql",
+        "z": "tab_push_api",
+        "name": "push_notify",
+        "query": "SELECT push_notify($1, $2) AS push_notify",
+        "postgreSQLConfig": "pg_secdb",
+        "split": false,
+        "rowsPerMsg": 1,
+        "outputs": 1,
+        "x": 680,
+        "y": 360,
+        "wires": [
+            [
+                "notify_out_get"
+            ]
+        ]
+    },
+    {
+        "id": "notify_out_set",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "resposta",
+        "func": "const row = (msg.payload && msg.payload[0]) || {};\nif (row.status === 'ok') {\n    msg.statusCode = 200;\n    msg.payload = { ok: true };\n} else if (row.status === 'not_registered') {\n    // O celular ainda nao mandou o token FCM. Nao e erro de autenticacao: o\n    // app registra o token e tenta de novo.\n    msg.statusCode = 409;\n    msg.payload = { error: 'not_registered' };\n} else {\n    msg.statusCode = 401;\n    msg.payload = { error: row.status || 'unauthorized' };\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 260,
+        "wires": [
+            [
+                "push_resp"
+            ]
+        ]
+    },
+    {
+        "id": "notify_out_get",
+        "type": "function",
+        "z": "tab_push_api",
+        "name": "resposta",
+        "func": "const row = (msg.payload && msg.payload[0]) || {};\nconst r = row.push_notify || {};\nif (r.status === 'ok') {\n    msg.statusCode = 200;\n    // Chave ausente significa \"quer receber\" -- o padrao e tudo ligado, e o\n    // app so precisa saber o que foi explicitamente desligado.\n    msg.payload = { registered: !!r.registered, notify: r.notify || {} };\n} else {\n    msg.statusCode = 401;\n    msg.payload = { error: (r && r.status) || 'unauthorized' };\n}\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 880,
+        "y": 360,
+        "wires": [
+            [
+                "push_resp"
+            ]
+        ]
+    }
+]
