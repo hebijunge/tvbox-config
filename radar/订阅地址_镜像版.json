@@ -56,12 +56,6 @@
    "origin": "https://raw.githubusercontent.com/cluntop/tvbox/main/jsm.json"
   },
   {
-   "url": "https://gitee.com/jwlangzi/best/raw/master/gr.json",
-   "sites": 75,
-   "ms": 519,
-   "origin": "https://gitee.com/jwlangzi/best/raw/master/gr.json"
-  },
-  {
    "url": "https://gh.927223.xyz/https://raw.githubusercontent.com/qist/tvbox/master/99188.json",
    "sites": 64,
    "ms": 445,
@@ -195,10 +189,10 @@
   },
   {
    "url": "https://9877.kstore.space/sun.json",
-   "sites": 0,
+   "sites": 106,
    "ms": 134,
    "origin": "https://9877.kstore.space/sun.json",
-   "note": "加密配置(#$..#$hex)，TVBox/影视仓自动解密，用户实测可用"
+   "note": "加密配置(RC4类)，TVBox自动解密；真机实测106源: C5能播37+C4详情20，质量高"
   }
  ],
  "excluded": [
@@ -289,6 +283,10 @@
   {
    "origin": "https://raw.githubusercontent.com/nxppru/tvbox/master/dianshi.json",
    "reason": "用户实测不可用（spider 相对路径+md5 锁定，客户端兼容性差，2026-09-20）"
+  },
+  {
+   "origin": "https://gitee.com/jwlangzi/best/raw/master/gr.json",
+   "reason": "jar 2MB下载84s超客户端超时（gitee raw 20KB/s），导入必败（2026-09-20 实测）"
   }
  ]
 }
