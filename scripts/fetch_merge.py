@@ -140,6 +140,10 @@ UPSTREAMS = [
     {"name": "fatcat/tv", "kind": "tvbox", "url": "http://xn--z7x900a.net/tv"},
     # 老刘备：234 sites（容错解析通过）；ghproxy.net 为单点依赖，失效时会被自动停用
     {"name": "liu673cn/m", "kind": "tvbox", "url": "https://ghproxy.net/https://raw.githubusercontent.com/liu673cn/box/main/m.json"},
+    # ---- 2026-09-20 DeepSeek 报告实测收录（仅纯 JSON 可合并源；图片伪装/加密/多仓类进订阅清单不进此处，避免被判 dead 进黑名单）----
+    {"name": "deepseek/8815wmz", "kind": "tvbox", "url": "https://8815.kstore.vip/tvbox/wmz"},          # 105 sites
+    {"name": "deepseek/gaoops404", "kind": "tvbox", "url": "https://raw.giteeusercontent.com/gaoops404/tvbox-config/raw/main/tvbox.json"},  # 52 sites
+    {"name": "deepseek/gao777520", "kind": "tvbox", "url": "https://gitlab.com/gao777520/tvbox-config/raw/main/tvbox.json"},  # 52 sites
 ]
 
 # P0：直播源上游（Guovin/iptv-api 双通道产物，2026-09-17 实测 200 且为社区公共上游）
