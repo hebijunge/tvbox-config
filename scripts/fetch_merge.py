@@ -675,7 +675,11 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         base = UPSTREAM_BASES.get(origin, "")
         if not base:
             continue
-        for field in ("jar", "ext"):
+        # api 也纳管：规则 js 常写在 api 字段（如 cat 系列 ./cat/MyCatBookan.js），
+        # 与 jar/ext 同等落库，否则产物里留悬空相对路径、客户端 404。
+        # is_file_ref 只认 .jar/.js/.json/.zip/.css/.txt 等文件后缀，
+        # type 1 的 HTTP 端点（/api.php/provide/vod）不以文件后缀结尾，天然不会被误收。
+        for field in ("jar", "ext", "api"):
             v = s.get(field)
             if isinstance(v, str):
                 hint = "jar" if field == "jar" else ("js" if v.lower().split("?")[0].endswith(".js") else "json")
@@ -733,6 +737,41 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             if i % 50 == 0:
                 print(f"  ... {i}/{len(entries)}", flush=True)
 
+    # ---- 2b. 规则 js 内部相对 import 递归落库（限深 1 层）----
+    # cat 规则集形态：每个规则 js 顶部 `import { _ } from './lib/cat.js'`，公共库必须随规则
+    # 一起落库，否则客户端加载规则时 import 404（Bookan[cat] 等 6 个 cat 源因此曾全灭）。
+    # base 用「该 js 文件自身的 url」做 urljoin（标准 ESM 相对语义），比 relpath 反推可靠。
+    IMPORT_JS_RE = re.compile(r"""(?:from\s*|import\s*\(\s*|require\(\s*)['"](\.{1,2}/[^'"]+\.js)['"]""")
+
+    def scan_js_imports():
+        added = 0
+        for rec in list(ok_map.values()):
+            if rec.get("kind") != "js" or not rec.get("ok"):
+                continue
+            try:
+                text = open(rec["local"], encoding="utf-8", errors="replace").read()[:65536]
+            except OSError:
+                continue
+            for m in IMPORT_JS_RE.finditer(text):
+                imp = m.group(1)  # './lib/cat.js' 或 '../lib/cat.js'
+                target_url = urllib.parse.urljoin(rec["url"], imp)
+                rkey = f"{rec['origin']}|{target_url}"
+                if rkey in ok_map:
+                    continue
+                entries.append(("js", target_url, rec["origin"]))
+                added += 1
+        return added
+
+    n_imp = scan_js_imports()
+    if n_imp:
+        print(f"  [deps] 规则 js 内部 import 追加 {n_imp} 个公共库依赖...", flush=True)
+        with cf.ThreadPoolExecutor(DEP_CONCURRENCY) as ex:
+            futs2 = {ex.submit(work, e): e for e in entries[-n_imp:]}
+            for fut in cf.as_completed(futs2):
+                rec2 = fut.result()
+                if rec2["ok"]:
+                    ok_map[rec2["key"]] = rec2
+
     # ---- 3. 失败项回退：manifest 缓存 ----
     for e in entries:
         key = f"{e[2]}|{e[1]}"
@@ -773,7 +812,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         origin = site_origin.get(s.get("key"))
         if not origin:
             continue
-        for field in ("jar", "ext"):
+        for field in ("jar", "ext", "api"):
             v = s.get(field)
             vals = []
             if isinstance(v, str):
@@ -788,6 +827,8 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                         r = is_file_ref(seg)
                         if not r:
                             continue
+                        if f0 == "api" and not (r[0] == "rel" and seg.lower().split("?")[0].endswith(".js")):
+                            continue  # api 字段只改写「相对 js 规则」，绝不动 HTTP 端点
                         base2 = UPSTREAM_BASES.get(origin, "")
                         url2 = urllib.parse.urljoin(base2, r[1]) if r[0] == "rel" else r[1]
                         rec2 = ok_map.get(f"{origin}|{url2}")
@@ -808,6 +849,8 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 r = is_file_ref(raw)
                 if not r:
                     continue
+                if f0 == "api" and not (r[0] == "rel" and raw.lower().split("?")[0].endswith(".js")):
+                    continue  # api 字段只改写「相对 js 规则」，绝不动 HTTP 端点
                 base = UPSTREAM_BASES.get(origin, "")
                 url = urllib.parse.urljoin(base, r[1]) if r[0] == "rel" else r[1]
                 rec = ok_map.get(f"{origin}|{url}")

@@ -51,10 +51,9 @@ def extract_target(site, repo_dir):
     api = site.get("api")
     ext = site.get("ext")
     if isinstance(api, str) and api.startswith("./"):
-        # js 型：ext 是本地规则文件，host 写在文件里
-        if not isinstance(ext, str) or not ext.strip().startswith("./"):
-            return None, "js 无本地规则文件"
-        path = ext.strip().split(";")[0][2:]
+        # js 型：规则文件在 ext 或 api 本身（cat 系列的规则直接写在 api 字段）
+        rule = ext if (isinstance(ext, str) and ext.strip().startswith("./")) else api
+        path = rule.strip().split(";")[0][2:]
         fp = os.path.join(repo_dir, path)
         if not os.path.isfile(fp):
             return None, "js 规则文件缺失"
