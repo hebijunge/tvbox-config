@@ -31,8 +31,9 @@ os.chdir(ROOT)
 UA = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) tvbox-radar",
       "Accept": "*/*"}
 # 镜像兜底序（ghf 系最快，2026-09-19 测速择优产物）
+# gh.xxooo.cf 已剔除（2026-09-20 用户反馈：只触发文件下载不适合在线订阅，响应行为异常）
 GH_MIRROR = ("https://ghf.xn--eqrr82bzpe.top", "https://gh.927223.xyz",
-             "https://gh.xxooo.cf", "https://ghproxy.net")
+             "https://ghproxy.net")
 
 
 def log(m):
