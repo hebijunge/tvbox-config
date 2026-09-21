@@ -33,9 +33,25 @@ import urllib.error
 import concurrent.futures as cf
 from datetime import datetime, timezone, timedelta
 
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # scripts 内互相导入
+from config_decode import decode_config   # 吸收点 P1-1：混淆配置解码链（独立实现）
+
 BEIJING = timezone(timedelta(hours=8))
 UA = {"User-Agent": "okhttp/3.15", "Accept": "*/*"}
 FETCH_TIMEOUT = 15          # 单次拉取超时（秒）
+
+# 吸收点 P1-3：上游拉取 UA 池（设计借鉴自参考仓库调研，代码独立实现）。
+# 拉取失败时轮换 UA + 指纹头重试，覆盖部分上游对单一 okhttp UA 的选择性拦截。
+UA_POOL_VOD = [
+    {"User-Agent": "okhttp/3.15", "X-Requested-With": "com.iptvbox.tvbox"},
+    {"User-Agent": "okhttp/4.9.3", "X-Requested-With": "com.iptvbox.tvbox"},
+    {"User-Agent": "TVBox/1.0.0", "X-Requested-With": "com.github.tvbox.osc"},
+    {"User-Agent": "Dalvik/2.1.0 (Linux; U; Android 12; Pixel 3 XL Build/SQ1A.220205.002)", "X-Requested-With": "com.iptvbox.tvbox"},
+    {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36", "X-Requested-With": ""},
+    {"User-Agent": "okhttp/3.12.0", "X-Requested-With": "com.box.tvbox"},
+]
+UA_ROTATE_MAX = int(os.environ.get("UA_ROTATE_MAX", "3"))   # 单 URL 的 UA 轮换上限（含首次）
+
 TEST_TIMEOUT = 6            # 站点验活单次超时（秒）
 CONCURRENCY = int(os.environ.get("CONCURRENCY", "20"))
 MAX_BODY = 4096             # 验活最多读取字节数
@@ -153,7 +169,8 @@ UPSTREAMS = [
     # 肥猫：39 sites；必须用 /tv 路径（根路径 / 为损坏配置）；IDN 域名已转 punycode 供 urllib 直连
     {"name": "fatcat/tv", "kind": "tvbox", "url": "http://xn--z7x900a.net/tv"},
     # 老刘备：234 sites（容错解析通过）；ghproxy.net 为单点依赖，失效时会被自动停用
-    {"name": "liu673cn/m", "kind": "tvbox", "url": "https://ghproxy.net/https://raw.githubusercontent.com/liu673cn/box/main/m.json"},
+    {"name": "liu673cn/m", "kind": "tvbox", "url": "https://ghproxy.net/https://raw.githubusercontent.com/liu673cn/box/main/m.json",
+     "mirrors": ["https://raw.githubusercontent.com/liu673cn/box/main/m.json"]},  # 吸收点 P1-2：消除 ghproxy.net 单点
     # ---- 2026-09-20 DeepSeek 报告实测收录（仅纯 JSON 可合并源；图片伪装/加密/多仓类进订阅清单不进此处，避免被判 dead 进黑名单）----
     {"name": "deepseek/8815wmz", "kind": "tvbox", "url": "https://8815.kstore.vip/tvbox/wmz"},          # 105 sites
     {"name": "deepseek/gaoops404", "kind": "tvbox", "url": "https://raw.giteeusercontent.com/gaoops404/tvbox-config/raw/main/tvbox.json"},  # 52 sites
@@ -305,7 +322,11 @@ def load_extra_upstreams() -> list:
     for u in doc.get("upstreams", []):
         url, kind = u.get("url"), u.get("kind")
         if url and kind in PARSERS:
-            out.append({"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True})
+            ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
+            # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
+            if isinstance(u.get("mirrors"), list) and u["mirrors"]:
+                ent["mirrors"] = [m for m in u["mirrors"] if isinstance(m, str) and m]
+            out.append(ent)
     if out:
         print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)
     return out
@@ -1215,10 +1236,15 @@ def gh_url(u: str) -> str:
     return u
 
 
-def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None):
+def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None, ua: str = None, xrw: str = None):
     """返回 (status, bytes, elapsed_ms)。非 2xx 抛异常。
-    rng=(start, end) 时带 Range 头抽段请求（直播测速用，不整段下载）。"""
+    rng=(start, end) 时带 Range 头抽段请求（直播测速用，不整段下载）。
+    ua/xrw 传入时覆盖默认 UA / 加 X-Requested-With 指纹头（P1-3 UA 池轮换）。"""
     headers = dict(UA)
+    if ua:
+        headers["User-Agent"] = ua
+    if xrw:
+        headers["X-Requested-With"] = xrw
     if rng:
         headers["Range"] = f"bytes={rng[0]}-{rng[1]}"
     req = urllib.request.Request(url, headers=headers)
@@ -1275,22 +1301,40 @@ def _replace_host(value: str, old: str, new: str) -> str:
 
 # ---------------- P0：拉取与解析（一上游一适配器） ----------------
 
-def fetch_raw(url: str):
-    """多通道重试：直连 → ghproxy 镜像列表逐个轮换（仅 GitHub 链接）。返回 (raw_bytes, channel) 或 (None, err)。"""
-    attempts = [url]
-    if "github" in url and "ghproxy" not in url:
-        attempts.extend(m + url for m in GH_MIRRORS)
+def fetch_raw(url: str, mirrors=None, ua_pool=None):
+    """多通道重试（吸收点 P1-2 多镜像选通 / P1-3 UA 轮换，独立实现）。
+    尝试顺序：主 URL → mirrors 逐个 → ghproxy 镜像列表（仅 GitHub 链接）。
+    主 URL 与用户镜像每个失败后按 UA 池轮换重试（上限 UA_ROTATE_MAX 组）；
+    ghproxy 兜底通道保持默认 UA 单次尝试（控制最坏尝试次数）。
+    返回 (raw_bytes, channel, success_url) 或 (None, err, "")。"""
+    import urllib.parse
+    pool = ua_pool if ua_pool is not None else UA_POOL_VOD
+    base_urls = [url]
+    for m in (mirrors or []):
+        if isinstance(m, str) and m and m not in base_urls:
+            base_urls.append(m)
+    gh_urls = ([m + url for m in GH_MIRRORS if m + url not in base_urls]
+               if ("github" in url and "ghproxy" not in url) else [])
     last_err = ""
-    for ch, u in enumerate(attempts):
+    for ch, u in enumerate(base_urls):
+        for pair in pool[:UA_ROTATE_MAX]:
+            try:
+                status, raw, _ms = http_get(
+                    u, FETCH_TIMEOUT,
+                    ua=pair.get("User-Agent"),
+                    xrw=pair.get("X-Requested-With") or None)
+                if ch == 0:
+                    return raw, "direct", u
+                return raw, f"mirror:{urllib.parse.urlparse(u).netloc}", u
+            except Exception as e:  # noqa: BLE001
+                last_err = f"{type(e).__name__}: {e}"[:120]
+    for u in gh_urls:
         try:
             status, raw, _ms = http_get(u, FETCH_TIMEOUT)
-            if ch == 0:
-                return raw, "direct"
-            import urllib.parse
-            return raw, f"mirror:{urllib.parse.urlparse(u).netloc}"
+            return raw, f"mirror:{urllib.parse.urlparse(u).netloc}", u
         except Exception as e:  # noqa: BLE001
             last_err = f"{type(e).__name__}: {e}"[:120]
-    return None, last_err
+    return None, last_err, ""
 
 
 def parse_tvbox(raw: bytes):
@@ -2356,16 +2400,23 @@ def main() -> int:
     def do_fetch(item):
         u, ok, _tag = item
         if not ok:
-            return u, None, "skipped"
-        raw, info = fetch_raw(u["url"])
-        return u, raw, info
+            return u, None, "skipped", "", ""
+        raw, info, ok_url = fetch_raw(u["url"], u.get("mirrors"))
+        d_method = ""
+        # 吸收点 P1-1：混淆配置解码（仅 tvbox 配置类；明文零开销直通，
+        # 解码失败按候选失败处理，绝不把密文残留进下游解析/快照）。
+        if raw is not None and u.get("kind") == "tvbox":
+            raw, d_method = decode_config(raw)
+            if raw is None:
+                info = f"decode failed: {d_method}"
+        return u, raw, info, ok_url, d_method
 
     with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
         fetched = list(ex.map(do_fetch, fetchable))
 
     snapshot_paths = []
     disabled_now_list = []
-    for (u, fetchable_ok, tag), (u2, raw, info) in zip(fetchable, fetched):
+    for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method) in zip(fetchable, fetched):
         name, kind = u["name"], u["kind"]
         state_ent = state.get(name) if isinstance(state.get(name), dict) else {}
         rec = {
@@ -2376,6 +2427,7 @@ def main() -> int:
             "grade": "不可用", "error": "",
             "status": tag, "fail_count": int(state_ent.get("fail_count", 0)),
             "last_ok_at": state_ent.get("last_ok_at", ""),
+            "decode": d_method, "success_url": ok_url or "",
         }
         if not fetchable_ok:
             checks.append(rec)
@@ -2413,6 +2465,8 @@ def main() -> int:
         rec["last_ok_at"] = state[name].get("last_ok_at", "")
         if raw is None:
             rec["error"] = info
+        else:
+            rec["channel"] = info
 
         if not ok_eval:
             checks.append(rec)

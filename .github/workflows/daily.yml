@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 单元测试（config_decode / 吸收点 P1-P2 行为回归）
+        run: python -m unittest discover -s tests -v
+
       - name: 镜像复测并动态重排 GH_MIRRORS（实测延迟/吞吐，首位=运行时前缀；失败回退默认顺序）
         continue-on-error: true
         run: python scripts/mirror_probe.py

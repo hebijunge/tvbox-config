@@ -34,15 +34,15 @@ def main() -> int:
     def do_fetch(item):
         u, ok, _tag = item
         if not ok:
-            return u, None, "skipped"
-        raw, info = fetch_raw(u["url"])
-        return u, raw, info
+            return u, None, "skipped", "", ""
+        raw, info, ok_url = fetch_raw(u["url"], u.get("mirrors"))
+        return u, raw, info, ok_url, ""
 
     print(f"[validate] 检测 {len(ALL_UPSTREAMS)} 个上游 @ {generated_at}", flush=True)
     records = []
     disabled_now = []
     with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
-        for (u, fetchable_ok, tag), (u2, raw, info) in zip(fetchable, ex.map(do_fetch, fetchable)):
+        for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method) in zip(fetchable, ex.map(do_fetch, fetchable)):
             name = u["name"]
             state_ent = state.get(name) if isinstance(state.get(name), dict) else {}
             rec = {

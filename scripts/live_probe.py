@@ -14,6 +14,7 @@
   blocked     — 沙箱网关 502（无法判定，不算死）
 """
 import json
+import os
 import re
 import time
 import ssl
@@ -22,6 +23,16 @@ import urllib.error
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 UA = "okhttp/3.15"
+# 吸收点 P1-3（直播侧）：直播源 UA 池（设计借鉴自参考仓库调研，代码独立实现）。
+# 部分直播源对 okhttp/桌面 UA 选择性拦截，换播放器画像 UA 重试可救回。
+UA_POOL_LIVE = [
+    "okhttp/3.15",
+    "VLC/3.0.20 LibVLC/3.0.20",
+    "AppleCoreMedia/1.0.0.23A344 (iPhone; U; CPU OS 17_5 like Mac OS X)",
+    "Lavf/60.3.100",
+    "Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 Chrome/126 Mobile Safari/537.36",
+]
+UA_ROTATE_MAX = int(os.environ.get("UA_ROTATE_MAX", "3"))
 STREAM_SAMPLE = 5
 SOURCE_TIMEOUT = 10
 STREAM_TIMEOUT = 6
@@ -63,10 +74,11 @@ def _read_capped(r, cap, deadline):
     return b"".join(chunks)
 
 
-def http_get(url: str, timeout: int, rng: str = None):
-    """返回 (status, headers, body_bytes)；任何异常返回 (0, None, None)。"""
+def http_get(url: str, timeout: int, rng: str = None, ua: str = None):
+    """返回 (status, headers, body_bytes)；任何异常返回 (0, None, None)。
+    ua 传入时覆盖默认 UA（P1-3 直播 UA 池轮换）。"""
     req = urllib.request.Request(url, headers={
-        "User-Agent": UA,
+        "User-Agent": ua or UA,
         **({"Range": rng} if rng else {}),
     })
     deadline = time.time() + timeout
@@ -152,9 +164,8 @@ def parse_channels(text: str):
 BAD_BODY_MARKS = (b"<!DOCTYPE", b"<html", b"<HTML", b"<?xml")
 
 
-def probe_stream(url: str):
-    """单条频道流实测：Range GET，检查非 HTML、非空、内容像流。"""
-    status, headers, body = http_get(url, STREAM_TIMEOUT, rng="bytes=0-2047")
+def _judge_stream(status: int, headers, body) -> tuple:
+    """对单次 Range GET 的响应做流有效性判定，返回 (ok, why)。"""
     if status == 0 or body is None:
         return False, "no_response"
     if status not in (200, 206):
@@ -170,6 +181,21 @@ def probe_stream(url: str):
     return True, "ct:%s" % (ctype or "n/a")
 
 
+def probe_stream(url: str):
+    """单条频道流实测：Range GET，检查非 HTML、非空、内容像流。
+    吸收点 P1-3（直播侧）：网络类失败（无响应/401/403/429）按 UA 池轮换重试；
+    内容类失败（HTML/空体）换 UA 无意义，直接返回。"""
+    why = "no_response"
+    for ua in UA_POOL_LIVE[:max(1, UA_ROTATE_MAX)]:
+        status, headers, body = http_get(url, STREAM_TIMEOUT, rng="bytes=0-2047", ua=ua)
+        ok, why = _judge_stream(status, headers, body)
+        if ok:
+            return True, why
+        if why not in ("no_response", "http_401", "http_403", "http_429"):
+            break
+    return False, why
+
+
 def probe_source(entry: dict):
     """完整测一个直播源条目。返回记录 dict。"""
     name = entry.get("name") or ""
@@ -183,7 +209,11 @@ def probe_source(entry: dict):
     for k in ("epg", "ua", "boot", "timeout", "ratio"):
         if entry.get(k):
             rec[k] = entry[k]
-    status, headers, body = http_get(url, SOURCE_TIMEOUT)
+    status, headers, body = 0, None, None
+    for ua in UA_POOL_LIVE[:max(1, UA_ROTATE_MAX)]:   # 吸收点 P1-3：源列表拉取失败换 UA 重试
+        status, headers, body = http_get(url, SOURCE_TIMEOUT, ua=ua)
+        if status == 200 and body:
+            break
     if is_gateway_blocked(status, headers):
         rec.update(status="blocked", reason="sandbox_502", channels=0)
         return rec

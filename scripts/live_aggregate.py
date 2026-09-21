@@ -396,6 +396,79 @@ def write_verified_txt(cmap, verified, path, extra_keep=6):
     return {c: len(chs) for c, chs in groups.items()}
 
 
+# ---------------- 吸收点 P2-1：lives 套壳穿透（设计借鉴自参考仓库调研，代码独立实现） ----------------
+# TVBox 配置的 lives 条目可能是「壳」：请求 URL 返回体只有一行指向真实播放列表的
+# URL。递归跟随穿透（深度 ≤5、visited 防循环），把真实列表并入聚合源；
+# sid 锚定原始条目名（cfg:<name>），保证跨日运行时来源标识稳定。
+LIVE_SHELL_DEPTH = int(os.environ.get("LIVE_SHELL_DEPTH", "5"))
+LIVE_CFG_SOURCES_MAX = int(os.environ.get("LIVE_CFG_SOURCES_MAX", "20"))
+
+
+def _is_plain_url_list_body(text: str) -> bool:
+    """返回体是否为「单行纯 URL」壳（去首尾空白后仅一行且是 http(s) URL）。"""
+    t = (text or "").strip()
+    if not t or "\n" in t or len(t) > 512:
+        return False
+    return bool(re.match(r"^https?://\S+$", t))
+
+
+def follow_live_shell(url: str, visited: set, timeout: int = 15) -> str:
+    """跟随套壳：返回最内层真实列表 URL；请求失败返回 ""（放弃该条）。"""
+    for _ in range(LIVE_SHELL_DEPTH):
+        if url in visited:
+            return ""                 # 循环防护
+        visited.add(url)
+        try:
+            status, _h, body = http_get(url, timeout)
+        except Exception:  # noqa: BLE001
+            return ""
+        if status != 200 or not body:
+            return ""
+        text = body.decode("utf-8", "replace")
+        if not _is_plain_url_list_body(text):
+            return url                # 已是真实列表内容（m3u / tvbox txt）
+        nxt = text.strip()
+        url = nxt if nxt != url else ""
+        if not url:
+            return ""
+    return url                        # 达到深度上限：以最后跟随到的 URL 为准
+
+
+def collect_config_live_sources(repo, max_entries=None):
+    """从仓库 tvbox.json 的 lives 条目收集可穿透的直播源（追加进聚合源清单）。"""
+    max_entries = max_entries or LIVE_CFG_SOURCES_MAX
+    if not repo:
+        return []
+    cfg_path = os.path.join(repo, "tvbox.json")
+    if not os.path.isfile(cfg_path):
+        return []
+    try:
+        with open(cfg_path, encoding="utf-8") as f:
+            cfg = json.load(f)
+    except Exception:  # noqa: BLE001
+        return []
+    out, seen_urls, visited = [], set(), set()
+    for l in (cfg.get("lives") or []):
+        if len(out) >= max_entries:
+            break
+        if not isinstance(l, dict):
+            continue
+        name = str(l.get("name") or "").strip()
+        urls = l.get("url")
+        urls = [urls] if isinstance(urls, str) else (urls if isinstance(urls, list) else [])
+        for u in urls:
+            if not isinstance(u, str) or not re.match(r"^https?://", u.strip()):
+                continue
+            real = follow_live_shell(u.strip(), visited)
+            if not real or real in seen_urls:
+                continue
+            seen_urls.add(real)
+            sid = "cfg:" + (name or re.sub(r"\W+", "-", real)[-24:])
+            out.append((sid, real))
+            break                     # 每个 lives 条目只取第一条可用 URL
+    return out
+
+
 def build_sources(repo):
     sources = []
     for fn, sid in (("live_cctv.txt", "cctv"), ("live_satellite.txt", "satellite"),
@@ -419,6 +492,11 @@ def build_sources(repo):
         ("mgtv", "https://mgtv.ottiptv.cc/mglist.m3u"),
         ("fmm_v6", "https://m3u.ibert.me/txt/fmml_ipv6.txt"),
     ])
+    # 吸收点 P2-1：配置内 lives 条目套壳穿透后并入聚合源（追加在静态源之后）
+    cfg_sources = collect_config_live_sources(repo)
+    if cfg_sources:
+        print("config lives sources: %d collected" % len(cfg_sources), flush=True)
+    sources.extend(cfg_sources)
     return sources
 
 
