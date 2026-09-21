@@ -39,7 +39,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/live_checks.json
+          git add -f state/live_checks.json
           if git diff --cached --quiet; then
             echo "本轮无变更，跳过提交"
           else
