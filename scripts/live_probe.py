@@ -282,10 +282,11 @@ if __name__ == "__main__":
     import sys
     from collections import Counter
     path = sys.argv[1] if len(sys.argv) > 1 else "live.json"
+    out_file = sys.argv[2] if len(sys.argv) > 2 else "live_checks.json"
     d = json.load(open(path, encoding="utf-8"))
     entries = d.get("lives") or []
     print("probing %d live entries ..." % len(entries), flush=True)
     recs = probe_all_resumable(entries, "live_probe_results.jsonl", max_workers=6)
-    with open("live_checks.json", "w", encoding="utf-8") as f:
+    with open(out_file, "w", encoding="utf-8") as f:
         json.dump({"entries": [r for r in recs if r]}, f, ensure_ascii=False, indent=1)
     print(Counter(r["status"] for r in recs if r))

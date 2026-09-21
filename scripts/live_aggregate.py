@@ -23,6 +23,7 @@ SOURCE_PRIORITY = [
     "cctv", "satellite", "hkmo_tw", "other",
     "guovin", "mlzlzj", "suxuang", "livefl",
     "zonghe", "kimentanm",
+    "xuy132", "svefnz",
     "yy", "huya", "douyu", "bili", "mgtv", "catvod",
     "fmm_v6",
 ]
@@ -40,6 +41,120 @@ DIFANG_KW = ("北京", "上海", "天津", "重庆", "广东", "珠江", "深圳
              "吉林", "黑龙江", "安徽", "福建", "江西", "广西", "云南", "贵州", "甘肃",
              "青海", "宁夏", "新疆", "西藏", "内蒙古", "海南", "新闻综合", "都市",
              "剧场", "教育", "少儿", "卡酷", "金鹰", "优漫", "哈哈", "炫动")
+
+
+# ---- 2026-09-21 直播线融合（第六批 P1/P2，借鉴 ineed2underfit/hk-iptv + Collect-IPTV）----
+# 港台白名单清洗：与 hk-iptv 全量白名单制不同，本仓「港台」组同时承载台湾频道，
+# 严格白名单会清空台湾，故采用三分制：黑名单剔除 → 港白名单组首（收视习惯排序）→
+# 台湾次级 → 其余组尾保留。RTHK 官方静态源兜底见 write_verified_txt。
+HK_BLOCK_KW = (
+    # 大陆伪装/地方误入（hk-iptv 日志分析来源）
+    "浙江", "杭州", "西湖", "广东", "廣東", "珠江", "大湾区", "大灣區",
+    "澳门", "澳門", "macau", "福建", "延时", "延時", "测试", "測試", "星河", "华丽", "華麗",
+    # 澳门频道防误入
+    "澳广视", "澳廣視", "澳亞", "tdm",
+    # 大陆注册落地港频道（hk-iptv 口径；如需保留凤凰可从黑名单移除）
+    "凤凰", "鳳凰",
+    # 英文广告/ pseudo 台
+    "fox", "pluto", "nbc", "cbs", "abc", "axs", "snowy", "reuters", "mirror",
+    "et now", "the now", "right now", "news now", "chopper", "wow", "uhd",
+    "8k", "career", "comics", "movies", "cbtv", "ihoy", "ihoi",
+)
+
+# 港人收视习惯排序（hk-iptv ORDER_KEYWORDS 口径，每组一个优先级档，组内保持原序）
+HK_ORDER_KW = (
+    ("翡翠", "tvb"),                       # TVB 主频
+    ("无线新闻", "無線新聞"),               # TVB 新闻
+    ("明珠",),                             # TVB 明珠
+    ("j2",), ("j5",), ("财经", "財經"),     # TVB 副频
+    ("viutv", "viu"),                      # ViuTV 系
+    ("hoy", "奇妙"),                       # HOY 系
+    ("有线", "有線"),                      # 香港有线
+    ("港台电视31", "港台電視31", "rthk31", "rthk 31"),
+    ("港台电视32", "港台電視32", "rthk32", "rthk 32"),
+    ("now新闻", "now新聞", "now直播"),      # Now 系
+)
+
+# 台湾频道次级保留关键词（不参与排序，仅保证不被当杂牌沉底后遗忘）
+TW_KW = ("台湾", "臺灣", "民视", "民視", "三立", "东森", "東森", "中天", "台视", "台視",
+         "中视", "中視", "华视", "華視", "公视", "公視", "八大", "纬来", "緯來",
+         "龙华", "龍華", "靖天", "大爱", "大愛", "壹电视", "壹電視", "年代", "tvbs",
+         "momo", "镜新闻", "鏡新聞", "寰宇", "好消息")
+
+# RTHK 官方静态源（hk-iptv STATIC_CHANNELS 原文，测速全挂时兜底，不参与删除）
+RTHK_STATIC = (
+    ("港台電視31 (官方)", "https://rthklive1-lh.akamaihd.net/i/rthk31_1@167495/index_2052_av-b.m3u8"),
+    ("港台電視32 (官方)", "https://rthklive2-lh.akamaihd.net/i/rthk32_1@168450/index_2052_av-b.m3u8"),
+)
+
+# ---- 频道名归一化别名表（第六批 P2，借鉴 Collect-IPTV：繁简映射 + 别名 + 后缀剥离）----
+# 繁→简字符映射（覆盖频道名常见繁体字；内置表而非 OpenCC，避免 CI 新增 pip 依赖）
+S2T_MAP = {
+    "臺": "台", "灣": "湾", "鳳": "凤", "無": "无", "線": "线", "綫": "线", "電": "电",
+    "視": "视", "廣": "广", "東": "东", "門": "门", "體": "体", "聞": "闻", "財": "财",
+    "經": "经", "娛": "娱", "樂": "乐", "戲": "戏", "劇": "剧", "歷": "历", "綜": "综",
+    "藝": "艺", "資": "资", "訊": "讯", "龍": "龙", "緯": "纬", "來": "来", "華": "华",
+    "愛": "爱", "環": "环", "衛": "卫", "頻": "频", "網": "网", "絡": "络", "場": "场",
+    "實": "实", "況": "况", "賽": "赛", "國": "国", "際": "际", "標": "标", "靈": "灵",
+    "話": "话", "亞": "亚", "歐": "欧", "聲": "声", "韓": "韩", "億": "亿", "萬": "万",
+    "豐": "丰", "澤": "泽", "輝": "辉", "創": "创", "學": "学", "奧": "奥", "運": "运",
+    "動": "动", "畫": "画", "兒": "儿", "親": "亲", "寶": "宝", "貝": "贝", "頭": "头",
+    "條": "条", "聯": "联", "傳": "传", "區": "区", "職": "职", "業": "业", "籃": "篮",
+    "誌": "志", "質": "质", "選": "选", "譯": "译", "談": "谈", "靚": "靓", "購": "购",
+    "賣": "卖", "廠": "厂", "銷": "销", "麗": "丽", "間": "间", "雙": "双",
+}
+
+# 别名归一（应用于去重键，全词小写匹配；保守条目，只并明显同台异名）
+ALIAS_MAP = {
+    "tvb翡翠": "翡翠", "tvb明珠": "明珠", "香港翡翠": "翡翠", "香港明珠": "明珠",
+    "tvb新闻": "无线新闻", "tvb新聞": "无线新闻",
+}
+
+
+def to_simp(s):
+    """繁→简字符级归一化（内置 S2T_MAP，无外部依赖）。"""
+    return "".join(S2T_MAP.get(ch, ch) for ch in (s or ""))
+
+
+def dedup_key(std):
+    """频道名去重键：繁归简 → 去空白转小写 → 去尾部括号标注（如“(官方)”）→
+    别名表 → 后缀剥离（频道/台，守卫卫视/电台）。
+    仅用于 build_channel_map 聚合键，显示名保留首次出现的原名（ent['name']）。"""
+    k = to_simp(std or "")
+    k = re.sub(r"[\s　]+", "", k).lower()
+    k = re.sub(r"[（(][^()（）]*[)）]$", "", k)
+    if k in ALIAS_MAP:
+        return ALIAS_MAP[k]
+    m = re.search(r"(卫视|电台|频道|台)$", k)
+    if m and len(k) > len(m.group(1)):
+        # 守卫：卫视/电台是完整词不剥离；频道/台 仅在剥离后仍非空时剥
+        if m.group(1) not in ("卫视", "电台"):
+            k = k[: -len(m.group(1))]
+    if k in ALIAS_MAP:
+        k = ALIAS_MAP[k]
+    return k
+
+
+def hk_clean_sort(chans):
+    """港台组清洗与排序（第六批 P1）。
+    chans: {频道名: lines}。返回清洗排序后的 OrderedDict：
+    黑名单命中剔除；港白名单命中按 HK_ORDER 收视习惯排组首；台湾频道次级；其余组尾。"""
+    def bucket(name):
+        low = name.lower()
+        if any(k in low for k in HK_BLOCK_KW):
+            return (9, 0)
+        for prio, kws in enumerate(HK_ORDER_KW):
+            if any(k in low for k in kws):
+                return (0, prio)
+        if any(k in low for k in TW_KW):
+            return (1, 0)
+        return (2, 0)
+    out = OrderedDict()
+    for name, lines in sorted(chans.items(), key=lambda kv: bucket(kv[0])):
+        if bucket(name)[0] == 9:
+            continue  # 黑名单命中：直接剔除（大陆伪装/澳门/测试频道）
+        out[name] = lines
+    return out
 
 
 def norm_channel(name):
@@ -126,6 +241,11 @@ def classify_source(url):
         return "zonghe"
     if "kimentanm" in u:
         return "kimentanm"
+    # 2026-09-21 直播线融合：第五批新增聚合上游
+    if "xuy132" in u:
+        return "xuy132"
+    if "svefnz" in u:
+        return "svefnz"
     if "yylunbo" in u:
         return "yy"
     if "huyayqk" in u:
@@ -176,7 +296,10 @@ def build_channel_map(sources, repo):
             std, cls = norm_channel(name)
             if not std:
                 continue
-            ent = cmap.setdefault(std, {"class": cls, "lines": []})
+            # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
+            # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
+            key = dedup_key(std)
+            ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": []})
             if CLASS_PRIO.get(cls, 9) < CLASS_PRIO.get(ent["class"], 9):
                 ent["class"] = cls
             ent["lines"].append((sid, u))
@@ -230,16 +353,39 @@ def test_channel_lines(cmap, only_classes=("央视", "卫视", "港台"),
 
 
 def write_verified_txt(cmap, verified, path, extra_keep=6):
+    """输出 lives/live_verified.txt。2026-09-21 直播线融合增强：
+    1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
+    2) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
+    3) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）。"""
     groups = OrderedDict()
     ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
-    for std, ent in cmap.items():
+    for key, ent in cmap.items():
+        name = ent.get("name") or key
         groups.setdefault(ent["class"], OrderedDict())
-        if std in verified:
-            lines = verified[std]
+        if key in verified:
+            lines = verified[key]
         else:
             lines = [u for _sid, u in ent["lines"][:extra_keep]]
         if lines:
-            groups[ent["class"]][std] = lines
+            groups[ent["class"]][name] = lines
+    if "港台" in groups:
+        groups["港台"] = hk_clean_sort(groups["港台"])
+        # RTHK 官方静态源兜底（第六批 P1）：实测未通过/缺失的港台频道补官方源
+        for nm, static_url in RTHK_STATIC:
+            k = dedup_key(nm)
+            if k in cmap and k in verified:
+                continue  # 实测通过，无需兜底
+            found = None
+            for dname in groups["港台"]:
+                if dedup_key(dname) == k:
+                    found = dname
+                    break
+            if found:
+                lines = groups["港台"][found]
+                if static_url not in lines:
+                    groups["港台"][found] = ([static_url] + lines)[:MAX_LINES_PER_CH]
+            else:
+                groups["港台"][nm] = [static_url]
     with open(path, "w", encoding="utf-8") as f:
         for cls in ORDER:
             if cls not in groups:
@@ -263,6 +409,9 @@ def build_sources(repo):
         ("livefl", "https://ghproxy.net/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u"),
         ("zonghe", "http://193.123.86.190:14888/TV/iptv.php"),
         ("kimentanm", "https://gh.927223.xyz/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u"),
+        # 2026-09-21 直播线融合：第五批实测有效上游（xuy132 txt 2648 条 / svefnz 338 频道含港澳台）
+        ("xuy132", "https://ghproxy.net/https://raw.githubusercontent.com/xuy132/TV/master/output/result.txt"),
+        ("svefnz", "https://ghproxy.net/https://raw.githubusercontent.com/svefnz/IPTVN/Files/IPTV.m3u"),
         ("yy", "https://sub.ottiptv.cc/yylunbo.m3u"),
         ("huya", "https://sub.ottiptv.cc/huyayqk.m3u"),
         ("douyu", "https://sub.ottiptv.cc/douyuyqk.m3u"),

@@ -1,0 +1,49 @@
+name: live-validate
+# 直播源独立验活工作流（2026-09-21 直播线融合，第六批 P2）：
+# 只跑 live_probe 验活、产出 state/live_checks.json 供人工巡检与排查，
+# 不产出配置、不动 daily-fetch（点播）与 live_aggregate（直播合并）链路。
+# 每 6 小时运行一次（UTC 0/6/12/18 = 北京 8/14/20/2 点），与点播验活解耦。
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-validate
+  cancel-in-progress: false
+
+jobs:
+  live-validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 直播上游验活（L1 清洗 / L2 格式 / L3 流抽样）
+        run: |
+          if [ -f live.json ]; then
+            python scripts/live_probe.py live.json state/live_checks.json
+          else
+            echo "live.json 尚未生成（首次 daily-fetch 前），跳过"
+          fi
+
+      - name: 提交并推送（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/live_checks.json
+          if git diff --cached --quiet; then
+            echo "本轮无变更，跳过提交"
+          else
+            git commit -m "chore: live validate $(date -u +%Y-%m-%d)"
+            git pull --rebase origin main
+            git push
+          fi

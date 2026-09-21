@@ -96,6 +96,8 @@ LIVE_CONCURRENCY = int(os.environ.get("LIVE_CONCURRENCY", "24"))
 LIVE_MAX_URLS = int(os.environ.get("LIVE_MAX_URLS", "1200"))       # 单轮测速 URL 总量上限
 LIVE_PER_CHANNEL = int(os.environ.get("LIVE_PER_CHANNEL", "3"))    # 每频道保留条数
 LIVE_FALLBACK_CHANNELS = int(os.environ.get("LIVE_FALLBACK_CHANNELS", "100"))  # O6 测速全挂频道的保底收录上限
+LIVE_MIN_SPEED = float(os.environ.get("LIVE_MIN_SPEED", "0.2"))    # MB/s；低于此速率降权排序（只降权不删除）
+LIVE_SPEED_RANGE = int(os.environ.get("LIVE_SPEED_RANGE", str(1 << 20)))  # 测速抽样字节数（HTTP Range 抽 1MB 实测吞吐）
 LIVES_DIR = os.environ.get("LIVES_DIR", "lives")
 CHECKS_FILE = os.environ.get("CHECKS_FILE", "checks.json")
 DOMAIN_MAP_FILE = os.environ.get("DOMAIN_MAP_FILE", "state/domain_map.json")
@@ -166,13 +168,70 @@ UPSTREAMS = [
     {"name": "franksun/cks2026", "kind": "tvbox", "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/CKS2026.json"},
 ]
 
-# P0：直播源上游（Guovin/iptv-api 双通道产物，2026-09-17 实测 200 且为社区公共上游）
+# P0：直播源上游。2026-09-21 直播线融合扩容（六批调研落地，task 7687996812807916527）：
+# 原 2 条（guovin 双通道）扩至 22 条。全部经 live_probe 验活后纳入：
+#   ok = L1+L2+L3 全过；format_only = L2 过、L3 沙箱抽样全挂（保留，交 CI 侧验活）；
+#   blocked = 沙箱网关 502 无法判定（保留，交 CI 侧验活）；curl 复核项已单独注明。
+# 沙箱内不可达不代表死链（CI 侧 raw 直连可达）；运行期任一上游连续 FAIL_LIMIT=3 次
+# 失败会被自动停用进 blacklist_auto.txt，无需人工值守。
 LIVE_UPSTREAMS = [
+    # ---- 原有：guovin 双通道 ----
     {"name": "guovin-gd-ipv4", "kind": "m3u",
      "url": "https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/ipv4/result.m3u"},
     {"name": "guovin-release", "kind": "m3u",
      "url": "https://github.com/Guovin/iptv-api/releases/download/playlist-latest/result.m3u"},
+    # ---- 第二批（3377/Kshao123/best-fan）----
+    {"name": "3377-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/3377/IPTV/master/output/result.m3u"},  # 验活 ok 2261 频道
+    {"name": "kshao123-tv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/Kshao123/TV/master/output/result.m3u"},  # 验活 format_only 2688 频道
+    {"name": "bestfan-status", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/best-fan/iptv-sources/master/cn_all_status.m3u8"},  # 验活 ok 164 频道带分辨率标注
+    # ---- 第三批（Bruce0422/JunTV/zhi35/iTCoffe）----
+    {"name": "bruce0422-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/Bruce0422/iptv-api/master/output/result.m3u"},  # 验活 ok 3217 频道（Guovin fork，每日 6:00/18:00）
+    {"name": "juntv-main", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/alantang1977/JunTV/main/output/result.m3u"},  # 验活 ok 1317 频道（master 分支 404，已改 main）
+    {"name": "zhi35-iptv", "kind": "m3u",
+     "url": "https://live.zhi35.com/iptv.m3u"},  # probe 误判 binary_body（gzip），curl 复核 200/51272B 有效 m3u
+    {"name": "itcoffe-itv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/iTCoffe/Collect-iTV/main/Internet_iTV.m3u"},  # 验活 format_only 3241 频道
+    # ---- 第五批（xuy132/svefnz/yoursmile66）----
+    {"name": "xuy132-tv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/xuy132/TV/master/output/result.txt"},  # 验活 ok 2648 条 txt 格式（每日 6:00/18:00）
+    {"name": "svefnz-iptvn", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/svefnz/IPTVN/Files/IPTV.m3u"},  # 验活 ok 338 频道含港澳台（默认分支 Files）
+    {"name": "yoursmile66-tvbox", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/yoursmile66/TVBox/main/live.txt"},  # 验活 ok 1156 条多线路 txt
+    # ---- 第六批（Collect-IPTV 系独有上游）----
+    {"name": "kilvn-iptv", "kind": "m3u",
+     "url": "https://live.kilvn.com/iptv.m3u"},  # blocked=沙箱网关 502 无法判定，交 CI 验活
+    {"name": "ibert-fmml", "kind": "m3u",
+     "url": "https://m3u.ibert.me/txt/fmml_itv.txt"},  # 验活 format_only 189 频道
+    {"name": "ibert-ycl", "kind": "m3u",
+     "url": "https://m3u.ibert.me/ycl_iptv.m3u"},  # probe 瞬时 fetch_error，curl 复核 200/35330B 有效
+    {"name": "vbskycn-iptv4", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/vbskycn/iptv/master/tv/iptv4.m3u"},  # 验活 ok 527 频道
+    {"name": "iill-gather", "kind": "m3u",
+     "url": "https://tv.iill.top/m3u/Gather"},  # blocked=沙箱网关 502 无法判定，交 CI 验活
+    {"name": "zbds-iptv4", "kind": "m3u",
+     "url": "https://live.zbds.org/tv/iptv4.m3u"},  # blocked=沙箱网关 502 无法判定，交 CI 验活
+    {"name": "yuechan-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u"},  # 验活 format_only 96 频道
+    {"name": "burningc4-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/BurningC4/Chinese-IPTV/master/TV-IPV4.m3u"},  # 验活 format_only 58 频道
+    {"name": "zwc456baby-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/zwc456baby/iptv_alive/master/live.m3u"},  # 验活 ok 30 频道
+    {"name": "hujingguang-cntv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8"},  # 验活 ok 60 频道
 ]
+# 报告点名的上游未纳入本次 LIVE_UPSTREAMS（有据记录，非遗漏）：
+# - tzdr.com/iptv.txt（第六批）：沙箱两次 fetch_error + curl 000 不可达，不硬塞；
+# - alantang1977/JunTV master 分支：404，已改用 main 分支（见上 juntv-main）；
+# - suxuang/iptv、Kimentanm/iptv（第六批）：与 guovin 系产物重复，避免同质翻倍；
+# - 裸 IP 175.178.251.183：报告未点名核实，不臆造；
+# - Zhou-Li-Bin/Tvbox-QingNing README 直播源 12 条（第四批 P2 可选）：落点为 README 抓取，
+#   不在本任务允许改动的文件清单内，暂不纳入。
 
 # 试探性短剧/成人专项上游：失败/降级均不影响主流程（自动黑名单保护）
 # 2026-09-18 实测 GitHub 搜索后，仅找到 duanju_juhe.js（猫/河马/星芽/牛牛 聚合）的 js 源片段
@@ -1156,9 +1215,13 @@ def gh_url(u: str) -> str:
     return u
 
 
-def http_get(url: str, timeout: int, max_bytes: int = 0):
-    """返回 (status, bytes, elapsed_ms)。非 2xx 抛异常。"""
-    req = urllib.request.Request(url, headers=UA)
+def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None):
+    """返回 (status, bytes, elapsed_ms)。非 2xx 抛异常。
+    rng=(start, end) 时带 Range 头抽段请求（直播测速用，不整段下载）。"""
+    headers = dict(UA)
+    if rng:
+        headers["Range"] = f"bytes={rng[0]}-{rng[1]}"
+    req = urllib.request.Request(url, headers=headers)
     t0 = time.time()
     with urllib.request.urlopen(req, timeout=timeout) as r:
         data = r.read(max_bytes) if max_bytes else r.read()
@@ -1242,8 +1305,15 @@ def parse_tvbox(raw: bytes):
 EXTINF_RE = re.compile(r"^#EXTINF:?\s*-?\d+\s*(.*)$")
 
 
+TXT_GENRE_RE = re.compile(r"^(.*?)[，,]\s*#genre#\s*$", re.IGNORECASE)
+
+
 def parse_m3u(raw: bytes):
-    """适配器：m3u/txt 直播列表。返回 [(频道名, 分组, url)]。"""
+    """适配器：m3u/txt 直播列表。返回 [(频道名, 分组, url)]。
+    支持两种格式（2026-09-21 直播线融合，第三批 P3）：
+    1) m3u：#EXTINF...group-title="分组",频道名 + 换行 URL；
+    2) txt 频道格式（Bruce0422/JunTV 等部分产物）：「分组,#genre#」行声明分组，
+       其后「频道名,url1#url2」行，多线路以 # 分隔（仅收 http/https 线路）。"""
     txt = raw.decode("utf-8", "replace")
     entries = []
     attr_name = None
@@ -1261,6 +1331,21 @@ def parse_m3u(raw: bytes):
             continue
         if line.startswith("#"):
             continue
+        gm = TXT_GENRE_RE.match(line)
+        if gm:
+            group = gm.group(1).strip()
+            attr_name = None
+            continue
+        if "," in line and not attr_name:
+            name, _, urls = line.partition(",")
+            got = False
+            for u in urls.split("#"):
+                u = u.strip()
+                if u.lower().startswith(("http://", "https://")):
+                    entries.append((name.strip(), group, u))
+                    got = True
+            if got:
+                continue
         if attr_name:
             entries.append((attr_name, group, line))
             attr_name = None
@@ -1479,8 +1564,13 @@ def category_of(channel: str, group: str) -> str:
 CATEGORY_LABELS = [("cctv", "央视"), ("weishi", "卫视"), ("gangtai", "港台"), ("other", "其他")]
 
 
-def speed_test(entries, limit: int) -> dict:
-    """并发测速，返回 {url: latency_ms}（失败的 URL 不在结果里）。"""
+def speed_test(entries, limit: int):
+    """并发测速，返回 (lat, spd)。
+    lat = {url: latency_ms}，仅 HTTP 200/206 且有数据的 URL 计入；
+    spd = {url: MB/s}，对同一请求按实际收到字节数折算吞吐（第一批 P2：
+    借鉴 guovin 三维测速中最值得的一维——HTTP Range 抽 LIVE_SPEED_RANGE 字节实测，
+    低于 LIVE_MIN_SPEED 的源降权排序、不删除）。
+    完全失败的 URL 不在结果里（仍走 O6 保底通道）。"""
     urls = []
     seen = set()
     for _name, _group, url in entries:
@@ -1490,12 +1580,18 @@ def speed_test(entries, limit: int) -> dict:
     if limit > 0 and len(urls) > limit:
         urls = urls[:limit]  # 顺序即上游优先级，截前 limit 个
     lat = {}
-    print(f"    测速 {len(urls)} 条直播 URL（并发 {LIVE_CONCURRENCY}，单条 {LIVE_TIMEOUT}s）...", flush=True)
+    spd = {}
+    print(f"    测速 {len(urls)} 条直播 URL（并发 {LIVE_CONCURRENCY}，单条 {LIVE_TIMEOUT}s，"
+          f"Range 抽 {LIVE_SPEED_RANGE >> 10}KB）...", flush=True)
 
     def probe(u):
         try:
-            st, body, ms = http_get(u, LIVE_TIMEOUT, 2048)
-            if st == 200 and body:
+            st, body, ms = http_get(u, LIVE_TIMEOUT, LIVE_SPEED_RANGE,
+                                    rng=(0, LIVE_SPEED_RANGE - 1))
+            if st in (200, 206) and body:
+                dt = ms / 1000.0
+                if dt > 0:
+                    spd[u] = len(body) / dt / (1 << 20)  # MB/s
                 return u, ms
         except Exception:  # noqa: BLE001
             pass
@@ -1505,7 +1601,7 @@ def speed_test(entries, limit: int) -> dict:
         for u, ms in ex.map(probe, urls):
             if ms is not None:
                 lat[u] = ms
-    return lat
+    return lat, spd
 
 
 # ---------------- P0：本地相对路径依赖核验（防死引用写入配置） ----------------
@@ -1567,9 +1663,11 @@ def filter_local_ref_sites(sites: list, repo_dir: str, target: str, registry: di
 
 
 def build_live_outputs(entries) -> dict:
-    """分类 →（可选测速排序）→ 每频道取前 N 条 → 输出 lives/*.txt。返回分类统计 dict。"""
+    """分类 →（可选测速排序）→ 每频道取前 N 条 → 输出 lives/*.txt。返回分类统计 dict。
+    测速排序规则（2026-09-21 直播线融合）：吞吐 >= LIVE_MIN_SPEED 的源优先；
+    慢速源降权排后但保留（只降权不删除）；完全连不上的 URL 仍剔除走 O6 保底。"""
     os.makedirs(LIVES_DIR, exist_ok=True)
-    lat = speed_test(entries, LIVE_MAX_URLS) if LIVE_SPEEDTEST else {}
+    lat, spd = speed_test(entries, LIVE_MAX_URLS) if LIVE_SPEEDTEST else ({}, {})
 
     per_cat = {k: [] for k, _ in CATEGORY_LABELS}
     for name, group, url in entries:
@@ -1583,11 +1681,15 @@ def build_live_outputs(entries) -> dict:
             for name, url in items:
                 ms = lat.get(url)
                 if ms is None:
-                    continue  # 测速失败剔除
-                by_ch.setdefault(name, []).append((ms, url))
+                    continue  # 完全连不上的 URL 剔除（O6 保底兜住）；慢速源不删、仅降权
+                by_ch.setdefault(name, []).append((spd.get(url, 0.0), ms, url))
             ranked = []
             for name in sorted(by_ch):
-                for ms, url in sorted(by_ch[name])[:LIVE_PER_CHANNEL]:
+                # 排序键：达速源（吞吐>=LIVE_MIN_SPEED）在前，组内吞吐降序 → 延迟升序 → URL 稳定序
+                for _bps, ms, url in sorted(
+                        by_ch[name],
+                        key=lambda t: (0 if t[0] >= LIVE_MIN_SPEED else 1, -t[0], t[1], t[2])
+                )[:LIVE_PER_CHANNEL]:
                     ranked.append((name, url, ms))
             # O6 保底：所有线路测速全挂的频道（多为跑批网络环境误杀）按字母序收录在组尾
             tested_channels = set(by_ch)
@@ -1612,6 +1714,9 @@ def build_live_outputs(entries) -> dict:
                     ranked.append((name, url, None))
         stats[key] = {"channels": len({n for n, _u, _ms in ranked}), "urls": len(ranked),
                       "input_urls": len(items), "speed_tested": bool(lat),
+                      "slow_speed_urls": (sum(1 for _n, u, ms in ranked
+                                              if ms is not None and spd.get(u, 0.0) < LIVE_MIN_SPEED)
+                                          if lat else 0),
                       "fallback_urls": (sum(1 for _n, _u, ms in ranked if ms is None) if lat else 0)}
         if not ranked:
             continue
