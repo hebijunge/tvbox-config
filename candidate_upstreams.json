@@ -1,5 +1,22 @@
 {
- "_说明": "上游推荐候选池：issue 自动收录（issue-to-pr 工作流）写入，人工确认后收编进 scripts/fetch_merge.py 的 UPSTREAMS 并删除对应条目",
- "updated_at": "",
- "candidates": []
+  "_说明": "上游推荐候选池：issue 自动收录 + 人工登记，人工确认后收编进 UPSTREAMS 并删除对应条目。CKS2026.json 已于 2026-09-21 经实拉 + parse_tvbox 等效验证（60 sites）直接收编进 UPSTREAMS，此处保留其余两条待评估。",
+  "updated_at": "2026-09-21",
+  "candidates": [
+    {
+      "name": "franksun/xc-xctv",
+      "kind": "live",
+      "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/APP/TVBoxOSC/XC/XCTV.json",
+      "source": "第四批调研报告 P1：franksun1211/TVBOX 仓库树实扫，XCTV.json 11623B 为直播源配置，转直播线任务评估（不进点播 UPSTREAMS）",
+      "verified": "2026-09-21 仓库树 API 实扫确认路径与大小",
+      "note": "直播线任务处理"
+    },
+    {
+      "name": "franksun/qiaoji8",
+      "kind": "tvbox",
+      "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/qiaoji8.json",
+      "source": "第四批调研报告 P1：franksun1211/TVBOX 根目录 83712B 配置，与 CKS2026.json 同仓高冗余，建议先经 evaluate_candidates canary 对比去重收益",
+      "verified": "2026-09-21 仓库树 API 实扫确认路径与大小",
+      "note": "待 canary 对比与 CKS2026 收益后决定是否收编"
+    }
+  ]
 }

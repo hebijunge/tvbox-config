@@ -47,6 +47,51 @@ def md5_of(path, chunk=1 << 20):
     return h.hexdigest()
 
 
+# ---- 2026-09-21 点播+容错线：jar_suffix 内容探测（借鉴 fish2018/tvbox）----
+# 痛点：上游给的 jar 链接常无 .jar 后缀（甚至 .php/.html），直接落盘后客户端
+# 加载不了；也有 .jar 后缀里装的其实是 HTML 报错页。这里按内容魔数判真实类型，
+# 与后缀比对，产出「后缀不匹配」报告 + 引用改写建议（只报告，不删除）。
+MAGIC_PROBES = [
+    (b"PK\x03\x04", "jar"),
+    (b"\x1f\x8b", "gzip"),
+    (b"<!DOCTYPE", "html"),
+    (b"<!doctype", "html"),
+    (b"<html", "html"),
+    (b"{", "json"),
+]
+
+
+def probe_magic(path):
+    try:
+        with open(path, "rb") as f:
+            head = f.read(512)
+    except OSError:
+        return None
+    head = head.lstrip()
+    for magic, kind in MAGIC_PROBES:
+        if head.startswith(magic):
+            return kind
+    return "binary" if head and not head[:64].isascii() else "text"
+
+
+def jar_suffix_audit(files, repo, refs):
+    findings, rewrites = [], []
+    for p, _ in files:
+        rel = os.path.relpath(p, repo).replace("\\", "/")
+        ext = os.path.splitext(rel)[1].lower()
+        kind = probe_magic(p)
+        if kind == "binary" and not ext:
+            kind = "jar"  # 64KB 内无可识别魔数且非纯文本 → 按 jar 处理
+        mismatch = (ext == ".jar" and kind not in ("jar", "binary")) or \
+                   (ext != ".jar" and kind == "jar" and ext not in (".zip",))
+        if mismatch:
+            findings.append({"path": rel, "suffix": ext or "(无后缀)", "content": kind})
+            if rel in refs:
+                good = os.path.splitext(rel)[0] + ".jar"
+                rewrites.append({"from": rel, "to": good, "referenced": True})
+    return findings, rewrites
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="tvbox.json")
@@ -107,6 +152,11 @@ def main() -> int:
     print(f"[audit] 未被引用：{len(unreferenced)} 个，{un_bytes/1024/1024:.1f} MB"
           f"（占总量的 {100*un_bytes/max(total_bytes,1):.0f}%）")
 
+    # 4) jar_suffix 内容探测（fish2018/tvbox 借鉴）
+    jar_findings, jar_rewrites = jar_suffix_audit(files, repo, refs)
+    print(f"[audit] 后缀与内容不匹配：{len(jar_findings)} 个"
+          f"（其中被产物引用 {len(jar_rewrites)} 个，可按建议改写后缀）")
+
     doc = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
         "deps_files": len(files),
@@ -115,6 +165,9 @@ def main() -> int:
         "duplicate_savable_bytes": dup_bytes,
         "unreferenced_count": len(unreferenced),
         "unreferenced_bytes": un_bytes,
+        "jar_suffix_mismatch": jar_findings[:args.max_list],
+        "jar_suffix_mismatch_count": len(jar_findings),
+        "jar_suffix_rewrite_suggestions": jar_rewrites[:args.max_list],
         "note": "仅分析报告，不做删除。清理前须确认引用真的不存在（引用可能是运行时拼接的）。",
         "duplicates": [{"md5": m, "files": [p for p, _ in v]}
                        for m, v in list(dup_groups.items())[:args.max_list]],

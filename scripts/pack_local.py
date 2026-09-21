@@ -18,6 +18,7 @@ pack_local.py — 生成本地 TVBox 接口包（zip）
 接入：run_all.py 阶段 8；daily.yml CI 步骤（无成人留档自动跳过）
 """
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -245,6 +246,51 @@ def main():
             plan[r[2:]] = src
         else:
             unresolvable.append(r)
+
+    # ---------- 4.5 内容级去重（2026-09-21 点播+容错线，借鉴 fish2018/tvbox）----------
+    # fish2018 tvbox_tools 在下载侧用 file_hash（内容 hash）+ 文件大小双条件判重后
+    # 跳过重复下载；我们是组包侧等价实现：不同引用路径但内容完全相同（sha256 与
+    # 大小双双一致）的依赖只随包附带一份，其余引用路径统一改写到保留路径。
+    # 与 fetch_merge 的 L1/L2 源级去重作用对象不同（它防重复源入库，这里防重复文件落包），互补而非替代。
+    def _rewrite_refs(obj, pat, new_ref):
+        if isinstance(obj, str):
+            return pat.sub(new_ref, obj)
+        if isinstance(obj, dict):
+            return {k: _rewrite_refs(v, pat, new_ref) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [_rewrite_refs(v, pat, new_ref) for v in obj]
+        return obj
+
+    content_map = {}   # (sha256, size) -> 保留的包内路径
+    dedup_map = {}     # 被去重路径 -> 保留路径
+    for dst_rel in sorted(plan):
+        src = plan[dst_rel]
+        _h = hashlib.sha256()
+        try:
+            with open(src, "rb") as fh:
+                for _chunk in iter(lambda: fh.read(1 << 20), b""):
+                    _h.update(_chunk)
+            key = (_h.hexdigest(), os.path.getsize(src))
+        except OSError:
+            continue
+        if key in content_map and content_map[key] != dst_rel:
+            dedup_map[dst_rel] = content_map[key]
+        else:
+            content_map.setdefault(key, dst_rel)
+    # 长路径先改写，配合负向前瞻断言避免前缀误替换（./deps/a.jar vs ./deps/a.jar.bak）
+    for old_rel in sorted(dedup_map, key=len, reverse=True):
+        keep_rel = dedup_map[old_rel]
+        pat = re.compile(re.escape("./" + old_rel) + r"(?![A-Za-z0-9._~%/-])")
+        new_ref = "./" + keep_rel
+        for _i, (name, cfg) in enumerate(docs):
+            docs[_i] = (name, _rewrite_refs(cfg, pat, new_ref))
+        if top_spider and pat.match(top_spider):
+            top_spider = pat.sub(new_ref, top_spider)
+        plan.pop(old_rel, None)
+    if dedup_map:
+        log("内容级去重：%d 个重复依赖（sha256+大小双条件一致），引用已改写：%s"
+            % (len(dedup_map), "; ".join(f"{o} → {k}" for o, k in sorted(dedup_map.items())[:5])))
+
     n_bytes = sum(os.path.getsize(v) for v in plan.values())
     log("依赖：%d 个文件 / %.1f MB（真缺失 %d）"
         % (len(plan), n_bytes / 1048576, len(unresolvable)))

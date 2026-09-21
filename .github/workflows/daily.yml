@@ -71,13 +71,23 @@ jobs:
         continue-on-error: true
         run: python scripts/evaluate_candidates.py --min-unique 3 --write-canary || true
 
-      - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks）
+      - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks/空产物守卫）
+        id: fetch_merge
         env:
           CONCURRENCY: "24"
           # canary 上游已按「独有站点数 unique>=3」自动收编（不是按 score），
           # 且失效由自动黑名单兜底，故开启并入。要停用改回 "0" 即可。
           EXTRA_UPSTREAMS: "1"
-        run: python scripts/fetch_merge.py
+        run: |
+          python scripts/fetch_merge.py
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -eq 2 ]; then
+            echo "guard=true" >> "$GITHUB_OUTPUT"
+            echo "::warning::空产物守卫触发：本轮聚合产物异常，跳过提交与 Release，保留上次缓存"
+            exit 0
+          fi
+          exit $rc
 
       - name: 依赖审计（只报告，不删除）
         continue-on-error: true
@@ -106,7 +116,8 @@ jobs:
         continue-on-error: true
         run: python scripts/pack_local.py || true
 
-      - name: 提交并推送（有变更时）
+      - name: 提交并推送（有变更时；守卫触发则仅落守卫日报）
+        if: steps.fetch_merge.outputs.guard != 'true'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -122,7 +133,22 @@ jobs:
             git push
           fi
 
+      - name: 守卫日报（空产物守卫触发时只提交守卫记录，产物保留上次缓存）
+        if: steps.fetch_merge.outputs.guard == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add state/guard_last.json state/upstreams_state.json state/blacklist_auto.txt || true
+          if git diff --cached --quiet; then
+            echo "守卫触发且无状态变更，跳过提交"
+          else
+            git commit -m "chore(guard): 空产物守卫触发，跳过本轮发布（保留上次缓存，下轮重试）"
+            git pull --rebase origin main || true
+            git push || true
+          fi
+
       - name: 发布到 Releases（latest 标签，Guovin 双通道模式）
+        if: steps.fetch_merge.outputs.guard != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |

@@ -65,6 +65,18 @@ BLACKLIST_AUTO = os.environ.get("BLACKLIST_AUTO", "state/blacklist_auto.txt")
 BLACKLIST_MANUAL = os.environ.get("BLACKLIST_MANUAL", "state/blacklist_manual.txt")
 WHITELIST_MANUAL = os.environ.get("WHITELIST_MANUAL", "state/whitelist_manual.txt")
 FAIL_LIMIT = int(os.environ.get("UPSTREAM_FAIL_LIMIT", "3"))       # 连续 N 次不达标自动停用
+# 2026-09-21 点播+容错线：黑名单单轮安全阀（来自 riowang88 设计文档）。
+# 单轮「本次停用」数超过上游总数 30% 时，判定为网络抖动等系统性误判而非
+# 上游集体长期失效：只警告、不落盘（本轮停用全部回滚，fail_count 保留，
+# 真失效的源下一轮仍会正常触发停用），防止一次抖动误杀大量源。
+# 与连续 3 次失败自动停用互补：黑名单管长期失效，安全阀管单轮抖动。
+BLACKLIST_ROUND_CAP_RATIO = float(os.environ.get("BLACKLIST_ROUND_CAP_RATIO", "0.30"))
+# 2026-09-21 点播+容错线：空产物守卫（借鉴 tengxiaobao「聚合失败保留上次缓存」）。
+# 本轮 sites/lives/parses 任一为空、或较上一版已提交产物萎缩超 80% 时，
+# 判定本轮聚合结果异常：跳过全部产物写入与提交/发布（exit 2），保留上次
+# 缓存，写 state/guard_last.json 日报下轮重试。与安全阀互补：安全阀管
+# 「单轮停用抖动」，守卫管「合并产物塌方」。
+EMPTY_GUARD_DROP_RATIO = float(os.environ.get("EMPTY_GUARD_DROP_RATIO", "0.80"))
 PROBE_INTERVAL_DAYS = int(os.environ.get("DISABLED_PROBE_DAYS", "7"))  # O2 停用上游每隔 N 天探活回捞
 
 # O3 站点验活历史记忆（连续 N 轮失败才剔除，通过自动回捞）
@@ -144,6 +156,14 @@ UPSTREAMS = [
     {"name": "deepseek/8815wmz", "kind": "tvbox", "url": "https://8815.kstore.vip/tvbox/wmz"},          # 105 sites
     {"name": "deepseek/gaoops404", "kind": "tvbox", "url": "https://raw.giteeusercontent.com/gaoops404/tvbox-config/raw/main/tvbox.json"},  # 52 sites
     {"name": "deepseek/gao777520", "kind": "tvbox", "url": "https://gitlab.com/gao777520/tvbox-config/raw/main/tvbox.json"},  # 52 sites
+    # ---- 2026-09-21 点播+容错线：六批调研新增上游（jsDelivr 实拉 + parse_tvbox 等效验证后纳入）----
+    # tushen6/Tomorrow（2278★，2026-09-21 当日有推送）：根目录 tvbox.json 33 sites / 1 lives / 9 parses
+    {"name": "tushen6/tvbox", "kind": "tvbox", "url": "https://raw.githubusercontent.com/tushen6/Tomorrow/master/tvbox.json"},
+    # victor1616888/TVBOX-Q（2026-09-21 当日有推送）：根目录 tvbox.json 116 sites / 12 lives / 9 parses（含 // 行内注释，经状态机清洗可解析）
+    {"name": "victor/tvbox", "kind": "tvbox", "url": "https://raw.githubusercontent.com/victor1616888/TVBOX-Q/master/tvbox.json"},
+    # franksun1211/TVBOX（228★，2026-09-12 推送）：CKS2026.json 60 sites / 2 lives / 4 parses（内含 /* */ 块注释，经状态机清洗可解析）；
+    # XCTV.json（APP/TVBoxOSC/XC/，教育向直播源）转直播线任务处理；qiaoji8.json 等其余 19 个配置已登记 candidate_upstreams.json 候选池走 canary 收编
+    {"name": "franksun/cks2026", "kind": "tvbox", "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/CKS2026.json"},
 ]
 
 # P0：直播源上游（Guovin/iptv-api 双通道产物，2026-09-17 实测 200 且为社区公共上游）
@@ -318,6 +338,10 @@ ADULT_KEYWORDS = [
     "xvideos", "pornhub", "xhamster", "hdsemj", "tokyo-hot",
     # 限定形容词（"敏感词"语义强）— 仅作为最后防线
     "裸聊", "裸播", "黄播", "黄网", "瑟瑟情",
+    # 2026-09-21 点播+容错线：高置信词 ×10 增量（来源：实读 ccAzy separate_sources.py
+    # 词表后人工挑选，走本表关键词匹配而非其删除式过滤；均为社区普遍使用的成人
+    # 站名/黑话，误匹配风险低）
+    "探花", "蜜桃", "糖心", "海角", "含羞草", "草榴", "秋霞", "番号", "无码", "里番",
 ]
 
 
@@ -384,8 +408,11 @@ def _idna_host(host: str) -> str:
 def dep_lenient_json(text: str) -> bool:
     if text.startswith("\ufeff"):
         text = text[1:]
-    text = re.sub(r"^\s*//.*$", "", text, flags=re.M)
-    text = re.sub(r",\s*([}\]])", r"\1", text)
+    # 2026-09-21 点播+容错线：改用主管线同款状态机清洗（去 // 行注释（含行内）、
+    # /* */ 块注释、尾随逗号，且不误伤字符串内双斜杠）。原正则只剥「整行 //」，
+    # 实测 franksun1211/TVBOX 的 CKS2026.json（/* */ 块注释）与
+    # victor1616888/TVBOX-Q 的 tvbox.json（值后行内 // 注释）都会解析失败。
+    text = strip_comments_and_clean(text)
     try:
         json.loads(text)
         return True
@@ -2133,6 +2160,57 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
     }
 
 
+# ---- 2026-09-21 点播+容错线：容错函数化（便于构造空场景做单元测试）----
+
+def read_prev_counts(path="tvbox.json") -> dict:
+    """读上一版产物（工作树 tvbox.json）的三类条目数；读不到返回 {}。"""
+    try:
+        with open(path, "r", encoding="utf-8") as _f:
+            _p = json.load(_f)
+        return {"sites": len(_p.get("sites") or []),
+                "lives": len(_p.get("lives") or []),
+                "parses": len(_p.get("parses") or [])}
+    except Exception:  # noqa: BLE001 —— 首轮无历史产物属正常
+        return {}
+
+
+def empty_guard_check(cur: dict, prev: dict, drop_ratio: float = None) -> list:
+    """空产物守卫判定：返回触发原因列表（空列表 = 通过）。
+    任一维度为 0，或相对上一版萎缩超 drop_ratio，即判定本轮产物异常。"""
+    if drop_ratio is None:
+        drop_ratio = EMPTY_GUARD_DROP_RATIO
+    blocked = []
+    for _dim, _cnt in cur.items():
+        if _cnt == 0:
+            blocked.append(f"{_dim}=0（空产物）")
+        elif prev.get(_dim, 0) > 0 and _cnt < prev[_dim] * (1 - drop_ratio):
+            blocked.append(f"{_dim} {prev[_dim]}→{_cnt}（萎缩超 {drop_ratio:.0%}）")
+    return blocked
+
+
+def apply_blacklist_round_cap(state: dict, disabled_now_list: list,
+                              round_total: int, ratio: float = None) -> list:
+    """黑名单单轮安全阀：本轮拟停用数超过上游总数 ratio（默认 30%）时判定为
+    网络抖动等单轮系统性误判，回滚全部 disabled 标志（fail_count 保留，
+    sync_blacklist_auto 按 disabled 标志回写，故黑名单文件本轮不会有任何新增），
+    返回回滚后的空列表；未超阈值时原样返回。"""
+    if ratio is None:
+        ratio = BLACKLIST_ROUND_CAP_RATIO
+    round_cap = max(1, int(round_total * ratio))
+    if not disabled_now_list or len(disabled_now_list) <= round_cap:
+        return disabled_now_list
+    print(f"  [安全阀] 本轮拟自动停用 {len(disabled_now_list)} 个，超过上游总数 {round_total} 的 "
+          f"{ratio:.0%}（阈值 {round_cap} 个）——判定为网络抖动等单轮系统性误判："
+          f"全部回滚、不落盘黑名单（fail_count 保留，真失效下轮仍会正常停用）", flush=True)
+    print(f"  [安全阀] 回滚名单：{', '.join(disabled_now_list)}", flush=True)
+    for _n in disabled_now_list:
+        _ent = state.get(_n)
+        if isinstance(_ent, dict) and _ent.get("disabled"):
+            _ent["disabled"] = False
+            _ent["disabled_reason"] = ""
+    return []
+
+
 def main() -> int:
     global DOMAIN_MAP
     DOMAIN_MAP = load_domain_map()
@@ -2307,6 +2385,9 @@ def main() -> int:
         checks.append(rec)
         interfaces.append(rec)
 
+    # 2026-09-21 点播+容错线：黑名单单轮安全阀（判定与回滚逻辑见 apply_blacklist_round_cap）
+    disabled_now_list = apply_blacklist_round_cap(
+        state, disabled_now_list, len(active_upstreams), BLACKLIST_ROUND_CAP_RATIO)
     sync_blacklist_auto(state)
     save_state(state)
     if disabled_now_list:
@@ -2443,6 +2524,31 @@ def main() -> int:
     lives = list(lives_by_name.values())
 
     # ---- [5/6] 产出配置 ----
+    # 2026-09-21 点播+容错线：空产物守卫（必须在写任何产物文件之前执行）。
+    # 上一版已提交产物 = 工作树里的 tvbox.json（守卫在覆盖它之前返回，即天然保留上次缓存）；
+    # 判定逻辑见 empty_guard_check / read_prev_counts。
+    _cur = {"sites": len(kept_sites), "lives": len(lives), "parses": len(parses)}
+    _prev = read_prev_counts("tvbox.json")
+    _blocked = empty_guard_check(_cur, _prev, EMPTY_GUARD_DROP_RATIO)
+    if _blocked:
+        _guard_note = {
+            "triggered_at": generated_at,
+            "current": _cur, "previous": _prev,
+            "reasons": _blocked,
+            "action": "跳过本轮产物写入/提交/Release，保留上次缓存，下轮重试",
+        }
+        try:
+            os.makedirs("state", exist_ok=True)
+            with open("state/guard_last.json", "w", encoding="utf-8") as _f:
+                json.dump(_guard_note, _f, ensure_ascii=False, indent=1)
+        except Exception:  # noqa: BLE001
+            pass
+        print("[守卫] 空产物守卫触发，本轮不产出、不提交、不发布：", flush=True)
+        for _b in _blocked:
+            print(f"    - {_b}", flush=True)
+        print("    已保留上次缓存（工作树 tvbox.json 未被覆盖）；详见 state/guard_last.json", flush=True)
+        return 2
+
     tvbox = dict(merged)
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives

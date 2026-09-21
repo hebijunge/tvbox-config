@@ -78,6 +78,9 @@ SEEDS = [
     ("QingNing", "https://raw.githubusercontent.com/Zhou-Li-Bin/Tvbox-QingNing/main/README.md"),
     ("ngo5", "https://raw.githubusercontent.com/ngo5/IPTV/main/README.md"),
     ("dongyubin", "https://raw.githubusercontent.com/dongyubin/IPTV/main/README.md"),
+    # 2026-09-21 点播+容错线：noimank/tvbox 走发现通道（第二批/第三批报告判定：不直接作上游，
+    # 其 tvboxmuti.json 为多仓索引，经种子路展开比单点接入更稳）
+    ("noimank", "https://raw.githubusercontent.com/noimank/tvbox/main/tvboxmuti.json"),
 ]
 
 URL_RE = re.compile(r"https?://[^\s\"'<>\\)\]]+", re.I)
@@ -286,6 +289,98 @@ def discover_seeds():
                 found += 1
         print(f"  [种子] {name} → {found} 条候选链接", flush=True)
     return urls
+
+
+# ---- 2026-09-21 点播+容错线：第二批 P1 —— laoma2053/awesome-zhuiju-free 作为扩源第五路 ----
+# 9234★，机器可读清单 resources/resources.json（category=tvbox_config 条目）
+# + 每日 Actions 验活 reports/availability.json。只取验活 reachable 的条目进候选流，
+# L0 探测仍会二次把关；验活不过的如实丢弃（报告已记录 401/403 的 restricted 情况）。
+ZHUIJU_RES = "https://raw.githubusercontent.com/laoma2053/awesome-zhuiju-free/main/resources/resources.json"
+ZHUIJU_AVAIL = "https://raw.githubusercontent.com/laoma2053/awesome-zhuiju-free/main/reports/availability.json"
+
+
+def discover_zhuiju():
+    try:
+        st, raw = http_get(ZHUIJU_RES, 15, 2_000_000)
+        res = json.loads(raw.decode("utf-8", "replace"))
+    except Exception as e:  # noqa: BLE001 —— 第五路整体可失败，不影响其它六路
+        print(f"  [追剧] resources.json 拉取失败：{e}", flush=True)
+        return set()
+    resources = res.get("resources", []) if isinstance(res, dict) else []
+    tvbox = [r for r in resources if r.get("category") == "tvbox_config" and r.get("url")]
+
+    ok_ids = set()
+    try:
+        st2, raw2 = http_get(ZHUIJU_AVAIL, 15, 2_000_000)
+        avail = json.loads(raw2.decode("utf-8", "replace"))
+        for r in avail.get("results", []):
+            if r.get("status") == "reachable":
+                ok_ids.add(r.get("resource_id"))
+    except Exception as e:  # noqa: BLE001 —— 验活清单缺失时退化为不筛（交给 L0 探测兜底）
+        print(f"  [追剧] availability.json 拉取失败（退化为不筛验活）：{e}", flush=True)
+        ok_ids = None
+
+    urls = set()
+    skipped = 0
+    for r in tvbox:
+        if ok_ids is not None and r.get("id") not in ok_ids:
+            skipped += 1
+            continue
+        u = r["url"].strip()
+        if u.startswith("http"):
+            urls.add(u)
+    print(f"  [追剧] tvbox_config {len(tvbox)} 条，验活通过 {len(urls)} 条"
+          f"（验活不过丢弃 {skipped} 条）", flush=True)
+    return urls
+
+
+# ---- 2026-09-21 点播+容错线：第四批 P2 —— QingNing README 结构化分节解析 ----
+# README 为「> * **【标签】名称：**」+ 下一行 URL 的配对格式（标签驱动，不做数量硬编码；
+# 实测快照漂移：调研日 单仓122/多仓12/直播12，当日快照 单仓114/多仓10/直播类8）。
+# 【单仓】【多仓】URL → 返回给候选流；【电视】【广播】等直播类 URL → 落 radar/live_seeds.json
+# 转直播线任务，不进点播候选流；【成人】等敏感标签一律跳过。
+QN_README = SEEDS[0][1]
+QN_LIVE_LABELS = {"电视", "广播", "小飞电视", "频道多多", "直播"}
+QN_SKIP_LABELS = {"成人", "推荐老手", "国外的没有"}
+
+
+def discover_qingning(live_out="radar/live_seeds.json"):
+    try:
+        st, raw = http_get(QN_README, 15, 600_000)
+    except Exception as e:  # noqa: BLE001
+        print(f"  [青柠] README 拉取失败：{e}", flush=True)
+        return set(), set()
+    lines = raw.decode("utf-8", "replace").split("\n")
+    warehouse, live, cur = set(), set(), None
+    for ln in lines:
+        m = re.search(r"【([^】]+)】", ln)
+        if m:
+            cur = m.group(1).strip()
+            continue
+        if cur is None:
+            continue
+        um = re.search(r"https?://[^\s\"'<>\\)\]]+", ln)
+        if not um:
+            continue
+        u = um.group(0).rstrip(".,;")
+        if cur in QN_LIVE_LABELS:
+            live.add(u)
+        elif cur not in QN_SKIP_LABELS and cur in ("单仓", "多仓"):
+            warehouse.add(u)
+        cur = None
+    print(f"  [青柠] 单仓/多仓 {len(warehouse)} 条进候选流，直播类 {len(live)} 条转直播线",
+          flush=True)
+    if live:
+        try:
+            os.makedirs(os.path.dirname(live_out) or ".", exist_ok=True)
+            with open(live_out, "w", encoding="utf-8") as f:
+                json.dump({"generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                           "note": "QingNing README 直播类标签解析结果，转直播线任务处理，不进点播候选流",
+                           "source": QN_README, "total": len(live), "urls": sorted(live)},
+                          f, ensure_ascii=False, indent=1)
+        except OSError as e:
+            print(f"  [青柠] live_seeds 写入失败：{e}", flush=True)
+    return warehouse, live
 
 
 def discover_lineage(known_repos, max_repos):
@@ -564,6 +659,13 @@ def main() -> int:
     if not args.no_lineage:
         repos |= discover_lineage(known_repos, args.max_repos)
     repo_urls = discover_seeds()
+    # 第 2.5 路（2026-09-21 点播+容错线）：zhuiju 机器可读清单 + QingNing 结构化分节
+    repo_urls |= discover_zhuiju()
+    qn_warehouse, qn_live = discover_qingning()
+    repo_urls |= qn_warehouse
+    # 结构化解析出的直播类 URL 不进点播候选流；种子通用抽取若把 QingNing 的
+    # .m3u/.live 直播链接吸了进来，在这里按解析结果做差集隔离
+    repo_urls -= qn_live
 
     # 第 6 路：搜索引擎 + 文章页（博客/CSDN/微信公众号公开文章）
     if not args.no_web:
