@@ -501,7 +501,7 @@ def build_curated_lives(repo_dir: str):
 
     ver_txt_url = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt"
     curated = [{
-        "name": "聚合·央视卫视港台精选",
+        "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
         "type": 1,
         "url": ver_txt_url,
         "ua": "TVBox",
