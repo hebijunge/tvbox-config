@@ -167,7 +167,7 @@ jobs:
             [ -f "$f" ] && FILES="$FILES $f"
           done
           NOTES="自动发布于 $(date -u '+%Y-%m-%d %H:%M UTC')。
-          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、short.json（短剧独立配置）、lives/*（央视/卫视/港台分类直播）、stores/duocang.json（多仓入口：CMS·代理 + 蜘蛛仓·代理 两条线路，子仓内部依赖引用一律本仓库路径）、stores/pan_ck.json（网盘 CK 获取指引）、checks.json（上游校验状态）。
+          产物：tvbox.json（完整合并配置）、vod.json（点播）、live.json（直播）、short.json（短剧独立配置）、lives/*（央视/卫视/地方/港台/轮播/直播/其他分类直播）、stores/duocang.json（多仓入口：CMS·代理 + 蜘蛛仓·代理 两条线路，子仓内部依赖引用一律本仓库路径）、stores/pan_ck.json（网盘 CK 获取指引）、checks.json（上游校验状态）。
           packs/tvbox-latest.zip 为离线自洽本地包（配置+依赖+使用说明，解压后本地导入即用）。2026-09-22 起改固定名每日 --clobber 覆盖，不再按日期累积；历史日期名 zip 已由 release_cleanup 清理。
           在线导航页（第三条通路，与 raw / Releases 并列）：https://hebijunge.github.io/tvbox-config/
           固定引用本 Release：https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json"
