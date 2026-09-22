@@ -580,6 +580,369 @@ def classify_site(s, overrides: dict = None) -> str:
     return "vod"
 
 
+# 2026-09-23 改为多信号分级。强信号单命中即判 adult；弱信号需 ≥2 命中或上游投票佐证，
+# 避免「吃瓜」「迷妹」等通用词单独命中误杀 vod 站；已知误报 key 进白名单强制 vod。
+# 上游投票：同 repo 内强信号命中 ≥2 个站点 → 该 repo 其余未分类站也按投票结果走 adult。
+STRONG_ADULT_TOKENS = [
+    # 上游/官方标记
+    "🔞",
+    # 国际化成人平台（品牌词，零误匹配风险）
+    "pornhub", "xvideos", "xhamster", "tokyo-hot",
+    "javbus", "javdb", "xojav", "missav",
+    "91porn", "91md", "hdsemj",
+    # 明确成人 api 域名（社区共识的成人 CMS 后端）
+    "souavzy", "pgxdy", "dadiapi", "lbapi9", "xrbsp", "jcspcj8",
+    "caiji25", "sdszyapi", "hsck",
+    # 明确站点标志词（带数字/连字符变体）
+    "18av", "4kav", "4k-av", "cableav", "netflav", "owoav", "souav", "黄av",
+    # 明确中文成人站点品牌
+    "麻豆", "果冻传媒", "天美传媒", "精东传媒",
+]
+
+WEAK_ADULT_TOKENS = [
+    "成人", "18+", "porn", "传媒", "色播", "丝袜", "美腿",
+    "花活", "1024",
+    "91panta", "91splt", "91bobo", "91精品",
+    "色花糖", "玩偶", "朱古力", "涩涩",
+    "裸聊", "裸播", "黄播", "黄网", "瑟瑟情",
+    "探花", "蜜桃", "糖心", "海角", "含羞草", "草榴", "秋霞", "番号", "无码", "里番",
+    "淫水", "色屌丝", "咪咪资源", "嗨片", "吃瓜", "迷妹", "黄果", "熊猫资源",
+    "果冻", "天美", "精东",
+]
+
+# 已知误报白名单：key 命中强制 vod（这些是网盘/通用资源站，与成人无关）
+ADULT_FALSE_POSITIVE_KEYS = {
+    "webdav", "webdav1", "webdav2", "webdav3",
+    "clouddrive", "aliyundrive", "aliyundrive2",
+}
+ADULT_FALSE_POSITIVE_NAME_FRAGMENTS = (
+    "webdav", "web dav", "clouddrive", "阿里云盘", "alist",
+)
+
+
+def _classify_target_text(s: dict) -> str:
+    """构造大小写归一化的搜索串（name + api + ext + 净化 key），跳过 32 位 MD5 key 防误撞。"""
+    name = s.get("name") or ""
+    api = s.get("api") or ""
+    ext = s.get("ext")
+    ext_str = ""
+    if isinstance(ext, str):
+        ext_str = ext
+    elif isinstance(ext, dict):
+        ext_str = json.dumps(ext, ensure_ascii=False)
+    key = s.get("key") or ""
+    key_use = "" if (len(key) == 32 and all(c in "0123456789abcdef" for c in key.lower())) else key
+    return f"{name} {key_use} {api} {ext_str}".lower()
+
+
+def classify_site(s, overrides: dict = None, origin_votes: dict = None) -> str:
+    """返回 'short' / 'adult' / 'vod'。多信号分级：
+    1) 人工覆盖表（state/category_overrides.json）优先；
+    2) 已知误报 key/name → vod 兜底；
+    3) 短剧关键词优先（避免成人词误吞短剧）；
+    4) 强信号关键词 → adult；
+    5) 弱信号关键词：单命中 → 仅当上游已 ≥1 站被判 adult 才升 adult；多命中 → 直接 adult；
+    6) 其余 vod。
+
+    origin_votes: {上游名: 强信号 adult 命中数}；None 表示不启用上游投票。
+    """
+    if not isinstance(s, dict):
+        return "vod"
+    key_raw = s.get("key") or ""
+    key = key_raw.lower()
+    name = s.get("name") or ""
+
+    # 1. 人工覆盖表（保持原大小写匹配语义，避免与既有 state/category_overrides.json 冲突）
+    if overrides and key_raw and key_raw in overrides:
+        return overrides[key_raw]
+
+    # 2. 已知误报白名单
+    if key in ADULT_FALSE_POSITIVE_KEYS:
+        return "vod"
+    name_lower = name.lower()
+    if any(frag in name_lower for frag in ADULT_FALSE_POSITIVE_NAME_FRAGMENTS):
+        return "vod"
+
+    target = _classify_target_text(s)
+
+    # 3. 短剧关键词优先（保留原逻辑）
+    if any(kw.lower() in target for kw in SHORT_KEYWORDS):
+        return "short"
+
+    # 4. 强信号关键词直接判 adult
+    if any(t.lower() in target for t in STRONG_ADULT_TOKENS):
+        return "adult"
+
+    # 5. 弱信号关键词：单命中需上游投票；多命中直接判
+    weak_hits = [t for t in WEAK_ADULT_TOKENS if t.lower() in target]
+    if weak_hits:
+        if len(weak_hits) >= 2:
+            return "adult"
+        # 单命中：查上游投票
+        if origin_votes:
+            site_origin = (s.get("_origin") or s.get("origin") or "").lower()
+            if site_origin and origin_votes.get(site_origin, 0) >= 1:
+                return "adult"
+
+    return "vod"
+
+
+def classify_site_strong_only(s, overrides: dict = None) -> str:
+    """只用强信号 + 覆盖表 + 短剧词 + 误报白名单判定成人，用于上游投票预扫。
+    弱信号在此场景不参与计数，避免把低置信度站计入上游投票而误伤同级站。"""
+    if not isinstance(s, dict):
+        return "vod"
+    key = (s.get("key") or "").lower()
+    if overrides and key and key in overrides:
+        return overrides[key]
+    if key in ADULT_FALSE_POSITIVE_KEYS:
+        return "vod"
+    name_lower = (s.get("name") or "").lower()
+    if any(frag in name_lower for frag in ADULT_FALSE_POSITIVE_NAME_FRAGMENTS):
+        return "vod"
+    target = _classify_target_text(s)
+    if any(kw.lower() in target for kw in SHORT_KEYWORDS):
+        return "short"
+    if any(t.lower() in target for t in STRONG_ADULT_TOKENS):
+        return "adult"
+    return "vod"
+
+
+# ==================== 解析池（parses）清洗 ====================
+# adult.json 等分类产物复用 vod 的 parses 全集（TVBox 站点不依赖 parses，parses 是
+# 全局播放器池）。但历史版本未做去重，导致「一堆没用的解析」：
+#   · 同一 URL 多个不同 name（如 jx.xmflv.com 至少 5 个别名）
+#   · localhost/127.0.0.1/192.168.x 等本地代理引用（用户环境不可用）
+#   · 类型错误（type 为字符串 "1" 而非 int）
+#   · 占位 url（type 3 的 "Demo"/"Web" 内置功能，重复 6/7 次应各留一条）
+# 修复目标：结构校验 + 私有地址剔除 + URL 规范化去重 + 可选 TCP 探活 + 安全阀
+_VALID_PARSE_TYPES = {0, 1, 2, 3, 4}
+_LOOPBACK_HOSTS = {"localhost", "0.0.0.0", "::1", "[::1]"}
+
+
+def _is_private_host(host: str) -> bool:
+    """判断主机名是否属于本地/回环/内网。IPv4 用 octet 解析，IPv6 走文本判定。"""
+    if not host:
+        return False
+    h = host.lower().strip("[]")
+    if h in _LOOPBACK_HOSTS:
+        return True
+    if h == "127.0.0.1" or h.startswith("127."):
+        return True
+    parts = h.split(".")
+    if len(parts) == 4 and all(p.isdigit() for p in parts):
+        try:
+            o = [int(p) for p in parts]
+            if o[0] == 10:
+                return True
+            if o[0] == 192 and o[1] == 168:
+                return True
+            if o[0] == 172 and 16 <= o[1] <= 31:
+                return True
+            if o[0] == 169 and o[1] == 254:
+                return True
+        except Exception:
+            return False
+    return False
+
+
+def _normalize_parse_url(u: str) -> str:
+    """规范化解析 URL 用于去重：去 scheme、host 小写、剥末尾斜杠、剥 query/fragment。
+    内置 type 3 占位（"Demo"/"Web"）按字面保留大小写一致。"""
+    if not isinstance(u, str):
+        return ""
+    u = u.strip()
+    if u in ("Demo", "Web"):
+        return u  # TVBox type 3 内置功能占位
+    if "://" in u:
+        u = u.split("://", 1)[1]
+    u = u.split("?", 1)[0].split("#", 1)[0]
+    u = u.rstrip("/")
+    # host 小写，路径保持原样
+    if "/" in u:
+        host, _, path = u.partition("/")
+        return f"{host.lower()}/{path}"
+    return u.lower()
+
+
+def _coerce_parse_type(t) -> int | None:
+    """接受 int / 数字字符串；其余返回 None（视为无效）。"""
+    if isinstance(t, int):
+        return t
+    if isinstance(t, str):
+        s = t.strip()
+        if s.isdigit() or (s.startswith("-") and s[1:].isdigit()):
+            try:
+                return int(s)
+            except Exception:
+                return None
+    return None
+
+
+def clean_parses(parses: list, *, do_probe: bool = True, probe_timeout: float = 4.0) -> tuple:
+    """解析池清洗：返回 (cleaned_parses, stats)。
+
+    清洗步骤：
+    1) 结构校验：非 dict / 缺 name / 缺 url → 剔除；type 数字字符串 → int 保留；
+       type 不在 {0,1,2,3,4} 或为 None 且 URL 是占位 → 剔除。
+    2) 私有/回环主机剔除（localhost / 127.* / 10.* / 192.168.* / 172.16-31.* / 169.254.*）。
+    3) URL 规范化去重（scheme-insensitive、host-lowercase、no trailing slash）：
+       同一规范化 URL 保留第一条。
+    4) 可选 TCP 主机探活（do_probe=True 时）：仅对 type 0/1/2 且 URL 非占位者做 DNS 解析 + TCP 握手，
+       不可达主机 → 剔除。安全阀：若剔除率 > 80% 视为网络故障，回退为「仅做 1-3 步」
+       （保护沙箱/受限环境下不会把整个解析池清空）。
+
+    stats dict 字段：before / after / dropped_invalid / dropped_private / dropped_duplicate /
+    dropped_unreachable / probe_alive / probe_dead / safety_valve_triggered
+    """
+    stats = {
+        "before": len(parses),
+        "after": 0,
+        "dropped_invalid": 0,
+        "dropped_private": 0,
+        "dropped_duplicate": 0,
+        "dropped_unreachable": 0,
+        "probe_alive": 0,
+        "probe_dead": 0,
+        "safety_valve_triggered": False,
+        "do_probe": bool(do_probe),
+    }
+
+    step1: list = []
+    for p in parses:
+        if not isinstance(p, dict):
+            stats["dropped_invalid"] += 1
+            continue
+        name = p.get("name")
+        url = p.get("url")
+        if not isinstance(name, str) or not name:
+            stats["dropped_invalid"] += 1
+            continue
+        if not isinstance(url, str) or not url:
+            stats["dropped_invalid"] += 1
+            continue
+        # type 校正
+        coerced = _coerce_parse_type(p.get("type"))
+        if coerced is not None:
+            new_p = dict(p)
+            new_p["type"] = coerced
+            if url in ("Demo", "Web"):
+                new_p["type"] = 3
+            step1.append(new_p)
+        elif url in ("Demo", "Web"):
+            # 占位 url 缺 type → 补 type=3
+            new_p = dict(p)
+            new_p["type"] = 3
+            step1.append(new_p)
+        else:
+            stats["dropped_invalid"] += 1
+            continue
+
+    step2: list = []
+    for p in step1:
+        url = p["url"]
+        if url in ("Demo", "Web"):
+            step2.append(p)
+            continue
+        # 解析主机
+        host = ""
+        try:
+            if "://" in url:
+                tail = url.split("://", 1)[1]
+            else:
+                tail = url
+            host = tail.split("/", 1)[0]
+            host = host.split(":", 1)[0]
+        except Exception:
+            stats["dropped_invalid"] += 1
+            continue
+        if _is_private_host(host):
+            stats["dropped_private"] += 1
+            continue
+        step2.append(p)
+
+    step3: list = []
+    seen_urls: set = set()
+    for p in step2:
+        key = _normalize_parse_url(p["url"])
+        if key in seen_urls:
+            stats["dropped_duplicate"] += 1
+            continue
+        seen_urls.add(key)
+        step3.append(p)
+
+    # 探活（可选）
+    if do_probe and step3:
+        probe_targets: list = []
+        probe_idx: dict = {}
+        for i, p in enumerate(step3):
+            url = p["url"]
+            if url in ("Demo", "Web"):
+                continue
+            if p.get("type") not in (0, 1, 2):
+                continue
+            host = ""
+            port = 0
+            try:
+                tail = url.split("://", 1)[1] if "://" in url else url
+                hp = tail.split("/", 1)[0]
+                if ":" in hp:
+                    host, port_s = hp.rsplit(":", 1)
+                    port = int(port_s) if port_s.isdigit() else 0
+                else:
+                    host = hp
+            except Exception:
+                continue
+            if not host or _is_private_host(host):
+                continue
+            if not port:
+                port = 443 if url.startswith("https") else 80
+            probe_targets.append((i, host, port))
+
+        alive_idx: set = set()
+        if probe_targets:
+            import concurrent.futures as _cf
+            import socket as _socket
+            from urllib.parse import urlparse as _urlparse
+            def _probe(arg):
+                i, host, port = arg
+                try:
+                    ip = _socket.gethostbyname(host)
+                    s = _socket.create_connection((ip, port), timeout=probe_timeout)
+                    s.close()
+                    return i, True
+                except Exception:
+                    return i, False
+            with _cf.ThreadPoolExecutor(min(16, len(probe_targets))) as ex:
+                for i, ok in ex.map(_probe, probe_targets):
+                    if ok:
+                        alive_idx.add(i)
+                    else:
+                        stats["probe_dead"] += 1
+
+        # 安全阀：剔除率 > 80% 视为网络故障，回退保留全部
+        if probe_targets and stats["probe_dead"] / len(probe_targets) > 0.80:
+            stats["safety_valve_triggered"] = True
+            stats["probe_dead"] = 0
+            stats["after"] = len(step3)
+            return step3, stats
+
+        step4 = []
+        for i, p in enumerate(step3):
+            if i in alive_idx or p["url"] in ("Demo", "Web") or p.get("type") not in (0, 1, 2):
+                step4.append(p)
+                if i in alive_idx:
+                    stats["probe_alive"] += 1
+            else:
+                if p.get("type") in (0, 1, 2):
+                    stats["dropped_unreachable"] += 1
+        stats["after"] = len(step4)
+        return step4, stats
+
+    stats["after"] = len(step3)
+    return step3, stats
+
+
 # ==================== 依赖收集（jar / js / json 库文件） ====================
 DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
@@ -2711,6 +3074,43 @@ def main() -> int:
     parses = list(parses_by_name.values())
     print(f"[2/6] 合并完成：{len(sites)} sites / {len(lives)} lives / {len(parses)} parses", flush=True)
 
+    # ---- 解析池清洗（解决「一堆没用的解析」）----
+    # 站点去重只看 key，无法处理「同一 URL 多个不同 name」的解析池；调用 clean_parses
+    # 做结构校验 + 私有地址剔除 + URL 规范化去重 + TCP 主机探活（沙箱/CI 受限时可走
+    # SKIP_PARSE_PROBE=1 跳过；安全阀保障网络故障不会清空解析池）。
+    skip_probe = os.environ.get("SKIP_PARSE_PROBE", "0") == "1"
+    parses, parse_stats = clean_parses(parses, do_probe=not skip_probe)
+    print(f"[2/6] 解析清洗：{parse_stats['before']} → {parse_stats['after']}"
+          f"（无效 {parse_stats['dropped_invalid']} / 私有 {parse_stats['dropped_private']}"
+          f" / 重复 {parse_stats['dropped_duplicate']} / 不可达 {parse_stats['dropped_unreachable']}"
+          f"{' / ⚠安全阀触发' if parse_stats['safety_valve_triggered'] else ''}）",
+          flush=True)
+    # 把解析池更新回 vod.json（parses 是全局播放器池，不分产品）。
+    vod["parses"] = parses
+
+    # ---- 上游投票预扫（防关键词单匹配误杀）----
+    # 给每个站点打上 _origin 标签（来自 site_origin_name），用强信号 + 覆盖表 + 误报
+    # 白名单 + 短剧词 判定成人站，按上游仓库计数。后续 classify_site 调用会读
+    # _origin + origin_votes 做仓库级聚合判定。
+    origin_votes: dict = {}
+    for s in sites:
+        key = s.get("key")
+        if not key:
+            continue
+        origin = site_origin_name.get(key) or ""
+        if origin:
+            s["_origin"] = origin
+        cat = classify_site_strong_only(s, category_overrides)
+        if cat == "adult":
+            origin_votes[origin.lower()] = origin_votes.get(origin.lower(), 0) + 1
+    # 同步到 vod.sites 派生对象（后续 [5/6] 会从 vod.sites 取站点分类）
+    for s in (vod.get("sites") or []):
+        key = s.get("key")
+        if key and not s.get("_origin"):
+            origin = site_origin_name.get(key) or ""
+            if origin:
+                s["_origin"] = origin
+
     # ---- [3/6] 测速验活：仅 type 0/1 且 api 为 http(s) 的直连站点 ----
     def testable(s: dict) -> bool:
         return s.get("type") in (0, 1) and isinstance(s.get("api"), str) and s["api"].startswith("http")
@@ -2776,8 +3176,8 @@ def main() -> int:
     adult_excluded_sites: list = []
     if not PUBLISH_ADULT:
         before = len(kept_sites)
-        adult_excluded_sites = [s for s in kept_sites if classify_site(s, category_overrides) == "adult"]
-        kept_sites = [s for s in kept_sites if classify_site(s, category_overrides) != "adult"]
+        adult_excluded_sites = [s for s in kept_sites if classify_site(s, category_overrides, origin_votes) == "adult"]
+        kept_sites = [s for s in kept_sites if classify_site(s, category_overrides, origin_votes) != "adult"]
         if adult_excluded_sites:
             print(f"    [adult] 不声明模式：从主产物剔除 {len(adult_excluded_sites)} 个成人分类站点"
                   f"（{before} → {len(kept_sites)}）；成人源完整写入仓库根 adult.json"
@@ -2916,9 +3316,9 @@ def main() -> int:
     # vod.json 保持完整（含所有点播站点）；short/adult 为分类独立配置。
     # parses 复用 vod 全集：TVBox 站点不引用 parses（playUrl/jar 才是站点自有播放方式），
     # parses 是全局播放器池，单独配置需自带全集才不至于某些解析器不可用。
-    short_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "short"]
+    short_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides, origin_votes) == "short"]
     if PUBLISH_ADULT:
-        adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "adult"]
+        adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides, origin_votes) == "adult"]
     else:
         # 不声明模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
         adult_sites = adult_excluded_sites
@@ -2938,7 +3338,12 @@ def main() -> int:
         short_doc.pop("spider", None)
     adult_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
     adult_doc["lives"] = adult_lives
-    adult_doc["sites"] = adult_sites
+    # 按上游来源归类：先按 _origin 排序，同源内按 name，产物内部结构更可读
+    adult_sites_sorted = sorted(
+        [s for s in adult_sites if isinstance(s, dict)],
+        key=lambda x: ((x.get("_origin") or "~"), (x.get("name") or "")),
+    )
+    adult_doc["sites"] = adult_sites_sorted
     if not adult_doc.get("spider"):
         adult_doc.pop("spider", None)
     with open("short.json", "w", encoding="utf-8") as f:
@@ -2947,6 +3352,11 @@ def main() -> int:
     # 「只是不声明」：不进 Release 附件白名单 / Pages / 导航页，也不在 README 与日报声明。
     with open("adult.json", "w", encoding="utf-8") as f:
         json.dump(adult_doc, f, ensure_ascii=False, indent=1)
+    # 按上游仓库归类的拆分（供 status.json 报告）
+    from collections import Counter as _C
+    adult_origin_breakdown = _C()
+    for s in adult_sites_sorted:
+        adult_origin_breakdown[s.get("_origin") or "~(无origin)"] += 1
     adult_out = f"adult.json（{len(adult_sites)} sites + {len(adult_lives)} lives + {len(parses)} parses）"
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
@@ -3036,6 +3446,12 @@ def main() -> int:
             "site_fail_limit": SITE_FAIL_LIMIT,
             "category_overrides": len(category_overrides),
             "secondary_dedup_dropped": dup_drops[:50],
+        },
+        "adult_clean": {
+            "note": "2026-09-23 adult.json 生成逻辑优化：多信号分类 + 解析池清洗 + 上游归类",
+            "parses_clean_stats": parse_stats,
+            "origin_votes_strong_signal": origin_votes,
+            "adult_breakdown_by_origin": dict(adult_origin_breakdown),
         },
         "lives_by_category": live_stats,
         "stores": stores_summary,
