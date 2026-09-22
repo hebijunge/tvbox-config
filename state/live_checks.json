@@ -6,7 +6,7 @@
    "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 4657,
+   "channels": 4665,
    "groups": [
     "卫视",
     "地方",
@@ -19,32 +19,32 @@
    "bytes": 1048576,
    "stream_tests": [
     {
-     "stream": "http://204.12.221.218:8181/3m1080p/cctv1.m3u8#http://74.91.26.218:82/live/cctv1hd.m3u8#http://38.75.136.137:98/gslb/dsdq",
+     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8#http://198.204.228.26/live/cctv1hd.m3u8#http://38.75.136.137:98/gslb/dsdqbv/cct",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://vip2.slbfsl.com/20230302/JY2aFSQF/index.m3u8#https://vip2.slbfsl.com/20230302/JY2aFSQF/index.m3u8#https://vip2.s",
+     "stream": "https://z100.cdn2020.com/video/m3u8/2019/09/05/91500757/index.m3u8#https://z100.cdn2020.com/video/m3u8/2019/09/05/915007",
      "ok": false,
-     "why": "http_404"
+     "why": "no_response"
     },
     {
-     "stream": "http://1.94.31.214/php/hntv.php?id=xsj#http://1.94.31.214/php/hntv.php?id=xsj",
-     "ok": false,
-     "why": "http_302"
+     "stream": "http://tmpstream.hyrtv.cn/xwzh/sd/live.m3u8#http://tmpstream.hyrtv.cn/xwzh/sd/live.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/30631706#https://live.ottiptv",
+     "stream": "https://live.ottiptv.cc/huya/31138934#https://live.ottiptv.cc/h",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://stream1.freetv.fun/c9e67a8d71df4c6411fd715e629eb179ea6eb30acd4d96efc45d8944110eb64e.ctv",
+     "stream": "https://stream1.freetv.fun/5eee88e93c5b7681cfbae7b627b7cd4cfd90bed45a87eb8290a933f15ad81aca.m3u8",
      "ok": false,
      "why": "no_response"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 3,
    "status": "ok"
   },
   {
@@ -55,25 +55,25 @@
    "groups": [
     "央视"
    ],
-   "bytes": 19139,
+   "bytes": 19156,
    "stream_tests": [
     {
-     "stream": "http://74.91.26.218:82/live/cctv17hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv3hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "rtp://239.3.1.64:8124",
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226942/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
+     "stream": "http://198.204.228.26/live/cctv1hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=nxss",
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=hjjc",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -106,11 +106,11 @@
    "name": "Guovin·其他",
    "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
    "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
-   "channels": 417,
+   "channels": 410,
    "groups": [
     "其他"
    ],
-   "bytes": 35122,
+   "bytes": 34645,
    "stream_tests": [
     {
      "stream": "http://192.151.150.154/live/chcdz.m3u8",
@@ -118,12 +118,17 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8",
+     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/720p.m3u8",
      "ok": true,
      "why": "ct:application/x-mpegurl"
     },
     {
-     "stream": "https://liveout.xntv.tv/a65jur/96iln2.m3u8?zqinghd",
+     "stream": "http://pulls.myun.tv/live/0dkp33j5.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://liveout.xntv.tv/a65jur/96iln2.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -131,14 +136,9 @@
      "stream": "https://pulltv1.wanfudaluye.com/live/tv1.m3u8",
      "ok": false,
      "why": "http_403"
-    },
-    {
-     "stream": "http://live.ahsz.tv/video/s10001-ggpd/index.m3u8",
-     "ok": false,
-     "why": "no_response"
     }
    ],
-   "streams_ok": 3,
+   "streams_ok": 4,
    "status": "ok"
   },
   {
@@ -164,9 +164,9 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
-     "ok": true,
-     "why": "ct:video/mp4"
+     "stream": "https://zby.130519.xyz/PLTV/11/224/3221225762/index.m3u8",
+     "ok": false,
+     "why": "no_response"
     },
     {
      "stream": "https://live.264788.xyz/channel/fujianlvyou?streamid=221239fcf3c7edb274f2f0760fe47f96&livekey=01WgOR41rriMmMkzNsd0UoaxJR",
@@ -174,9 +174,9 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://zby.130519.xyz/PLTV/11/224/3221225762/index.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
+     "ok": true,
+     "why": "ct:video/mp4"
     },
     {
      "stream": "https://live.ottiptv.cc/huya/23824164",
@@ -199,7 +199,7 @@
     "zonghe",
     "列表更新时间"
    ],
-   "bytes": 113867,
+   "bytes": 113928,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -207,22 +207,22 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1382736895",
+     "stream": "https://live.ottiptv.cc/yy/1382745173",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1382735584",
+     "stream": "https://live.ottiptv.cc/yy/1354936208",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1355179797",
+     "stream": "https://live.ottiptv.cc/yy/1354930977",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1354936134",
+     "stream": "https://live.ottiptv.cc/yy/1355238690",
      "ok": true,
      "why": "ct:video/x-flv"
     }
@@ -234,14 +234,14 @@
    "name": "虎牙一起看",
    "url_raw": "https://sub.ottiptv.cc/huyayqk.m3u",
    "url": "https://sub.ottiptv.cc/huyayqk.m3u",
-   "channels": 1030,
+   "channels": 1092,
    "groups": [
     "4K频道",
     "一起看",
     "列表更新时间",
     "原创"
    ],
-   "bytes": 197071,
+   "bytes": 209521,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -249,22 +249,22 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/30080221",
+     "stream": "https://live.ottiptv.cc/huya/21059556",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/29982627",
+     "stream": "https://live.ottiptv.cc/huya/29465863",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/29982690",
+     "stream": "https://live.ottiptv.cc/huya/29982663",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/23860049",
+     "stream": "https://live.ottiptv.cc/huya/30574220",
      "ok": true,
      "why": "ct:video/x-flv"
     }
@@ -283,7 +283,7 @@
     "列表更新时间",
     "原创IP"
    ],
-   "bytes": 177416,
+   "bytes": 177446,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -291,12 +291,12 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9409722",
+     "stream": "https://live.ottiptv.cc/douyu/9425669",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9660127",
+     "stream": "https://live.ottiptv.cc/douyu/5124602",
      "ok": true,
      "why": "ct:video/x-flv"
     },
@@ -306,7 +306,7 @@
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/4400816",
+     "stream": "https://live.ottiptv.cc/douyu/9236042",
      "ok": true,
      "why": "ct:video/x-flv"
     }
@@ -318,7 +318,7 @@
    "name": "B站直播",
    "url_raw": "https://sub.ottiptv.cc/bililive.m3u",
    "url": "https://sub.ottiptv.cc/bililive.m3u",
-   "channels": 188,
+   "channels": 668,
    "groups": [
     "4K频道",
     "列表更新时间",
@@ -329,7 +329,7 @@
     "沉浸体验",
     "生活杂谈"
    ],
-   "bytes": 37753,
+   "bytes": 130806,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -337,24 +337,24 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/25287629",
+     "stream": "https://live.ottiptv.cc/bilibili/1353621",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/1371140",
+     "stream": "https://live.ottiptv.cc/bilibili/24405968",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/1703959573",
+     "stream": "https://live.ottiptv.cc/bilibili/31864996",
      "ok": false,
-     "why": "http_403"
+     "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/22781595",
+     "stream": "https://live.ottiptv.cc/bilibili/13552545",
      "ok": false,
-     "why": "http_403"
+     "why": "http_404"
     }
    ],
    "streams_ok": 1,
@@ -436,11 +436,11 @@
     },
     {
      "stream": "https://gitee.com/kabigo/tv/raw/master/assets/about1080p.mp4",
-     "ok": false,
-     "why": "empty_body"
+     "ok": true,
+     "why": "ct:video/mp4"
     }
    ],
-   "streams_ok": 4,
+   "streams_ok": 5,
    "status": "ok"
   },
   {
@@ -463,22 +463,22 @@
      "why": "no_response"
     },
     {
-     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225761/index.m3u8?servicetype=1&",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225654/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225913/index.m3u8?servicetype=1&",
+     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225761/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225795/index.m3u8?servicetype=1&",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225913/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
     }
@@ -497,8 +497,8 @@
   },
   {
    "name": "181818",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/181818.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/181818.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/181818.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/181818.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "channels": 4303,
@@ -520,12 +520,12 @@
      "why": "no_response"
     },
     {
-     "stream": "https://t25.cdn2020.com/video/m3u8/2024/03/20/c8d240cc/index.m3u8",
+     "stream": "https://t25.cdn2020.com/video/m3u8/2024/04/07/4085a050/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://t25.cdn2020.com/video/m3u8/2024/04/07/4085a050/index.m3u8",
+     "stream": "https://t25.cdn2020.com/video/m3u8/2024/03/20/c8d240cc/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -546,12 +546,22 @@
   },
   {
    "name": "18资源丰富",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/18资源丰富.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/18资源丰富.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/18资源丰富.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/18资源丰富.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
    "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "AI直播",
+   "url_raw": "https://wget.la/https://raw.githubusercontent.com/PizazzGY/TV/master/output/user_result.txt",
+   "url": "https://wget.la/https://raw.githubusercontent.com/PizazzGY/TV/master/output/user_result.txt",
+   "epg": "http://cdn.1678520.xyz/epg/?ch={name}&date={date}",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_404",
    "channels": 0
   },
   {
@@ -566,8 +576,8 @@
   },
   {
    "name": "APTV",
-   "url_raw": "https://gh-proxy.com/https://github.com/Kimentanm/aptv/raw/master/m3u/iptv.m3u",
-   "url": "https://gh-proxy.com/https://github.com/Kimentanm/aptv/raw/master/m3u/iptv.m3u",
+   "url_raw": "https://wget.la/https://github.com/Kimentanm/aptv/raw/master/m3u/iptv.m3u",
+   "url": "https://wget.la/https://github.com/Kimentanm/aptv/raw/master/m3u/iptv.m3u",
    "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
    "ua": "okhttp/3.15,AptvPlayer/1.4.0",
    "timeout": 10,
@@ -610,57 +620,10 @@
    "status": "ok"
   },
   {
-   "name": "BMCH",
-   "url_raw": "https://gh.halonice.com/https:/raw.githubusercontent.com/big-mouth-cn/tv/main/iptv-ok.m3u",
-   "url": "https://gh.halonice.com/https:/raw.githubusercontent.com/big-mouth-cn/tv/main/iptv-ok.m3u",
-   "epg": "https://epg.v1.mk/json?ch={name}&date={date}",
-   "channels": 747,
-   "groups": [
-    "4K",
-    "4K8K频道",
-    "儿童",
-    "卫视台",
-    "历年春晚",
-    "国际台",
-    "地方台",
-    "备用频道"
-   ],
-   "bytes": 195150,
-   "stream_tests": [
-    {
-     "stream": "https://0472.org/hls/cgtn.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://live.iill.top/huya/23865080",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://live.iill.top/huya.php?id=11352941",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://cdn.jdshipin.com:8880/huya.php?id=11342384",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://live.sxrtv.com/iptv/shxws.m3u8",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 1,
-   "status": "ok"
-  },
-  {
    "name": "B站直播",
    "url_raw": "https://sub.ottiptv.cc/bililive.m3u",
    "url": "https://sub.ottiptv.cc/bililive.m3u",
-   "channels": 188,
+   "channels": 668,
    "groups": [
     "4K频道",
     "列表更新时间",
@@ -671,7 +634,7 @@
     "沉浸体验",
     "生活杂谈"
    ],
-   "bytes": 37753,
+   "bytes": 130806,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -679,28 +642,76 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/25287629",
+     "stream": "https://live.ottiptv.cc/bilibili/24405968",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/1371140",
+     "stream": "https://live.ottiptv.cc/bilibili/31864996",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/22781595",
+     "stream": "https://live.ottiptv.cc/bilibili/1353621",
      "ok": false,
-     "why": "http_403"
+     "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/1703959573",
+     "stream": "https://live.ottiptv.cc/bilibili/13552545",
      "ok": false,
-     "why": "http_403"
+     "why": "http_404"
     }
    ],
    "streams_ok": 1,
    "status": "ok"
+  },
+  {
+   "name": "EPG直播",
+   "url_raw": "http://gh-proxy.org/https://raw.githubusercontent.com/Wirili/IPTV/main/live.txt",
+   "url": "http://gh-proxy.org/https://raw.githubusercontent.com/Wirili/IPTV/main/live.txt",
+   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
+   "channels": 666,
+   "groups": [
+    "上海频道",
+    "剧集轮播",
+    "卫视频道",
+    "央视频道",
+    "广东频道",
+    "数字频道",
+    "浙江频道",
+    "港·澳·台"
+   ],
+   "bytes": 68546,
+   "stream_tests": [
+    {
+     "stream": "http://tvbox6.icu/tv/migu.php?id=cctv1$LR•6•IPV4『线路1』",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://smart.pendy.dpdns.org/Smart.php?id=cctv15$LR•14•IPV4『线路12』",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://120.76.248.139/live/bfgd/4200000119.m3u8$LR•7•IPV4『线路5』",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://liveout.xntv.tv/a65jur/90p2i1.m3u8?zqing$LR•4•IPV4『线路3』",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://live.metshop.top/huya/23865161$LR•IPV4",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 0,
+   "status": "format_only",
+   "reason": "no_valid_stream_in_sample"
   },
   {
    "name": "FMM_IPV6",
@@ -717,22 +728,22 @@
    "bytes": 15219,
    "stream_tests": [
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226954/1.m3u8?GuardEncType=2&accountinfo",
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227028/1.m3u8?GuardEncType=2&accountinfo",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226954/1.m3u8?GuardEncType=2&accountinfo",
      "ok": false,
      "why": "no_response"
     },
@@ -781,9 +792,9 @@
    "url_raw": "https://gh-proxy.org/https://github.com/q1017673817/iptvz/blob/main/zubo_all.txt",
    "url": "https://gh-proxy.org/https://github.com/q1017673817/iptvz/blob/main/zubo_all.txt",
    "epg": "http://epg.cdn.loc.cc/?ch={name}&date={date}",
-   "channels": 7571,
+   "channels": 7674,
    "groups": [
-    "2026/09/21 22:59更新",
+    "2026/09/22 12:03更新",
     "上海电信-组播1",
     "云南电信-组播1",
     "内蒙古电信-组播1",
@@ -792,7 +803,7 @@
     "北京联通-组播1",
     "北京联通-组播2"
    ],
-   "bytes": 488422,
+   "bytes": 494524,
    "stream_tests": [
     {
      "stream": "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
@@ -800,19 +811,19 @@
      "why": "ct:application/x-mpegurl"
     },
     {
-     "stream": "http://58.46.30.181:8188/udp/239.76.252.117:9000",
+     "stream": "http://113.251.74.222:8012/rtp/235.254.196.214:1128",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://144.255.16.132:6688/udp/239.21.1.172:5002",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://183.236.43.98:4013/udp/239.77.1.162:5146",
+     "ok": true,
+     "why": "ct:application/octet-stream"
     },
     {
-     "stream": "http://183.236.43.98:4013/udp/239.77.0.253:5146",
-     "ok": false,
-     "why": "empty_body"
+     "stream": "http://58.46.29.183:8188/udp/239.76.253.157:9000",
+     "ok": true,
+     "why": "ct:application/octet-stream"
     },
     {
      "stream": "http://171.119.206.133:6000/rtp/226.0.2.234:9784",
@@ -820,13 +831,13 @@
      "why": "ct:application/octet-stream"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 4,
    "status": "ok"
   },
   {
    "name": "Guovin",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
    "channels": 1619,
    "groups": [
     "☘️上海频道",
@@ -871,14 +882,14 @@
   },
   {
    "name": "Guovin·其他",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
    "epg": "https://live.fanmingming.cn/e.xml",
-   "channels": 417,
+   "channels": 410,
    "groups": [
     "其他"
    ],
-   "bytes": 35122,
+   "bytes": 34645,
    "stream_tests": [
     {
      "stream": "http://192.151.150.154/live/chcdz.m3u8",
@@ -886,9 +897,14 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8",
+     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/720p.m3u8",
      "ok": true,
      "why": "ct:application/x-mpegurl"
+    },
+    {
+     "stream": "http://pulls.myun.tv/live/0dkp33j5.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "https://pulltv1.wanfudaluye.com/live/tv1.m3u8",
@@ -896,39 +912,34 @@
      "why": "http_403"
     },
     {
-     "stream": "https://liveout.xntv.tv/a65jur/96iln2.m3u8?zqinghd",
+     "stream": "https://liveout.xntv.tv/a65jur/96iln2.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://live.ahsz.tv/video/s10001-ggpd/index.m3u8",
-     "ok": false,
-     "why": "no_response"
     }
    ],
-   "streams_ok": 3,
+   "streams_ok": 4,
    "status": "ok"
   },
   {
    "name": "Guovin·卫视",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_weishi.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_weishi.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_weishi.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_weishi.txt",
    "epg": "https://live.fanmingming.cn/e.xml",
-   "channels": 215,
+   "channels": 214,
    "groups": [
     "卫视"
    ],
-   "bytes": 19322,
+   "bytes": 19226,
    "stream_tests": [
+    {
+     "stream": "https://live.264788.xyz/channel/ningxiaweishi?streamid=e1236348f815c36a0429357e5b5c5f10&livekey=01WgOR41rriMmMkzNsd0Uoax",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
     {
      "stream": "http://107.150.60.122/live/ssws.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226537/1.m3u8?GuardEncType=2&accountinfo",
-     "ok": false,
-     "why": "no_response"
     },
     {
      "stream": "http://[2409:8087:7000:20::4]:80/dbiptv.sn.chinamobile.com/PLTV/88888888/224/3221226010/1.m3u8",
@@ -936,47 +947,47 @@
      "why": "no_response"
     },
     {
-     "stream": "http://120.76.248.139/live/bfgd/4200000100.m3u8",
-     "ok": false,
-     "why": "html_content_type"
-    },
-    {
-     "stream": "https://liveout.xntv.tv/a65jur/96iln2.m3u8",
+     "stream": "http://107.150.60.122/live/szwshd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://gslbserv.itv.cmvideo.cn/1000000005000265018/1.m3u8?channel-id=ystenlive&Contentid=1000000005000265018&livemode=1&",
+     "ok": false,
+     "why": "http_403"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 3,
    "status": "ok"
   },
   {
    "name": "Guovin·央视",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
    "epg": "https://live.fanmingming.cn/e.xml",
    "channels": 236,
    "groups": [
     "央视"
    ],
-   "bytes": 19139,
+   "bytes": 19156,
    "stream_tests": [
     {
-     "stream": "http://74.91.26.218:82/live/cctv17hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv3hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "rtp://239.3.1.64:8124",
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226942/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
+     "stream": "http://198.204.228.26/live/cctv1hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=nxss",
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=hjjc",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -991,8 +1002,8 @@
   },
   {
    "name": "Guovin·港台",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_gangtai.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_gangtai.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_gangtai.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_gangtai.txt",
    "epg": "https://live.fanmingming.cn/e.xml",
    "channels": 124,
    "groups": [
@@ -1006,14 +1017,14 @@
      "why": "http_403"
     },
     {
-     "stream": "http://31.43.191.125:8080/vip7201770826573/415c945b71e8/34928",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
      "stream": "http://r.jdshipin.com/CkuBd",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://31.43.191.125:8080/vip7201770826573/415c945b71e8/34928",
+     "ok": false,
+     "why": "http_404"
     },
     {
      "stream": "https://ktpremium.world/live/LT1976F/A9177/1003300.ts",
@@ -1027,6 +1038,52 @@
     }
    ],
    "streams_ok": 2,
+   "status": "ok"
+  },
+  {
+   "name": "IPTV直播",
+   "url_raw": "https://iptv.445569.xyz/live.m3u",
+   "url": "https://iptv.445569.xyz/live.m3u",
+   "channels": 2137,
+   "groups": [
+    "TikTok",
+    "Twitch",
+    "YY",
+    "☁️CloudFlare直播",
+    "⚽️体育直播",
+    "✈️ TG频道@stymei",
+    "✡️周杰伦歌曲点播",
+    "✴️BestTV直播[移动]"
+   ],
+   "bytes": 512845,
+   "stream_tests": [
+    {
+     "stream": "https://baheyi.pages.dev/twitch/39daph",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://d1flvb4iqlercm.cloudfront.net/r-channel/live.m3u8",
+     "ok": true,
+     "why": "ct:binary/octet-stream"
+    },
+    {
+     "stream": "https://cloudflare.tv/hls/live.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://tymov2.a.kwimgs.com/upic/2026/08/15/09/BMjAyNjA4MTUwOTE2MzRfNDI0MDI5NTBfMjA1NjA5Mjg4OTg3XzFfMw==_b_B664d90218f70",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://huyazhibo.de5.net/?id=11352967",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    }
+   ],
+   "streams_ok": 5,
    "status": "ok"
   },
   {
@@ -1054,62 +1111,19 @@
    "channels": 0
   },
   {
-   "name": "IPv4 赛选源",
-   "url_raw": "http://kakaxi.indevs.in/ipv4.txt",
-   "url": "http://kakaxi.indevs.in/ipv4.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 215,
-   "groups": [
-    "卫视频道",
-    "央视频道",
-    "影视轮播",
-    "数字频道",
-    "更新时间"
-   ],
-   "bytes": 40801,
-   "stream_tests": [
-    {
-     "stream": "http://kakaxi.indevs.in/Disclaimer.mp4",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "https://itv.1920.qzz.io/api/ysp.php?id=shanxiws",
-     "ok": false,
-     "why": "http_402"
-    },
-    {
-     "stream": "http://182.61.15.229:80/608807423",
-     "ok": false,
-     "why": "html_content_type"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1351505899",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "http://gslbmgsplive.miguvideo.com/ws_w/2018/gdws/gdws711/1000/index.m3u8?msisdn=23da0c4aa6e6ca6415df13ec2c52de4e&mdspid=",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 1,
-   "status": "ok"
-  },
-  {
-   "name": "IPv6 神源",
-   "url_raw": "https://kakaxi.indevs.in/ipv6.m3u",
-   "url": "https://kakaxi.indevs.in/ipv6.m3u",
+   "name": "IPv4",
+   "url_raw": "http://101.200.122.188/66",
+   "url": "http://101.200.122.188/66",
+   "epg": "http://epg.112114.xyz/?ch={name}&date={date}",
+   "ua": "okhttp/3.12.13",
    "status": "dead",
-   "reason": "no_channels",
+   "reason": "fetch_404",
    "channels": 0
   },
   {
    "name": "Jable嗅探",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/Jable嗅探.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/Jable嗅探.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/Jable嗅探.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/Jable嗅探.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -1160,8 +1174,8 @@
   },
   {
    "name": "LIVEfl",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u",
    "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
    "channels": 2066,
    "groups": [],
@@ -1183,12 +1197,12 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://vip2.slbfsl.com/20230404/01J7WImo/index.m3u8",
+     "stream": "http://cdn.adultiptv.net/blonde.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://cdn.adultiptv.net/blonde.m3u8",
+     "stream": "https://vip2.slbfsl.com/20230404/01J7WImo/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     }
@@ -1238,7 +1252,7 @@
    "url_raw": "https://v6.gh-proxy.org/https://github.com/Supprise0901/TVBox_live/blob/main/live.txt",
    "url": "https://v6.gh-proxy.org/https://github.com/Supprise0901/TVBox_live/blob/main/live.txt",
    "epg": "http://epg.cdn.loc.cc/?ch={name}&date={date}",
-   "channels": 312,
+   "channels": 314,
    "groups": [
     "🇨🇳IPV4线路",
     "🇨🇳影音剧场",
@@ -1246,27 +1260,27 @@
     "🇨🇳电影在线",
     "🇨🇳组播线路"
    ],
-   "bytes": 105277,
+   "bytes": 106471,
    "stream_tests": [
     {
-     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=d1c605274a2a95175381cb",
+     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=35d9e49f4d8f3d768bfcf1",
      "ok": true,
      "why": "ct:application/x-mpegurl"
     },
     {
-     "stream": "http://hlsztemgsplive.miguvideo.com:8080/envivo_v/2018/SD/jilin/1000/index.m3u8?msisdn=20260921220307ad2fe64cd4ec463ba20",
+     "stream": "http://hlsztemgsplive.miguvideo.com:8080/wd_r2/cctv/jiangsuhd/600/index.m3u8?msisdn=2026092122014043229870774b4d2882c82a",
      "ok": false,
      "why": "http_403"
     },
     {
-     "stream": "http://hlsztemgsplive.miguvideo.com:8080/migu/kailu/20200324/cctv4meihd/50/index.m3u8?msisdn=202609221003037816b0788ba74",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
-     "stream": "http://113.25.252.226:9901/tsfile/live/1014_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
+    },
+    {
+     "stream": "http://hlsztemgsplive.miguvideo.com:8080/envivo_v/2018/SD/cctv/xibanya/1000/index.m3u8?msisdn=202609221803033c02a10710a5",
+     "ok": false,
+     "why": "http_403"
     },
     {
      "stream": "https://gcalic.v.myalicdn.com/gc/hlzycc_1/index.m3u8",
@@ -1278,43 +1292,21 @@
    "status": "ok"
   },
   {
-   "name": "TianmuTNT",
-   "url_raw": "https://ghfast.top/raw.githubusercontent.com/TianmuTNT/iptv/main/iptv.txt",
-   "url": "https://ghfast.top/raw.githubusercontent.com/TianmuTNT/iptv/main/iptv.txt",
+   "name": "V4聚合（卡顿请按左┃右键换线）",
+   "url_raw": "https://gh-proxy.net/https://raw.githubusercontent.com/wwb521/live/main/tv.m3u",
+   "url": "https://gh-proxy.net/https://raw.githubusercontent.com/wwb521/live/main/tv.m3u",
    "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 53,
-   "groups": [],
-   "bytes": 3965,
-   "stream_tests": [
-    {
-     "stream": "http://74.91.26.218:82/live/cctv12hd.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://60.222.246.220:19433/hls1.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://31.43.191.125:8080/vip6821768502490/6c17bae55394/34825",
-     "ok": true,
-     "why": "ct:video/mp2t"
-    },
-    {
-     "stream": "http://59.175.226.142:280/gb28181/xwzh.m3u8?zhubd",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
-    },
-    {
-     "stream": "http://124.88.144.73:1935/live/xwzh/playlist.m3u8?zxinjd",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 4,
-   "status": "ok"
+   "status": "dead",
+   "reason": "no_channels",
+   "channels": 0
+  },
+  {
+   "name": "V6范明明",
+   "url_raw": "https://gh-proxy.net/https://raw.githubusercontent.com/fanmingming/live/refs/heads/main/tv/m3u/ipv6.m3u",
+   "url": "https://gh-proxy.net/https://raw.githubusercontent.com/fanmingming/live/refs/heads/main/tv/m3u/ipv6.m3u",
+   "status": "dead",
+   "reason": "no_channels",
+   "channels": 0
   },
   {
    "name": "XingHuo",
@@ -1338,7 +1330,7 @@
     "zonghe",
     "列表更新时间"
    ],
-   "bytes": 113867,
+   "bytes": 113928,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -1346,22 +1338,22 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1382735584",
+     "stream": "https://live.ottiptv.cc/yy/1354936208",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1354936134",
+     "stream": "https://live.ottiptv.cc/yy/1354930977",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1355179797",
+     "stream": "https://live.ottiptv.cc/yy/1382745173",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1382736895",
+     "stream": "https://live.ottiptv.cc/yy/1355238690",
      "ok": true,
      "why": "ct:video/x-flv"
     }
@@ -1383,9 +1375,14 @@
    "bytes": 26227,
    "stream_tests": [
     {
-     "stream": "https://cdn.ttvb.eu.org/douyu/288016",
-     "ok": true,
-     "why": "ct:n/a"
+     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000010000009788&livemode=1&stbId=YanG-198",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000020000011523&livemode=1&stbId=YanG-198",
+     "ok": false,
+     "why": "http_403"
     },
     {
      "stream": "https://cdn.ttvb.eu.org/douyu/9223245",
@@ -1393,19 +1390,14 @@
      "why": "ct:n/a"
     },
     {
+     "stream": "https://cdn.ttvb.eu.org/douyu/288016",
+     "ok": true,
+     "why": "ct:n/a"
+    },
+    {
      "stream": "https://cdn.ttvb.eu.org/huya/11342413",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000020000011523&livemode=1&stbId=YanG-198",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000010000009788&livemode=1&stbId=YanG-198",
-     "ok": false,
-     "why": "no_response"
     }
    ],
    "streams_ok": 3,
@@ -1440,54 +1432,6 @@
    "channels": 0
   },
   {
-   "name": "Yoursmile",
-   "url_raw": "https://ghfast.top/raw.githubusercontent.com/yoursmile66/TVBox/refs/heads/main/live.txt",
-   "url": "https://ghfast.top/raw.githubusercontent.com/yoursmile66/TVBox/refs/heads/main/live.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 1149,
-   "groups": [
-    "DJ音乐",
-    "卫视",
-    "大杂烩",
-    "央视",
-    "少儿频道",
-    "山东综合",
-    "影视",
-    "歌星金曲"
-   ],
-   "bytes": 117042,
-   "stream_tests": [
-    {
-     "stream": "http://120.76.248.139/live/bfgd/4200000489.m3u8",
-     "ok": false,
-     "why": "html_content_type"
-    },
-    {
-     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/649a0df6bc394fde973b2e8ef12ef3d6/1200.m3u8",
-     "ok": true,
-     "why": "ct:application/x-mpeg"
-    },
-    {
-     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/9d7bcf3e27d941cfac2e6c933ad9b543/1200.m3u8",
-     "ok": true,
-     "why": "ct:application/x-mpeg"
-    },
-    {
-     "stream": "https://vd3.bdstatic.com/mda-nck3tqzgjvj076vc/sc/cae_h264_delogo/1647833645083560959/mda-nck3tqzgjvj076vc.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
-    },
-    {
-     "stream": "http://satellitepull.cnr.cn/live/wx32hunws/playlist.m3u8",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
-    }
-   ],
-   "streams_ok": 4,
-   "status": "ok"
-  },
-  {
    "name": "Yoursmile•综合",
    "url_raw": "https://agit.ai/Yoursmile7/TVBox/raw/branch/master/live.txt",
    "url": "https://agit.ai/Yoursmile7/TVBox/raw/branch/master/live.txt",
@@ -1503,48 +1447,6 @@
    "status": "dead",
    "reason": "fetch_error",
    "channels": 0
-  },
-  {
-   "name": "YueChan",
-   "url_raw": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u",
-   "url": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u",
-   "channels": 96,
-   "groups": [
-    "卫视",
-    "央视",
-    "数字"
-   ],
-   "bytes": 33963,
-   "stream_tests": [
-    {
-     "stream": "rtp://239.3.1.131:3001",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "rtp://239.3.1.129:8008",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "rtp://239.3.1.151:8144",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "rtp://239.3.1.166:8188",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "rtp://239.3.1.80:4120",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
   },
   {
    "name": "YueChan•综合",
@@ -1574,48 +1476,13 @@
    "channels": 0
   },
   {
-   "name": "cymz6",
-   "url_raw": "https://m3u.ibert.me/txt/cymz6_lives.txt",
-   "url": "https://m3u.ibert.me/txt/cymz6_lives.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 119,
-   "groups": [
-    "其他频道",
-    "卫视频道",
-    "央视频道"
-   ],
-   "bytes": 10989,
-   "stream_tests": [
-    {
-     "stream": "http://101.66.195.5:9901/tsfile/live/0010_1.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://101.66.195.5:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://101.66.195.235:9901/tsfile/live/0018_1.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://101.66.195.235:9901/tsfile/live/1000_1.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://101.66.195.81:9901/tsfile/live/0125_1.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
+   "name": "develop202",
+   "url_raw": "https://gh-proxy.org/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
+   "url": "https://gh-proxy.org/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
+   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
+   "status": "dead",
+   "reason": "no_channels",
+   "channels": 0
   },
   {
    "name": "epg.pw All",
@@ -1626,59 +1493,10 @@
    "channels": 0
   },
   {
-   "name": "epg.pw 中国",
-   "url_raw": "https://m3u.ibert.me/txt/cn.txt",
-   "url": "https://m3u.ibert.me/txt/cn.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 151,
-   "groups": [
-    "儿童",
-    "其它",
-    "新闻",
-    "测试",
-    "电影",
-    "知识",
-    "综合",
-    "综艺"
-   ],
-   "bytes": 17497,
-   "stream_tests": [
-    {
-     "stream": "https://stream1.freetv.fun/d8e73ca102368276e14bb06176fea0d69be787f785677be0e005362b3467d3c4.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://stream1.freetv.fun/cfa2ed9d4f96d20f3dd2eb920e17de8ecd8482cfff2328d8cfdcaba050a03a4b.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://stream1.freetv.fun/4a250dafef7349ead704088bec3993f3cd3b2cdcb604f23bbf700da31434fa08.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://stream1.freetv.fun/2617cdcb31d7c3e1ddfce03c4588be223f375509a7c234a35ff6b184827ebcf5.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://stream1.freetv.fun/52ed518ded3a5709aa6e47f85f39d52db99bf7ce3aafd576e830b8ce206d43d0.ctv",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
-  },
-  {
    "name": "gambiarras",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/gambiarras/legal-iptv/refs/heads/main/playlist.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/gambiarras/legal-iptv/refs/heads/main/playlist.m3u",
-   "channels": 597,
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/gambiarras/legal-iptv/refs/heads/main/playlist.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/gambiarras/legal-iptv/refs/heads/main/playlist.m3u",
+   "channels": 988,
    "groups": [
     "Alternativos",
     "Animação",
@@ -1689,12 +1507,12 @@
     "Cultura",
     "Documentário"
    ],
-   "bytes": 154544,
+   "bytes": 280461,
    "stream_tests": [
     {
-     "stream": "http://hls1.sua.tv/live/globotvbahiafhdbr2/s.m3u8",
+     "stream": "https://dai.google.com/linear/hls/event/1XSOdtQ0SH2G8OEmEfGgjQ/master.m3u8",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "why": "ct:application/x-mpegurl; charset=utf-8"
     },
     {
      "stream": "https://video01.brascast.com/bdctv/bdctv/playlist.m3u8",
@@ -1707,12 +1525,12 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://video09.logicahost.com.br/paieterno/paieterno/playlist.m3u8",
+     "stream": "https://frostview.squareweb.app/relay/m/aHR0cDovL3BhbGRpLnBybzo4MC9saXZlL3RvbmluaG8wMi9DYjQ5ODAzNy8xMzU0NTUubTN1OA.m3u8",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
-     "stream": "https://frostview.squareweb.app/relay/m/aHR0cDovL3BhbGRpLnBybzo4MC9saXZlL3RvbmluaG8wMi9DYjQ5ODAzNy8zMDY3NzQubTN1OA.m3u8",
+     "stream": "https://frostview.squareweb.app/relay/m/aHR0cDovL3BhbGRpLnBybzo4MC9saXZlL3RvbmluaG8wMi9DYjQ5ODAzNy83MTc5OC5tM3U4.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     }
@@ -1729,54 +1547,6 @@
    "channels": 0
   },
   {
-   "name": "iptv.org 中国",
-   "url_raw": "https://m3u.ibert.me/txt/o_cn.txt",
-   "url": "https://m3u.ibert.me/txt/o_cn.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 143,
-   "groups": [
-    "Animation;Kids",
-    "Business",
-    "Classic",
-    "Culture",
-    "Documentary",
-    "Education",
-    "Education;Lifestyle;Science",
-    "Education;Outdoor"
-   ],
-   "bytes": 12394,
-   "stream_tests": [
-    {
-     "stream": "https://mediaserver.abnvideos.com/streams/abnchina.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://110.153.180.106:55555/out_2/index.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://scgctvshow.sctv.com/hdlive/sctv7/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://223.110.245.167/ott.js.chinamobile.com/PLTV/3/224/3221225947/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://live.cztv.cc:85/live/ggpd.m3u8",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 2,
-   "status": "ok"
-  },
-  {
    "name": "kakaxi组转单",
    "url_raw": "https://v6.gh-proxy.org/https://github.com/kakaxi-1/IPTV/blob/main/iptv.txt",
    "url": "https://v6.gh-proxy.org/https://github.com/kakaxi-1/IPTV/blob/main/iptv.txt",
@@ -1791,17 +1561,17 @@
    "bytes": 87033,
    "stream_tests": [
     {
-     "stream": "http://124.112.241.231:4022/rtp/238.1.78.156:7120$安徽电信11",
+     "stream": "http://171.119.206.125:6000/rtp/226.0.2.164:9224$山西联通21",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://118.248.155.220:8889/udp/239.76.245.196:1234$湖南电信12",
+     "stream": "http://171.8.138.218:8800/rtp/239.16.20.77:10770$河南电信11",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://39.77.172.61:4002/rtp/239.253.254.235:8000$山东联通21",
+     "stream": "http://124.112.241.231:4022/rtp/238.1.78.150:7072$安徽电信12",
      "ok": false,
      "why": "no_response"
     },
@@ -1826,36 +1596,36 @@
    "epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}",
    "ua": "okhttp/3.8.1",
    "timeout": 20,
-   "channels": 711,
+   "channels": 708,
    "groups": [
     "兒童",
     "其它",
     "新聞",
-    "測試",
     "知識",
     "綜合",
     "綜藝",
-    "運動"
+    "運動",
+    "電影"
    ],
-   "bytes": 226943,
+   "bytes": 226110,
    "stream_tests": [
     {
-     "stream": "rtmp://212.200.230.50:1935/RTV/rtv1",
+     "stream": "https://stream1.freetv.fun/2bbb83987353f278de8023703a2c974ccdd5042777367191c1b91edaeab5eedd.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://stream1.freetv.fun/171a7a51c9de334f1b476b4700d1cb9a1ab7081c4b59c75a849b8ac1270ad3f8.ctv",
+     "stream": "https://stream1.freetv.fun/e95f4a846b8ef95b8f6d0a709e6ebba05017681d6ddcd128d2cfbb7c78b97b71.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://stream1.freetv.fun/d8047855af4e70cdb8ed1698e49d90d7564184575e36e04d3fbc861326e39bf3.m3u8",
+     "stream": "https://stream1.freetv.fun/4a250dafef7349ead704088bec3993f3cd3b2cdcb604f23bbf700da31434fa08.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://stream1.freetv.fun/466a41732878afdef2dc81d4a751735252b9aa1a51ae0583ea3c770fa711f4bf.m3u8",
+     "stream": "https://stream1.freetv.fun/cee5cfaf0047e43df21ed1d00f03bcd3398f730317feabca730b45edfcb9d3bb.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -1882,8 +1652,8 @@
   },
   {
    "name": "mlzlzj",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/mlzlzj/TV/main/output/result.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/mlzlzj/TV/main/output/result.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/mlzlzj/TV/main/output/result.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/mlzlzj/TV/main/output/result.m3u",
    "channels": 2020,
    "groups": [
     "☘️上海频道",
@@ -1927,95 +1697,9 @@
    "status": "ok"
   },
   {
-   "name": "netlify",
-   "url_raw": "https://shimmering-taffy-8c2940.netlify.app/",
-   "url": "https://shimmering-taffy-8c2940.netlify.app/",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 166,
-   "groups": [
-    "卫视",
-    "央视",
-    "省内",
-    "轮播"
-   ],
-   "bytes": 32423,
-   "stream_tests": [
-    {
-     "stream": "http://144.123.165.186:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
-    },
-    {
-     "stream": "http://144.123.165.186:9901/tsfile/live/1014_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
-    },
-    {
-     "stream": "http://222.135.142.75:3283/tsfile/live/0128_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://150.138.8.143/00/SNM/CHANNEL00000327/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://112.6.244.211:9901/tsfile/live/1049_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 2,
-   "status": "ok"
-  },
-  {
-   "name": "niuber",
-   "url_raw": "https://gh-proxy.org/https://raw.githubusercontent.com/niuber/iptv-api/refs/heads/master/output/iptv.m3u",
-   "url": "https://gh-proxy.org/https://raw.githubusercontent.com/niuber/iptv-api/refs/heads/master/output/iptv.m3u",
-   "epg": "https://epg.v1.mk/json?ch={name}&date={date}",
-   "channels": 252,
-   "groups": [
-    "📡卫视频道",
-    "📺央视频道",
-    "🕘️更新时间"
-   ],
-   "bytes": 58872,
-   "stream_tests": [
-    {
-     "stream": "http://144.123.165.186:9901/tsfile/live/1017_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
-    },
-    {
-     "stream": "http://183.11.239.36:808/hls/119/index.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://play.kankanlive.com/live/1698234869325962.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://live.metshop.top/bestv.php?id=ynwshd8m/8000000",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "http://rihou.cc:555/tv/[mg]CCTV-10",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 3,
-   "status": "ok"
-  },
-  {
    "name": "suxuang",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u",
    "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
    "channels": 1225,
    "groups": [
@@ -2061,8 +1745,8 @@
   },
   {
    "name": "vip源",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/vip源.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/vip源.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/vip源.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/vip源.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -2088,60 +1772,51 @@
    "channels": 0
   },
   {
-   "name": "yingshi",
-   "url_raw": "http://52bsj.vip:81/api/v3/file/get/122873/lele.txt?sign=yKzjapJlxJ-6naKcbM5Bz4FDYn43u6lTHO_0fd7t3Xg%3D%3A0",
-   "url": "http://52bsj.vip:81/api/v3/file/get/122873/lele.txt?sign=yKzjapJlxJ-6naKcbM5Bz4FDYn43u6lTHO_0fd7t3Xg%3D%3A0",
-   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "zbefine源",
-   "url_raw": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/zbefine/iptv/main/iptv.m3u",
-   "url": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/zbefine/iptv/main/iptv.m3u",
-   "channels": 1286,
+   "name": "yuan",
+   "url_raw": "http://wangziduoqing.com/yuan/zb.txt",
+   "url": "http://wangziduoqing.com/yuan/zb.txt",
+   "timeout": 10,
+   "channels": 1709,
    "groups": [
-    "NewTV",
-    "上海",
-    "云南",
-    "内蒙古",
-    "北京",
-    "吉林",
-    "四川",
-    "天津"
+    "4K测试",
+    "80后经典歌曲",
+    "内网源",
+    "咪咕源",
+    "备用港澳台1",
+    "备用港澳台2",
+    "小品",
+    "电信源"
    ],
-   "bytes": 136965,
+   "bytes": 132125,
    "stream_tests": [
     {
-     "stream": "https://pili-live-hdl-ysx.tianma3600.com/gdyf/gdyfzh.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "https://live.ottiptv.cc/yy/25055036",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://39.135.138.58:18890/PLTV/88888888/224/3221225618/index.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://222.186.39.21:35466/huya/11602072",
+     "ok": true,
+     "why": "ct:video/x-flv"
     },
     {
-     "stream": "http://live.dxhmt.cn:9081/tv/11627-1.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "https://vd3.bdstatic.com/mda-pd67p5k6bme117n7/sc/cae_h264/1680848349956826702/mda-pd67p5k6bme117n7.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
     },
     {
-     "stream": "http://42.176.185.28:9901/tsfile/live/1007_1.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "https://vdse.bdstatic.com//36ea0ffcf8156a44b9d524d999eb088a.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
     },
     {
-     "stream": "http://gcksc.v.kcdnvip.com/gc/bsszjs_1/index.m3u8",
-     "ok": false,
-     "why": "http_403"
+     "stream": "https://live.ottiptv.cc/yy/1354932397",
+     "ok": true,
+     "why": "ct:video/x-flv"
     }
    ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
+   "streams_ok": 5,
+   "status": "ok"
   },
   {
    "name": "zwrt",
@@ -2161,6 +1836,14 @@
    "channels": 0
   },
   {
+   "name": "体育③",
+   "url_raw": "http://82.156.243.185:33389/fwc.m3u",
+   "url": "http://82.156.243.185:33389/fwc.m3u",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
    "name": "俊于•综合",
    "url_raw": "http://home.jundie.top:81/Cat/tv/live.txt",
    "url": "http://home.jundie.top:81/Cat/tv/live.txt",
@@ -2171,8 +1854,8 @@
   },
   {
    "name": "全球",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/全球.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/全球.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/全球.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/全球.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -2180,9 +1863,29 @@
    "channels": 0
   },
   {
+   "name": "内置直播-最新",
+   "url_raw": "https://d.kstore.dev/download/16371/yixing.txt",
+   "url": "https://d.kstore.dev/download/16371/yixing.txt",
+   "epg": "http://diyp2.112114.xyz/?ch={name}&date={date}",
+   "ua": "okhttp/3.15",
+   "status": "dead",
+   "reason": "fetch_404",
+   "channels": 0
+  },
+  {
+   "name": "冰茶",
+   "url_raw": "https://bc.188766.xyz/?ip=&mishitong=true&mima=bingcha1130&json=true",
+   "url": "https://bc.188766.xyz/?ip=&mishitong=true&mima=bingcha1130&json=true",
+   "ua": "bingcha/1.1(mianfeifenxiang)",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
    "name": "几个传媒",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/几个传媒.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/几个传媒.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/几个传媒.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/几个传媒.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -2241,6 +1944,15 @@
    "channels": 0
   },
   {
+   "name": "划了",
+   "url_raw": "https://pan.szfx.top/down.php/dcb0cc6a6935b5e62b2659eba6718471.txt",
+   "url": "https://pan.szfx.top/down.php/dcb0cc6a6935b5e62b2659eba6718471.txt",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
    "name": "北京联通组转单",
    "url_raw": "https://gh-proxy.org/https://github.com/jia070310/4K-IPTV-M3U/blob/main/txt/%E5%8C%97%E4%BA%AC%E8%81%94%E9%80%9A.txt",
    "url": "https://gh-proxy.org/https://github.com/jia070310/4K-IPTV-M3U/blob/main/txt/%E5%8C%97%E4%BA%AC%E8%81%94%E9%80%9A.txt",
@@ -2279,6 +1991,11 @@
      "why": "ct:application/x-mpeg"
     },
     {
+     "stream": "https://vd3.bdstatic.com/mda-nck3tqzgjvj076vc/sc/cae_h264_delogo/1647833645083560959/mda-nck3tqzgjvj076vc.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
      "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/649a0df6bc394fde973b2e8ef12ef3d6/1200.m3u8",
      "ok": true,
      "why": "ct:application/x-mpeg"
@@ -2287,58 +2004,9 @@
      "stream": "http://satellitepull.cnr.cn/live/wx32hunws/playlist.m3u8",
      "ok": true,
      "why": "ct:application/x-mpegurl"
-    },
-    {
-     "stream": "https://vd3.bdstatic.com/mda-nck3tqzgjvj076vc/sc/cae_h264_delogo/1647833645083560959/mda-nck3tqzgjvj076vc.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
-  },
-  {
-   "name": "卡卡西线路",
-   "url_raw": "https://gh-proxy.com/https://raw.githubusercontent.com/kakaxi-1/IPTV/main/ipv4.txt",
-   "url": "https://gh-proxy.com/https://raw.githubusercontent.com/kakaxi-1/IPTV/main/ipv4.txt",
-   "epg": "http://epg.112114.eu.org/?ch={name}&date={date}",
-   "channels": 215,
-   "groups": [
-    "卫视频道",
-    "央视频道",
-    "影视轮播",
-    "数字频道",
-    "更新时间"
-   ],
-   "bytes": 40801,
-   "stream_tests": [
-    {
-     "stream": "http://kakaxi.indevs.in/Disclaimer.mp4",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "https://itv.1920.qzz.io/api/ysp.php?id=shanxiws",
-     "ok": false,
-     "why": "http_402"
-    },
-    {
-     "stream": "http://182.61.15.229:80/608807423",
-     "ok": false,
-     "why": "html_content_type"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1351505899",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "http://gslbmgsplive.miguvideo.com/ws_w/2018/gdws/gdws711/1000/index.m3u8?msisdn=23da0c4aa6e6ca6415df13ec2c52de4e&mdspid=",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 1,
    "status": "ok"
   },
   {
@@ -2354,7 +2022,7 @@
    "name": "咪咕TV直播",
    "url_raw": "http://www.52top.com.cn:678/downloads/migu.txt",
    "url": "http://www.52top.com.cn:678/downloads/migu.txt",
-   "channels": 117,
+   "channels": 118,
    "groups": [
     "体育",
     "卫视",
@@ -2365,42 +2033,41 @@
     "教育",
     "新闻"
    ],
-   "bytes": 101147,
+   "bytes": 101999,
    "stream_tests": [
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/zgnlws/50/20250804/index.m3u8?msisdn=20260922114744bf0743b3c40d4645aca04102",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r3/cnr/faxianzhilv/1000/index.m3u8?msisdn=2026092217473177ac5fc2c35a4271b811d36be52",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r3/cnr/faxianzhilv/1000/index.m3u8?msisdn=202609221147315554799e20dc46d7b708ddab900",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/600/index.m3u8?msisdn=202609221747177510710ca853496a95a57c974f6b75f",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/600/index.m3u8?msisdn=20260922114717fe95600084e646919c8ff474c1b72e0",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://gslbmgsplive.miguvideo.com/envivo_x/SD/lvyou/711/index.m3u8?msisdn=2026092217474438ef609cd55b4636a0a2a5438e9db76e",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/jstv/sqxinwenzonghe/600/index.m3u8?msisdn=20260922114757ebc5f7b3a067416f801d68ab",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/jstv/lygxinwenzonghe/600/index.m3u8?msisdn=20260922174757c458b374228b41f6a8f8d0d",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/ydcmc/50/20251225/index.m3u8?msisdn=20260922114823464f9fdb62ce4938a95300e07",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/ydcmc/50/20251225/index.m3u8?msisdn=20260922174823bf4b10a5b3704e07b484471c4",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
+   "streams_ok": 5,
+   "status": "ok"
   },
   {
    "name": "国产传媒",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/国产传媒.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/国产传媒.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/国产传媒.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/国产传媒.m3u",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -2408,53 +2075,60 @@
    "channels": 0
   },
   {
-   "name": "国内直播源",
-   "url_raw": "https://myernestlu.github.io/zby.txt",
-   "url": "https://myernestlu.github.io/zby.txt",
-   "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
-   "ua": "okhttp/3.15",
-   "channels": 588,
+   "name": "夜空",
+   "url_raw": "https://pan.szfx.top/down.php/4f5dad27633e1293d7ef2317ee9c801e.txt",
+   "url": "https://pan.szfx.top/down.php/4f5dad27633e1293d7ef2317ee9c801e.txt",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "夜空1",
+   "url_raw": "https://pan.29o.cn/down.php/aa846bceb7a1b4adb0385b1f61b192e8.txt",
+   "url": "https://pan.29o.cn/down.php/aa846bceb7a1b4adb0385b1f61b192e8.txt",
+   "timeout": 10,
+   "channels": 1578,
    "groups": [
-    "MTV频道",
-    "体育频道",
-    "各省卫视",
-    "国际频道",
+    "卫视",
+    "台湾频道",
     "央视频道",
-    "少儿频道",
-    "明星系列",
-    "港澳台"
+    "广东频道",
+    "河南频道",
+    "浙江频道",
+    "海外",
+    "港台频道"
    ],
-   "bytes": 58392,
+   "bytes": 122942,
    "stream_tests": [
     {
-     "stream": "rtmp://ivi.bupt.edu.cn:1935/livetv/fhzw",
+     "stream": "http://120.76.248.139/live/bfgd/4200000482.m3u8",
+     "ok": false,
+     "why": "html_content_type"
+    },
+    {
+     "stream": "http://ali-xwl.cztv.com/live/channel101080Plxw.m3u8$订阅源",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://httpdvb.slave.homed.hrtn.net:80/playurl?playtype=live&protocol=hls&accesstoken=R5D22D2B7U309E0093K7735BBEDIAC2DC6",
+     "stream": "http://tvpull.dxhmt.cn:9081/tv/10526-1.m3u8",
      "ok": false,
-     "why": "no_response"
+     "why": "http_403"
     },
     {
-     "stream": "http://111.13.111.242/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226297/1.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://cssbyd.imwork.net:8082/hls/6/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://112.17.40.140/hwltc.tv.cdn.zj.chinamobile.com/PLTV/88888888/224/3221230112/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://www.zuori.cc/index/downloads?d=43165&v=yq8JSUqD",
+     "stream": "http://139.227.221.179:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
      "ok": false,
      "why": "no_response"
     }
    ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
+   "streams_ok": 1,
+   "status": "ok"
   },
   {
    "name": "央视TV直播",
@@ -2503,53 +2177,12 @@
    "status": "ok"
   },
   {
-   "name": "宝盒直播",
-   "url_raw": "https://3043.kstore.space/bhvip/bhzb.txt",
-   "url": "https://3043.kstore.space/bhvip/bhzb.txt",
-   "epg": "https://epg.112114.eu.org/?ch={name}&date={date}",
-   "ua": "okhttp/3",
-   "channels": 614,
-   "groups": [
-    "☘️四川频道",
-    "☘️广西频道",
-    "☘️浙江频道",
-    "☘️重庆频道",
-    "☘️青海频道",
-    "☘️黑龙江频道",
-    "剧集",
-    "动画"
-   ],
-   "bytes": 43677,
-   "stream_tests": [
-    {
-     "stream": "http://live.nctv.top/huya.php?id=26355849",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "http://live.nctv.top/huya.php?id=15152155",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "http://liveout.btzx.com.cn/62ds9e/yil08g.m3u8?mkey=txiptv",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
-     "stream": "http://live.qthnews.org.cn:1935/live/live2/800k/tzwj_video.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://gyang.host:7088/udp/239.253.43.25:5146",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
+   "name": "宫殿",
+   "url_raw": "https://gongdian.top/tv/iptv",
+   "url": "https://gongdian.top/tv/iptv",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
   },
   {
    "name": "小武哥",
@@ -2557,6 +2190,24 @@
    "url": "https://qu.ax/PEHy.txt",
    "status": "dead",
    "reason": "fetch_404",
+   "channels": 0
+  },
+  {
+   "name": "尘墨",
+   "url_raw": "https://52xiaobai.cn/ceshi/zb.php",
+   "url": "https://52xiaobai.cn/ceshi/zb.php",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "平台直播",
+   "url_raw": "http://tv.iill.top/m3u/Live",
+   "url": "http://tv.iill.top/m3u/Live",
+   "ua": "okhttp/3.15",
+   "status": "dead",
+   "reason": "fetch_error",
    "channels": 0
   },
   {
@@ -2575,12 +2226,12 @@
    "bytes": 12045,
    "stream_tests": [
     {
-     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225489/10000100000000060000000000081818_0.smil",
+     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225536/10000100000000060000000000081865_0.smil",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225536/10000100000000060000000000081865_0.smil",
+     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225489/10000100000000060000000000081818_0.smil",
      "ok": false,
      "why": "no_response"
     },
@@ -2650,6 +2301,97 @@
    "reason": "no_valid_stream_in_sample"
   },
   {
+   "name": "应该能看",
+   "url_raw": "https://gh-proxy.org/raw.githubusercontent.com/vinkerq/iptv-api/refs/heads/master/iptv.txt",
+   "url": "https://gh-proxy.org/raw.githubusercontent.com/vinkerq/iptv-api/refs/heads/master/iptv.txt",
+   "timeout": 10,
+   "channels": 3691,
+   "groups": [
+    "UDP卫视频道",
+    "UDP央视频道",
+    "UDP广东频道",
+    "其他频道",
+    "卫视频道",
+    "咪咕其他",
+    "咪咕卫视",
+    "咪咕地方"
+   ],
+   "bytes": 265967,
+   "stream_tests": [
+    {
+     "stream": "http://183.51.190.123:6633/rtp/239.77.0.119:5146",
+     "ok": true,
+     "why": "ct:application/octet-stream"
+    },
+    {
+     "stream": "http://14.145.143.181:14022/rtp/239.77.1.182:5146",
+     "ok": false,
+     "why": "http_503"
+    },
+    {
+     "stream": "http://113.95.135.60:8188/rtp/239.253.43.22:5146",
+     "ok": true,
+     "why": "ct:application/octet-stream"
+    },
+    {
+     "stream": "http://183.10.180.81:202/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://183.10.180.89:202/tsfile/live/1034_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 2,
+   "status": "ok"
+  },
+  {
+   "name": "很少",
+   "url_raw": "https://mpimg.cn/down.php/fa04b02ffac54ac877f5250d3d70e494.txt",
+   "url": "https://mpimg.cn/down.php/fa04b02ffac54ac877f5250d3d70e494.txt",
+   "timeout": 10,
+   "channels": 32,
+   "groups": [
+    "🌟數字頻道🌟",
+    "🌟紅貓頻道🌟",
+    "🌟經典頻道🌟",
+    "🌟馬來頻道🌟",
+    "🌟鳳凰頻道🌟"
+   ],
+   "bytes": 2221,
+   "stream_tests": [
+    {
+     "stream": "https://o11.163189.xyz/stream/live/tvbxh/",
+     "ok": false,
+     "why": "html_content_type"
+    },
+    {
+     "stream": "https://o11.163189.xyz/stream/live/aec/",
+     "ok": false,
+     "why": "html_content_type"
+    },
+    {
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/chcdz.m3u8?auth=testpub",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://tv.zimtv.cn/tv/player/api/huya.php?id=11352962",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://tv.zimtv.cn/tv/player/api/huya.php?id=11342386",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    }
+   ],
+   "streams_ok": 3,
+   "status": "ok"
+  },
+  {
    "name": "心魔",
    "url_raw": "https://raw.gitmirror.com/yw88075/tvbox/main/live.txt",
    "url": "https://raw.gitmirror.com/yw88075/tvbox/main/live.txt",
@@ -2705,6 +2447,14 @@
    "status": "ok"
   },
   {
+   "name": "政治时事",
+   "url_raw": "http://zhangqun66.com/141.php",
+   "url": "http://zhangqun66.com/141.php",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
    "name": "斗鱼一起看",
    "url_raw": "https://sub.ottiptv.cc/douyuyqk.m3u",
    "url": "https://sub.ottiptv.cc/douyuyqk.m3u",
@@ -2717,7 +2467,7 @@
     "列表更新时间",
     "原创IP"
    ],
-   "bytes": 177416,
+   "bytes": 177446,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -2725,12 +2475,17 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9409722",
+     "stream": "https://live.ottiptv.cc/douyu/9236042",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9660127",
+     "stream": "https://live.ottiptv.cc/douyu/9425669",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/5124602",
      "ok": true,
      "why": "ct:video/x-flv"
     },
@@ -2738,11 +2493,6 @@
      "stream": "https://live.ottiptv.cc/douyu/8912038",
      "ok": false,
      "why": "http_404"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/4400816",
-     "ok": true,
-     "why": "ct:video/x-flv"
     }
    ],
    "streams_ok": 4,
@@ -2750,8 +2500,8 @@
   },
   {
    "name": "无敌",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/无敌.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/无敌.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/无敌.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/无敌.m3u",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -2759,156 +2509,9 @@
    "channels": 0
   },
   {
-   "name": "月灿",
-   "url_raw": "https://m3u.002397.xyz/ycl_iptv.m3u",
-   "url": "https://m3u.002397.xyz/ycl_iptv.m3u",
-   "status": "dead",
-   "reason": "fetch_530",
-   "channels": 0
-  },
-  {
-   "name": "有效期27年7月",
-   "url_raw": "http://m.szyyds.cn/api.php?token=8664f352657e8b13585bcf0f84fc3512",
-   "url": "http://m.szyyds.cn/api.php?token=8664f352657e8b13585bcf0f84fc3512",
-   "timeout": 10,
-   "channels": 51,
-   "groups": [
-    "卫视",
-    "央视",
-    "娱乐频道",
-    "少儿频道",
-    "新闻频道",
-    "财经频道"
-   ],
-   "bytes": 6947,
-   "stream_tests": [
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0137_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0014_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0118_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/1009_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0008_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
-  },
-  {
-   "name": "歌手直播",
-   "url_raw": "https://mgtv.ottiptv.cc/mglist.m3u",
-   "url": "https://mgtv.ottiptv.cc/mglist.m3u",
-   "ua": "okhttp/3.15",
-   "channels": 197,
-   "groups": [
-    "4K频道",
-    "乘风2026 回放",
-    "乘风2026 直播",
-    "歌手2026 回放",
-    "歌手2026 直播"
-   ],
-   "bytes": 75456,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24352566",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24475156",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    }
-   ],
-   "streams_ok": 5,
-   "status": "ok"
-  },
-  {
-   "name": "游魂直播",
-   "url_raw": "https://www.iyouhun.com/tv/zb",
-   "url": "https://www.iyouhun.com/tv/zb",
-   "epg": "https://epg.112114.eu.org/?ch={name}&date={date}",
-   "ua": "okhttp/3",
-   "channels": 6,
-   "groups": [
-    "更新时间"
-   ],
-   "bytes": 609,
-   "stream_tests": [
-    {
-     "stream": "https://lotus.stingray.com/manifest/cmusic-cme004-montreal/samsungtvplus/dee3e3af-2706-3e77-a952-91b99f6d1819/5711200/ma",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://gitlab.com/youhun/TVAPP/-/raw/main/abput1080.mp4",
-     "ok": true,
-     "why": "ct:application/octet-stream"
-    },
-    {
-     "stream": "https://AMChls.wns.live/hls/stream.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://61.221.215.25:8800/hls/49/index.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0d00fg10000crdl34vog65v7e9of17g&ratio=720p&line=0",
-     "ok": true,
-     "why": "ct:video/mp4"
-    }
-   ],
-   "streams_ok": 5,
-   "status": "ok"
-  },
-  {
-   "name": "潇洒AI直播",
-   "url_raw": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/PizazzGY/TV/master/output/user_result.m3u",
-   "url": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/PizazzGY/TV/master/output/user_result.m3u",
-   "status": "dead",
-   "reason": "fetch_404",
-   "channels": 0
-  },
-  {
-   "name": "猫TV线路",
-   "url_raw": "http://rihou.cc:567/gggg.nzk",
-   "url": "http://rihou.cc:567/gggg.nzk",
+   "name": "日后",
+   "url_raw": "http://rihou.cc:555/gggg.nzk",
+   "url": "http://rihou.cc:555/gggg.nzk",
    "epg": "https://epg.112114.eu.org/?ch={name}&date={date}",
    "ua": "okhttp/3",
    "channels": 1572,
@@ -2954,14 +2557,238 @@
    "status": "ok"
   },
   {
+   "name": "有效期27年7月",
+   "url_raw": "http://m.szyyds.cn/api.php?token=8664f352657e8b13585bcf0f84fc3512",
+   "url": "http://m.szyyds.cn/api.php?token=8664f352657e8b13585bcf0f84fc3512",
+   "timeout": 10,
+   "channels": 51,
+   "groups": [
+    "卫视",
+    "央视",
+    "娱乐频道",
+    "少儿频道",
+    "新闻频道",
+    "财经频道"
+   ],
+   "bytes": 6947,
+   "stream_tests": [
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/0118_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/0014_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/0137_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/1009_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/0008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 0,
+   "status": "format_only",
+   "reason": "no_valid_stream_in_sample"
+  },
+  {
+   "name": "歌手直播",
+   "url_raw": "https://mgtv.ottiptv.cc/mglist.m3u",
+   "url": "https://mgtv.ottiptv.cc/mglist.m3u",
+   "ua": "okhttp/3.15",
+   "channels": 197,
+   "groups": [
+    "4K频道",
+    "乘风2026 回放",
+    "乘风2026 直播",
+    "歌手2026 回放",
+    "歌手2026 直播"
+   ],
+   "bytes": 75456,
+   "stream_tests": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24352566",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24475156",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    }
+   ],
+   "streams_ok": 5,
+   "status": "ok"
+  },
+  {
+   "name": "没4K",
+   "url_raw": "https://mpimg.cn/text.php?hash=7265d70b6834cefbddb61bcc2d9c99db",
+   "url": "https://mpimg.cn/text.php?hash=7265d70b6834cefbddb61bcc2d9c99db",
+   "timeout": 10,
+   "channels": 10,
+   "groups": [
+    "世界杯没4K"
+   ],
+   "bytes": 578,
+   "stream_tests": [
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv8kn.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv16n.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv5n.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv5p.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv8k.m3u8",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 0,
+   "status": "format_only",
+   "reason": "no_valid_stream_in_sample"
+  },
+  {
+   "name": "游魂",
+   "url_raw": "https://www.iyouhun.com/tv/zb",
+   "url": "https://www.iyouhun.com/tv/zb",
+   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
+   "channels": 6,
+   "groups": [
+    "更新时间"
+   ],
+   "bytes": 609,
+   "stream_tests": [
+    {
+     "stream": "https://lotus.stingray.com/manifest/cmusic-cme004-montreal/samsungtvplus/dee3e3af-2706-3e77-a952-91b99f6d1819/5711200/ma",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://gitlab.com/youhun/TVAPP/-/raw/main/abput1080.mp4",
+     "ok": true,
+     "why": "ct:application/octet-stream"
+    },
+    {
+     "stream": "http://61.221.215.25:8800/hls/49/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://AMChls.wns.live/hls/stream.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://www.iesdouyin.com/aweme/v1/playwm/?video_id=v0d00fg10000crdl34vog65v7e9of17g&ratio=720p&line=0",
+     "ok": true,
+     "why": "ct:video/mp4"
+    }
+   ],
+   "streams_ok": 5,
+   "status": "ok"
+  },
+  {
    "name": "珍藏",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/珍藏.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/珍藏.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/珍藏.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/珍藏.m3u",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
    "reason": "fetch_error",
    "channels": 0
+  },
+  {
+   "name": "电视Live",
+   "url_raw": "https://tv.iill.top/m3u/Gather",
+   "url": "https://tv.iill.top/m3u/Gather",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "电视直播",
+   "url_raw": "http://gh-proxy.org/raw.githubusercontent.com/Supprise0901/TVBox_live/main/live.txt",
+   "url": "http://gh-proxy.org/raw.githubusercontent.com/Supprise0901/TVBox_live/main/live.txt",
+   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
+   "channels": 314,
+   "groups": [
+    "🇨🇳IPV4线路",
+    "🇨🇳影音剧场",
+    "🇨🇳河南地方",
+    "🇨🇳电影在线",
+    "🇨🇳组播线路"
+   ],
+   "bytes": 106471,
+   "stream_tests": [
+    {
+     "stream": "http://hlsztemgsplive.miguvideo.com:8080/wd_r2/cctv/jiangsuhd/600/index.m3u8?msisdn=2026092122014043229870774b4d2882c82a",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "http://hlsztemgsplive.miguvideo.com:8080/envivo_v/2018/SD/cctv/xibanya/1000/index.m3u8?msisdn=202609221803033c02a10710a5",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=35d9e49f4d8f3d768bfcf1",
+     "ok": true,
+     "why": "ct:application/x-mpegurl"
+    },
+    {
+     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
+    },
+    {
+     "stream": "https://gcalic.v.myalicdn.com/gc/hlzycc_1/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    }
+   ],
+   "streams_ok": 3,
+   "status": "ok"
   },
   {
    "name": "直播",
@@ -2973,50 +2800,103 @@
    "channels": 0
   },
   {
-   "name": "直播电视IPV4",
-   "url_raw": "https://live.zbds.top/tv/iptv4.txt",
-   "url": "https://live.zbds.top/tv/iptv4.txt",
-   "ua": "okhttp/3.15",
-   "channels": 649,
+   "name": "直播一线（能不能看，看缘分）",
+   "url_raw": "https://ds65.tv1288.xyz",
+   "url": "https://ds65.tv1288.xyz",
+   "status": "dead",
+   "reason": "fetch_403",
+   "channels": 0
+  },
+  {
+   "name": "直播二线（能不能看，看缘分）",
+   "url_raw": "https://gitee.com/mytv-android/iptv-api/raw/master/output/result.m3u",
+   "url": "https://gitee.com/mytv-android/iptv-api/raw/master/output/result.m3u",
+   "channels": 3194,
    "groups": [
-    "儿童频道",
-    "卫视频道",
-    "地方频道",
-    "央视频道",
-    "数字频道",
-    "春晚频道",
-    "更新时间",
-    "电影频道"
+    "☘️上海频道",
+    "☘️云南频道",
+    "☘️内蒙古频道",
+    "☘️北京频道",
+    "☘️吉林频道",
+    "☘️四川频道",
+    "☘️天津频道",
+    "☘️宁夏频道"
    ],
-   "bytes": 54046,
+   "bytes": 892567,
    "stream_tests": [
     {
-     "stream": "http://112.30.73.119:229/tsfile/live/0003_2.m3u8?key=txiptv&playlive=0&authid=0",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
+     "stream": "javascript://https://gitee.com/mytv-android/mytvJS/raw/main/js/cctvnews.js?id=cctv1",
+     "ok": false,
+     "why": "no_response"
     },
     {
-     "stream": "http://play.kankanlive.com/live/1720583434627241.m3u8",
+     "stream": "https://iptv.catvod.com/live.php?id=%E9%99%95%E8%A5%BF%E6%96%B0%E9%97%BB%E8%B5%84%E8%AE%AF%E9%A2%91%E9%81%93&line=1",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://hls-gateway.vpstv.net/streams/708845.m3u8",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "http://mgsp-yx2.live.miguvideo.com:8088/migu/kailu/ssws/50/20251127/index.m3u8?msisdn=e55e9ee71b42d2d7008a152c069625e3&m",
+     "ok": false,
+     "why": "http_604"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/23824164",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    }
+   ],
+   "streams_ok": 1,
+   "status": "ok"
+  },
+  {
+   "name": "直播本地包线（不定时跟新，看缘分）",
+   "url_raw": "http://xn--oev29b.top/files/txt/700.txt",
+   "url": "http://xn--oev29b.top/files/txt/700.txt",
+   "channels": 6395,
+   "groups": [
+    "IPTV专线",
+    "IPV4卫视",
+    "IPV4央视",
+    "上海地区",
+    "云南地区",
+    "云南西藏",
+    "内蒙地区",
+    "北京"
+   ],
+   "bytes": 570427,
+   "stream_tests": [
+    {
+     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://live.metshop.top/huya/23863804",
-     "ok": true,
-     "why": "ct:video/x-flv"
+     "stream": "http://php.jdshipin.com:8880/1905.php?id=1905dy",
+     "ok": false,
+     "why": "html_content_type"
     },
     {
-     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel03/1080p.m3u8#https://ali-m-l.cztv.com/channels/lantian/channel003/1080p",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
+     "stream": "http://yp.qqqtv.top/1/api.php?id=%E5%9B%9B%E5%B7%9D%E4%B9%A1%E6%9D%91&auth=666858",
+     "ok": false,
+     "why": "no_response"
     },
     {
      "stream": "https://gcalic.v.myalicdn.com/gc/hlzycc_1/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://1.94.31.214/php/qilu.php?id=wfgxq",
+     "ok": true,
+     "why": "ct:application/x-mpegurl"
     }
    ],
-   "streams_ok": 5,
+   "streams_ok": 3,
    "status": "ok"
   },
   {
@@ -3024,39 +2904,39 @@
    "url_raw": "https://gh-proxy.org/https://github.com/jia070310/lemonTV/blob/main/iptv-fe.m3u",
    "url": "https://gh-proxy.org/https://github.com/jia070310/lemonTV/blob/main/iptv-fe.m3u",
    "epg": "http://epg.cdn.loc.cc/?ch={name}&date={date}",
-   "channels": 117,
+   "channels": 115,
    "groups": [
     "其它",
     "卫视",
     "央视",
     "央视专版"
    ],
-   "bytes": 98865,
+   "bytes": 97193,
    "stream_tests": [
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/1200/index.m3u8?msisdn=99ba8f080b24ccbb31eec8006fb566ec&mdspid=&spi",
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/2018/ocn/hubeiwshd/2000/index.m3u8?msisdn=02854d86d7ed41dca05ce5093ad72a19&mdspi",
      "ok": false,
-     "why": "no_response"
+     "why": "http_660"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/haixiaws/51/20230724/index.m3u8?msisdn=5af1062f1633e5bd9b2b320eb1064a75&mds",
+     "stream": "http://gslbmgsplive.miguvideo.com/envivo_v/2018/SD/cctv/fayu/1000/index.m3u8?msisdn=ad63af67d6a2412288458b32e1b82af6&mds",
      "ok": false,
-     "why": "no_response"
+     "why": "http_660"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/envivo_v/2018/SD/cctv/fayu/1000/index.m3u8?msisdn=5cb90e20250bbfa733cc48957153ebe0&mds",
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/1200/index.m3u8?msisdn=d4b8be42791023b03a6376f4bf6ccc46&mdspid=&spi",
      "ok": false,
-     "why": "no_response"
+     "why": "http_660"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/sxylpd/51/20250804/index.m3u8?msisdn=d8370429383923d45a2a6d7c385200ca&mdspi",
+     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/sxylpd/51/20250804/index.m3u8?msisdn=cadd87a8d575781369cc6bfd5e19e031&mdspi",
      "ok": false,
-     "why": "no_response"
+     "why": "http_660"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/jstv/jsgonggong/600/index.m3u8?msisdn=58266e046ab7386c764ded42e73924d0&mdspid=&s",
+     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/nanjingsb/50/20230719/index.m3u8?msisdn=373df3c38ab699ba01653a56a80a1ae5&md",
      "ok": false,
-     "why": "no_response"
+     "why": "http_660"
     }
    ],
    "streams_ok": 0,
@@ -3065,8 +2945,8 @@
   },
   {
    "name": "精东影业816",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/精东影业816.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/精东影业816.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/精东影业816.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/精东影业816.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3074,18 +2954,66 @@
    "channels": 0
   },
   {
-   "name": "糖意",
-   "url_raw": "https://wp.weikete.cc/down.php/c3eecc14547f5e1e468718148c9f762f.txt",
-   "url": "https://wp.weikete.cc/down.php/c3eecc14547f5e1e468718148c9f762f.txt",
-   "epg": "http://epg.112114.xyz/?ch={name}&date={date}",
+   "name": "线路①",
+   "url_raw": "http://rihou.cc:567/gggg.nzk",
+   "url": "http://rihou.cc:567/gggg.nzk",
+   "epg": "https://epg.112114.eu.org/?ch={name}&date={date}",
+   "ua": "okhttp/3",
+   "channels": 1572,
+   "groups": [
+    "Q-三国粤",
+    "亮剑全集",
+    "凡人修仙",
+    "华山论剑",
+    "大地恩情",
+    "大时代粤",
+    "央卫咪咕",
+    "射雕英雄"
+   ],
+   "bytes": 119416,
+   "stream_tests": [
+    {
+     "stream": "video://https://web.guangdianyun.tv/tv/?id=643&uin=1629",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://rihou.cc:555/tv/[mv]抖舞陪看",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://vip.dytt-tv.com/20250208/1786_6449f44a/index.m3u8",
+     "ok": false,
+     "why": "http_403"
+    }
+   ],
+   "streams_ok": 2,
+   "status": "ok"
+  },
+  {
+   "name": "线路②",
+   "url_raw": "https://gh-proxy.com/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
+   "url": "https://gh-proxy.com/https://raw.githubusercontent.com/develop202/migu_video/refs/heads/main/interface.txt",
+   "ua": "okHttp/Mod-1.1.0",
    "status": "dead",
-   "reason": "fetch_404",
+   "reason": "no_channels",
    "channels": 0
   },
   {
    "name": "终极",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/终极.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/终极.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/终极.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/终极.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3094,8 +3022,8 @@
   },
   {
    "name": "经典",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/经典.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/经典.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/经典.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/经典.m3u",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3103,9 +3031,57 @@
    "channels": 0
   },
   {
+   "name": "经典电视剧",
+   "url_raw": "https://wp.kayyw.com/f/XOpgIZ/%E7%BB%8F%E5%85%B8%E7%94%B5%E8%A7%86%E5%89%A7.txt",
+   "url": "https://wp.kayyw.com/f/XOpgIZ/%E7%BB%8F%E5%85%B8%E7%94%B5%E8%A7%86%E5%89%A7.txt",
+   "timeout": 10,
+   "channels": 7674,
+   "groups": [
+    "一代神相赖布衣",
+    "一剑天涯粤语",
+    "一剑镇神州国语",
+    "一枝花和尚国语",
+    "七彩如来神掌国语",
+    "丐世英豪",
+    "中华英雄之中华傲诀国语",
+    "中华英雄国语"
+   ],
+   "bytes": 560240,
+   "stream_tests": [
+    {
+     "stream": "https://vip.ffzy-online3.com/20230228/19267_b40a8e10/index.m3u8",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://vip.ffzy-play10.com/20230603/38052_3402bf16/2000k/hls/mixed.m3u8",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://vip.ffzy-play1.com/20221207/30440_51fb5cd4/index.m3u8",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://vip.ffzy-online3.com/20230620/33867_d2d2fc4b/index.m3u8",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://vip.ffzy-play1.com/20221205/28860_5a6bb55f/index.m3u8",
+     "ok": false,
+     "why": "http_403"
+    }
+   ],
+   "streams_ok": 0,
+   "status": "format_only",
+   "reason": "no_valid_stream_in_sample"
+  },
+  {
    "name": "绝品",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/绝品.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/绝品.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/绝品.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/绝品.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3146,31 +3122,30 @@
     {
      "stream": "http://gslbserv.itv.cmvideo.cn:80/3000000020000011528/index.m3u8?channel-id=FifastbLive&Contentid=3000000020000011528&li",
      "ok": false,
-     "why": "no_response"
+     "why": "http_403"
     },
     {
      "stream": "http://gslbserv.itv.cmvideo.cn:80/3000000010000004193/index.m3u8?channel-id=FifastbLive&Contentid=3000000010000004193&li",
      "ok": false,
-     "why": "no_response"
+     "why": "http_403"
     }
    ],
    "streams_ok": 3,
    "status": "ok"
   },
   {
-   "name": "网络收集",
-   "url_raw": "https://gitee.com/xxy002/zhiboyuan/raw/master/dsy",
-   "url": "https://gitee.com/xxy002/zhiboyuan/raw/master/dsy",
-   "epg": "https://epg.112114.eu.org/?ch={name}&date={date}",
-   "ua": "okhttp/3",
+   "name": "网络Live",
+   "url_raw": "https://tv.iill.top/m3u/Live",
+   "url": "https://tv.iill.top/m3u/Live",
+   "timeout": 10,
    "status": "dead",
-   "reason": "fetch_404",
+   "reason": "fetch_error",
    "channels": 0
   },
   {
    "name": "美腿丝袜",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/美腿丝袜.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/美腿丝袜.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/美腿丝袜.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/美腿丝袜.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3235,6 +3210,16 @@
    "channels": 0
   },
   {
+   "name": "肥羊直播",
+   "url_raw": "https://9877.kstore.space/Live/live.m3u",
+   "url": "https://9877.kstore.space/Live/live.m3u",
+   "ua": "okhttp/3.15",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_404",
+   "channels": 0
+  },
+  {
    "name": "自动更新",
    "url_raw": "https://z.szyyds.cn/iptv",
    "url": "https://z.szyyds.cn/iptv",
@@ -3252,9 +3237,9 @@
      "why": "no_response"
     },
     {
-     "stream": "http://218.28.0.62:9003/hls/25/index.m3u8",
+     "stream": "http://222.214.208.34:59901/tsfile/live/0018_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
      "stream": "http://218.28.0.62:9003/hls/8/index.m3u8",
@@ -3262,23 +3247,23 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://222.214.208.34:59901/tsfile/live/0018_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://222.214.208.34:59901/tsfile/live/1013_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
-     "stream": "http://222.214.208.34:59901/tsfile/live/1013_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://218.28.0.62:9003/hls/25/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 4,
    "status": "ok"
   },
   {
    "name": "至尊",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/至尊.m3u",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/至尊.m3u",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/至尊.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/至尊.m3u",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3287,8 +3272,8 @@
   },
   {
    "name": "花活",
-   "url_raw": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/花活.txt",
-   "url": "https://git.820828.xyz/https://raw.githubusercontent.com/fish2018/lib/main/txt/花活.txt",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/花活.txt",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/fish2018/lib/main/txt/花活.txt",
    "epg": "http://127.0.0.1:10079/p/0/proxy/http://epg.112114.xyz/?ch={name}&date={date}",
    "ua": "okhttp/3.15",
    "status": "dead",
@@ -3297,8 +3282,9 @@
   },
   {
    "name": "范明明",
-   "url_raw": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u",
-   "url": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/ipv6.m3u",
+   "url_raw": "https://live.fanmingming.cn/tv/m3u/ipv6.m3u",
+   "url": "https://live.fanmingming.cn/tv/m3u/ipv6.m3u",
+   "timeout": 10,
    "channels": 82,
    "groups": [
     "内蒙频道",
@@ -3319,12 +3305,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227033/1.m3u8?GuardEncType=2&accountinfo",
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227033/1.m3u8?GuardEncType=2&accountinfo",
      "ok": false,
      "why": "no_response"
     },
@@ -3352,6 +3338,11 @@
    "bytes": 25215,
    "stream_tests": [
     {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227014/1.m3u8?GuardEncType=2&accountinfo",
      "ok": false,
      "why": "no_response"
@@ -3363,11 +3354,6 @@
     },
     {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227033/1.m3u8?GuardEncType=2&accountinfo",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
@@ -3415,12 +3401,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://iptv.huuc.edu.cn/hls/cctv14hd.m3u8",
+     "stream": "http://iptv.huuc.edu.cn/hls/hljhd.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://iptv.huuc.edu.cn/hls/hljhd.m3u8",
+     "stream": "http://iptv.huuc.edu.cn/hls/cctv14hd.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -3439,66 +3425,19 @@
    "status": "ok"
   },
   {
-   "name": "茶客源",
-   "url_raw": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/vamoschuck/TV/main/M3U",
-   "url": "https://cdn.gh-proxy.org/https://raw.githubusercontent.com/vamoschuck/TV/main/M3U",
-   "channels": 789,
-   "groups": [
-    "GITV",
-    "MQIPTV",
-    "京津冀鲁豫",
-    "咪咕V6",
-    "江浙沪包邮",
-    "百视通",
-    "组播2",
-    "美国Local听力磨耳朵"
-   ],
-   "bytes": 147124,
-   "stream_tests": [
-    {
-     "stream": "https://live.metshop.top/bestv.php?id=dfcjhd8m/8000000",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "http://180.97.247.27:8088/liveplay-kk.rtxapp.com/live/program/live/dfwshd8m/8000000/mnf.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://stream-us-east-1.getpublica.com/playlist.m3u8?network_id=73",
-     "ok": false,
-     "why": "http_400"
-    },
-    {
-     "stream": "http://hsv4dcdn.qnqcdn.net/gdcucc-livod.qn-cdn.gitv.tv/gitv_live/G_CCTV-1-HQ/G_CCTV-1-HQ.m3u8?p=GITV&area=GD_CUCC&$4M",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
-     "stream": "http://223.110.245.160/ott.js.chinamobile.com/PLTV/3/224/3221227476/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 0,
-   "status": "format_only",
-   "reason": "no_valid_stream_in_sample"
-  },
-  {
    "name": "虎牙一起看",
    "url_raw": "https://sub.ottiptv.cc/huyayqk.m3u",
    "url": "https://sub.ottiptv.cc/huyayqk.m3u",
    "ua": "okHttp/Mod-1.5.0.0",
    "timeout": 10,
-   "channels": 1030,
+   "channels": 1092,
    "groups": [
     "4K频道",
     "一起看",
     "列表更新时间",
     "原创"
    ],
-   "bytes": 197071,
+   "bytes": 209521,
    "stream_tests": [
     {
      "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
@@ -3506,28 +3445,45 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/30080221",
+     "stream": "https://live.ottiptv.cc/huya/29465863",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/29982627",
+     "stream": "https://live.ottiptv.cc/huya/21059556",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/29982690",
+     "stream": "https://live.ottiptv.cc/huya/29982663",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/23860049",
+     "stream": "https://live.ottiptv.cc/huya/30574220",
      "ok": true,
      "why": "ct:video/x-flv"
     }
    ],
    "streams_ok": 5,
    "status": "ok"
+  },
+  {
+   "name": "裤佬",
+   "url_raw": "https://gh-proxy.org/https://raw.githubusercontent.com/Jsnzkpg/Jsnzkpg/refs/heads/Jsnzkpg/Jsnzkpg1",
+   "url": "https://gh-proxy.org/https://raw.githubusercontent.com/Jsnzkpg/Jsnzkpg/refs/heads/Jsnzkpg/Jsnzkpg1",
+   "epg": "https://epg.112114.xyz/?ch={name}&date={date}",
+   "status": "dead",
+   "reason": "fetch_404",
+   "channels": 0
+  },
+  {
+   "name": "酒店源",
+   "url_raw": "https://gongdian.top/tv/guovin",
+   "url": "https://gongdian.top/tv/guovin",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
   },
   {
    "name": "音乐所",
@@ -3541,11 +3497,6 @@
    ],
    "bytes": 1048576,
    "stream_tests": [
-    {
-     "stream": "http://em.21dtv.com/songs/60146517.mkv",
-     "ok": false,
-     "why": "http_404"
-    },
     {
      "stream": "https://15799848.s21v.faiusr.com/58/ABUIABA6GAAg6uyj4QUosO5G.mp4",
      "ok": false,
@@ -3565,11 +3516,309 @@
      "stream": "http://em.21dtv.com/songs/60143931.mkv",
      "ok": false,
      "why": "http_404"
+    },
+    {
+     "stream": "http://em.21dtv.com/songs/60146517.mkv",
+     "ok": false,
+     "why": "http_404"
     }
    ],
    "streams_ok": 0,
    "status": "format_only",
    "reason": "no_valid_stream_in_sample"
+  },
+  {
+   "name": "风云试看",
+   "url_raw": "http://iptv.4666888.xyz/FYTV.txt",
+   "url": "http://iptv.4666888.xyz/FYTV.txt",
+   "timeout": 10,
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "🍬电信🍬",
+   "url_raw": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
+   "url": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
+   "epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}",
+   "ua": "okhttp/3.15",
+   "channels": 120,
+   "groups": [
+    "4K8K频道",
+    "卫视IPV4",
+    "历年春晚",
+    "央视IPV4"
+   ],
+   "bytes": 21944,
+   "stream_tests": [
+    {
+     "stream": "http://101.35.240.114:88/live.php?id=青海卫视",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://101.35.240.114:88/live.php?id=山东卫视4K",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://0472.org/hls/cgtne.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": false,
+     "why": "http_404"
+    }
+   ],
+   "streams_ok": 1,
+   "status": "ok"
+  },
+  {
+   "name": "📡BL",
+   "url_raw": "https://sub.ottiptv.cc/bililive.m3u",
+   "url": "https://sub.ottiptv.cc/bililive.m3u",
+   "channels": 668,
+   "groups": [
+    "4K频道",
+    "列表更新时间",
+    "情感杂谈",
+    "户外",
+    "手工绘画",
+    "时尚",
+    "沉浸体验",
+    "生活杂谈"
+   ],
+   "bytes": 130806,
+   "stream_tests": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/bilibili/1353621",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/bilibili/24405968",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/bilibili/31864996",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/bilibili/13552545",
+     "ok": false,
+     "why": "http_404"
+    }
+   ],
+   "streams_ok": 1,
+   "status": "ok"
+  },
+  {
+   "name": "📡YY",
+   "url_raw": "https://sub.ottiptv.cc/yylunbo.m3u",
+   "url": "https://sub.ottiptv.cc/yylunbo.m3u",
+   "channels": 543,
+   "groups": [
+    "4K频道",
+    "car",
+    "other",
+    "zonghe",
+    "列表更新时间"
+   ],
+   "bytes": 113928,
+   "stream_tests": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1382745173",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1354930977",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1354936208",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1355238690",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    }
+   ],
+   "streams_ok": 5,
+   "status": "ok"
+  },
+  {
+   "name": "📡咪咕直播",
+   "url_raw": "http://124.77.202.8:49155",
+   "url": "http://124.77.202.8:49155",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "📡咪咕直播2",
+   "url_raw": "http://27.18.216.122:55555",
+   "url": "http://27.18.216.122:55555",
+   "status": "dead",
+   "reason": "fetch_error",
+   "channels": 0
+  },
+  {
+   "name": "📡咪咕直播3",
+   "url_raw": "http://120.24.194.118:10002",
+   "url": "http://120.24.194.118:10002",
+   "channels": 435,
+   "groups": [
+    "其他频道",
+    "卫视频道",
+    "地方频道",
+    "央视频道"
+   ],
+   "bytes": 128969,
+   "stream_tests": [
+    {
+     "stream": "http://120.24.194.118:10002/962067517",
+     "ok": false,
+     "why": "http_400"
+    },
+    {
+     "stream": "http://120.24.194.118:10002/967679099",
+     "ok": false,
+     "why": "http_400"
+    },
+    {
+     "stream": "http://120.24.194.118:10002/608807420",
+     "ok": false,
+     "why": "http_400"
+    },
+    {
+     "stream": "http://120.24.194.118:10002/967773556",
+     "ok": false,
+     "why": "http_400"
+    },
+    {
+     "stream": "http://120.24.194.118:10002/967673241",
+     "ok": false,
+     "why": "http_400"
+    }
+   ],
+   "streams_ok": 0,
+   "status": "format_only",
+   "reason": "no_valid_stream_in_sample"
+  },
+  {
+   "name": "📡斗鱼",
+   "url_raw": "https://sub.ottiptv.cc/douyuyqk.m3u",
+   "url": "https://sub.ottiptv.cc/douyuyqk.m3u",
+   "channels": 944,
+   "groups": [
+    "4K频道",
+    "一起看",
+    "列表更新时间",
+    "原创IP"
+   ],
+   "bytes": 177446,
+   "stream_tests": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/9236042",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/9425669",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/5124602",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/8912038",
+     "ok": false,
+     "why": "http_404"
+    }
+   ],
+   "streams_ok": 4,
+   "status": "ok"
+  },
+  {
+   "name": "📡虎牙",
+   "url_raw": "https://sub.ottiptv.cc/huyayqk.m3u",
+   "url": "https://sub.ottiptv.cc/huyayqk.m3u",
+   "channels": 1092,
+   "groups": [
+    "4K频道",
+    "一起看",
+    "列表更新时间",
+    "原创"
+   ],
+   "bytes": 209521,
+   "stream_tests": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/21059556",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/29465863",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/29982663",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/30574220",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    }
+   ],
+   "streams_ok": 5,
+   "status": "ok"
+  },
+  {
+   "name": "📡裤佬直播",
+   "url_raw": "https://seep.eu.org/https://live.445569.xyz/live.m3u",
+   "url": "https://seep.eu.org/https://live.445569.xyz/live.m3u",
+   "status": "dead",
+   "reason": "fetch_503",
+   "channels": 0
   },
   {
    "name": "📺简单TV(EXO)",
@@ -3591,12 +3840,12 @@
    "bytes": 3916,
    "stream_tests": [
     {
-     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/gdxw.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://74.91.26.218:82/live/gdxw.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
