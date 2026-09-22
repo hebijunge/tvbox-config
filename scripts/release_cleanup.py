@@ -58,7 +58,7 @@ def gh_json(args, endpoint):
 def gh_delete(args, asset_id):
     out = subprocess.run(
         ["gh", "api", "--method", "DELETE",
-         "repos/%s/releases/assets/%s" % (args.repo, asset_id)] + args,
+         "repos/%s/releases/assets/%s" % (args.repo, asset_id)],
         capture_output=True, text=True, timeout=60)
     if out.returncode != 0:
         raise RuntimeError("删除资产 %s 失败: %s" % (asset_id, out.stderr.strip()[:200]))

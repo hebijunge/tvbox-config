@@ -578,7 +578,7 @@ def main() -> int:
         else:
             log(f"跳过（不存在）: {p}")
     if args.ingest_upstreams and os.path.isfile(args.ingest_upstreams):
-        ingest_upstream(conn, args.ingest_upstreams)
+        ingest_upstreams(conn, args.ingest_upstreams)
     if args.ingest_lives and os.path.isfile(args.ingest_lives):
         ingest_lives(conn, args.ingest_lives)
     if args.probe_lives:
