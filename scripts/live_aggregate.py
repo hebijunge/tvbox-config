@@ -501,30 +501,40 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH, budget_s=420):
     jobs.sort(key=lambda j: group_sort_key(cmap[j[0]]["class"]))
     results = {}
     n = [0]
+
+    def _probe_timed(u):
+        """带计时的单线路实测（2026-09-23 线路按速度排序）：
+        复用同一次 probe_stream 请求，取成功探流耗时（首包 2KB，秒）作速度依据。"""
+        _t = time.time()
+        try:
+            ok, why = probe_stream(u)
+        except Exception:
+            ok, why = False, "error"
+        return ok, why, time.time() - _t
+
     with ThreadPoolExecutor(max_workers=8) as ex:
         futs = {}
         for std, lines in jobs:
             for sid, u in lines:
                 if time.time() - t0 > budget_s:
                     break
-                futs[ex.submit(probe_stream, u)] = (std, u)
+                futs[ex.submit(_probe_timed, u)] = (std, u)
             if time.time() - t0 > budget_s:
                 break
         for fut in as_completed(futs):
             std, u = futs[fut]
-            try:
-                ok, why = fut.result()
-            except Exception:
-                ok, why = False, "error"
-            results.setdefault(std, []).append((u, ok, why))
+            ok, why, ms = fut.result()
+            results.setdefault(std, []).append((u, ok, why, ms))
             n[0] += 1
             if n[0] % 50 == 0:
                 print("  tested %d lines ..." % n[0], flush=True)
     verified = {}
     for std, lst in results.items():
-        good = [u for u, ok, _w in lst if ok]
+        # 线路按速度升序：实测通过者按探流耗时小→大排列（同一频道内首条=最快线路，
+        # 播放器默认取首条、卡顿可手动切后继线路）；未通过的线路不进 verified。
+        good = sorted(((u, ms) for u, ok, _w, ms in lst if ok), key=lambda x: x[1])
         if good:
-            verified[std] = good[:MAX_LINES_PER_CH]
+            verified[std] = [u for u, _ms in good[:MAX_LINES_PER_CH]]
     return verified, results
 
 
