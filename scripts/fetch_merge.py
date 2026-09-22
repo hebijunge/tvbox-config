@@ -301,7 +301,7 @@ UPSTREAMS = [
 ]
 
 # P0：直播源上游。2026-09-21 直播线融合扩容（六批调研落地，task 7687996812807916527）：
-# 原 2 条（guovin 双通道）扩至 22 条。全部经 live_probe 验活后纳入：
+# 原 2 条（guovin 双通道）扩至 22 条；2026-09-22 第七批扩容（多仓调研+多App调研落地）再增 5 仓 6 条，共 28 条。全部经 live_probe 验活后纳入：
 #   ok = L1+L2+L3 全过；format_only = L2 过、L3 沙箱抽样全挂（保留，交 CI 侧验活）；
 #   blocked = 沙箱网关 502 无法判定（保留，交 CI 侧验活）；curl 复核项已单独注明。
 # 沙箱内不可达不代表死链（CI 侧 raw 直连可达）；运行期任一上游连续 FAIL_LIMIT=3 次
@@ -356,6 +356,19 @@ LIVE_UPSTREAMS = [
      "url": "https://raw.githubusercontent.com/zwc456baby/iptv_alive/master/live.m3u"},  # 验活 ok 30 频道
     {"name": "hujingguang-cntv", "kind": "m3u",
      "url": "https://raw.githubusercontent.com/hujingguang/ChinaIPTV/main/cnTV_AutoUpdate.m3u8"},  # 验活 ok 60 频道
+    # ---- 第七批（多仓调研+多App调研落地，2026-09-22）：5 仓 6 条 ----
+    {"name": "ccsh-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/ccsh/iptv/main/live.m3u"},  # 验活 ok 2324 频道 47 组（MIT，全自动聚合产物，L3 抽样 3/5）
+    {"name": "kimwang-bbxx365lite", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/kimwang1978/collect-txt/main/bbxx365_lite.m3u"},  # 验活 ok 7434 频道 24 组（每日归一化精简产物，沙箱 raw 直拉 200；全量版 bbxx365.m3u 25233 频道体积 4.3MB 未采用）
+    {"name": "iptv0610-xp", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/0610840119/iptv-api/master/output/xp_result.m3u"},  # 验活 ok 683 频道 8 组（Guovin 变体秒播级，master 分支）
+    {"name": "fanmingming-index", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/fanmingming/live/main/tv/m3u/index.m3u"},  # 验活 format_only 94 频道（运营商鉴权流沙箱 403/404；CI 侧同仓 Pages 域名产物已验 ok/82 频道，交 live-validate 复核）
+    {"name": "yang-gather", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/YanG-1989/m3u/main/Gather.m3u"},  # 验活 ok 123 频道（斗鱼/虎牙等大街源聚合；CI 侧 live_checks 同 URL 组验活 ok/123 频道）
+    {"name": "yang-migu", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/YanG-1989/m3u/main/Migu.m3u"},  # 验活 format_only 43 频道（咪咕回看流 gslbserv.itv.cmvideo.cn 沙箱 403，交 CI 验活）
 ]
 # 报告点名的上游未纳入本次 LIVE_UPSTREAMS（有据记录，非遗漏）：
 # - tzdr.com/iptv.txt（第六批）：沙箱两次 fetch_error + curl 000 不可达，不硬塞；
