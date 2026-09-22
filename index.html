@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TVBox 配置导航 · tvbox-config</title>
+<style>
+  /* 独立实现（2026-09-22）：参考对象仅提供交互概念，未复制任何 GPL 代码 */
+  :root{
+    --bg:#0f1420; --panel:#171e2e; --panel2:#1c2438; --line:#2a3450;
+    --txt:#e8ecf5; --dim:#93a0bb; --acc:#4f8cff; --ok:#37c283; --warn:#e8b03f; --bad:#e06565;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:var(--bg);color:var(--txt);font:15px/1.6 -apple-system,"PingFang SC","Microsoft YaHei",sans-serif;
+       min-height:100vh;padding:0 0 60px}
+  header{padding:28px 20px 14px;max-width:960px;margin:0 auto}
+  header h1{font-size:22px;font-weight:700}
+  header p{color:var(--dim);font-size:13px;margin-top:4px}
+  nav{max-width:960px;margin:14px auto 0;padding:0 20px;display:flex;gap:8px;flex-wrap:wrap;
+      position:sticky;top:0;background:var(--bg);z-index:9;padding-top:10px;padding-bottom:10px}
+  nav button{background:var(--panel);border:1px solid var(--line);color:var(--dim);padding:8px 18px;
+             border-radius:20px;cursor:pointer;font-size:14px}
+  nav button.on{background:var(--acc);border-color:var(--acc);color:#fff}
+  main{max-width:960px;margin:0 auto;padding:6px 20px}
+  section{display:none}
+  section.on{display:block}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin-bottom:14px}
+  .card h3{font-size:15px;margin-bottom:6px}
+  .card .desc{color:var(--dim);font-size:13px;margin-bottom:10px}
+  .badge{display:inline-block;font-size:11px;color:#fff;background:var(--ok);border-radius:4px;
+         padding:1px 7px;margin-left:8px;vertical-align:2px}
+  .lines{display:flex;flex-wrap:wrap;gap:8px}
+  .ln{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);
+      border-radius:8px;padding:6px 10px;font-size:12px;color:var(--txt)}
+  .ln .tag{color:var(--dim)}
+  .ln button{background:var(--acc);border:0;color:#fff;border-radius:5px;padding:3px 9px;cursor:pointer;font-size:12px}
+  .ln button:active{opacity:.7}
+  .ln a{color:var(--acc);text-decoration:none;font-size:12px}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line)}
+  th{color:var(--dim);font-weight:500}
+  .bar{height:10px;border-radius:5px;overflow:hidden;display:flex;background:var(--panel2);margin:8px 0 4px}
+  .bar i{display:block;height:100%}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--dim)}
+  .legend s{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;text-decoration:none}
+  .c-ok{background:var(--ok)} .c-warn{background:var(--warn)}
+  .c-unknown{background:#5a6684} .c-bad{background:var(--bad)}
+  .note{color:var(--dim);font-size:12px;margin-top:8px}
+  .err{color:var(--warn);font-size:13px}
+  footer{max-width:960px;margin:26px auto 0;padding:0 20px;color:var(--dim);font-size:12px}
+  footer b{color:var(--warn)}
+  .toast{position:fixed;left:50%;bottom:36px;transform:translateX(-50%);background:var(--acc);color:#fff;
+         padding:8px 18px;border-radius:20px;font-size:13px;opacity:0;transition:.25s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<header>
+  <h1>TVBox 配置导航</h1>
+  <p id="genat">tvbox-config 每日自动更新 · 数据与仓库产物同源</p>
+</header>
+
+<nav>
+  <button data-t="sub" class="on">订阅入口</button>
+  <button data-t="health">健康度总览</button>
+  <button data-t="live">直播分类</button>
+  <button data-t="dl">离线包下载</button>
+</nav>
+
+<main>
+  <!-- ① 订阅入口：同一配置多线路并列，一线不畅换下一条 -->
+  <section id="sub" class="on"><div id="subcards"></div></section>
+
+  <!-- ② 健康度总览：读 exports/health_report.json -->
+  <section id="health">
+    <div class="card"><h3>点播站点健康分布</h3><div id="h-vod"></div></div>
+    <div class="card"><h3>直播源健康分布</h3><div id="h-live"></div></div>
+    <div class="card"><h3>较上轮变化</h3><div id="h-diff"></div>
+      <p class="note">完整明细见仓库 <code>exports/health_report.json</code> 与 <a id="h-summary" style="color:var(--acc)" href="exports/SUMMARY.md">人读日报 SUMMARY.md</a></p>
+    </div>
+  </section>
+
+  <!-- ③ 直播分类 -->
+  <section id="live"><div id="livecards"></div></section>
+
+  <!-- ④ 离线包下载 -->
+  <section id="dl">
+    <div class="card"><h3>离线自洽包（推荐弱网环境）</h3>
+      <p class="desc">配置 + 全部依赖打包，解压后本地导入即用，不依赖任何在线域名。</p>
+      <div class="lines" id="dl-lines"></div>
+    </div>
+    <div class="card"><h3>网盘 Cookie 获取指引</h3>
+      <p class="desc">部分网盘源需自行配置 Cookie，获取方法见 <a style="color:var(--acc)" href="stores/pan_ck.json" target="_blank" rel="noopener">stores/pan_ck.json</a>。</p>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <p><b>受限内容说明</b>：成人分类内容自 2026-09-19 起不在本仓库公开通路（导航页 / Pages / Release 白名单 / README 订阅表）托管与推广，本页不含任何相关入口；如有需要请按仓库 README 的本地构建说明自行生成。</p>
+  <p style="margin-top:6px">数据来源：tvbox-config 仓库每日 CI 产物 · 页面为纯静态实现，无后端 · 加载失败时请直接使用订阅卡片中的 raw / Release 线路。</p>
+</footer>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+  var REPO="hebijunge/tvbox-config";
+  var RAW="https://raw.githubusercontent.com/"+REPO+"/main/";
+  var GH="https://ghproxy.net/https://raw.githubusercontent.com/"+REPO+"/main/";
+  var JSD="https://cdn.jsdelivr.net/gh/"+REPO+"@main/";
+  var REL="https://github.com/"+REPO+"/releases/download/latest/";
+  var BASE=location.origin+location.pathname.replace(/[^/]*$/,"");
+
+  /* 订阅配置清单：仅列公开通路产物；release 字段为空表示该产物不上 Release */
+  var CONFIGS=[
+    {path:"tvbox.json",        name:"完整合并配置",   desc:"全量站点 + 直播 + 解析，一次订阅全包含", release:1},
+    {path:"exports/healthy.json", name:"健康清单", desc:"仅实测能搜能播的源，体感最好", release:0, hot:1},
+    {path:"vod.json",          name:"点播",          desc:"点播拆分订阅（含短剧）", release:1},
+    {path:"live.json",         name:"直播",          desc:"直播拆分订阅", release:1},
+    {path:"short.json",        name:"短剧",          desc:"短剧独立订阅", release:1}
+  ];
+  var LIVES=[
+    {f:"live.txt",n:"分类合并（全量）"},{f:"live_cctv.txt",n:"央视"},{f:"live_weishi.txt",n:"卫视"},
+    {f:"live_gangtai.txt",n:"港台"},{f:"live_other.txt",n:"其他"}
+  ];
+
+  function $(id){return document.getElementById(id)}
+  function toast(msg){var t=$("toast");t.textContent=msg;t.classList.add("show");
+    setTimeout(function(){t.classList.remove("show")},1600)}
+  function copy(text){
+    function ok(){toast("已复制")}
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text).then(ok,function(){fallback()})
+    }else{fallback()}
+    function fallback(){
+      var ta=document.createElement("textarea");ta.value=text;ta.style.position="fixed";ta.style.opacity="0";
+      document.body.appendChild(ta);ta.select();
+      try{document.execCommand("copy");ok()}catch(e){toast("复制失败，请手动复制")}
+      document.body.removeChild(ta);
+    }
+  }
+  /* 页内相对线路：Pages 同域；本地打开 file:// 时 origin 不可用则隐藏该线路 */
+  function pagesUrl(path){return /^https?:/.test(location.protocol)?BASE+path:null}
+
+  function lineBtn(tag,url,path){
+    var d=document.createElement("span");d.className="ln";
+    var t=document.createElement("span");t.className="tag";t.textContent=tag;d.appendChild(t);
+    if(url){
+      var b=document.createElement("button");b.textContent="复制";
+      b.onclick=function(){copy(url)};d.appendChild(b);
+      var a=document.createElement("a");a.href=url;a.target="_blank";a.rel="noopener";
+      a.textContent="打开";d.appendChild(a);
+    }else{
+      var s=document.createElement("span");s.style.color="var(--dim)";s.textContent="不可用";d.appendChild(s);
+    }
+    return d;
+  }
+
+  /* ① 订阅卡片 */
+  (function(){
+    var wrap=$("subcards");
+    CONFIGS.forEach(function(c){
+      var card=document.createElement("div");card.className="card";
+      var h=document.createElement("h3");h.textContent=c.name;
+      if(c.hot){var b=document.createElement("span");b.className="badge";b.textContent="推荐";h.appendChild(b)}
+      card.appendChild(h);
+      var p=document.createElement("p");p.className="desc";p.textContent=c.desc;card.appendChild(p);
+      var lines=document.createElement("div");lines.className="lines";
+      lines.appendChild(lineBtn("raw",RAW+c.path,c.path));
+      lines.appendChild(lineBtn("ghproxy",GH+c.path,c.path));
+      lines.appendChild(lineBtn("jsDelivr",JSD+c.path,c.path));
+      lines.appendChild(lineBtn("Pages",pagesUrl(c.path),c.path));
+      if(c.release) lines.appendChild(lineBtn("Release",REL+c.path.split("/").pop(),c.path));
+      card.appendChild(lines);wrap.appendChild(card);
+    });
+  })();
+
+  /* ③ 直播分类 */
+  (function(){
+    var wrap=$("livecards");
+    LIVES.forEach(function(lv){
+      var card=document.createElement("div");card.className="card";
+      var h=document.createElement("h3");h.textContent=lv.n;card.appendChild(h);
+      var p=document.createElement("p");p.className="desc";p.textContent="lives/"+lv.f+" · m3u/txt 直播源";card.appendChild(p);
+      var lines=document.createElement("div");lines.className="lines";
+      lines.appendChild(lineBtn("raw",RAW+"lives/"+lv.f));
+      lines.appendChild(lineBtn("Pages",pagesUrl("lives/"+lv.f)));
+      card.appendChild(lines);wrap.appendChild(card);
+    });
+  })();
+
+  /* ④ 下载 */
+  (function(){
+    var w=$("dl-lines");
+    w.appendChild(lineBtn("Pages 同域",pagesUrl("packs/tvbox-latest.zip")));
+    w.appendChild(lineBtn("Release",REL+"tvbox-latest.zip"));
+    var note=document.createElement("p");note.className="note";
+    note.textContent="固定名 tvbox-latest.zip 每日覆盖更新；生成时间见包内「使用说明.txt」。";
+    w.parentNode.appendChild(note);
+  })();
+
+  /* ② 健康度总览：读数失败降级显示，不阻塞其他面板 */
+  function bar(el,summary,total){
+    var order=[["healthy","c-ok"],["degraded","c-warn"],["unknown","c-unknown"],["dead","c-bad"]];
+    var barEl=document.createElement("div");barEl.className="bar";
+    order.forEach(function(o){
+      var v=summary[o[0]]||0;if(!v)return;
+      var i=document.createElement("i");i.className=o[1];i.style.width=(total? (v/total*100).toFixed(1):0)+"%";
+      barEl.appendChild(i);
+    });
+    el.appendChild(barEl);
+    var lg=document.createElement("div");lg.className="legend";
+    order.forEach(function(o){
+      var s=document.createElement("span");
+      s.innerHTML='<s class="'+o[1]+'"></s>'+o[0]+" "+(summary[o[0]]||0);
+      lg.appendChild(s);
+    });
+    el.appendChild(lg);
+  }
+  fetch("exports/health_report.json").then(function(r){if(!r.ok)throw 0;return r.json()}).then(function(d){
+    $("genat").textContent="tvbox-config 每日自动更新 · 产物生成于 "+(d.generated_at||"");
+    bar($("h-vod"),d.vod&&d.vod.summary||{},d.vod&&d.vod.total||0);
+    bar($("h-live"),d.live&&d.live.summary||{},d.live&&d.live.total||0);
+    var cv=d.vod&&d.vod.counts||{},cl=d.live&&d.live.counts||{};
+    $("h-diff").innerHTML="<table><tr><th></th><th>新增</th><th>掉线</th><th>恢复</th><th>移除</th></tr>"
+      +"<tr><td>点播</td><td>"+(cv.new||0)+"</td><td>"+(cv.down||0)+"</td><td>"+(cv.recovered||0)+"</td><td>"+(cv.gone||0)+"</td></tr>"
+      +"<tr><td>直播</td><td>"+(cl.new||0)+"</td><td>"+(cl.down||0)+"</td><td>"+(cl.recovered||0)+"</td><td>"+(cl.gone||0)+"</td></tr></table>";
+  }).catch(function(){
+    $("h-vod").innerHTML='<p class="err">健康数据加载失败（同域 exports/health_report.json 不可达）。请直接使用订阅卡片中的 raw / Release 线路。</p>';
+    $("h-live").innerHTML="";$("h-diff").innerHTML="";
+  });
+
+  /* 面板切换 */
+  document.querySelectorAll("nav button").forEach(function(b){
+    b.onclick=function(){
+      document.querySelectorAll("nav button").forEach(function(x){x.classList.remove("on")});
+      document.querySelectorAll("main section").forEach(function(x){x.classList.remove("on")});
+      b.classList.add("on");$(b.dataset.t).classList.add("on");
+    };
+  });
+})();
+</script>
+</body>
+</html>

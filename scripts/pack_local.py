@@ -296,7 +296,6 @@ def main():
         % (len(plan), n_bytes / 1048576, len(unresolvable)))
 
     # ---------- 5. 组包 ----------
-    today = datetime.now().strftime("%Y%m%d")
     build = os.path.join(args.out, "build")
     shutil.rmtree(build, ignore_errors=True)
     os.makedirs(build)
@@ -336,7 +335,10 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
 """
     open(os.path.join(build, "使用说明.txt"), "w", encoding="utf-8").write(readme)
 
-    zip_path = os.path.join(args.out, "TVBox接口包_%s.zip" % today)
+    # P1-2 卫生修复（2026-09-22）：zip 改固定名，Release 端 --clobber 原地覆盖，
+    # 不再按日期累积（此前 TVBox接口包_YYYYMMDD.zip 逐日堆积 70MB+，Release 资产膨胀）。
+    # 生成日期记录在包内「使用说明.txt」与 pack_report.json，不丢可追溯性。
+    zip_path = os.path.join(args.out, "tvbox-latest.zip")
     if os.path.isfile(zip_path):
         os.remove(zip_path)
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:

@@ -28,6 +28,17 @@ https://cdn.jsdelivr.net/gh/hebijunge/tvbox-config@main/tvbox.json
 https://github.com/hebijunge/tvbox-config/releases/download/latest/tvbox.json
 ```
 
+## 在线导航页（2026-09-22 起，第三条通路）
+
+**https://hebijunge.github.io/tvbox-config/** —— 纯静态导航页（`index.html`），与配置产物同域托管：
+
+- 订阅入口：每份配置 raw / ghproxy / jsDelivr / Pages / Release 多线路并列，一键复制，一线不畅换下一条；
+- 健康度总览：读 `exports/health_report.json` 实时渲染（读数失败自动降级提示）；
+- 直播分类：央视 / 卫视 / 港台 / 其他 txt 直达；
+- 离线包下载：`tvbox-latest.zip` Pages 同域 + Release 双入口。
+
+> 前置（一次性）：仓库 Settings → Pages → Build and deployment → Source 选「GitHub Actions」，之后每日 CI 成功自动部署（`.github/workflows/pages.yml`）。
+
 ## 健康清单订阅（2026-09-20 起，推荐）
 
 全量配置里约一半源是死的（站点关停/防盗链失效）。`exports/` 按实测健康度分层导出，**推荐默认订阅 `healthy.json`**（实测能搜能播的源）：
@@ -129,10 +140,11 @@ python scripts/fetch_merge.py
 | `drpy-sandbox/` | drpy Node 沙箱（宿主 + 引擎），CI 每日实测本地 JS 源 |
 | `exports/` | 按健康度导出的订阅清单（见上方「健康清单订阅」） |
 | `candidate_upstreams.json` | issue 自动收录的候选池（issue → PR） |
+| `index.html` | 在线导航页（Pages 同域部署，见上方「在线导航页」） |
 
 ## 运行机制
 
-1. **定时**：北京时间每日 06:00 与 18:00 各跑一次拉取合并（`.github/workflows/daily.yml`），00:30 独立验活（`validate.yml`），周一 11:00 源雷达扫描（`radar.yml`），均支持手动触发。
+1. **定时**：北京时间每日 03:00 单轮跑拉取合并（`.github/workflows/daily.yml`，cron `0 19 * * *` UTC；2026-09-22 与实现对齐——旧文档写的 06:00/18:00 双轮已过时），成功后自动部署 GitHub Pages（`pages.yml`）；00:30 独立验活（`validate.yml`），周一 11:00 源雷达扫描（`radar.yml`），均支持手动触发。
 2. **质量门槛（P0）**：每份上游除 HTTP 可达外，还须通过最小字节数（配置 ≥512B、m3u ≥1KB）/ 最小条目数门槛，并记录内容 sha256 指纹——HTTP 200 不等于有货。
 3. **自动停用（P0/P1）**：连续 3 次不达标的上游自动停用（写入 `state/blacklist_auto.txt`），可用后自动恢复；`state/whitelist_manual.txt` 可豁免，`state/blacklist_manual.txt` 可强制拉黑。
 4. **拉取与解析（P2 一上游一适配器）**：上游以 kind 分派解析器（`tvbox`=json 配置 / `m3u`=直播列表），新增源只加一条配置，互不影响。
@@ -140,7 +152,7 @@ python scripts/fetch_merge.py
 6. **链接代理**：配置内的 GitHub 原链统一加 `ghproxy.net` 前缀；上游换域名时可在 `state/domain_map.json` 配置映射自动改写（P2 域名替换层）。
 7. **测速验活**：type 0/1 直连站点并发测活（6 秒超时，失败重试一次），连续失败自动剔除；直播源按央视/卫视/港台/其他分类，逐 URL 测速排序，每频道保留前 3 条。
 8. **快照存档（P1）**：每次运行把各上游原始文件存入 `snapshot/<日期>/`（带时间戳文件名），合并产物一并留存，可回滚与失效溯源。
-9. **双通道发布（P2）**：产物同时提交 main 分支与 Releases（`latest` 标签固定指向最新），README 由 `checks.json` 自动回写各上游可用性状态（🟢🟡🔴）。
+9. **三通道发布（P2）**：产物同时提交 main 分支、Releases（`latest` 标签固定指向最新）与 GitHub Pages 导航页（`https://hebijunge.github.io/tvbox-config/`，2026-09-22 起，白名单组目录、adult 系产物不入）；README 由 `checks.json` 自动回写各上游可用性状态（🟢🟡🔴）。Release 白名单外陈旧资产每日由 `scripts/release_cleanup.py` 自动清理（`adult.json` 按受限产物保留，见下方「受限内容说明」）。
 10. **社区收录（P2）**：提 issue 按模板推荐上游 → 机器人自动验活 → 可用者自动开 PR 登记 `candidate_upstreams.json`，人工确认后收编。
 
 ## 上游清单
@@ -391,3 +403,11 @@ python3 scripts/discover_upstreams.py               # 全网上游发现
 ```
 
 仅依赖 Python 3.8+ 标准库，无第三方包。
+
+
+## 受限内容说明（2026-09-22 起）
+
+- **仓库根 `adult.json` 为受限内容产物，按所有者 2026-09-22 明确决策保留**：文件与 raw 链接不删除；但它是**历史遗留的独立产物**，不在每日发布白名单内（不随 CI 更新、不进 Release 上传清单、不进 GitHub Pages、不进本 README 与导航页的任何订阅入口）。
+- 合规处理与保留并行：保留产物本身的同时，切断其在所有**公开推广通路**的露出（此页即唯一公开说明位），内容分级 18+，仅供自行部署的成年用户按需取用。
+- 如需成人分类的最新构建产物：本地运行 `python3 scripts/fetch_merge.py` 并设 `PUBLISH_ADULT=1`（产物只落在本地，不提交、不发布）。
+- 评估报告（2026-09-22）曾建议删除仓库根 `adult.json` 以消除合规缺口；所有者裁决为保留，故本轮以「保留 + 通路隔离 + 明示声明」替代删除方案。

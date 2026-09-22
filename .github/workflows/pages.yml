@@ -1,0 +1,93 @@
+name: pages-deploy
+# P1-1 订阅通路多域名化 + P1-3 静态导航页（2026-09-22）
+# GitHub Pages 作为第三条订阅通路（与 raw / Releases 并列）：
+#   - 导航页 index.html 与配置产物同域可访问，参考 tvbox-api-backup 的「静态托管 + 多域名」思路，
+#     交互概念自行实现、不引入其 GPL 代码；
+#   - 白名单拷贝组目录：adult 系产物一律不入 Pages（红线，双保险见组目录末尾 find -delete）。
+# 前置（一次性，仓库设置）：Settings → Pages → Build and deployment → Source 选「GitHub Actions」。
+
+on:
+  workflow_run:
+    workflows: [daily-fetch]
+    types: [completed]
+    branches: [main]
+  push:
+    branches: [main]
+    paths:
+      - "index.html"
+      - "tvbox.json"
+      - "vod.json"
+      - "live.json"
+      - "short.json"
+      - "list.json"
+      - "status.json"
+      - "exports/**"
+      - "lives/**"
+      - "stores/pan_ck.json"
+      - "packs/**"
+      - ".github/workflows/pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    # workflow_run 触发时仅在上游 daily-fetch 成功后部署；其余触发无条件执行
+    if: ${{ github.event_name != 'workflow_run' || github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 组装 Pages 目录（白名单拷贝）
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          mkdir -p site/exports site/lives site/packs site/stores
+          cp index.html site/
+          for f in tvbox.json vod.json live.json short.json list.json status.json; do
+            [ -f "$f" ] && cp "$f" site/ || echo "缺少 $f（跳过）"
+          done
+          # exports 白名单（不含 any adult 相关导出）
+          for f in all usable healthy vod spider localjs pan short; do
+            [ -f "exports/$f.json" ] && cp "exports/$f.json" site/exports/ || true
+          done
+          [ -f exports/health_index.json ] && cp exports/health_index.json site/exports/ || true
+          [ -f exports/health_report.json ] && cp exports/health_report.json site/exports/ || true
+          [ -f exports/SUMMARY.md ] && cp exports/SUMMARY.md site/exports/ || true
+          # 直播分类 txt
+          for f in live.txt live_cctv.txt live_weishi.txt live_gangtai.txt live_other.txt; do
+            [ -f "lives/$f" ] && cp "lives/$f" site/lives/ || true
+          done
+          # 离线包：仓库不提交 zip，从 Release latest 取固定名包（ASCII 名，避免资产名被转写成点号）
+          if [ -f packs/tvbox-latest.zip ]; then
+            cp packs/tvbox-latest.zip site/packs/
+          else
+            gh release download latest -R "$GITHUB_REPOSITORY" -p 'tvbox-latest.zip' \
+              -O site/packs/tvbox-latest.zip && echo "离线包已从 Release 取回" || echo "离线包暂缺（页面会回退显示 Release 链接）"
+          fi
+          [ -f packs/pack_report.json ] && cp packs/pack_report.json site/packs/ || true
+          [ -f stores/pan_ck.json ] && cp stores/pan_ck.json site/stores/ || true
+          # 双保险：即使上游误放，adult 系产物也绝不进入 Pages
+          find site -iname '*adult*' -delete -print
+          echo "---- site 目录 ----"
+          find site -type f | sort
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

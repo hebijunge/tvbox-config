@@ -73,6 +73,57 @@ def diff(cur: dict, prev: dict):
     return new, gone, down, recovered
 
 
+def write_summary_md(report: dict, out_path: str):
+    """把 health_report 渲染成人读 Markdown（exports/SUMMARY.md）。
+
+    只做格式化、不做二次计算：所有数字直接取自 report，
+    长尾明细各截前 10 条（完整明细在 health_report.json）。"""
+    v, l = report.get("vod", {}), report.get("live", {})
+    sv, sl = v.get("summary", {}), l.get("summary", {})
+    cv, cl = v.get("counts", {}), l.get("counts", {})
+    lines = [
+        "# 每日健康日报（人读版）",
+        "",
+        f"生成时间：{report.get('generated_at', '')}"
+        + ("（首次运行，已建立基线，无对比数据）" if report.get("is_baseline") else ""),
+        "",
+        "## 总览",
+        "",
+        "| 类别 | 总量 | healthy | degraded | unknown | dead |",
+        "|---|---|---|---|---|---|",
+        f"| 点播 | {v.get('total', 0)} | {sv.get('healthy', 0)} | {sv.get('degraded', 0)} "
+        f"| {sv.get('unknown', 0)} | {sv.get('dead', 0)} |",
+        f"| 直播 | {l.get('total', 0)} | {sl.get('healthy', 0)} | {sl.get('degraded', 0)} "
+        f"| {sl.get('unknown', 0)} | {sl.get('dead', 0)} |",
+        "",
+        f"较上轮变化：新增 {cv.get('new', 0)}｜掉线 {cv.get('down', 0)}｜恢复 {cv.get('recovered', 0)}｜移除 {cv.get('gone', 0)}（点播）；"
+        f"新增 {cl.get('new', 0)}｜掉线 {cl.get('down', 0)}｜恢复 {cl.get('recovered', 0)}｜移除 {cl.get('gone', 0)}（直播）",
+        "",
+    ]
+    if v.get("down"):
+        lines += ["## 点播掉线（前 10）", ""]
+        lines += [f"- {d.get('name') or d.get('key')}（{d.get('from')} → {d.get('to')}）"
+                  for d in v["down"][:10]]
+        lines.append("")
+    if v.get("recovered"):
+        lines += ["## 点播恢复（前 10）", ""]
+        lines += [f"- {r.get('name') or r.get('key')}（{r.get('from')} → {r.get('to')}）"
+                  for r in v["recovered"][:10]]
+        lines.append("")
+    if v.get("new"):
+        lines += ["## 点播新增（前 10）", ""]
+        lines += [f"- {n.get('name') or n.get('key')}（{n.get('health')}）" for n in v["new"][:10]]
+        lines.append("")
+    if l.get("down"):
+        lines += ["## 直播掉线（前 10）", ""]
+        lines += [f"- {d.get('name') or d.get('key')}（{d.get('from')} → {d.get('to')}）"
+                  for d in l["down"][:10]]
+        lines.append("")
+    os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
+    with open(out_path, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(lines))
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--db", default="state/tvbox.db")
@@ -129,6 +180,12 @@ def main() -> int:
 
     os.makedirs(os.path.dirname(out_path) or ".", exist_ok=True)
     json.dump(report, open(out_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+
+    # P2-2 人读日报（2026-09-22）：同一份报告输出轻量 Markdown（exports/SUMMARY.md），
+    # 供导航页与 README 引用；数据源与 health_report.json 完全一致，不做二次加工。
+    summary_path = os.path.join(repo, "exports", "SUMMARY.md")
+    write_summary_md(report, summary_path)
+
     # 更新快照（下次对比的基线）
     os.makedirs(os.path.dirname(snap_path) or ".", exist_ok=True)
     json.dump({"generated_at": report["generated_at"],
