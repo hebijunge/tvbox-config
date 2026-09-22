@@ -1,400 +1,53 @@
 {
- "generated_at": "2026-09-22 02:09:48",
+ "generated_at": "2026-09-22 02:47:07",
  "source": "probe/sites_probe.json",
  "threshold": 0.8,
  "total_tol": 0.15,
  "note": "同片库镜像站分组；drop_keys 供合并阶段剔除（证据不足不合并）",
  "summary": {
-  "considered": 87,
-  "groups": 14,
-  "redundant": 40
+  "considered": 146,
+  "groups": 34,
+  "redundant": 95
  },
  "groups": [
   {
    "keep": {
-    "key": "api_19",
-    "name": "TV-无尽资源",
-    "api": "https://api.wujinapi.me/api.php/provide/vod",
+    "key": "滴滴",
+    "name": "滴滴 | 采集",
+    "api": "https://api.ddapi.cc/api.php/provide/vod/",
+    "level": "L3",
+    "total": 45111
+   },
+   "drops": [
+    {
+     "key": "didizy.com",
+     "name": "♥滴滴(直连)",
+     "api": "https://api.ddapi.cc/api.php/provide/vod/?ac=list",
+     "level": "L3",
+     "total": 45111
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "souav",
+    "name": "souav | 采集",
+    "api": "https://api.souavzy.vip/api.php/provide/vod/?ac=list",
     "level": "L2",
-    "total": 120710
+    "total": 125954
    },
    "drops": [
     {
-     "key": "csp_xml_无尽",
-     "name": "❤无尽资源",
-     "api": "https://api.wujinapi.me/api.php/provide/vod/?ac=list",
+     "key": "AV资源",
+     "name": "AV | 采集",
+     "api": "https://api.souavzy.vip/api.php/provide/vod/at/json",
      "level": "L2",
-     "total": 120710
-    },
-    {
-     "key": "api_20",
-     "name": "TV-无尽资源",
-     "api": "https://api.wujinapi.net/api.php/provide/vod",
-     "level": "L2",
-     "total": 120710
-    },
-    {
-     "key": "api_8",
-     "name": "TV-wujinapi无尽",
-     "api": "https://api.wujinapi.cc/api.php/provide/vod",
-     "level": "L2",
-     "total": 120710
-    },
-    {
-     "key": "api_18",
-     "name": "TV-无尽资源",
-     "api": "https://api.wujinapi.com/api.php/provide/vod",
-     "level": "L2",
-     "total": 120710
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "api_wsyzy_net",
-    "name": "👖奈飞",
-    "api": "https://api.wsyzy.net/api.php/provide/vod",
-    "level": "L3",
-    "total": 125857
-   },
-   "drops": [
-    {
-     "key": "api_25",
-     "name": "TV-最大资源",
-     "api": "https://api.zuidapi.com/api.php/provide/vod",
-     "level": "L2",
-     "total": 123270
-    },
-    {
-     "key": "b31acfcd3fce887b832b0c47754159b5",
-     "name": "25-最大",
-     "api": "https://zuidazy.co/api.php/provide/vod/",
-     "level": "L2",
-     "total": 123270
-    },
-    {
-     "key": "api_24",
-     "name": "TV-最大点播",
-     "api": "http://zuidazy.me/api.php/provide/vod",
-     "level": "L2",
-     "total": 123270
-    },
-    {
-     "key": "suonisandian",
-     "name": "索尼-闪电资源",
-     "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
-     "level": "L1",
-     "total": 123057
-    },
-    {
-     "key": "api_9",
-     "name": "TV-丫丫点播",
-     "api": "https://cj.yayazy.net/api.php/provide/vod",
-     "level": "L1",
-     "total": 121314
-    },
-    {
-     "key": "csp_xml_闪电资源",
-     "name": "❤闪电资源",
-     "api": "https://sdzyapi.com/api.php/provide/vod/?ac=list",
-     "level": "L1",
-     "total": 123057
-    },
-    {
-     "key": "api_28",
-     "name": "TV-牛牛点播",
-     "api": "https://api.niuniuzy.me/api.php/provide/vod",
-     "level": "L1",
-     "total": 123274
-    },
-    {
-     "key": "闪电影视",
-     "name": "☀闪电🔹秒播",
-     "api": "http://sdzyapi.com/api.php/provide/vod/",
-     "level": "L1",
-     "total": 123057
-    },
-    {
-     "key": "a7309ad5614fb7c13fa6d3e49639f8be",
-     "name": "63-丫丫",
-     "api": "https://yayazy2.com/api.php/provide/vod/",
-     "level": "L1",
-     "total": 121314
-    },
-    {
-     "key": "be2647749acad7d9ad787c87cb03e9d4",
-     "name": "36-牛牛",
-     "api": "https://niuniuzy3.com/api.php/provide/vod/",
-     "level": "L1",
-     "total": 123274
-    },
-    {
-     "key": "牛牛影视",
-     "name": "☀牛牛🔹秒播",
-     "api": "https://api.niuniuzy.me/api.php/provide/vod/at/xml",
-     "level": "L1",
-     "total": 123274
-    },
-    {
-     "key": "api_44",
-     "name": "TV-閃電资源",
-     "api": "https://sdzyapi.com/api.php/provide/vod",
-     "level": "L1",
-     "total": 123057
-    },
-    {
-     "key": "cj_牛牛短剧",
-     "name": "☀🔹牛牛短剧",
-     "api": "https://api.niuniuzy.me/api.php/provide/vod/from/nnm3u8/at/json",
-     "level": "L1",
-     "total": 123256
-    },
-    {
-     "key": "kczy",
-     "name": "快车资源",
-     "api": "https://caiji.kuaichezy.org/api.php/provide/vod",
-     "level": "L1",
-     "total": 124670
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "lebozy.com",
-    "name": "💕乐播(直连)",
-    "api": "https://lbapi9.com/api.php/provide/vod/?ac=list",
-    "level": "L2",
-    "total": 331155
-   },
-   "drops": [
-    {
-     "key": "猎豹",
-     "name": "猎豹(18)",
-     "api": "https://lbapi9.com/api.php/provide/vod/at/json",
-     "level": "L2",
-     "total": 331155
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "api_32",
-    "name": "TV-神马云",
-    "api": "https://api.1080zyku.com/inc/apijson.php/",
-    "level": "L2",
-    "total": 103968
-   },
-   "drops": [
-    {
-     "key": "柚子资源",
-     "name": "☀柚子🔹秒播",
-     "api": "https://api.yzzy-api.com/inc/api.php",
-     "level": "L2",
-     "total": 103968
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "tyyszyapi_com",
-    "name": "天涯资源",
-    "api": "https://tyyszyapi.com/api.php/provide/vod/at/",
-    "level": "L1",
-    "total": 70247
-   },
-   "drops": [
-    {
-     "key": "天涯采集",
-     "name": "影视 • 天涯",
-     "api": "http://tyyszy.com/api.php/provide/vod",
-     "level": "L1",
-     "total": 70247
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "鸡坤",
-    "name": "鸡坤 | 采集",
-    "api": "https://jkunzyapi.com/api.php/provide/vod/",
-    "level": "L3",
-    "total": 131789
-   },
-   "drops": [
-    {
-     "key": "jkunzyapi_com",
-     "name": "鸡坤 | 采集",
-     "api": "https://jkunzyapi.com/api.php/provide/vod/",
-     "level": "L3",
-     "total": 131789
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "玉兔",
-    "name": "玉兔 | 采集",
-    "api": "https://apiyutu.com/api.php/provide/vod/",
-    "level": "L3",
-    "total": 215972
-   },
-   "drops": [
-    {
-     "key": "laosebizy.com",
-     "name": "💕老色逼(直连)",
-     "api": "https://apilsbzy1.com/api.php/provide/vod/?ac=list",
-     "level": "L3",
-     "total": 215972
-    },
-    {
-     "key": "玉兔资源",
-     "name": "玉兔资源",
-     "api": "https://apiyutu.com/api.php/provide/vod/at/xml/",
-     "level": "L3",
-     "total": 215972
-    },
-    {
-     "key": "色戒",
-     "name": "色戒(18)",
-     "api": "https://apilsbzy1.com/api.php/provide/vod/at/json",
-     "level": "L3",
-     "total": 215972
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 10,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "api_33",
-    "name": "TV-索尼资源",
-    "api": "https://suoniapi.com/api.php/provide/vod",
-    "level": "L1",
-    "total": 144949
-   },
-   "drops": [
-    {
-     "key": "率率",
-     "name": "影视 • 率率[直连]",
-     "api": "https://suoniapi.com/api.php/provide/vod/?ac=list",
-     "level": "L1",
-     "total": 144949
-    },
-    {
-     "key": "索尼",
-     "name": "影视 • 索尼[直连]",
-     "api": "https://suoniapi.com/api.php/provide/vod/at/xml/",
-     "level": "L1",
-     "total": 144949
-    },
-    {
-     "key": "索尼资源",
-     "name": "索尼┃资源",
-     "api": "https://suoniapi.com/api.php/provide/vod/from/snm3u8/",
-     "level": "L1",
-     "total": 143898
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "pgxdy.com",
-    "name": "★黄AV(直连)",
-    "api": "https://www.pgxdy.com/api/xml.php",
-    "level": "L3",
-    "total": 23998
-   },
-   "drops": [
-    {
-     "key": "www_pgxdy_com",
-     "name": "黄AV资源 [662ms] ✅ [223ms] ✅ [296ms] ✅ [258ms] ✅ [464ms] ✅ [588ms] ✅ [249ms] ✅ [326ms] ✅ [1322ms] ✅ [531ms] ✅ [759ms] ✅ [650ms] ✅ [408ms] ✅ [265ms] ✅ [371ms] ✅ [319ms] ✅ [435ms] ✅ [669ms] ✅ [594ms] ✅ [165ms] ✅ [300ms] ✅ [764ms] ✅ [260ms] ✅ [543ms] ✅ [162ms] ✅ [456ms] ✅ [370ms] ✅ [402ms] ✅ [317ms] ✅",
-     "api": "https://www.pgxdy.com/api/json.php",
-     "level": "L3",
-     "total": 23998
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "雪人",
-    "name": "雪人(18)",
-    "api": "https://www.xrbsp.com/api/json.php",
-    "level": "L3",
-    "total": 23838
-   },
-   "drops": [
-    {
-     "key": "淫水机资源站",
-     "name": "水机 | 采集",
-     "api": "https://www.xrbsp.com/api/xml.php",
-     "level": "L3",
-     "total": 23838
-    }
-   ],
-   "evidence": {
-    "jaccard": 1.0,
-    "overlap": 20,
-    "total_diff": 0.0
-   }
-  },
-  {
-   "keep": {
-    "key": "香奶儿资源站",
-    "name": "香奶 | 采集",
-    "api": "https://www.gdlsp.com/api/xml.php",
-    "level": "L1",
-    "total": 24160
-   },
-   "drops": [
-    {
-     "key": "奶儿",
-     "name": "奶儿(18)",
-     "api": "https://www.gdlsp.com/api/json.php",
-     "level": "L1",
-     "total": 24160
+     "total": 125954
     }
    ],
    "evidence": {
@@ -413,99 +66,1151 @@
    },
    "drops": [
     {
-     "key": "a极速资源",
-     "name": "🎀极速┃采集",
-     "api": "https://jszyapi.com/api.php/provide/vod/",
+     "key": "api_10",
+     "name": "TV-光速资源",
+     "api": "https://api.guangsuapi.com/api.php/provide/vod",
      "level": "L2",
-     "total": 111583
+     "total": 113315
     },
     {
-     "key": "jszyapi_com",
-     "name": "极速资源",
-     "api": "https://jszyapi.com/api.php/provide/vod/at/json",
+     "key": "csp_xml_新浪",
+     "name": "❤新浪资源",
+     "api": "https://api.xinlangapi.com/xinlangapi.php/provide//vod/",
      "level": "L2",
-     "total": 111583
+     "total": 113321
     },
     {
-     "key": "新浪影视",
-     "name": "☀🔹影视.禁止贩卖.如有侵权请联系作者删除",
+     "key": "新浪资源",
+     "name": "新浪资源(切)",
      "api": "http://api.xinlangapi.com/xinlangapi.php/provide/vod/",
      "level": "L2",
      "total": 113321
     },
     {
-     "key": "api_43",
-     "name": "TV-金鹰资源",
-     "api": "https://jyzyapi.com/api.php/provide/vod",
+     "key": "红牛采集",
+     "name": "红牛",
+     "api": "https://www.hongniuzy2.com/api.php/provide/vod/at/xml/",
+     "level": "L2",
+     "total": 112739
+    },
+    {
+     "key": "api_17",
+     "name": "TV-新浪点播",
+     "api": "https://api.xinlangapi.com/xinlangapi.php/provide/vod",
+     "level": "L2",
+     "total": 113321
+    },
+    {
+     "key": "api_34",
+     "name": "TV-红牛资源",
+     "api": "https://www.hongniuzy2.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 112739
+    },
+    {
+     "key": "hongniuziyuan",
+     "name": "红牛资源",
+     "api": "https://www.hongniuzy3.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 112739
+    },
+    {
+     "key": "api_42",
+     "name": "TV-金鹰点播",
+     "api": "https://jinyingzy.com/api.php/provide/vod",
      "level": "L2",
      "total": 113316
     },
     {
-     "key": "xml_火狐",
-     "name": "🔥️火狐┃秒播",
-     "api": "https://hhzyapi.com/api.php/provide/vod/?ac=list",
+     "key": "光速采集",
+     "name": "光速",
+     "api": "https://api.guangsuapi.com/api.php/provide/vod/at/xml/",
      "level": "L2",
-     "total": 112350
-    },
-    {
-     "key": "jinyingzy.com",
-     "name": "🎬金鹰点播",
-     "api": "https://jyzyapi.com/provide/vod/from/jinyingyun/at/json",
-     "level": "L2",
-     "total": 113316
-    },
-    {
-     "key": "e743537b66dc4d8932f3a3800fdb7477",
-     "name": "37-豪华",
-     "api": "https://www.haohuazy.com/api.php/provide/vod/",
-     "level": "L2",
-     "total": 112350
+     "total": 113315
     }
    ],
    "evidence": {
-    "jaccard": 0.905,
-    "overlap": 19,
-    "total_diff": 0.009
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
    }
   },
   {
    "keep": {
-    "key": "IK",
-    "name": "IK",
-    "api": "https://ikunzyapi.com/api.php/provide/vod/from/ikm3u8/",
+    "key": "★辣椒资源",
+    "name": "★辣椒资源",
+    "api": "http://www.lajiaozy18.com/api.php/provide/vod?ac=list",
     "level": "L3",
-    "total": 66971
+    "total": 227039
    },
    "drops": [
     {
-     "key": "iQiYi",
-     "name": "🔰奇艺",
-     "api": "https://iqiyizyapi.com/api.php/provide/vod",
+     "key": "lajiaozy.com",
+     "name": "辣椒(FQ)",
+     "api": "https://apilj.com/api.php/provide/vod/at/json/?ac=list",
      "level": "L3",
-     "total": 67963
+     "total": 227039
+    },
+    {
+     "key": "辣椒",
+     "name": "辣椒 | 采集",
+     "api": "https://apilj.com/api.php/provide/vod/",
+     "level": "L3",
+     "total": 227039
+    },
+    {
+     "key": "*辣椒资源",
+     "name": "*辣椒资源",
+     "api": "https://apilj.com/api.php/provide/vod/at/json/",
+     "level": "L3",
+     "total": 227039
     }
    ],
    "evidence": {
-    "jaccard": 0.818,
-    "overlap": 18,
-    "total_diff": 0.015
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
    }
   },
   {
    "keep": {
-    "key": "feifan1",
-    "name": "非凡线路1",
-    "api": "http://ffzy1.tv/api.php/provide/vod",
+    "key": "api_19",
+    "name": "TV-无尽资源",
+    "api": "https://api.wujinapi.me/api.php/provide/vod",
+    "level": "L2",
+    "total": 120710
+   },
+   "drops": [
+    {
+     "key": "无尽采集",
+     "name": "无尽资源",
+     "api": "https://api.wujinapi.com/api.php/provide/vod/?ac=list",
+     "level": "L2",
+     "total": 120710
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "155资源站",
+    "name": "155 | 采集",
+    "api": "https://155api.com/api.php/provide/vod/",
+    "level": "L3",
+    "total": 187350
+   },
+   "drops": [
+    {
+     "key": "155zy.com",
+     "name": "♥155(直连)",
+     "api": "https://155api.com/api.php/provide/vod/?ac=list",
+     "level": "L3",
+     "total": 187350
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "jingpinx.com",
+    "name": "★精品下(直连)",
+    "api": "http://www.jingpinx.com/api.php/provide/vod/?ac=list",
+    "level": "L3",
+    "total": 57390
+   },
+   "drops": [
+    {
+     "key": "精品资源站",
+     "name": "精品 | 采集",
+     "api": "https://www.jingpinx.com/api.php/provide/vod/",
+     "level": "L3",
+     "total": 57390
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "9号资源",
+    "name": "9号资源",
+    "api": "http://fhapi9.com/api.php/provide/vod/at/xml/",
+    "level": "L3",
+    "total": 232506
+   },
+   "drops": [
+    {
+     "key": "fhapi9.com",
+     "name": "★废柴(直连)",
+     "api": "http://fhapi9.com/api.php/provide/vod/?ac=list",
+     "level": "L3",
+     "total": 232506
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "api_25",
+    "name": "TV-最大资源",
+    "api": "https://api.zuidapi.com/api.php/provide/vod",
+    "level": "L2",
+    "total": 123270
+   },
+   "drops": [
+    {
+     "key": "api_24",
+     "name": "TV-最大点播",
+     "api": "http://zuidazy.me/api.php/provide/vod",
+     "level": "L2",
+     "total": 123270
+    },
+    {
+     "key": "b31acfcd3fce887b832b0c47754159b5",
+     "name": "25-最大",
+     "api": "https://zuidazy.co/api.php/provide/vod/",
+     "level": "L2",
+     "total": 123270
+    },
+    {
+     "key": "csp_xml_闪电资源",
+     "name": "❤闪电资源",
+     "api": "https://sdzyapi.com/api.php/provide/vod/?ac=list",
+     "level": "L1",
+     "total": 123057
+    },
+    {
+     "key": "api_44",
+     "name": "TV-閃電资源",
+     "api": "https://sdzyapi.com/api.php/provide/vod",
+     "level": "L1",
+     "total": 123057
+    },
+    {
+     "key": "api_28",
+     "name": "TV-牛牛点播",
+     "api": "https://api.niuniuzy.me/api.php/provide/vod",
+     "level": "L1",
+     "total": 123274
+    },
+    {
+     "key": "a7309ad5614fb7c13fa6d3e49639f8be",
+     "name": "63-丫丫",
+     "api": "https://yayazy2.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 121314
+    },
+    {
+     "key": "suonisandian",
+     "name": "索尼-闪电资源",
+     "api": "https://xsd.sdzyapi.com/api.php/provide/vod",
+     "level": "L1",
+     "total": 123057
+    },
+    {
+     "key": "be2647749acad7d9ad787c87cb03e9d4",
+     "name": "36-牛牛",
+     "api": "https://niuniuzy3.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 123274
+    },
+    {
+     "key": "闪电资源",
+     "name": "闪电资源(切)",
+     "api": "http://sdzyapi.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 123057
+    },
+    {
+     "key": "api_9",
+     "name": "TV-丫丫点播",
+     "api": "https://cj.yayazy.net/api.php/provide/vod",
+     "level": "L1",
+     "total": 121314
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "*乐播资源",
+    "name": "*乐播资源",
+    "api": "https://lbapi9.com/api.php/provide/vod/",
+    "level": "L2",
+    "total": 331155
+   },
+   "drops": [
+    {
+     "key": "*乐播",
+     "name": "*乐播",
+     "api": "https://lbapi9.com/api.php/provide/vod/at/xml",
+     "level": "L2",
+     "total": 331155
+    },
+    {
+     "key": "乐播",
+     "name": "乐播 | 采集",
+     "api": "https://lbapi9.com/api.php/provide/vod/",
+     "level": "L2",
+     "total": 331155
+    },
+    {
+     "key": "lebozy.com",
+     "name": "💕乐播(直连)",
+     "api": "https://lbapi9.com/api.php/provide/vod/?ac=list",
+     "level": "L2",
+     "total": 331155
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "魔都",
+    "name": "🥇💢魔都✨",
+    "api": "https://www.mdzyapi.com/api.php/provide/vod/at/xml/",
+    "level": "L3",
+    "total": 89010
+   },
+   "drops": [
+    {
+     "key": "moduzy",
+     "name": "魔都影视",
+     "api": "https://www.moduzy.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 89010
+    },
+    {
+     "key": "api_48",
+     "name": "TV-魔都动漫",
+     "api": "https://caiji.moduapi.cc/api.php/provide/vod",
+     "level": "L3",
+     "total": 89010
+    },
+    {
+     "key": "api_49",
+     "name": "TV-魔都资源",
+     "api": "https://www.mdzyapi.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 89010
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "csp_xml_优质",
+    "name": "❤优质资源",
+    "api": "https://api.1080zyku.com/inc/api_mac10.php?ac=list",
+    "level": "L2",
+    "total": 103969
+   },
+   "drops": [
+    {
+     "key": "api_1",
+     "name": "TV-1080资源",
+     "api": "https://api.1080zyku.com/inc/api_mac10.php",
+     "level": "L2",
+     "total": 103969
+    },
+    {
+     "key": "api_32",
+     "name": "TV-神马云",
+     "api": "https://api.1080zyku.com/inc/apijson.php/",
+     "level": "L2",
+     "total": 103969
+    },
+    {
+     "key": "yzzy",
+     "name": "优质资源",
+     "api": "https://api.yzzy-api.com/inc/apijson.php",
+     "level": "L2",
+     "total": 103969
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "api_6",
+    "name": "TV-U酷资源",
+    "api": "https://api.ukuapi88.com/api.php/provide/vod",
+    "level": "L2",
+    "total": 58083
+   },
+   "drops": [
+    {
+     "key": "api_5",
+     "name": "TV-U酷资源",
+     "api": "https://api.ukuapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 58083
+    },
+    {
+     "key": "U酷资源風",
+     "name": "影视 • 尤酷[直连]",
+     "api": "https://api.ukuapi.com/api.php/provide/vod/?ac=list",
+     "level": "L2",
+     "total": 58083
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "🚀小马_电影天堂",
+    "name": "🚀小马·️天堂┃采集",
+    "api": "http://caiji.dyttzyapi.com/api.php/provide/vod/from/dyttm3u8/at/m3u8/",
+    "level": "L3",
+    "total": 84037
+   },
+   "drops": [
+    {
+     "key": "api_15",
+     "name": "TV-如意资源",
+     "api": "https://cj.rycjapi.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 86091
+    },
+    {
+     "key": "api_29",
+     "name": "TV-电影天堂资源",
+     "api": "http://caiji.dyttzyapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 84037
+    },
+    {
+     "key": "请勿贩卖📚在线_采集集合",
+     "name": "请勿贩卖📚在线·采集集合",
+     "api": "http://zhangqun1818.serv00.net/cj/cjjh.php",
+     "level": "L2",
+     "total": 84037
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "senlinzy.com",
+    "name": "♥森林(直连)",
+    "api": "https://slapibf.com/api.php/provide/vod/?ac=list",
+    "level": "L3",
+    "total": 256037
+   },
+   "drops": [
+    {
+     "key": "森林专场",
+     "name": "森林 | 采集",
+     "api": "https://slapibf.com/api.php/provide/vod/",
+     "level": "L3",
+     "total": 256037
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "360",
+    "name": "360 资源",
+    "api": "https://360zyzz.com/api.php/provide/vod",
+    "level": "L3",
+    "total": 71303
+   },
+   "drops": [
+    {
+     "key": "api_3",
+     "name": "TV-360资源",
+     "api": "https://360zy.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 71356
+    },
+    {
+     "key": "e5df2aa0492ba0d57b047c1cdf009001",
+     "name": "66-360*",
+     "api": "https://360zy.tv/api.php/provide/vod/",
+     "level": "L3",
+     "total": 71356
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.001
+   }
+  },
+  {
+   "keep": {
+    "key": "ad1116ca9a9b3057570066086c9c9698",
+    "name": "7-非凡",
+    "api": "http://ffzy4.tv/api.php/provide/vod/",
     "level": "L2",
     "total": 98176
    },
    "drops": [
     {
-     "key": "cj_ffzyapi_com",
-     "name": "非凡采集",
-     "api": "http://cj.ffzyapi.com/api.php/provide/vod",
+     "key": "4d6422f0a2bc81fc9606ecc2d97208eb",
+     "name": "8-非凡",
+     "api": "http://ffzy.tv/api.php/provide/vod/",
      "level": "L2",
      "total": 98176
+    },
+    {
+     "key": "csp_xml_非凡资源",
+     "name": "❤非凡资源",
+     "api": "http://cj.ffzyapi.com/api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "api_45",
+     "name": "TV-非凡资源",
+     "api": "https://cj.ffzyapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "🍯HG_csp_xml_非凡资源",
+     "name": "🍯HG·🐝非凡资源",
+     "api": "http://cj.ffzyapi.com/api.php/provide/vod/?ac=list",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "73b5c89acc8a7c24118857fc514e9218",
+     "name": "6-非凡",
+     "api": "http://ffzy3.tv/api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "feifan1",
+     "name": "非凡线路1",
+     "api": "http://ffzy1.tv/api.php/provide/vod",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "c175280641d5263f0d0d9cbfab0162c3",
+     "name": "13-非凡",
+     "api": "http://ffzy5.tv/api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "730acd683fc317fa1a584e5613e727f0",
+     "name": "2-非凡",
+     "api": "http://cj.ffzyapi.com//api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "ffzy.tv",
+     "name": "非凡2",
+     "api": "https://ffzy.tv/api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "a794df941b177a5eb1e4e991fb5eaccb",
+     "name": "9-非凡",
+     "api": "http://www.ffzy.tv/api.php/provide/vod/",
+     "level": "L2",
+     "total": 98176
+    },
+    {
+     "key": "ffzynew",
+     "name": "非凡影视new",
+     "api": "https://api.ffzyapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 98176
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "🍯HG_csp_xml_量子资源",
+    "name": "🍯HG·🐝量子资源",
+    "api": "http://cj.lziapi.com/api.php/provide/vod/?ac=list",
+    "level": "L2",
+    "total": 155654
+   },
+   "drops": [
+    {
+     "key": "量子影视",
+     "name": "✅量子┃影视",
+     "api": "https://cj.lziapi.com/api.php/provide/vod/at/xml/",
+     "level": "L2",
+     "total": 155654
+    },
+    {
+     "key": "api_41",
+     "name": "TV-量子资源",
+     "api": "https://cj.lziapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 155654
+    },
+    {
+     "key": "量子资源",
+     "name": "量子资源(切)",
+     "api": "http://cj.lziapi.com/api.php/provide/vod/",
+     "level": "L2",
+     "total": 155654
+    },
+    {
+     "key": "lzi2",
+     "name": "量子资源",
+     "api": "https://cj.lzcaiji.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 155654
+    },
+    {
+     "key": "d2fee2579b5b9f122d45709ce08226fb",
+     "name": "12-量子",
+     "api": "http://www.lzzy.tv/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "4797280cffa831567a8b737ec684ac1d",
+     "name": "19-量子",
+     "api": "http://lzizy.net/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "fb264ae3b34e829817f35b9b59ea9c36",
+     "name": "14-量子",
+     "api": "https://lzizy4.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "548c69066731916a1611dacb0e3b452c",
+     "name": "15-量子",
+     "api": "https://lzizy8.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "96eb0562e1d21f2ef02d4c5e5bbf9ea7",
+     "name": "20-量子",
+     "api": "https://lzizy3.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "5d7bbc2b3aa0bfea3296946bf1ecda92",
+     "name": "17-量子",
+     "api": "https://lzizy5.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    },
+    {
+     "key": "6c22ca0c90b5e44cd830d7ca515efa9c",
+     "name": "16-量子",
+     "api": "https://lzizy2.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 155654
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "csp_xml_ikun",
+    "name": "❤ikun资源",
+    "api": "https://ikunzyapi.com/api.php/provide/vod/from/ikm3u8/at/json",
+    "level": "L3",
+    "total": 66971
+   },
+   "drops": [
+    {
+     "key": "🐹dxawi_IK",
+     "name": "🐹dxawi·IK",
+     "api": "https://ikunzyapi.com/api.php/provide/vod/from/ikm3u8/",
+     "level": "L3",
+     "total": 66971
+    },
+    {
+     "key": "api_7",
+     "name": "TV-ikun资源",
+     "api": "https://ikunzyapi.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 66971
+    },
+    {
+     "key": "iqiyi",
+     "name": "iqiyi资源",
+     "api": "https://www.iqiyizyapi.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 67963
+    },
+    {
+     "key": "iqiyi_2",
+     "name": "爱奇艺",
+     "api": "https://iqiyizyapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 67963
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "极速资源",
+    "name": "影视 • 极速[直连]",
+    "api": "https://jszyapi.com/api.php/provide/vod/?ac=list",
+    "level": "L2",
+    "total": 111583
+   },
+   "drops": [
+    {
+     "key": "jinyingziyuan",
+     "name": "金鹰资源采集网",
+     "api": "https://jyzyapi.com/provide/vod",
+     "level": "L2",
+     "total": 113316
+    },
+    {
+     "key": "api_39",
+     "name": "TV-豪华资源",
+     "api": "https://hhzyapi.com/api.php/provide/vod",
+     "level": "L2",
+     "total": 112350
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.007
+   }
+  },
+  {
+   "keep": {
+    "key": "csp_xml_ckzy",
+    "name": "❤ckzy",
+    "api": "https://ckzy.me/api.php/provide/vod/?ac=list",
+    "level": "L3",
+    "total": 7506
+   },
+   "drops": [
+    {
+     "key": "ck",
+     "name": "CK",
+     "api": "https://www.ckzy1.com/api.php/provide/vod",
+     "level": "L3",
+     "total": 7506
+    },
+    {
+     "key": "api_4",
+     "name": "TV-CK资源",
+     "api": "https://ckzy.me/api.php/provide/vod",
+     "level": "L3",
+     "total": 7506
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "天涯采集",
+    "name": "影视 • 天涯",
+    "api": "http://tyyszy.com/api.php/provide/vod",
+    "level": "L1",
+    "total": 70247
+   },
+   "drops": [
+    {
+     "key": "api_14",
+     "name": "TV-天涯资源",
+     "api": "https://tyyszy.com/api.php/provide/vod",
+     "level": "L1",
+     "total": 70247
+    },
+    {
+     "key": "cc8221d0e6ce9ce89d28e502caeb555d",
+     "name": "56-天涯",
+     "api": "https://ty.tyyszy5.com/api.php/provide/vod/",
+     "level": "L1",
+     "total": 70247
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "*大地资源",
+    "name": "*大地资源",
+    "api": "https://dadiapi.com/api.php/",
+    "level": "L2",
+    "total": 274336
+   },
+   "drops": [
+    {
+     "key": "大地采集",
+     "name": "大地av",
+     "api": "https://dadiapi.com/apple_m3u8.php",
+     "level": "L2",
+     "total": 274336
+    },
+    {
+     "key": "大地",
+     "name": "大地 | 采集",
+     "api": "https://dadiapi.com/apple_m3u8.php",
+     "level": "L2",
+     "total": 274336
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "dbzy2",
+    "name": "豆瓣资源",
+    "api": "https://caiji.dbzy5.com/api.php/provide/vod",
+    "level": "L3",
+    "total": 145021
+   },
+   "drops": [
+    {
+     "key": "api_38",
+     "name": "TV-豆瓣资源",
+     "api": "https://dbzy.tv/api.php/provide/vod",
+     "level": "L3",
+     "total": 145021
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "Clun📚在线_茅台",
+    "name": "Clun📚在线·茅台 | 采集",
+    "api": "https://mtzy.me/api.php/provide/vod/",
+    "level": "L3",
+    "total": 147342
+   },
+   "drops": [
+    {
+     "key": "api_35",
+     "name": "TV-茅台资源",
+     "api": "https://caiji.maotaizy.cc/api.php/provide/vod",
+     "level": "L3",
+     "total": 147342
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "api_33",
+    "name": "TV-索尼资源",
+    "api": "https://suoniapi.com/api.php/provide/vod",
+    "level": "L1",
+    "total": 144949
+   },
+   "drops": [
+    {
+     "key": "kczy",
+     "name": "快车资源",
+     "api": "https://caiji.kuaichezy.org/api.php/provide/vod",
+     "level": "L1",
+     "total": 124681
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.14
+   }
+  },
+  {
+   "keep": {
+    "key": "鸡坤",
+    "name": "鸡坤 | 采集",
+    "api": "https://jkunzyapi.com/api.php/provide/vod/",
+    "level": "L3",
+    "total": 131855
+   },
+   "drops": [
+    {
+     "key": "jkunzy.com",
+     "name": "💕jkun(直连)",
+     "api": "https://jkunzyapi.com/api.php/provide/vod/?ac=list",
+     "level": "L3",
+     "total": 131855
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "★84鲨鱼",
+    "name": "★84鲨鱼",
+    "api": "https://shayuapi.com/api.php/provide/vod/at/xml/",
+    "level": "L3",
+    "total": 282778
+   },
+   "drops": [
+    {
+     "key": "*鲨鱼资源",
+     "name": "*鲨鱼资源",
+     "api": "https://shayuapi.com/api.php/provide/vod/",
+     "level": "L3",
+     "total": 282778
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "*白嫖资源",
+    "name": "*白嫖资源",
+    "api": "https://www.kxgav.com/api/xml.php",
+    "level": "L3",
+    "total": 23833
+   },
+   "drops": [
+    {
+     "key": "白嫖",
+     "name": "白嫖 | 采集",
+     "api": "https://www.kxgav.com/api/xml.php",
+     "level": "L3",
+     "total": 23833
+    },
+    {
+     "key": "★白嫖资源",
+     "name": "★白嫖资源",
+     "api": "https://www.kxgav.com/api/json.php",
+     "level": "L3",
+     "total": 23833
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "*美少女资源",
+    "name": "*美少女资源",
+    "api": "https://www.msnii.com/api/xml.php",
+    "level": "L3",
+    "total": 25126
+   },
+   "drops": [
+    {
+     "key": "★美少女资源",
+     "name": "★美少女资源",
+     "api": "https://www.msnii.com/api/json.php",
+     "level": "L3",
+     "total": 25126
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "*黄AV资源",
+    "name": "*黄AV资源",
+    "api": "https://www.pgxdy.com/api/json.php",
+    "level": "L1",
+    "total": 23999
+   },
+   "drops": [
+    {
+     "key": "pgxdy.com",
+     "name": "★黄AV(直连)",
+     "api": "https://www.pgxdy.com/api/xml.php",
+     "level": "L1",
+     "total": 23999
+    },
+    {
+     "key": "黄AV资源站",
+     "name": "AV | 采集",
+     "api": "https://www.pgxdy.com/api/xml.php",
+     "level": "L1",
+     "total": 23999
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "淫水机资源站",
+    "name": "水机 | 采集",
+    "api": "https://www.xrbsp.com/api/xml.php",
+    "level": "L1",
+    "total": 23839
+   },
+   "drops": [
+    {
+     "key": "*淫水机资源",
+     "name": "*淫水机资源",
+     "api": "https://www.xrbsp.com/api/xml.php",
+     "level": "L1",
+     "total": 23839
+    },
+    {
+     "key": "★饮水机资源",
+     "name": "★饮水机资源",
+     "api": "https://www.xrbsp.com/api/json.php",
+     "level": "L1",
+     "total": 23839
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "香奶儿资源站",
+    "name": "香奶 | 采集",
+    "api": "https://www.gdlsp.com/api/xml.php",
+    "level": "L1",
+    "total": 24161
+   },
+   "drops": [
+    {
+     "key": "*香奶儿资源",
+     "name": "*香奶儿资源",
+     "api": "https://www.gdlsp.com/api/xml.php",
+     "level": "L1",
+     "total": 24161
+    },
+    {
+     "key": "★香乃儿资源",
+     "name": "★香乃儿资源",
+     "api": "https://www.gdlsp.com/api/json.php",
+     "level": "L1",
+     "total": 24161
+    }
+   ],
+   "evidence": {
+    "jaccard": 1.0,
+    "overlap": 20,
+    "total_diff": 0.0
+   }
+  },
+  {
+   "keep": {
+    "key": "api_23",
+    "name": "TV-暴风资源",
+    "api": "https://bfzyapi.com/api.php/provide/vod",
+    "level": "L2",
+    "total": 160282
+   },
+   "drops": [
+    {
+     "key": "16952cefcaeeda11b0bae2529a576e12",
+     "name": "11-暴风",
+     "api": "http://by.bfzyapi.com/api.php/provide/vod/",
+     "level": "L2",
+     "total": 160282
+    },
+    {
+     "key": "csp_xml_暴风",
+     "name": "❤暴风资源",
+     "api": "https://bfzyapi.com/api.php/provide/vod/?ac=list",
+     "level": "L2",
+     "total": 160282
     }
    ],
    "evidence": {
@@ -516,45 +1221,100 @@
   }
  ],
  "drop_keys": [
-  "a极速资源",
-  "jszyapi_com",
-  "新浪影视",
-  "api_43",
-  "xml_火狐",
-  "jinyingzy.com",
-  "e743537b66dc4d8932f3a3800fdb7477",
-  "iQiYi",
-  "csp_xml_无尽",
-  "api_20",
-  "api_8",
-  "api_18",
-  "api_25",
-  "b31acfcd3fce887b832b0c47754159b5",
+  "didizy.com",
+  "AV资源",
+  "api_10",
+  "csp_xml_新浪",
+  "新浪资源",
+  "红牛采集",
+  "api_17",
+  "api_34",
+  "hongniuziyuan",
+  "api_42",
+  "光速采集",
+  "lajiaozy.com",
+  "辣椒",
+  "*辣椒资源",
+  "无尽采集",
+  "155zy.com",
+  "精品资源站",
+  "fhapi9.com",
   "api_24",
-  "suonisandian",
-  "api_9",
+  "b31acfcd3fce887b832b0c47754159b5",
   "csp_xml_闪电资源",
-  "api_28",
-  "闪电影视",
-  "a7309ad5614fb7c13fa6d3e49639f8be",
-  "be2647749acad7d9ad787c87cb03e9d4",
-  "牛牛影视",
   "api_44",
-  "cj_牛牛短剧",
+  "api_28",
+  "a7309ad5614fb7c13fa6d3e49639f8be",
+  "suonisandian",
+  "be2647749acad7d9ad787c87cb03e9d4",
+  "闪电资源",
+  "api_9",
+  "*乐播",
+  "乐播",
+  "lebozy.com",
+  "moduzy",
+  "api_48",
+  "api_49",
+  "api_1",
+  "api_32",
+  "yzzy",
+  "api_5",
+  "U酷资源風",
+  "api_15",
+  "api_29",
+  "请勿贩卖📚在线_采集集合",
+  "16952cefcaeeda11b0bae2529a576e12",
+  "csp_xml_暴风",
+  "森林专场",
+  "api_3",
+  "e5df2aa0492ba0d57b047c1cdf009001",
+  "4d6422f0a2bc81fc9606ecc2d97208eb",
+  "csp_xml_非凡资源",
+  "api_45",
+  "🍯HG_csp_xml_非凡资源",
+  "73b5c89acc8a7c24118857fc514e9218",
+  "feifan1",
+  "c175280641d5263f0d0d9cbfab0162c3",
+  "730acd683fc317fa1a584e5613e727f0",
+  "ffzy.tv",
+  "a794df941b177a5eb1e4e991fb5eaccb",
+  "ffzynew",
+  "量子影视",
+  "api_41",
+  "量子资源",
+  "lzi2",
+  "d2fee2579b5b9f122d45709ce08226fb",
+  "4797280cffa831567a8b737ec684ac1d",
+  "fb264ae3b34e829817f35b9b59ea9c36",
+  "548c69066731916a1611dacb0e3b452c",
+  "96eb0562e1d21f2ef02d4c5e5bbf9ea7",
+  "5d7bbc2b3aa0bfea3296946bf1ecda92",
+  "6c22ca0c90b5e44cd830d7ca515efa9c",
+  "🐹dxawi_IK",
+  "api_7",
+  "iqiyi",
+  "iqiyi_2",
+  "jinyingziyuan",
+  "api_39",
+  "ck",
+  "api_4",
+  "api_14",
+  "cc8221d0e6ce9ce89d28e502caeb555d",
+  "大地采集",
+  "大地",
+  "api_38",
+  "api_35",
   "kczy",
-  "cj_ffzyapi_com",
-  "猎豹",
-  "柚子资源",
-  "天涯采集",
-  "jkunzyapi_com",
-  "laosebizy.com",
-  "玉兔资源",
-  "色戒",
-  "率率",
-  "索尼",
-  "索尼资源",
-  "www_pgxdy_com",
-  "淫水机资源站",
-  "奶儿"
+  "jkunzy.com",
+  "*鲨鱼资源",
+  "白嫖",
+  "★白嫖资源",
+  "★美少女资源",
+  "pgxdy.com",
+  "黄AV资源站",
+  "*淫水机资源",
+  "★饮水机资源",
+  "*香奶儿资源",
+  "★香乃儿资源"
  ]
 }
