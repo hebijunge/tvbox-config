@@ -2648,7 +2648,7 @@ def main() -> int:
     # ---- [4/6] 直播源分类测速优选 ----
     print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
     m3u_entries = []
-    for (u, fetchable_ok, tag), (u2, raw, info) in zip(fetchable, fetched):
+    for (u, fetchable_ok, tag), (u2, raw, info, _ok_url, _d_method) in zip(fetchable, fetched):
         if u["kind"] != "m3u" or raw is None:
             continue
         try:
