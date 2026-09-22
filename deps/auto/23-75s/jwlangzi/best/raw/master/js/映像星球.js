@@ -1,0 +1,22 @@
+{
+    "请求头": "User-Agent$MOBILE_UA",
+    "编码": "UTF-8",
+    "线路数组": "<div class=\"module-tab-item tab-item\"&&</div>[不包含:深夜福利]",
+    "线路标题": "<span>&&</span>[替换:4K高清>>4K线路#线路①>>线路1#线路②>>线路2#线路③>>线路3]",
+    "播放数组": "<div class=\"module-play-list\"&&</div>",
+    "播放列表": "<a&&</a>",
+    "播放标题": "<span>&&</span>",
+    "播放链接": "href=\"&&\"",
+    "播放链接前缀": "https://yxxq3.cc",
+    "搜索url": "https://yxxq3.cc/search/-------------.html?wd={wd}&page={pg}",
+    "搜索二次截取": "<div class=\"module-main module-page \">&&<div id=\"page\">",
+    "搜索数组": "module-card-item module-item&&</a>",
+    "搜索图片": "data-original=\"&&\"",
+    "搜索标题": "title=\"&&\"",
+    "搜索链接": "href=\"&&\"",
+    "搜索副标题": "<div class=\"module-item-note\">&&</div>",
+    "搜索链接前缀": "",
+     "分类url": "https://yxxq3.cc/top/{cateId}-{area}-{by}-{class}-{lang}-------{year}---{catePg}.html",
+    "分类": "电影$1#电视剧$2#综艺$3#动漫$4",
+    "简介": "<p>&&<p>"
+}
