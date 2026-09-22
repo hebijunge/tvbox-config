@@ -3142,13 +3142,10 @@ def main() -> int:
         cat = classify_site_strong_only(s, category_overrides)
         if cat == "adult":
             origin_votes[origin.lower()] = origin_votes.get(origin.lower(), 0) + 1
-    # 同步到 vod.sites 派生对象（后续 [5/6] 会从 vod.sites 取站点分类）
-    for s in (vod.get("sites") or []):
-        key = s.get("key")
-        if key and not s.get("_origin"):
-            origin = site_origin_name.get(key) or ""
-            if origin:
-                s["_origin"] = origin
+    # _origin 无需二次同步到 vod.sites：vod 由 tvbox 浅拷贝派生、tvbox["sites"] =
+    # kept_sites 与上面 `sites` 是同一批 dict 对象，首循环已全部打上标签；rank_sites
+    # 的 dict 拷贝也会带上 _origin。（原 vod.get("sites") 提前引用已在 CI
+    # run 35769498157 实证为 UnboundLocalError，删除。）
 
     # ---- [3/6] 测速验活：仅 type 0/1 且 api 为 http(s) 的直连站点 ----
     def testable(s: dict) -> bool:
