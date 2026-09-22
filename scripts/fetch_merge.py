@@ -3123,8 +3123,9 @@ def main() -> int:
           f" / 重复 {parse_stats['dropped_duplicate']} / 不可达 {parse_stats['dropped_unreachable']}"
           f"{' / ⚠安全阀触发' if parse_stats['safety_valve_triggered'] else ''}）",
           flush=True)
-    # 把解析池更新回 vod.json（parses 是全局播放器池，不分产品）。
-    vod["parses"] = parses
+    # 解析池回写：parses 在 [5/6] 输出装配时统一写入 tvbox["parses"]（vod 由 tvbox
+    # 派生自动继承）；此处 tvbox/vod 尚未构建，提前引用会 UnboundLocalError
+    # （2026-09-23 CI run 35767489299 实证）。
 
     # ---- 上游投票预扫（防关键词单匹配误杀）----
     # 给每个站点打上 _origin 标签（来自 site_origin_name），用强信号 + 覆盖表 + 误报
