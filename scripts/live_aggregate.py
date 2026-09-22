@@ -3,7 +3,9 @@
 """live_aggregate.py — 频道级聚合：规范化、分类、多线路合并、逐线路实测。
 
 输入：源级测活通过的 m3u/tvbox-txt 源清单
-输出：lives/live_verified.txt（tvbox txt 分组格式，多线路 # 合并）
+输出：lives/live_verified.txt（tvbox txt 分组格式，大分类 → 频道 → 多线路 # 合并；
+     2026-09-23 分类重构：大分类 = 央视/卫视/地方-省(按地区)/港台/轮播/直播/其他，
+     小分类 = 频道条目（如央视组下 CCTV-1 各台），每频道多 URL 可切换线路）
      + lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）
      + live_channels.json 明细
 """
@@ -88,14 +90,116 @@ HKTW_KW = ("凤凰", "tvb", "翡翠", "明珠", "香港", "无线", "有线", "h
            "八大", "纬来", "龙华", "靖天", "大爱", "壹电视", "年代", "澳广视", "澳门",
            "tvbs", "好消息", "uhb", "viutv", "viu")
 
-LUNBO_KW = ("虎牙", "斗鱼", "哔哩", "b站", "bilibili", "咪咕", "歌手", "轮播",
-            "一起看", "电竞")
+# ---- 2026-09-23 分类层级重构（用户目标口径）----
+# 大分类固定七类：央视 / 卫视 / 地方(按地区) / 港台 / 轮播 / 直播 / 其他；
+# 小分类 = 频道条目（如「央视」组下 CCTV-1…各台）；多线路 = 每频道多 URL `#` 合并可切换。
+# 相比旧口径的变化：
+#   1) 「地方」按省级关键词落组（地方-湖南 / 地方-广东 …），组名带「地方-」前缀，
+#      输出序跟随 PROVINCE_ORDER；落不进任何省的频道进「其他」。
+#   2) 旧「轮播·一起看」拆为两类：直播（虎牙/斗鱼/B站/咪咕/电竞 等平台实时直播）
+#      与 轮播（轮播/一起看/歌手 等循环轮播频道）。
+#   3) 「电台」不再单独成组，折叠进「其他」（且豁免单线路裁剪，见 LIVE_OTHER_MIN_LINES）。
+#   4) CCTV 编号主频道（CCTV-1…CCTV-17/CCTV-5+/CGTN）归「央视」；
+#      CCTV 付费/专业频道（怀旧剧场/风云剧场/第一剧场 等）归「其他」。
+ZHIBO_KW = ("虎牙", "斗鱼", "哔哩", "b站", "bilibili", "咪咕", "电竞")
+LUNBO_KW = ("轮播", "一起看", "歌手")
 
-DIFANG_KW = ("北京", "上海", "天津", "重庆", "广东", "珠江", "深圳", "江苏", "浙江",
-             "山东", "湖北", "四川", "河南", "河北", "山西", "陕西", "辽宁",
-             "吉林", "黑龙江", "安徽", "福建", "江西", "广西", "云南", "贵州", "甘肃",
-             "青海", "宁夏", "新疆", "西藏", "内蒙古", "海南", "新闻综合", "都市",
-             "剧场", "教育", "少儿", "卡酷", "金鹰", "优漫", "哈哈", "炫动")
+# 省级关键词表（键=组名后缀，值=命中关键词；顺序即输出顺序，且为归组优先序）。
+# 每省收录省名/简称 + 主要地级市；县市级频道未命中的落入「其他」（best-effort，宁缺毋滥）。
+# 已知歧义接受项：青海「海南州」会落 地方-海南（数据中未出现，风险可忽略）。
+PROVINCE_TABLE = (
+    ("北京", ("北京", "卡酷")),
+    ("天津", ("天津",)),
+    ("河北", ("河北", "石家庄", "保定", "唐山", "邯郸", "沧州", "廊坊", "张家口",
+              "衡水", "邢台", "秦皇岛", "承德")),
+    ("山西", ("山西", "太原", "大同", "晋中", "运城", "临汾", "长治", "忻州", "吕梁",
+              "晋城", "朔州", "阳泉", "太谷")),
+    ("内蒙古", ("内蒙古", "呼和浩特", "包头", "赤峰", "通辽", "鄂尔多斯", "呼伦贝尔",
+                "巴彦淖尔", "乌海", "兴安", "锡林郭勒", "乌兰察布", "阿拉善")),
+    ("辽宁", ("辽宁", "沈阳", "大连", "鞍山", "抚顺", "本溪", "丹东", "锦州", "营口",
+              "阜新", "辽阳", "盘锦", "铁岭", "朝阳", "葫芦岛")),
+    ("吉林", ("吉林", "长春", "延边", "通化", "四平", "白山", "松原", "白城", "辽源")),
+    ("黑龙江", ("黑龙江", "哈尔滨", "齐齐哈尔", "牡丹江", "佳木斯", "大庆", "鸡西",
+                "双鸭山", "伊春", "七台河", "鹤岗", "绥化", "黑河", "大兴安岭")),
+    ("上海", ("上海", "哈哈", "炫动")),
+    ("江苏", ("江苏", "南京", "苏州", "无锡", "常州", "镇江", "南通", "扬州", "盐城",
+              "徐州", "连云港", "淮安", "宿迁", "泰州", "优漫")),
+    ("浙江", ("浙江", "杭州", "宁波", "温州", "嘉兴", "湖州", "绍兴", "金华", "衢州",
+              "舟山", "台州", "丽水", "文成")),
+    ("安徽", ("安徽", "合肥", "芜湖", "蚌埠", "淮南", "马鞍山", "淮北", "铜陵", "安庆",
+              "黄山", "滁州", "阜阳", "宿州", "六安", "亳州", "池州", "宣城", "宿松")),
+    ("福建", ("福建", "福州", "厦门", "泉州", "漳州", "莆田", "三明", "南平", "龙岩",
+              "宁德")),
+    ("江西", ("江西", "南昌", "九江", "赣州", "景德镇", "萍乡", "新余", "鹰潭", "宜春",
+              "上饶", "吉安", "抚州")),
+    ("山东", ("山东", "济南", "青岛", "淄博", "枣庄", "东营", "烟台", "潍坊", "济宁",
+              "泰安", "威海", "日照", "临沂", "德州", "聊城", "滨州", "菏泽")),
+    ("河南", ("河南", "郑州", "开封", "洛阳", "平顶山", "安阳", "鹤壁", "新乡", "焦作",
+              "濮阳", "许昌", "漯河", "三门峡", "南阳", "商丘", "信阳", "周口",
+              "驻马店", "济源")),
+    ("湖北", ("湖北", "武汉", "黄石", "十堰", "宜昌", "襄阳", "鄂州", "荆门", "孝感",
+              "荆州", "黄冈", "咸宁", "随州", "恩施", "仙桃", "潜江")),
+    ("湖南", ("湖南", "长沙", "株洲", "湘潭", "衡阳", "邵阳", "岳阳", "常德", "张家界",
+              "益阳", "郴州", "永州", "怀化", "娄底", "湘西", "金鹰")),
+    ("广东", ("广东", "广州", "深圳", "珠海", "汕头", "佛山", "韶关", "湛江", "肇庆",
+              "江门", "茂名", "惠州", "梅州", "汕尾", "河源", "阳江", "清远", "东莞",
+              "中山", "潮州", "揭阳", "云浮", "珠江", "南方")),
+    ("广西", ("广西", "南宁", "柳州", "桂林", "梧州", "北海", "防城港", "钦州", "贵港",
+              "玉林", "百色", "贺州", "河池", "来宾", "崇左")),
+    ("海南", ("海南", "海口", "三亚", "三沙", "儋州")),
+    ("重庆", ("重庆",)),
+    ("四川", ("四川", "成都", "绵阳", "德阳", "自贡", "攀枝花", "泸州", "广元", "遂宁",
+              "内江", "乐山", "南充", "眉山", "宜宾", "广安", "达州", "雅安", "巴中",
+              "资阳", "阿坝", "甘孜", "凉山", "夹江")),
+    ("贵州", ("贵州", "贵阳", "六盘水", "遵义", "安顺", "毕节", "铜仁", "黔东南",
+              "黔南", "黔西南")),
+    ("云南", ("云南", "昆明", "曲靖", "玉溪", "保山", "昭通", "丽江", "普洱", "临沧",
+              "大理", "红河", "文山", "西双版纳", "楚雄", "德宏", "怒江", "迪庆")),
+    ("西藏", ("西藏", "拉萨", "日喀则", "昌都", "林芝", "山南", "那曲")),
+    ("陕西", ("陕西", "西安", "宝鸡", "咸阳", "铜川", "渭南", "延安", "汉中", "榆林",
+              "安康", "商洛")),
+    ("甘肃", ("甘肃", "兰州", "嘉峪关", "金昌", "天水", "武威", "张掖", "平凉", "酒泉",
+              "庆阳", "定西", "陇南", "临夏", "甘南")),
+    ("青海", ("青海", "西宁", "海东", "海北", "黄南", "果洛", "玉树", "海西")),
+    ("宁夏", ("宁夏", "银川", "石嘴山", "吴忠", "固原", "中卫")),
+    ("新疆", ("新疆", "乌鲁木齐", "克拉玛依", "吐鲁番", "哈密", "昌吉", "博尔塔拉",
+              "巴音郭楞", "阿克苏", "喀什", "和田", "伊犁", "塔城", "阿勒泰", "石河子",
+              "兵团")),
+)
+PROVINCE_ORDER = [p for p, _k in PROVINCE_TABLE]
+
+# 输出大分类顺序（用户目标口径）：央视 / 卫视 / 地方(按地区) / 港台 / 轮播 / 直播 / 其他
+BIG_ORDER = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
+
+
+def big_cat(cls):
+    """内部类名 → 输出大分类名（地方-湖南 → 地方；电台折叠进 其他）。"""
+    if cls and cls.startswith("地方-"):
+        return "地方"
+    if cls == "电台":
+        return "其他"
+    return cls
+
+
+def group_sort_key(cls):
+    """类名 → 输出排序键 (大分类序, 省序)。
+    用于频道类名归并优先级与逐线路实测优先级（央视最先、地方随省序、其他殿后）。"""
+    bc = big_cat(cls)
+    bi = BIG_ORDER.index(bc) if bc in BIG_ORDER else len(BIG_ORDER)
+    pi = 0
+    if bc == "地方":
+        prov = cls[len("地方-"):]
+        pi = PROVINCE_ORDER.index(prov) if prov in PROVINCE_ORDER else len(PROVINCE_ORDER)
+    return (bi, pi)
+
+
+# 其他组长尾裁剪阈值：未验证频道的去重线路数低于该值时不入主列表（env 可调）
+LIVE_OTHER_MIN_LINES = int(os.environ.get("LIVE_OTHER_MIN_LINES", "2"))
+
+
+def _fold_group(cls):
+    """内部类名 → 输出组键（电台折叠进 其他，其余原样；地方-省 已是组键形态）。"""
+    return "其他" if cls == "电台" else cls
 
 
 # ---- 2026-09-21 直播线融合（第六批 P1/P2，借鉴 ineed2underfit/hk-iptv + Collect-IPTV）----
@@ -213,14 +317,18 @@ def hk_clean_sort(chans):
 
 
 def norm_channel(name):
-    """规范化频道名，返回 (标准名, 分类)。"""
+    """规范化频道名，返回 (标准名, 分类)。
+    分类为大分类名或地方子组名（地方-湖南），输出序见 BIG_ORDER/PROVINCE_ORDER：
+    央视(CCTV 编号主频道/CGTN) → 港台 → 卫视 → 直播(平台实时) → 轮播(循环频道)
+    → 电台 → 地方-省 → 其他（CCTV 付费/专业频道、未命中省份的县市频道、网络频道）。"""
     n = (name or "").strip()
     if not n:
         return "", ""
-    low = n.lower().replace(" ", "").replace("　", "")
+    low = n.lower().replace(" ", "").replace("\u3000", "")
     low = re.sub(r"[\[\]()（）【】「」]|超清|高清|标清|蓝光|1080p?|720p?|4k|50fps?|60fps?|hd|sd|fhd|测试", "", low)
     m = re.match(r"^cctv[-−]?(\d+)(\+?)", low)
     if m:
+        # 仅编号主频道归央视；CCTV怀旧剧场/CCTV第一剧场 等付费频道不带编号，落到其他
         return "CCTV-%d%s" % (int(m.group(1)), m.group(2)), "央视"
     if low.startswith(("cgtn", "cgtv")):
         return "CGTN", "央视"
@@ -229,17 +337,16 @@ def norm_channel(name):
     if "卫视" in low:
         base = low[:low.index("卫视") + 2]
         return base, "卫视"
+    if any(k in low for k in ZHIBO_KW):
+        return n, "直播"
     if any(k in low for k in LUNBO_KW):
-        return n, "轮播·一起看"
+        return n, "轮播"
     if re.search(r"电台|fm\d*$|广播", low):
         return n, "电台"
-    if any(k in low for k in DIFANG_KW):
-        return n, "地方"
-    return n, "网络·其他"
-
-
-CLASS_PRIO = {"央视": 0, "港台": 1, "卫视": 2, "轮播·一起看": 3,
-              "地方": 4, "电台": 5, "网络·其他": 6}
+    for prov, kws in PROVINCE_TABLE:
+        if any(k in low for k in kws):
+            return n, "地方-" + prov
+    return n, "其他"
 
 
 def parse_m3u(text):
@@ -354,20 +461,31 @@ def build_channel_map(sources, repo):
             # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
             # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
             key = dedup_key(std)
-            ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": []})
-            if CLASS_PRIO.get(cls, 9) < CLASS_PRIO.get(ent["class"], 9):
+            ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": [],
+                                        "_seen": set()})
+            if group_sort_key(cls) < group_sort_key(ent["class"]):
                 ent["class"] = cls
-            ent["lines"].append((sid, u))
+            # 2026-09-23 分类重构：频道内 URL 级去重——同一 URL 被多条上游重复收录
+            # 时只记一条（旧口径下未实测频道会出现 6 条一模一样的「假线路」）
+            if u not in ent["_seen"]:
+                ent["_seen"].add(u)
+                ent["lines"].append((sid, u))
     return cmap
 
 
-def test_channel_lines(cmap, only_classes=("央视", "卫视", "港台"),
-                       max_test=MAX_LINES_PER_CH, budget_s=420):
+def _is_core_class(cls):
+    """逐线路实测范围（预算内）：央视 / 卫视 / 港台 / 地方-省。
+    轮播/直播/其他 不逐线路实测（量级太大且多为平台源），沿用既有行为口径；
+    jobs 按输出序排序后提交，预算耗尽时优先保住央视/卫视/港台的实测覆盖。"""
+    return cls in ("央视", "卫视", "港台") or cls.startswith("地方-")
+
+
+def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH, budget_s=420):
     """核心频道逐线路实测，返回 {标准名: [通过 url]} 与全部明细。"""
     t0 = time.time()
     jobs = []
     for std, ent in cmap.items():
-        if ent["class"] not in only_classes:
+        if not _is_core_class(ent["class"]):
             continue
         lines = sorted(ent["lines"], key=lambda x: (SOURCE_PRIORITY.index(x[0])
                         if x[0] in SOURCE_PRIORITY else 99))
@@ -378,6 +496,9 @@ def test_channel_lines(cmap, only_classes=("央视", "卫视", "港台"),
                 uniq.append((sid, u))
         ent["lines"] = uniq
         jobs.append((std, uniq[:max_test]))
+    # 2026-09-23 分类重构：实测任务按输出序（央视→卫视→港台→地方-省）提交，
+    # 420s 预算耗尽时优先保证靠前大分类的线路实测覆盖
+    jobs.sort(key=lambda j: group_sort_key(cmap[j[0]]["class"]))
     results = {}
     n = [0]
     with ThreadPoolExecutor(max_workers=8) as ex:
@@ -410,18 +531,26 @@ def test_channel_lines(cmap, only_classes=("央视", "卫视", "港台"),
 def _build_groups(cmap, verified, extra_keep=6):
     """分组构建（write_verified_txt / write_verified_m3u 共用，第十三批下沉）：
     1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
-    2) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
-    3) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）。"""
+    2) 组键 = 大分类名或 地方-省 子组（电台折叠进 其他）；
+    3) 其他组长尾裁剪（2026-09-23 分类重构）：未验证且去重线路数 < LIVE_OTHER_MIN_LINES
+       的频道不入主列表——实测数据 18196 条网络长尾中 17473 条为单去重线路未验证频道，
+       全量保留会淹没多线路可用频道；电台豁免（量小且为功能性内容）；
+    4) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
+    5) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）。"""
     groups = OrderedDict()
     for key, ent in cmap.items():
         name = ent.get("name") or key
-        groups.setdefault(ent["class"], OrderedDict())
+        gk = _fold_group(ent["class"])
         if key in verified:
             lines = verified[key]
         else:
+            n_distinct = len({u for _s, u in ent["lines"]})
+            if ent["class"] == "其他" and n_distinct < LIVE_OTHER_MIN_LINES:
+                continue  # 其他组长尾裁剪：单线路未验证频道不进主列表
             lines = [u for _sid, u in ent["lines"][:extra_keep]]
+        groups.setdefault(gk, OrderedDict())
         if lines:
-            groups[ent["class"]][name] = lines
+            groups[gk][name] = lines
     if "港台" in groups:
         groups["港台"] = hk_clean_sort(groups["港台"])
         # RTHK 官方静态源兜底（第六批 P1）：实测未通过/缺失的港台频道补官方源
@@ -443,16 +572,27 @@ def _build_groups(cmap, verified, extra_keep=6):
     return groups
 
 
+def _iter_ordered_groups(groups):
+    """输出序（2026-09-23 用户目标口径）：央视 → 卫视 → 地方-省（按 PROVINCE_ORDER
+    华北→东北→华东→中南→西南→西北）→ 港台 → 轮播 → 直播 → 其他。
+    产出 (组名, 频道dict)。"""
+    for cat in BIG_ORDER:
+        if cat == "地方":
+            for prov in PROVINCE_ORDER:
+                gk = "地方-" + prov
+                if groups.get(gk):
+                    yield gk, groups[gk]
+        elif groups.get(cat):
+            yield cat, groups[cat]
+
+
 def write_verified_txt(cmap, verified, path, extra_keep=6):
     """输出 lives/live_verified.txt。分组构建见 _build_groups（第十三批与 m3u 输出共用）。"""
     groups = _build_groups(cmap, verified, extra_keep)
-    ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
     with open(path, "w", encoding="utf-8") as f:
-        for cls in ORDER:
-            if cls not in groups:
-                continue
-            f.write("%s,#genre#\n" % cls)
-            for std, lines in groups[cls].items():
+        for gname, chans in _iter_ordered_groups(groups):
+            f.write("%s,#genre#\n" % gname)
+            for std, lines in chans.items():
                 f.write("%s,%s\n" % (std, "#".join(lines)))
     return {c: len(chs) for c, chs in groups.items()}
 
@@ -465,16 +605,13 @@ def write_verified_m3u(cmap, verified, path, extra_keep=6):
     fanmingming/live 为 GPL-3.0；个别文件缺失时播放器仅无台标，不影响播放）。
     返回 {组名: 频道数}。"""
     groups = _build_groups(cmap, verified, extra_keep)
-    ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
     with open(path, "w", encoding="utf-8") as f:
         f.write('#EXTM3U x-tvg-url="%s" %s\n' % (",".join(FMM_EPG_URLS), FMM_CATCHUP))
-        for cls in ORDER:
-            if cls not in groups:
-                continue
-            for name, lines in groups[cls].items():
+        for gname, chans in _iter_ordered_groups(groups):
+            for name, lines in chans.items():
                 logo = fmm_logo_name(name)
                 f.write('#EXTINF:-1 tvg-name="%s" tvg-logo="%s%s.png" group-title="%s",%s\n'
-                        % (logo, FMM_TV_BASE, logo, cls, name))
+                        % (logo, FMM_TV_BASE, logo, gname, name))
                 for u in lines:
                     f.write(u + "\n")
     return {c: len(chs) for c, chs in groups.items()}
