@@ -279,33 +279,19 @@ UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAM
 EXTRA_UPSTREAMS_FILE = os.environ.get("EXTRA_UPSTREAMS_FILE", "state/extra_upstreams.json")
 EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
 
-# ---------------- 成人内容发布开关（默认**不发布**） ----------------
-# 为什么默认关：这份配置是给外部订阅的公开仓库产物，把成人源（含独立的 adult.json）
-# 放进公开仓库有被平台处置、整个仓库被封的风险 —— 而仓库里还有 tvbox.json 等主力产物，
-# 不值得为几十个源冒这个险。关掉时：
-#   1) 成人分类的站点不进 tvbox.json / vod.json；
-#   2) 不写仓库根的 adult.json（改写 ADULT_LOCAL_PATH，该路径不进版本库）；
-#   3) 数据一条不丢，仍留在本地文件里，需要时自己取。
-# 要恢复旧行为（连 adult.json 一起公开）：PUBLISH_ADULT=1
+# ---------------- 成人内容发布开关（默认「不声明」模式，2026-09-22 所有者指令） ----------------
+# 所有者指令：adult.json 每天随 daily 聚合产出并提交更新到仓库，但「只是不声明」——
+# 不公开传播 / 宣传：不进 Release 附件白名单、不进 GitHub Pages、不进导航页、不在日报/README 中声明。
+# 默认（PUBLISH_ADULT=0，「不声明」模式）：
+#   1) 成人分类的站点不进 tvbox.json / vod.json（主产物口径不变）；
+#   2) 仓库根 adult.json 每日照常产出（成人站点 + 成人直播），由 daily.yml 随提交白名单更新；
+#      公开通路的隔离由三处保证：Release 上传白名单不含它、pages.yml 组目录双保险剔除、
+#      导航页与 README 均无其入口与说明；
+#   3) 不再写 .workbuddy 本地留档（留档职能由仓库根 adult.json 取代，
+#      同时避免 pack_local 把它收进 Release 附件 zip）。
+# PUBLISH_ADULT=1（完整公开模式）：成人站点同时进 tvbox.json / vod.json；
+#   需要打进本地 zip 时给 pack_local.py 传 --adult adult.json。
 PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
-ADULT_LOCAL_PATH = os.environ.get("ADULT_LOCAL_PATH", ".workbuddy/adult.local.json")
-
-
-def _dump_adult_local(sites: list, repo_dir: str):
-    """把未发布的成人源写到仓库外的本地路径（`git` 不会收录）。"""
-    try:
-        path = ADULT_LOCAL_PATH
-        if not os.path.isabs(path):
-            path = os.path.join(repo_dir, path)
-        os.makedirs(os.path.dirname(path), exist_ok=True)
-        with open(path, "w", encoding="utf-8") as f:
-            json.dump({
-                "generated_at": datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00"),
-                "note": "成人分类站点（未发布到公开仓库，仅本地留档）",
-                "sites": sites,
-            }, f, ensure_ascii=False, indent=1)
-    except OSError as e:
-        print(f"    [adult] 本地留档失败（不影响产出）：{e}", flush=True)
 
 
 
@@ -2636,14 +2622,10 @@ def main() -> int:
         adult_excluded_sites = [s for s in kept_sites if classify_site(s, category_overrides) == "adult"]
         kept_sites = [s for s in kept_sites if classify_site(s, category_overrides) != "adult"]
         if adult_excluded_sites:
-            print(f"    [adult] 未发布模式：从主产物剔除 {len(adult_excluded_sites)} 个成人分类站点"
-                  f"（{before} → {len(kept_sites)}）；数据仍写入 {ADULT_LOCAL_PATH}，不进版本库",
+            print(f"    [adult] 不声明模式：从主产物剔除 {len(adult_excluded_sites)} 个成人分类站点"
+                  f"（{before} → {len(kept_sites)}）；成人源完整写入仓库根 adult.json"
+                  f"（随 daily 提交更新，不进 Release/Pages/导航页）",
                   flush=True)
-        # repo_dir 直到下方 [4/6] 直播重构段才定义；未发布模式（PUBLISH_ADULT=0，默认）
-        # 在那之前就要写 adult.local.json —— 这里内联计算仓库根，避免读取未绑定局部变量
-        # 抛 UnboundLocalError（实测 canary 开启后全链路在 [3/6] 成人段崩掉，且 CI/本地同份代码都会中招）
-        _dump_adult_local(adult_excluded_sites,
-                          os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
     # ---- [4/6] 直播源分类测速优选 ----
     print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
@@ -2781,7 +2763,7 @@ def main() -> int:
     if PUBLISH_ADULT:
         adult_sites = [s for s in (vod.get("sites") or []) if classify_site(s, category_overrides) == "adult"]
     else:
-        # 未发布模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
+        # 不声明模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
         adult_sites = adult_excluded_sites
     # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
     # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
@@ -2804,14 +2786,11 @@ def main() -> int:
         adult_doc.pop("spider", None)
     with open("short.json", "w", encoding="utf-8") as f:
         json.dump(short_doc, f, ensure_ascii=False, indent=1)
-    if PUBLISH_ADULT:
-        with open("adult.json", "w", encoding="utf-8") as f:
-            json.dump(adult_doc, f, ensure_ascii=False, indent=1)
-        adult_out = f"adult.json（{len(adult_sites)} sites + {len(parses)} parses）"
-    else:
-        # 不写仓库根的 adult.json（公开托管成人内容有封库风险）；
-        # 数据在 kept_sites 过滤那一步已写入 ADULT_LOCAL_PATH
-        adult_out = f"adult.json 未发布（{len(adult_sites)} 个源仅本地留档 {ADULT_LOCAL_PATH}）"
+    # 所有者 2026-09-22 指令：adult.json 每天产出并随 daily 提交更新到仓库；
+    # 「只是不声明」：不进 Release 附件白名单 / Pages / 导航页，也不在 README 与日报声明。
+    with open("adult.json", "w", encoding="utf-8") as f:
+        json.dump(adult_doc, f, ensure_ascii=False, indent=1)
+    adult_out = f"adult.json（{len(adult_sites)} sites + {len(adult_lives)} lives + {len(parses)} parses）"
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"

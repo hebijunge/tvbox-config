@@ -11,11 +11,11 @@ pack_local.py — 生成本地 TVBox 接口包（zip）
   tvbox.json   点播主配置（剔除实测 dead + 依赖缺失站点，排序后）
   live.json    直播
   short.json   短剧（group=短剧）
-  adult.json   成人（本地留档 .workbuddy/adult.local.json；文件不存在自动跳过）
+  adult.json   成人（默认不打包——Release 附件通路不含 adult；完整公开模式可 --adult adult.json）
   deps/ lib/ js/ lives/  被引用的依赖
 
 用法：python scripts/pack_local.py [--out packs] [--keep-dead] [--no-rank]
-接入：run_all.py 阶段 8；daily.yml CI 步骤（无成人留档自动跳过）
+接入：run_all.py 阶段 8；daily.yml CI 步骤（默认不打包成人配置，自动跳过）
 """
 import argparse
 import hashlib

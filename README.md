@@ -152,7 +152,7 @@ python scripts/fetch_merge.py
 6. **链接代理**：配置内的 GitHub 原链统一加 `ghproxy.net` 前缀；上游换域名时可在 `state/domain_map.json` 配置映射自动改写（P2 域名替换层）。
 7. **测速验活**：type 0/1 直连站点并发测活（6 秒超时，失败重试一次），连续失败自动剔除；直播源按央视/卫视/港台/其他分类，逐 URL 测速排序，每频道保留前 3 条。
 8. **快照存档（P1）**：每次运行把各上游原始文件存入 `snapshot/<日期>/`（带时间戳文件名），合并产物一并留存，可回滚与失效溯源。
-9. **三通道发布（P2）**：产物同时提交 main 分支、Releases（`latest` 标签固定指向最新）与 GitHub Pages 导航页（`https://hebijunge.github.io/tvbox-config/`，2026-09-22 起，白名单组目录、adult 系产物不入）；README 由 `checks.json` 自动回写各上游可用性状态（🟢🟡🔴）。Release 白名单外陈旧资产每日由 `scripts/release_cleanup.py` 自动清理（`adult.json` 按受限产物保留，见下方「受限内容说明」）。
+9. **三通道发布（P2）**：产物同时提交 main 分支、Releases（`latest` 标签固定指向最新）与 GitHub Pages 导航页（`https://hebijunge.github.io/tvbox-config/`，2026-09-22 起，白名单组目录）；README 由 `checks.json` 自动回写各上游可用性状态（🟢🟡🔴）。Release 白名单外陈旧资产每日由 `scripts/release_cleanup.py` 自动清理。
 10. **社区收录（P2）**：提 issue 按模板推荐上游 → 机器人自动验活 → 可用者自动开 PR 登记 `candidate_upstreams.json`，人工确认后收编。
 
 ## 上游清单
@@ -396,10 +396,3 @@ python3 scripts/discover_upstreams.py               # 全网上游发现
 
 仅依赖 Python 3.8+ 标准库，无第三方包。
 
-
-## 受限内容说明（2026-09-22 起）
-
-- **仓库根 `adult.json` 为受限内容产物，按所有者 2026-09-22 明确决策保留**：文件与 raw 链接不删除；但它是**历史遗留的独立产物**，不在每日发布白名单内（不随 CI 更新、不进 Release 上传清单、不进 GitHub Pages、不进本 README 与导航页的任何订阅入口）。
-- 合规处理与保留并行：保留产物本身的同时，切断其在所有**公开推广通路**的露出（此页即唯一公开说明位），内容分级 18+，仅供自行部署的成年用户按需取用。
-- 如需成人分类的最新构建产物：本地运行 `python3 scripts/fetch_merge.py` 并设 `PUBLISH_ADULT=1`（产物只落在本地，不提交、不发布）。
-- 评估报告（2026-09-22）曾建议删除仓库根 `adult.json` 以消除合规缺口；所有者裁决为保留，故本轮以「保留 + 通路隔离 + 明示声明」替代删除方案。
