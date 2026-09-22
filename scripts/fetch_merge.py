@@ -1300,7 +1300,10 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         fp = os.path.join(lp)
         rec = {"key": f"{origin}|{url}", "url": url, "origin": origin, "local": lp,
                "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": ""}
-        if os.path.exists(fp) and os.path.getsize(fp) > 0:
+        # isfile 而非 exists：上游 jar 路径可能与 deps 内目录同名（CI run
+        # 35771827233 实证 'deps/.../sites/码上👓多' 是目录），目录走重新下载，
+        # 落盘失败由下方 try/except 兜住，不炸整轮合并
+        if os.path.isfile(fp) and os.path.getsize(fp) > 0:
             content = open(fp, "rb").read()
         else:
             content, ch = dep_download(url)
@@ -1389,7 +1392,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     missing = []
 
     def md5_of(local: str):
-        if not os.path.exists(local):
+        if not os.path.isfile(local):  # 目录/不存在都算 missing，open 只接受真实文件
             missing.append(local)
             return None
         with open(local, "rb") as f:
@@ -1587,7 +1590,7 @@ def localize_external_refs(tvbox: dict) -> dict:
         url, hint = url_kind
         lp = local_path_of(url)
         rec = {"url": url, "local": lp, "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": ""}
-        if os.path.exists(lp) and os.path.getsize(lp) > 0:
+        if os.path.isfile(lp) and os.path.getsize(lp) > 0:
             content = open(lp, "rb").read()
             rec["channel"] = "keep-existing"
         else:
