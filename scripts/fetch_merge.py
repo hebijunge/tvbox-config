@@ -3142,11 +3142,6 @@ def main() -> int:
         cat = classify_site_strong_only(s, category_overrides)
         if cat == "adult":
             origin_votes[origin.lower()] = origin_votes.get(origin.lower(), 0) + 1
-    # _origin 无需二次同步到 vod.sites：vod 由 tvbox 浅拷贝派生、tvbox["sites"] =
-    # kept_sites 与上面 `sites` 是同一批 dict 对象，首循环已全部打上标签；rank_sites
-    # 的 dict 拷贝也会带上 _origin。（原 vod.get("sites") 提前引用已在 CI
-    # run 35769498157 实证为 UnboundLocalError，删除。）
-
     # ---- [3/6] 测速验活：仅 type 0/1 且 api 为 http(s) 的直连站点 ----
     def testable(s: dict) -> bool:
         return s.get("type") in (0, 1) and isinstance(s.get("api"), str) and s["api"].startswith("http")
@@ -3324,6 +3319,15 @@ def main() -> int:
     # vod.json = tvbox 去掉 lives（保留 spider / wallpaper / sites / parses 等点播相关字段）；
     # live.json = {"lives": [...]}，并确保汇总 lives/ 目录的分类文件条目（央视/卫视/港台/其他）。
     vod = {k: v for k, v in tvbox.items() if k != "lives"}
+    # 同步 _origin 到 vod.sites 派生对象（后续 adult 分类按 _origin 归类排序）。
+    # 2026-09-23 热修：原位置在 vod 构建前引用 vod，CI run 35770088851 实证
+    # UnboundLocalError;vod 为 tvbox 浅拷贝,移到构建后打标,语义不变。
+    for s in (vod.get("sites") or []):
+        key = s.get("key")
+        if key and not s.get("_origin"):
+            origin = site_origin_name.get(key) or ""
+            if origin:
+                s["_origin"] = origin
     live = {"lives": [l for l in lives if isinstance(l, dict) and l.get("name")]}
     # ---- 直播重构：以本次实测聚合为主入口（央视/卫视/港台分组 + 核心频道多线路）----
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
