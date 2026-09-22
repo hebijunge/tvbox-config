@@ -3,8 +3,11 @@
 """live_aggregate.py — 频道级聚合：规范化、分类、多线路合并、逐线路实测。
 
 输入：源级测活通过的 m3u/tvbox-txt 源清单
-输出：lives/live_verified.txt（tvbox txt 分组格式，多线路 # 合并）+ live_channels.json 明细
+输出：lives/live_verified.txt（tvbox txt 分组格式，多线路 # 合并）
+     + lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）
+     + live_channels.json 明细
 """
+import datetime
 import json
 import os
 import re
@@ -18,6 +21,58 @@ sys.path.insert(0, sys_path)
 from live_probe import http_get, probe_stream  # noqa: E402
 
 MAX_LINES_PER_CH = 6
+
+# ---- 第十三批吸收实施（batch11 P1-1 / batch12 建议落地）：fanmingming/live 台标引用层 ----
+# 只做引用（URL 拼接），不镜像资产——fanmingming/live 为 GPL-3.0（28k+★，生态事实标准，
+# zhi35/kilvn/hehonghui 等 m3u 均引用其台标/EPG），镜像分发有许可与时效双重问题。
+# 命名口径与生态实证一致（zhi35 m3u 原文）：台标文件名 = tvg-name；
+# CCTV 系取「CCTV1」形态（CCTV-1→CCTV1，CCTV-5+→CCTV5+），其余频道用显示名原文
+# 不转义（与 zhi35 的 https://live.fanmingming.cn/tv/湖南卫视.png 写法一致）；
+# 个别小众频道文件缺失时播放器侧仅无台标，不影响播放（引用层 best-effort）。
+FMM_TV_BASE = "https://live.fanmingming.cn/tv/"
+# 第十五批吸收实施（batch9 P1「EPG 直链四件套」剩余三条）：多源冗余，播放器按序取用；
+# 三条新源均为 2026-09-22 沙箱实测 200 且可解析（xmltv channel/programme 齐全）：
+#   kuke31/xmlgz all.xml.gz 1.3MB 521 频道/128230 条节目；plsy1/epg seven-days.xml.gz 552KB
+#   162 频道/54764 条节目（运营商机顶盒抓取，display-name 带「CCTV1综合」别名双挂）；
+#   mytv-android/myEPG epg.gz（master 分支）2.3MB 852 频道/168909 条节目。
+# 仅头部引用（x-tvg-url），运行时不抓取，无 CI 成本。
+FMM_EPG_URLS = ("https://live.fanmingming.cn/e.xml",       # fanmingming e.xml（batch12 三源 EPG 惯例首位）
+                "https://e.erw.cc/all.xml.gz",
+                "http://epg.51zmt.top:8000/e.xml.gz",
+                "https://epg.zsdc.eu.org/t.xml.gz",        # batch9 suzukua/epg 备源（2026-09-22 沙箱实测 200/500799B）
+                "https://raw.githubusercontent.com/kuke31/xmlgz/main/all.xml.gz",        # batch9 kuke31（七天回看）
+                "https://raw.githubusercontent.com/plsy1/epg/main/e/seven-days.xml.gz",  # batch9 plsy1（运营商抓取）
+                "https://raw.githubusercontent.com/mytv-android/myEPG/master/output/epg.gz")  # batch9 myEPG（每日 Actions 构建，master 分支）
+FMM_CATCHUP = 'catchup="append" catchup-source="?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}"'
+
+
+def fmm_logo_name(std):
+    """fanmingming 台标文件名（不含 .png）。第十五批适配增强（对库内 929 个 tv 台标名
+    离线量化验证：真实频道名池 1374 个，核心缺口为「CCTV-1 综合」副标题形态与画质后缀）：
+    1) 剥尾部括号标注（「港台電視31 (官方)」→「港台電視31」，与 dedup_key 同口径）；
+    2) 去全部空白；
+    3) CCTV/CGTN 编号+副标题 → 紧凑形态（「CCTV-1 综合」→CCTV1、「CCTV-5+ 体育赛事」→
+       CCTV5+、「CCTV-4K 超高清」→CCTV4K、CGTN 同理；库内形态 CCTV1/CCTV5+/CCTV4K）；
+    4) CETV-N 去连字符（CETV-1→CETV1，库内无连字符形态）；
+    5) 尾部画质后缀剥离（高清/超清/标清/蓝光/超高清/4K/8K/FHD/HD，「北京卫视高清」→北京卫视；
+       仅剥尾部 token，不伤「CHC高清电影」这类库内本名）；
+    6) NEWTV/IHOT 大小写归一（库内 NEWTV东北热剧/IHOT爱体育；库内 viutv 为全小写、
+       无大小写可归一的稳定形态，不做 ViuTV 映射）。
+    全部 best-effort：库缺名时播放器侧仅无台标，不影响播放。"""
+    n = (std or "").strip().replace('"', "'")
+    n = re.sub(r"[（(][^()（）]*[)）]$", "", n).strip()
+    n = re.sub(r"\s+", "", n)
+    m = re.match(r"^(CCTV|CGTN)[-·]?(\d+[K+]?)(?=[\u4e00-\u9fffA-Za-z]|$)", n, re.I)
+    if m:
+        return m.group(1).upper() + m.group(2)
+    m = re.match(r"^CETV[-·]?(\d+)$", n, re.I)
+    if m:
+        return "CETV" + m.group(1)
+    n = re.sub(r"(?:高清|超清|标清|蓝光|超高清|4K|8K|FHD|HD)$", "", n) or n
+    for pre, up in (("newtv", "NEWTV"), ("ihot", "IHOT")):
+        if n.lower().startswith(pre):
+            return up + n[len(pre):]
+    return n
 
 SOURCE_PRIORITY = [
     "cctv", "satellite", "hkmo_tw", "other",
@@ -352,13 +407,12 @@ def test_channel_lines(cmap, only_classes=("央视", "卫视", "港台"),
     return verified, results
 
 
-def write_verified_txt(cmap, verified, path, extra_keep=6):
-    """输出 lives/live_verified.txt。2026-09-21 直播线融合增强：
+def _build_groups(cmap, verified, extra_keep=6):
+    """分组构建（write_verified_txt / write_verified_m3u 共用，第十三批下沉）：
     1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
     2) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
     3) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）。"""
     groups = OrderedDict()
-    ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
     for key, ent in cmap.items():
         name = ent.get("name") or key
         groups.setdefault(ent["class"], OrderedDict())
@@ -386,6 +440,13 @@ def write_verified_txt(cmap, verified, path, extra_keep=6):
                     groups["港台"][found] = ([static_url] + lines)[:MAX_LINES_PER_CH]
             else:
                 groups["港台"][nm] = [static_url]
+    return groups
+
+
+def write_verified_txt(cmap, verified, path, extra_keep=6):
+    """输出 lives/live_verified.txt。分组构建见 _build_groups（第十三批与 m3u 输出共用）。"""
+    groups = _build_groups(cmap, verified, extra_keep)
+    ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
     with open(path, "w", encoding="utf-8") as f:
         for cls in ORDER:
             if cls not in groups:
@@ -394,6 +455,120 @@ def write_verified_txt(cmap, verified, path, extra_keep=6):
             for std, lines in groups[cls].items():
                 f.write("%s,%s\n" % (std, "#".join(lines)))
     return {c: len(chs) for c, chs in groups.items()}
+
+
+def write_verified_m3u(cmap, verified, path, extra_keep=6):
+    """输出 lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）。
+    与 txt 同源同数据（_build_groups），仅格式不同：
+    header 多源 EPG x-tvg-url（7 源冗余，见 FMM_EPG_URLS）+ catchup（zhi35 m3u 生态实证写法）；
+    每频道 tvg-name/tvg-logo 引用 live.fanmingming.cn/tv/{名}.png（只引用不镜像，
+    fanmingming/live 为 GPL-3.0；个别文件缺失时播放器仅无台标，不影响播放）。
+    返回 {组名: 频道数}。"""
+    groups = _build_groups(cmap, verified, extra_keep)
+    ORDER = ["央视", "卫视", "港台", "轮播·一起看", "地方", "电台", "网络·其他"]
+    with open(path, "w", encoding="utf-8") as f:
+        f.write('#EXTM3U x-tvg-url="%s" %s\n' % (",".join(FMM_EPG_URLS), FMM_CATCHUP))
+        for cls in ORDER:
+            if cls not in groups:
+                continue
+            for name, lines in groups[cls].items():
+                logo = fmm_logo_name(name)
+                f.write('#EXTINF:-1 tvg-name="%s" tvg-logo="%s%s.png" group-title="%s",%s\n'
+                        % (logo, FMM_TV_BASE, logo, cls, name))
+                for u in lines:
+                    f.write(u + "\n")
+    return {c: len(chs) for c, chs in groups.items()}
+
+
+
+# ---------------- 第十四批吸收实施（batch10 融合形态 + batch8 P1-1 组播面）：省级组播附录 ----------------
+# batch10 结论：239.x/233.x 组播地址仅对应运营商内网（IPTV 机顶盒网络）可达，公网测活无意义
+# （Guovin 式 HTTP 测速对组播无效），故不入 live_verified 主列表，单独输出附录文件并带
+# 「内网限定」标注；频道名不做归一化合并（各运营商频道集本就不同），仅同名多线路 # 合并。
+# 浙江电信源（LionixQ/Zhejiang_Telecom_IPTV）发布形态是 udpxy 占位模板（{{your_udpxy_address}}），
+# 附录输出时把 /udp/{组播组} 路径转写为裸 udp:// 组播地址（内网直连等价形态）。
+MULTICAST_SOURCES = [
+    ("组播·广东电信(内网)",
+     "https://gh-proxy.com/https://raw.githubusercontent.com/Tzwcard/ChinaTelecom-GuangdongIPTV-RTP-List/master/GuangdongIPTV_rtp.m3u8"),
+    ("组播·北京联通(内网)",
+     "https://gh-proxy.com/https://raw.githubusercontent.com/wuwentao/bj-unicom-iptv/master/bj-unicom-iptv.m3u"),
+    ("组播·浙江电信(内网)",
+     "https://gh-proxy.com/https://raw.githubusercontent.com/LionixQ/Zhejiang_Telecom_IPTV/main/Zhejiang_Multicast/Zhejiang_Multicast.txt"),
+]
+MULTICAST_URL_RE = re.compile(r"^(rtp|udp|https?)://", re.I)
+UDPXY_RE = re.compile(r"^https?://[^/]+/udp/(\d+\.\d+\.\d+\.\d+:\d+)$", re.I)
+
+
+def _norm_multicast_url(u):
+    """udpxy 占位模板 → 裸 udp:// 组播地址；其余形态原样保留。"""
+    m = UDPXY_RE.match(u)
+    if m:
+        return "udp://" + m.group(1)
+    return u
+
+
+def parse_multicast(text):
+    """解析组播 m3u / tvbox txt：接受 rtp:// udp:// http(s)://，udpxy 模板转写。
+    返回 [(频道名, 组播URL)]。"""
+    out = []
+    cur = None
+    for raw in text.splitlines():
+        l = raw.strip()
+        if not l:
+            continue
+        if l.startswith("#EXTINF"):
+            m = re.search(r",\s*(.+)$", l)
+            cur = m.group(1).strip() if m else None
+            continue
+        if l.startswith("#"):
+            continue
+        if MULTICAST_URL_RE.match(l) and "," not in l:
+            out.append((cur or "未知频道", _norm_multicast_url(l)))
+            cur = None
+            continue
+        if "," in l:
+            name, urls = l.rsplit(",", 1)
+            for u in urls.split("#"):
+                u = u.strip()
+                if MULTICAST_URL_RE.match(u):
+                    out.append((name.strip(), _norm_multicast_url(u)))
+    return out
+
+
+def write_multicast_txt(path):
+    """输出省级组播附录（lives/live_multicast.txt）。
+    不测速（组播公网不可达，测速无意义）、不做跨源频道归一化；
+    每组内同名多线路 # 合并；头部注释写内网限定警示与来源
+    （tvbox txt 解析器跳过无逗号行，注释行不干扰解析）。返回 {组名: 频道数}。"""
+    groups = OrderedDict()
+    for gname, url in MULTICAST_SOURCES:
+        try:
+            status, _h, body = http_get(url, 15)
+        except Exception:  # noqa: BLE001
+            status, body = 0, None
+        if status != 200 or not body:
+            print("  [multicast] %s fetch %s，本轮跳过" % (gname, status or "error"), flush=True)
+            continue
+        chans = OrderedDict()
+        for name, u in parse_multicast(body.decode("utf-8", "replace")):
+            if not name:
+                continue
+            lines = chans.setdefault(name, [])
+            if u not in lines:
+                lines.append(u)
+        if chans:
+            groups[gname] = chans
+        print("  [%s] %d channels" % (gname, len(chans)), flush=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write("# 省级运营商组播附录（第十四批吸收实施：batch10 融合形态 + batch8 P1-1 组播面）\n")
+        f.write("# ⚠ 内网限定：rtp://239.x / udp://233.x 组播地址仅对应运营商内网（IPTV 机顶盒网络）可达，公网环境不可播放\n")
+        f.write("# 来源：%s\n" % ";".join(u for _g, u in MULTICAST_SOURCES))
+        f.write("# 生成：%s\n" % datetime.date.today().isoformat())
+        for gname, chans in groups.items():
+            f.write("%s,#genre#\n" % gname)
+            for name, lines in chans.items():
+                f.write("%s,%s\n" % (name, "#".join(lines)))
+    return {g: len(c) for g, c in groups.items()}
 
 
 # ---------------- 吸收点 P2-1：lives 套壳穿透（设计借鉴自参考仓库调研，代码独立实现） ----------------
@@ -500,7 +675,9 @@ def build_sources(repo):
     return sources
 
 
-def main(repo=None, out_txt="lives/live_verified.txt", out_json="live_channels.json"):
+def main(repo=None, out_txt="lives/live_verified.txt",
+         out_m3u="lives/live_verified.m3u", out_json="live_channels.json",
+         out_multicast="lives/live_multicast.txt"):
     repo = repo or os.path.dirname(sys_path)
     sources = build_sources(repo)
     print("loading %d sources ..." % len(sources), flush=True)
@@ -510,7 +687,11 @@ def main(repo=None, out_txt="lives/live_verified.txt", out_json="live_channels.j
     verified, raw = test_channel_lines(cmap, budget_s=420)
     print("line tests done in %.0fs, verified channels: %d" % (time.time() - t0, len(verified)), flush=True)
     stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
+    m3u_stats = write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
+    mc_stats = write_multicast_txt(os.path.join(repo, out_multicast))
     print("groups:", stats, flush=True)
+    print("m3u groups:", m3u_stats, flush=True)
+    print("multicast groups:", mc_stats, flush=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump({
             "verified": verified,

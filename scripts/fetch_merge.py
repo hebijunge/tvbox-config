@@ -72,6 +72,7 @@ REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 # ---- P0：内容质量门槛参数 ----
 MIN_BYTES_TVBOX = int(os.environ.get("MIN_BYTES_TVBOX", "512"))    # 配置类上游最小字节数
 MIN_ITEMS_TVBOX = int(os.environ.get("MIN_ITEMS_TVBOX", "1"))      # 至少含多少条 sites/lives/parses
+CANARY_MIN_BYTES = int(os.environ.get("CANARY_MIN_BYTES", "5120"))  # canary 上游内容校验最小字节（batch11 P1-1：HEAD 200 + 5KB 内容校验）
 MIN_BYTES_M3U = int(os.environ.get("MIN_BYTES_M3U", "1024"))       # m3u 类上游最小字节数
 MIN_ENTRIES_M3U = int(os.environ.get("MIN_ENTRIES_M3U", "50"))     # m3u 至少多少条频道
 
@@ -369,6 +370,19 @@ LIVE_UPSTREAMS = [
      "url": "https://raw.githubusercontent.com/YanG-1989/m3u/main/Gather.m3u"},  # 验活 ok 123 频道（斗鱼/虎牙等大街源聚合；CI 侧 live_checks 同 URL 组验活 ok/123 频道）
     {"name": "yang-migu", "kind": "m3u",
      "url": "https://raw.githubusercontent.com/YanG-1989/m3u/main/Migu.m3u"},  # 验活 format_only 43 频道（咪咕回看流 gslbserv.itv.cmvideo.cn 沙箱 403，交 CI 验活）
+    # ---- 第十三批吸收实施（batch11 P1-1 / batch12 建议落地）：Romaxa55 canary ----
+    # canary 语义：只监控不合并。cn.m3u 43 条 < MIN_ENTRIES_M3U=50 属设计内（不套通用门槛），
+    # evaluate_upstream 走 canary 专用分支：fetch 200（由 fetch_raw 保证）+ 内容 >= CANARY_MIN_BYTES，
+    # 日拉取在合并前跳过（canary continue）。GitHub Pages 静态产物 6h 自动验活；
+    # 风险备注（batch11 调研）：README 带 MegaV VPN 商业推广，内容劣化由自动黑名单停用、可随时下线本条目。
+    {"name": "romaxa55-cn", "kind": "m3u", "canary": True,
+     "url": "https://romaxa55.github.io/world_ip_tv/output/cn.m3u"},  # 2026-09-22 沙箱实测 200/6946B，PARSERS['m3u'] 解析 43 条
+    # ---- 第十四批吸收实施（batch8 建议优先融合①·单播面）：xisohi/CHINA-IPTV 分省分运营商源 ----
+    # 主列表 TV/live.txt 1231 频道 / 90 域名 / 89 个为新增（batch8 重叠量化）；仓库 1820★ 当日活跃。
+    # 组播面（Multicast/ 97 文件，rtp://239.x）不入此表——公网不可达，由 live_aggregate
+    # 独立附录输出 lives/live_multicast.txt（内网限定标注）。
+    {"name": "xisohi-china-iptv", "kind": "m3u",
+     "url": "https://raw.githubusercontent.com/xisohi/CHINA-IPTV/main/TV/live.txt"},  # 2026-09-22 沙箱实测 200/133750B，解析 1231 频道
 ]
 # 报告点名的上游未纳入本次 LIVE_UPSTREAMS（有据记录，非遗漏）：
 # - tzdr.com/iptv.txt（第六批）：沙箱两次 fetch_error + curl 000 不可达，不硬塞；
@@ -1522,6 +1536,13 @@ def evaluate_upstream(u: dict, raw):
         return False, "dead", {}, f"unknown kind {u.get('kind')}"
     if raw is None:
         return False, "dead", {}, "fetch failed"
+    if u.get("canary"):
+        # 第十三批：canary 上游专用门槛——HTTP 200 已由 fetch_raw 保证 + 内容 >= CANARY_MIN_BYTES。
+        # 不套通用门槛：romaxa55 cn.m3u 43 条 < MIN_ENTRIES_M3U=50，设计内只监控不合并，
+        # 健康分照常进出 record_result（连续失败自动停用对 canary 同样生效）。
+        ok_c = len(raw) >= CANARY_MIN_BYTES
+        return ok_c, ("ok" if ok_c else "degraded"), {"bytes": len(raw)}, \
+            ("" if ok_c else f"canary content check failed: {len(raw)}B < {CANARY_MIN_BYTES}B")
     if len(raw) < (MIN_BYTES_M3U if u["kind"] == "m3u" else MIN_BYTES_TVBOX):
         return False, "degraded", {}, f"too small ({len(raw)} bytes)"
     try:
@@ -2586,6 +2607,14 @@ def main() -> int:
             checks.append(rec)
             interfaces.append(rec)
             print(f"  {'DEGRADED' if status_tag == 'degraded' else 'FAIL'} {name}: {err or info}", flush=True)
+            continue
+
+        if u.get("canary"):
+            # 第十三批：canary 只监控不合并——健康分/快照照常，内容不进 tvbox.json/live.json
+            rec["grade"] = "canary"
+            checks.append(rec)
+            interfaces.append(rec)
+            print(f"  CANARY {name}: 内容校验通过（{rec['bytes']}B），仅监控不合并", flush=True)
             continue
 
         # ---- 合并 ----

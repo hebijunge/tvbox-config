@@ -27,6 +27,14 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 确认 ffprobe 可用（第十四批吸收：FFprobe 探流第二引擎）
+        run: |
+          if ! command -v ffprobe >/dev/null 2>&1; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq ffmpeg
+          fi
+          ffprobe -version | head -1
+
       - name: 直播上游验活（L1 清洗 / L2 格式 / L3 流抽样）
         run: |
           if [ -f live.json ]; then

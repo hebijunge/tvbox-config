@@ -16,6 +16,8 @@
 import json
 import os
 import re
+import shutil
+import subprocess
 import time
 import ssl
 import urllib.request
@@ -196,6 +198,49 @@ def probe_stream(url: str):
     return False, why
 
 
+# ---------------- 第十四批吸收实施（batch12 建议②，借鉴 yuanzl77/IPTV「快筛+FFprobe 探流」双引擎，代码独立实现） ----------------
+# 源级抽样第二引擎：对 L3 HTTP 快筛通过的 http(s) 抽样流补 ffprobe 深探（编解码/分辨率）。
+# 仅富化记录（rec["ffprobe"]），默认不改判 ok/format_only；LIVE_PROBE_FFMPEG=0 关闭，
+# LIVE_PROBE_FFMPEG_STRICT=1 时 ffprobe 确认无音视频流才降级（谨慎使用）。
+# 只挂 probe_source（源级抽样，live-validate 链路）；不挂 probe_stream（会被 live_aggregate
+# 数千条逐线路实测调用，击穿聚合预算）。
+FFPROBE_BIN = shutil.which("ffprobe")
+LIVE_PROBE_FFMPEG = os.environ.get("LIVE_PROBE_FFMPEG", "1") != "0"
+LIVE_PROBE_FFMPEG_STRICT = os.environ.get("LIVE_PROBE_FFMPEG_STRICT", "0") == "1"
+FFPROBE_TIMEOUT = float(os.environ.get("FFPROBE_TIMEOUT", "6"))
+FFPROBE_MAX_PER_SOURCE = int(os.environ.get("FFPROBE_MAX_PER_SOURCE", "2"))
+
+
+def ffprobe_stream(url: str):
+    """ffprobe 深探单条流。返回 (True, info) / (False, why) / (None, 引擎级原因)。
+    (None, *) 表示引擎不可用或未得出结论（不参与任何判定）。"""
+    if not FFPROBE_BIN:
+        return None, "ffprobe_missing"
+    cmd = [FFPROBE_BIN, "-v", "error",
+           "-user_agent", UA,
+           "-rw_timeout", str(int(FFPROBE_TIMEOUT * 1_000_000)),
+           "-show_entries", "stream=codec_name,codec_type,width,height",
+           "-of", "json", url]
+    try:
+        p = subprocess.run(cmd, capture_output=True, timeout=FFPROBE_TIMEOUT + 2)
+    except subprocess.TimeoutExpired:
+        return None, "timeout"
+    except OSError as e:
+        return None, "os_error:%s" % getattr(e, "errno", "?")
+    if p.returncode != 0:
+        return False, "probe_failed"
+    try:
+        streams = (json.loads(p.stdout.decode("utf-8", "replace")) or {}).get("streams") or []
+    except Exception:  # noqa: BLE001
+        return None, "bad_json"
+    if not streams:
+        return False, "no_streams"
+    return True, {"codecs": [s.get("codec_name") for s in streams if s.get("codec_name")][:4],
+                  "video": next(({"codec": s.get("codec_name"), "w": s.get("width"),
+                                  "h": s.get("height")}
+                                 for s in streams if s.get("codec_type") == "video"), None)}
+
+
 def probe_source(entry: dict):
     """完整测一个直播源条目。返回记录 dict。"""
     name = entry.get("name") or ""
@@ -249,6 +294,24 @@ def probe_source(entry: dict):
     else:
         rec["status"] = "format_only"
         rec["reason"] = "no_valid_stream_in_sample"
+    # 第十四批吸收（batch12 建议②）：对抽样通过的 http(s) 流补 ffprobe 深探（仅富化记录）
+    if LIVE_PROBE_FFMPEG and FFPROBE_BIN and ok_n > 0:
+        full_of = {s[:120]: s for s in picks}
+        fp = []
+        for v in verdicts:
+            if len(fp) >= FFPROBE_MAX_PER_SOURCE:
+                break
+            full = full_of.get(v["stream"])
+            if v["ok"] and full and re.match(r"^https?://", full, re.I):
+                ok2, info = ffprobe_stream(full)
+                if ok2 is not None:
+                    fp.append({"stream": v["stream"], "ok": ok2,
+                               **({"info": info} if ok2 else {"why": info})})
+        if fp:
+            rec["ffprobe"] = fp
+            if LIVE_PROBE_FFMPEG_STRICT and not any(x["ok"] for x in fp):
+                rec["status"] = "format_only"
+                rec["reason"] = "ffprobe_no_streams"
     return rec
 
 
