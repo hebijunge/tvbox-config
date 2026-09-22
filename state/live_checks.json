@@ -45,7 +45,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8#http://204.12.221.218:8181/3m1080p/cctv1.m3u8#http://38.75.136.137:98/gslb/dsdq",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/311927",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·央视",
@@ -84,7 +116,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://204.12.221.218:8181/3m1080p/cctv2.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/fyjc.m3u8?auth=testpub",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·卫视",
@@ -118,7 +182,7 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://pulls.myun.tv/live/0dkp33j5.m3u8",
+     "stream": "http://ls.qingting.fm/live/2810.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -133,13 +197,40 @@
      "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
     },
     {
-     "stream": "http://ls.qingting.fm/live/2810.m3u8",
+     "stream": "http://pulls.myun.tv/live/0dkp33j5.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://192.151.150.154/live/chcdz.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://ls.qingting.fm/live/2810.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac"
+      ],
+      "video": null
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·总集",
@@ -159,22 +250,22 @@
    "bytes": 396412,
    "stream_tests": [
     {
-     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
      "stream": "https://zby.130519.xyz/PLTV/11/224/3221225762/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://live.264788.xyz/channel/fujianlvyou?streamid=221239fcf3c7edb274f2f0760fe47f96&livekey=01WgOR41rriMmMkzNsd0UoaxJR",
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
      "ok": true,
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
+     "stream": "https://live.264788.xyz/channel/fujianlvyou?streamid=221239fcf3c7edb274f2f0760fe47f96&livekey=01WgOR41rriMmMkzNsd0UoaxJR",
      "ok": true,
      "why": "ct:video/mp4"
     },
@@ -185,7 +276,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "YY·轮播",
@@ -228,7 +351,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1382828771",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "虎牙一起看",
@@ -249,12 +404,12 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/26355783",
+     "stream": "https://live.ottiptv.cc/huya/24720260",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/24720260",
+     "stream": "https://live.ottiptv.cc/huya/26355783",
      "ok": true,
      "why": "ct:video/x-flv"
     },
@@ -270,7 +425,40 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/24720260",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "text",
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "斗鱼一起看",
@@ -291,12 +479,12 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/10329713",
+     "stream": "https://live.ottiptv.cc/douyu/9444093",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9444093",
+     "stream": "https://live.ottiptv.cc/douyu/10329713",
      "ok": true,
      "why": "ct:video/x-flv"
     },
@@ -312,7 +500,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/9444093",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 0,
+       "h": 0
+      }
+     }
+    }
+   ]
   },
   {
    "name": "B站直播",
@@ -337,6 +557,11 @@
      "why": "ct:video/mp4"
     },
     {
+     "stream": "https://live.ottiptv.cc/bilibili/21156724",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
      "stream": "https://live.ottiptv.cc/bilibili/30824625",
      "ok": false,
      "why": "http_404"
@@ -350,15 +575,27 @@
      "stream": "https://live.ottiptv.cc/bilibili/14765757",
      "ok": false,
      "why": "http_404"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/bilibili/21156724",
-     "ok": false,
-     "why": "http_404"
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "咪咕歌手",
@@ -380,6 +617,11 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
+     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
      "stream": "http://mgtv.ottiptv.cc/vod/24293285",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
@@ -390,18 +632,45 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
      "stream": "http://mgtv.ottiptv.cc/vod/24475156",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 3840,
+       "h": 2160
+      }
+     }
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": " kimwang直播",
@@ -441,7 +710,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://gitlab.com/p2v5/wangtv/-/raw/main/about1080p.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://lotus.stingray.com/manifest/cmusic-cme004-montreal/samsungtvplus/dee3e3af-2706-3e77-a952-91b99f6d1819/5711200/ma",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": " 广西移动直播",
@@ -458,6 +759,11 @@
    "bytes": 10883,
    "stream_tests": [
     {
+     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225654/index.m3u8?servicetype=1&",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221226013/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
@@ -468,17 +774,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225654/index.m3u8?servicetype=1&",
+     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225795/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225913/index.m3u8?servicetype=1&",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://cdnrrs.gx.chinamobile.com/PLTV/77777777/224/3221225795/index.m3u8?servicetype=1&",
      "ok": false,
      "why": "no_response"
     }
@@ -515,7 +816,7 @@
    "bytes": 518714,
    "stream_tests": [
     {
-     "stream": "https://t23a.cdn2020.com/video/m3u8/2024/02/20/8a05d82d/index.m3u8",
+     "stream": "https://t25.cdn2020.com/video/m3u8/2024/04/07/4085a050/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -525,7 +826,7 @@
      "why": "no_response"
     },
     {
-     "stream": "https://t25.cdn2020.com/video/m3u8/2024/04/07/4085a050/index.m3u8",
+     "stream": "https://t23a.cdn2020.com/video/m3u8/2024/02/20/8a05d82d/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -601,23 +902,45 @@
      "why": "no_response"
     },
     {
-     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
      "stream": "https://0472.org/hls/cgtne.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
      "ok": false,
      "why": "http_404"
     }
    ],
-   "streams_ok": 1,
-   "status": "ok"
+   "streams_ok": 2,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtne.m3u8",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1080,
+       "h": 606
+      }
+     }
+    }
+   ]
   },
   {
    "name": "B站直播",
@@ -647,12 +970,12 @@
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/21156724",
+     "stream": "https://live.ottiptv.cc/bilibili/12264659",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/bilibili/12264659",
+     "stream": "https://live.ottiptv.cc/bilibili/21156724",
      "ok": false,
      "why": "http_404"
     },
@@ -663,7 +986,24 @@
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "D佬直播",
@@ -684,12 +1024,12 @@
    "bytes": 119416,
    "stream_tests": [
     {
-     "stream": "video://https://web.guangdianyun.tv/tv/?id=643&uin=1629",
+     "stream": "http://rihou.cc:555/tv/[mv]抖舞陪看",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://rihou.cc:555/tv/[mv]抖舞陪看",
+     "stream": "video://https://web.guangdianyun.tv/tv/?id=643&uin=1629",
      "ok": false,
      "why": "no_response"
     },
@@ -710,7 +1050,39 @@
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "EPG直播",
@@ -736,12 +1108,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://tvbox6.icu/tv/migu.php?id=cctv1$LR•6•IPV4『线路1』",
+     "stream": "http://tvbox6.icu/tv/migu.php?id=gzws$LR•6•IPV4『线路1』",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://tvbox6.icu/tv/migu.php?id=gzws$LR•6•IPV4『线路1』",
+     "stream": "http://tvbox6.icu/tv/migu.php?id=cctv1$LR•6•IPV4『线路1』",
      "ok": false,
      "why": "no_response"
     },
@@ -775,17 +1147,17 @@
    "bytes": 15219,
    "stream_tests": [
     {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226954/1.m3u8?GuardEncType=2&accountinfo",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
@@ -879,7 +1251,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel001/1080p.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://171.119.206.133:6000/rtp/226.0.2.234:9784",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 720,
+       "h": 576
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin",
@@ -899,14 +1303,14 @@
    "bytes": 396412,
    "stream_tests": [
     {
-     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
      "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
      "ok": true,
      "why": "ct:video/mp4"
+    },
+    {
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "https://live.264788.xyz/channel/fujianlvyou?streamid=221239fcf3c7edb274f2f0760fe47f96&livekey=01WgOR41rriMmMkzNsd0UoaxJR",
@@ -914,18 +1318,50 @@
      "why": "ct:video/mp4"
     },
     {
+     "stream": "https://live.ottiptv.cc/huya/23824164",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
      "stream": "https://zby.130519.xyz/PLTV/11/224/3221225762/index.m3u8",
      "ok": false,
      "why": "no_response"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/23824164",
-     "ok": false,
-     "why": "empty_body"
     }
    ],
-   "streams_ok": 3,
-   "status": "ok"
+   "streams_ok": 4,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·其他",
@@ -949,9 +1385,9 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://ls.qingting.fm/live/2810.m3u8",
+     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "why": "ct:application/x-mpegurl"
     },
     {
      "stream": "http://183.237.95.108:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=0&authid=0",
@@ -959,13 +1395,45 @@
      "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
     },
     {
-     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8",
+     "stream": "http://ls.qingting.fm/live/2810.m3u8",
      "ok": true,
-     "why": "ct:application/x-mpegurl"
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://192.151.150.154/live/chcdz.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://ali-m-l.cztv.com/channels/lantian/channel010/1080p.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·卫视",
@@ -1005,7 +1473,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://107.150.60.122/live/ahwshd.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://107.150.60.122/live/ssws.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 720,
+       "h": 576
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·央视",
@@ -1045,7 +1545,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://204.12.221.218:8181/3m1080p/cctv2.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "Guovin·港台",
@@ -1069,9 +1601,9 @@
      "why": "http_404"
     },
     {
-     "stream": "http://r.jdshipin.com/CkuBd",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "stream": "http://cdn6.163189.xyz/163189/cctv1",
+     "ok": false,
+     "why": "html_content_type"
     },
     {
      "stream": "http://45.192.97.170:8880/play/1315.m3u8",
@@ -1079,13 +1611,47 @@
      "why": "http_404"
     },
     {
-     "stream": "http://cdn6.163189.xyz/163189/cctv1",
-     "ok": false,
-     "why": "html_content_type"
+     "stream": "http://r.jdshipin.com/CkuBd",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://173.208.234.146/live/fhxg.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "http://r.jdshipin.com/CkuBd",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "aac",
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "IPV4",
@@ -1155,23 +1721,45 @@
      "why": "no_response"
     },
     {
-     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
      "stream": "https://0472.org/hls/cgtne.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
      "ok": false,
      "why": "http_404"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 1,
-   "status": "ok"
+   "streams_ok": 2,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtne.m3u8",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1080,
+       "h": 606
+      }
+     }
+    }
+   ]
   },
   {
    "name": "LIVEfl",
@@ -1193,12 +1781,12 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://vip2.slbfsl.com/20230411/XhL4DyzI/index.m3u8",
+     "stream": "http://cdn.adultiptv.net/blonde.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://cdn.adultiptv.net/blonde.m3u8",
+     "stream": "https://vip2.slbfsl.com/20230411/XhL4DyzI/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -1209,7 +1797,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://vip2.slbfsl.com/20230308/1UZH5fQD/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://cdn.adultiptv.net/blonde.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "MY live-catvod",
@@ -1264,9 +1884,9 @@
    "bytes": 107665,
    "stream_tests": [
     {
-     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=545407854671ec965a35d0",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
+     "stream": "http://hlsztemgsplive.miguvideo.com:8080/wd_r2/cctv/jiangsuhd/600/index.m3u8?msisdn=2026092122014043229870774b4d2882c82a",
+     "ok": false,
+     "why": "http_403"
     },
     {
      "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
@@ -1279,9 +1899,9 @@
      "why": "http_403"
     },
     {
-     "stream": "http://hlsztemgsplive.miguvideo.com:8080/wd_r2/cctv/jiangsuhd/600/index.m3u8?msisdn=2026092122014043229870774b4d2882c82a",
-     "ok": false,
-     "why": "http_403"
+     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=545407854671ec965a35d0",
+     "ok": true,
+     "why": "ct:application/x-mpegurl"
     },
     {
      "stream": "https://gcalic.v.myalicdn.com/gc/hlzycc_1/index.m3u8",
@@ -1290,7 +1910,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 720,
+       "h": 576
+      }
+     }
+    },
+    {
+     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=545407854671ec965a35d0",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "XingHuo",
@@ -1343,7 +1995,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/yy/1382828771",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "YanG",
@@ -1360,8 +2044,8 @@
    "stream_tests": [
     {
      "stream": "https://cdn.ttvb.eu.org/douyu/288016",
-     "ok": false,
-     "why": "empty_body"
+     "ok": true,
+     "why": "ct:n/a"
     },
     {
      "stream": "https://cdn.ttvb.eu.org/douyu/9223245",
@@ -1374,18 +2058,50 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000020000011523&livemode=1&stbId=YanG-198",
+     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000010000009788&livemode=1&stbId=YanG-198",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000010000009788&livemode=1&stbId=YanG-198",
+     "stream": "http://gslbserv.itv.cmvideo.cn/index.m3u8?channel-id=FifastbLive&Contentid=3000000020000011523&livemode=1&stbId=YanG-198",
      "ok": false,
      "why": "no_response"
     }
    ],
-   "streams_ok": 2,
-   "status": "ok"
+   "streams_ok": 3,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.ttvb.eu.org/douyu/288016",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://cdn.ttvb.eu.org/huya/11342413",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 640,
+       "h": 432
+      }
+     }
+    }
+   ]
   },
   {
    "name": "YanG-1989",
@@ -1494,7 +2210,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://ali-m-l.cztv.com/channels/lantian/channel007/1080p.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "atsushi",
@@ -1575,7 +2323,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://170.83.49.66:8083/JOVEMPANNEWSHD/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://video01.brascast.com/bdctv/bdctv/playlist.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "iTV",
@@ -1623,12 +2403,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://60.4.29.46:8077/rtp/239.253.92.197:6062$河北联通11",
+     "stream": "http://114.254.38.234:8888/rtp/239.3.1.134:8020$北京联通11",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://114.254.38.234:8888/rtp/239.3.1.134:8020$北京联通11",
+     "stream": "http://60.4.29.46:8077/rtp/239.253.92.197:6062$河北联通11",
      "ok": false,
      "why": "no_response"
     },
@@ -1644,7 +2424,24 @@
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://kakaxi.indevs.in/LOGO/Disclaimer.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "live",
@@ -1667,17 +2464,17 @@
    "bytes": 223548,
    "stream_tests": [
     {
-     "stream": "https://stream1.freetv.fun/d408673bca179f9b20ec03879d544e55d03a971c9d453b2207eeff4f50af4019.ctv",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "https://stream1.freetv.fun/4a250dafef7349ead704088bec3993f3cd3b2cdcb604f23bbf700da31434fa08.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "https://stream1.freetv.fun/dc20d0b380867cfe9203ed4b2115109f793029d61ee897b0cffb0e770e5ee32c.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "https://stream1.freetv.fun/d408673bca179f9b20ec03879d544e55d03a971c9d453b2207eeff4f50af4019.ctv",
      "ok": false,
      "why": "no_response"
     },
@@ -1731,6 +2528,11 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
+     "stream": "http://play.kankanlive.com/live/1698234869325962.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
      "stream": "http://tvpull.dxhmt.cn:9081/tv/10922-1.m3u8",
      "ok": false,
      "why": "http_403"
@@ -1741,18 +2543,45 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://play.kankanlive.com/live/1698234869325962.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
      "stream": "https://masterpull.hljtv.com/live/H2kVyS15.m3u8",
      "ok": false,
      "why": "no_response"
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://ali-xwl.cztv.com/live/channel08720Plxw.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "http://play.kankanlive.com/live/1698234869325962.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 800,
+       "h": 600
+      }
+     }
+    }
+   ]
   },
   {
    "name": "migu720",
@@ -1786,11 +2615,6 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://cm-wshls.homecdn.com/live/2aa50.m3u8",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
-    },
-    {
      "stream": "https://jwplay.hebyun.com.cn/live/hbwstv/1500k/tzwj_video.m3u8",
      "ok": false,
      "why": "http_404"
@@ -1804,10 +2628,32 @@
      "stream": "http://1.94.31.214:35455/huya/23824164",
      "ok": false,
      "why": "no_response"
+    },
+    {
+     "stream": "http://cm-wshls.homecdn.com/live/2aa50.m3u8",
+     "ok": false,
+     "why": "no_response"
     }
    ],
-   "streams_ok": 2,
-   "status": "ok"
+   "streams_ok": 1,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://php.jdshipin.com:8880/TVOD/iptv.php?id=rthk33",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "hevc",
+       "aac"
+      ],
+      "video": {
+       "codec": "hevc",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "nctv",
@@ -1842,11 +2688,6 @@
      "why": "http_500"
     },
     {
-     "stream": "http://8.138.7.223/tv/btime.php?id=bjws4k",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
      "stream": "https://live.metshop.top/huya/21059579",
      "ok": true,
      "why": "ct:video/x-flv"
@@ -1857,13 +2698,36 @@
      "why": "http_404"
     },
     {
+     "stream": "http://8.138.7.223/tv/btime.php?id=bjws4k",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
      "stream": "https://gdfire2.67890123.cn:8088/live/ztxw201.m3u8",
      "ok": false,
      "why": "no_response"
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://live.metshop.top/huya/21059579",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "text",
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 804
+      }
+     }
+    }
+   ]
   },
   {
    "name": "vip源",
@@ -1907,7 +2771,7 @@
    "url_raw": "http://wangziduoqing.com/yuan/zb.txt",
    "url": "http://wangziduoqing.com/yuan/zb.txt",
    "timeout": 10,
-   "channels": 1698,
+   "channels": 1709,
    "groups": [
     "4K测试",
     "80后经典歌曲",
@@ -1918,36 +2782,58 @@
     "小品",
     "电信源"
    ],
-   "bytes": 131072,
+   "bytes": 132125,
    "stream_tests": [
+    {
+     "stream": "https://live.ottiptv.cc/yy/25055036",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-pd67p5k6bme117n7/sc/cae_h264/1680848349956826702/mda-pd67p5k6bme117n7.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
+    },
     {
      "stream": "http://222.186.39.21:35466/huya/11602072",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://vd3.bdstatic.com/mda-pmkem86nnamb9esq/sc/cae_h264/1703202502607083623/mda-pmkem86nnamb9esq.mp4",
+     "stream": "https://vdse.bdstatic.com//36ea0ffcf8156a44b9d524d999eb088a.mp4",
      "ok": true,
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://vd4.bdstatic.com/mda-",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1354210357",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1354889019",
+     "stream": "https://live.ottiptv.cc/yy/1354932397",
      "ok": true,
      "why": "ct:video/x-flv"
     }
    ],
-   "streams_ok": 4,
-   "status": "ok"
+   "streams_ok": 5,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://live.ottiptv.cc/yy/25055036",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-pd67p5k6bme117n7/sc/cae_h264/1680848349956826702/mda-pd67p5k6bme117n7.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "zwrt",
@@ -2036,23 +2922,45 @@
      "why": "no_response"
     },
     {
-     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
      "stream": "https://0472.org/hls/cgtne.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://101.35.240.114:88/live.php?id=CCTV1",
      "ok": false,
      "why": "http_404"
     }
    ],
-   "streams_ok": 1,
-   "status": "ok"
+   "streams_ok": 2,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtne.m3u8",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1080,
+       "h": 606
+      }
+     }
+    }
+   ]
   },
   {
    "name": "切换直播源(2)",
@@ -2106,9 +3014,9 @@
      "why": "html_content_type"
     },
     {
-     "stream": "http://satellitepull.cnr.cn/live/wx32hunws/playlist.m3u8",
+     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/9d7bcf3e27d941cfac2e6c933ad9b543/1200.m3u8",
      "ok": true,
-     "why": "ct:application/x-mpegurl"
+     "why": "ct:application/x-mpeg"
     },
     {
      "stream": "https://vd3.bdstatic.com/mda-nck3tqzgjvj076vc/sc/cae_h264_delogo/1647833645083560959/mda-nck3tqzgjvj076vc.mp4",
@@ -2116,18 +3024,50 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/9d7bcf3e27d941cfac2e6c933ad9b543/1200.m3u8",
+     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/649a0df6bc394fde973b2e8ef12ef3d6/1200.m3u8",
      "ok": true,
      "why": "ct:application/x-mpeg"
     },
     {
-     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/649a0df6bc394fde973b2e8ef12ef3d6/1200.m3u8",
+     "stream": "http://satellitepull.cnr.cn/live/wx32hunws/playlist.m3u8",
      "ok": true,
-     "why": "ct:application/x-mpeg"
+     "why": "ct:application/x-mpegurl"
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/9d7bcf3e27d941cfac2e6c933ad9b543/1200.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 480,
+       "h": 270
+      }
+     }
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-nck3tqzgjvj076vc/sc/cae_h264_delogo/1647833645083560959/mda-nck3tqzgjvj076vc.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "咪咕",
@@ -2161,12 +3101,12 @@
      "why": "no_response"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/envivo_v/2018/SD/jilin/1000/index.m3u8?msisdn=20260922234745bd6ad954b25b4e5689e7ba8aaa",
+     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/600/index.m3u8?msisdn=2026092223471726906d013b5246a0839340902f47af3",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/600/index.m3u8?msisdn=2026092223471726906d013b5246a0839340902f47af3",
+     "stream": "http://gslbmgsplive.miguvideo.com/envivo_v/2018/SD/jilin/1000/index.m3u8?msisdn=20260922234745bd6ad954b25b4e5689e7ba8aaa",
      "ok": false,
      "why": "no_response"
     },
@@ -2269,12 +3209,12 @@
    "bytes": 225750,
    "stream_tests": [
     {
-     "stream": "http://183.10.180.121:202/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&down=1",
+     "stream": "http://183.10.180.172:202/tsfile/live/1037_1.m3u8?key=txiptv&playlive=1&down=1",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
     },
     {
-     "stream": "http://183.10.180.172:202/tsfile/live/1037_1.m3u8?key=txiptv&playlive=1&down=1",
+     "stream": "http://183.10.180.121:202/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&down=1",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
     },
@@ -2295,7 +3235,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://183.10.180.172:202/tsfile/live/1037_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://183.10.180.121:202/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "宫殿",
@@ -2347,12 +3319,12 @@
    "bytes": 12045,
    "stream_tests": [
     {
-     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225536/10000100000000060000000000081865_0.smil",
+     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225580/10000100000000060000000000081909_0.smil",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225580/10000100000000060000000000081909_0.smil",
+     "stream": "rtsp://180.141.207.144/PLTV/88888888/224/3221225536/10000100000000060000000000081865_0.smil",
      "ok": false,
      "why": "no_response"
     },
@@ -2455,18 +3427,50 @@
      "why": "ct:application/vnd.apple.mpegurl;charset=utf-8"
     },
     {
-     "stream": "http://183.51.190.123:6633/rtp/239.77.0.146:5146",
+     "stream": "http://113.95.135.60:8188/rtp/239.253.43.22:5146",
      "ok": true,
      "why": "ct:application/octet-stream"
     },
     {
-     "stream": "http://113.95.135.60:8188/rtp/239.253.43.22:5146",
+     "stream": "http://183.51.190.123:6633/rtp/239.77.0.146:5146",
      "ok": true,
      "why": "ct:application/octet-stream"
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://183.10.180.121:202/tsfile/live/1000_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://183.10.180.172:202/tsfile/live/1037_1.m3u8?key=txiptv&playlive=1&down=1",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "很少",
@@ -2484,12 +3488,12 @@
    "bytes": 2221,
    "stream_tests": [
     {
-     "stream": "https://o11.163189.xyz/stream/live/tvbxh/",
+     "stream": "https://o11.163189.xyz/stream/live/aec/",
      "ok": false,
      "why": "html_content_type"
     },
     {
-     "stream": "https://o11.163189.xyz/stream/live/aec/",
+     "stream": "https://o11.163189.xyz/stream/live/tvbxh/",
      "ok": false,
      "why": "html_content_type"
     },
@@ -2510,7 +3514,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/chcdz.m3u8?auth=testpub",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://tv.zimtv.cn/tv/player/api/huya.php?id=11352962",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "心魔",
@@ -2554,18 +3590,40 @@
      "why": "http_404"
     },
     {
-     "stream": "https://cloud.video.taobao.com//play/u/709608496/p/1/e/6/t/1/313341682455.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
-    },
-    {
      "stream": "http://gctxyc.liveplay.myqcloud.com/gc/xdfjq01_1/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://cloud.video.taobao.com//play/u/709608496/p/1/e/6/t/1/313341682455.mp4",
+     "ok": true,
+     "why": "ct:video/mp4"
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://gctxyc.liveplay.myqcloud.com/gc/xdfjq01_1/index.m3u8",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://cloud.video.taobao.com//play/u/709608496/p/1/e/6/t/1/313341682455.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "政治时事",
@@ -2601,14 +3659,14 @@
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/9444093",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
      "stream": "https://live.ottiptv.cc/douyu/8912038",
      "ok": false,
      "why": "http_404"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/9444093",
+     "ok": true,
+     "why": "ct:video/x-flv"
     },
     {
      "stream": "https://live.ottiptv.cc/douyu/5187099",
@@ -2617,7 +3675,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/10329713",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "无敌",
@@ -2659,12 +3749,12 @@
      "why": "no_response"
     },
     {
-     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
      "ok": true,
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
      "ok": true,
      "why": "ct:video/mp4"
     },
@@ -2675,7 +3765,39 @@
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "有效期27年7月",
@@ -2694,7 +3816,7 @@
    "bytes": 6947,
    "stream_tests": [
     {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0137_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "stream": "http://139.227.21.22:9901/tsfile/live/0014_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": false,
      "why": "no_response"
     },
@@ -2704,17 +3826,17 @@
      "why": "no_response"
     },
     {
-     "stream": "http://139.227.21.22:9901/tsfile/live/0014_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://139.227.21.22:9901/tsfile/live/1009_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "stream": "http://139.227.21.22:9901/tsfile/live/0137_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://139.227.21.22:9901/tsfile/live/0008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://139.227.21.22:9901/tsfile/live/1009_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": false,
      "why": "no_response"
     }
@@ -2754,12 +3876,12 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
+     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
+     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -2775,7 +3897,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 3840,
+       "h": 2160
+      }
+     }
+    },
+    {
+     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "没4K",
@@ -2794,22 +3948,22 @@
      "why": "no_response"
     },
     {
-     "stream": "http://82.156.243.185:36888/av3a/cctv8kn.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://82.156.243.185:36888/av3a/cctv16n.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://82.156.243.185:36888/av3a/cctv5p.m3u8",
+     "stream": "http://82.156.243.185:36888/av3a/cctv8kn.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://82.156.243.185:36888/av3a/cctv8k.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://82.156.243.185:36888/av3a/cctv5p.m3u8",
      "ok": false,
      "why": "no_response"
     }
@@ -2856,7 +4010,39 @@
     }
    ],
    "streams_ok": 5,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://lotus.stingray.com/manifest/cmusic-cme004-montreal/samsungtvplus/dee3e3af-2706-3e77-a952-91b99f6d1819/5711200/ma",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://gitlab.com/youhun/TVAPP/-/raw/main/abput1080.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "珍藏",
@@ -2893,6 +4079,11 @@
    "bytes": 107665,
    "stream_tests": [
     {
+     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
+    },
+    {
      "stream": "http://hlsztemgsplive.miguvideo.com:8080/wd_r2/cctv/jiangsuhd/600/index.m3u8?msisdn=2026092122014043229870774b4d2882c82a",
      "ok": false,
      "why": "http_403"
@@ -2911,15 +4102,42 @@
      "stream": "https://gcalic.v.myalicdn.com/gc/hlzycc_1/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://113.25.252.226:9901/tsfile/live/1008_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 720,
+       "h": 576
+      }
+     }
+    },
+    {
+     "stream": "http://tvcdn.stream3.hndt.com/tv/65c4a6d5017e1000b2b6ea2500000000_transios/playlist.m3u8?wsSecret=545407854671ec965a35d0",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "百宝箱箱",
@@ -2942,14 +4160,14 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://61.221.215.25:8800/hls/49/index.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
      "stream": "https://cloud.video.taobao.com//play/u/57349687/p/1/e/6/t/1/240192067467.mp4",
      "ok": true,
      "why": "ct:video/mp4"
+    },
+    {
+     "stream": "http://61.221.215.25:8800/hls/49/index.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "https://gitee.com/kabigo/tv/raw/master/assets/about1080p.mp4",
@@ -2958,7 +4176,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://gitlab.com/p2v5/wangtv/-/raw/main/about1080p.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://lotus.stingray.com/manifest/cmusic-cme004-montreal/samsungtvplus/dee3e3af-2706-3e77-a952-91b99f6d1819/5711200/ma",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "直播",
@@ -2989,22 +4239,22 @@
      "why": "no_response"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/wd-henanwssd-600/index.m3u8?msisdn=8fe713736883f0af5a4a5e5c25614328&mdspid=&spid=60063",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/cctv/cctv1hd/1200/index.m3u8?msisdn=1f09d667a4cebe08ef5152e91ec9f8b1&mdspid=&spi",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/sxylpd/51/20250804/index.m3u8?msisdn=6c4c1f85becd645dfe8c82dd5faf4fe5&mdspi",
+     "stream": "http://gslbmgsplive.miguvideo.com/wd-henanwssd-600/index.m3u8?msisdn=8fe713736883f0af5a4a5e5c25614328&mdspid=&spid=60063",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://gslbmgsplive.miguvideo.com/wd_r2/jstv/jstiyu/600/index.m3u8?msisdn=897dbc369f608f3b8c0e29b81dc1fda8&mdspid=&spid=",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://gslbmgsplive.miguvideo.com/migu/kailu/sxylpd/51/20250804/index.m3u8?msisdn=6c4c1f85becd645dfe8c82dd5faf4fe5&mdspi",
      "ok": false,
      "why": "no_response"
     }
@@ -3031,12 +4281,17 @@
    "bytes": 3916,
    "stream_tests": [
     {
-     "stream": "http://74.91.26.218:82/live/gdxw.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://74.91.26.218:82/live/gdxw.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -3049,15 +4304,42 @@
      "stream": "http://74.91.26.218:82/live/inews.m3u8",
      "ok": false,
      "why": "http_404"
+    }
+   ],
+   "streams_ok": 3,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
     },
     {
      "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
     }
-   ],
-   "streams_ok": 3,
-   "status": "ok"
+   ]
   },
   {
    "name": "精东影业816",
@@ -3099,12 +4381,12 @@
      "why": "no_response"
     },
     {
-     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
      "ok": true,
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
      "ok": true,
      "why": "ct:video/mp4"
     },
@@ -3115,7 +4397,39 @@
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "线路②",
@@ -3170,12 +4484,12 @@
      "why": "http_403"
     },
     {
-     "stream": "https://vip.ffzy-play1.com/20221207/30440_51fb5cd4/index.m3u8",
+     "stream": "https://vip.ffzy-play10.com/20230603/38052_3402bf16/2000k/hls/mixed.m3u8",
      "ok": false,
      "why": "http_403"
     },
     {
-     "stream": "https://vip.ffzy-play10.com/20230603/38052_3402bf16/2000k/hls/mixed.m3u8",
+     "stream": "https://vip.ffzy-play1.com/20221207/30440_51fb5cd4/index.m3u8",
      "ok": false,
      "why": "http_403"
     },
@@ -3247,7 +4561,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://173.208.212.130:8181/720p/hjjc.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "http://173.208.212.130:8181/720p/cctv1.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   },
   {
    "name": "网络Live",
@@ -3368,12 +4714,12 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://112.249.75.196:9989/tsfile/live/1002_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "stream": "http://112.249.75.196:9989/tsfile/live/0012_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
-     "stream": "http://112.249.75.196:9989/tsfile/live/0012_1.m3u8?key=txiptv&playlive=1&authid=0",
+     "stream": "http://112.249.75.196:9989/tsfile/live/1002_1.m3u8?key=txiptv&playlive=1&authid=0",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
@@ -3384,7 +4730,24 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://183.250.156.180:9999/newlive/live/hls/36/live.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "至尊",
@@ -3426,11 +4789,6 @@
      "why": "no_response"
     },
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
@@ -3441,13 +4799,35 @@
      "why": "no_response"
     },
     {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "https://0472.org/hls/cgtna.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtna.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "范明明(IPV6)",
@@ -3490,7 +4870,24 @@
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtna.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "范明明•ipv6",
@@ -3507,22 +4904,22 @@
    "bytes": 25215,
    "stream_tests": [
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227014/1.m3u8?GuardEncType=2&accountinfo",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227002/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
     {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227014/1.m3u8?GuardEncType=2&accountinfo",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221227033/1.m3u8?GuardEncType=2&accountinfo",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226895/1.m3u8?",
      "ok": false,
      "why": "no_response"
     },
@@ -3533,7 +4930,24 @@
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtna.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "范明明•电台1",
@@ -3565,12 +4979,12 @@
    "bytes": 12786,
    "stream_tests": [
     {
-     "stream": "http://iptv.huuc.edu.cn/hls/hljhd.m3u8",
+     "stream": "http://iptv.huuc.edu.cn/hls/cctv1hd.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://iptv.huuc.edu.cn/hls/cctv1hd.m3u8",
+     "stream": "http://iptv.huuc.edu.cn/hls/hljhd.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -3591,7 +5005,24 @@
     }
    ],
    "streams_ok": 1,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtna.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "虎牙一起看",
@@ -3614,12 +5045,12 @@
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/26355783",
+     "stream": "https://live.ottiptv.cc/huya/24720260",
      "ok": true,
      "why": "ct:video/x-flv"
     },
     {
-     "stream": "https://live.ottiptv.cc/huya/24720260",
+     "stream": "https://live.ottiptv.cc/huya/26355783",
      "ok": true,
      "why": "ct:video/x-flv"
     },
@@ -3630,12 +5061,45 @@
     },
     {
      "stream": "https://live.ottiptv.cc/huya/23352530",
-     "ok": false,
-     "why": "empty_body"
+     "ok": true,
+     "why": "ct:video/x-flv"
     }
    ],
-   "streams_ok": 4,
-   "status": "ok"
+   "streams_ok": 5,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1924,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/24720260",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "text",
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "裤佬",
@@ -3667,7 +5131,7 @@
    "bytes": 1048576,
    "stream_tests": [
     {
-     "stream": "http://em.21dtv.com/songs/60146517.mkv",
+     "stream": "http://em.21dtv.com/songs/60143931.mkv",
      "ok": false,
      "why": "http_404"
     },
@@ -3677,17 +5141,17 @@
      "why": "http_404"
     },
     {
-     "stream": "http://em.21dtv.com/songs/60088854.mkv",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
      "stream": "http://em.21dtv.com/songs/60137757.mkv",
      "ok": false,
      "why": "http_404"
     },
     {
-     "stream": "http://em.21dtv.com/songs/60143931.mkv",
+     "stream": "http://em.21dtv.com/songs/60088854.mkv",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "http://em.21dtv.com/songs/60146517.mkv",
      "ok": false,
      "why": "http_404"
     }
@@ -3750,12 +5214,34 @@
     },
     {
      "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
-     "ok": false,
-     "why": "http_404"
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 1,
-   "status": "ok"
+   "streams_ok": 2,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtne.m3u8",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
+     "stream": "https://v.lzcdn28.com/20260217/8616_1de9f6e5/index.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1080,
+       "h": 606
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💕分享者直播3",
@@ -3775,14 +5261,14 @@
    "bytes": 318306,
    "stream_tests": [
     {
-     "stream": "http://124.116.183.146:9901/tsfile/live/0123_1.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
-    },
-    {
      "stream": "http://183.11.239.36:808/hls/133/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://124.116.183.146:9901/tsfile/live/0123_1.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
      "stream": "http://iptv.huuc.edu.cn/hls/cctv1hd.m3u8",
@@ -3801,7 +5287,24 @@
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://124.116.183.146:9901/tsfile/live/0123_1.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 720,
+       "h": 576
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💕分享者直播4",
@@ -3820,24 +5323,24 @@
    "bytes": 17925,
    "stream_tests": [
     {
-     "stream": "http://148.135.93.213/live.php?id=重温经典",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
      "stream": "http://148.135.93.213/live.php?id=新疆卫视",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://res.cctvnews.cctv.com/video/3005/record/cctv/merge1/133396667284143308839013005/8fbd6180bdef4da19f6155cf6b4652e1",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
+     "stream": "http://148.135.93.213/live.php?id=重温经典",
+     "ok": false,
+     "why": "no_response"
     },
     {
      "stream": "https://0472.org/hls/cgtn.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://res.cctvnews.cctv.com/video/3005/record/cctv/merge1/133396667284143308839013005/8fbd6180bdef4da19f6155cf6b4652e1",
+     "ok": true,
+     "why": "ct:application/x-mpegurl"
     },
     {
      "stream": "https://alimov2.a.kwimgs.com/upic/2022/01/31/15/BMjAyMjAxMzExNTU5MTRfNDAzMDAxOTlfNjYyNzMxNjcwMjBfMF8z_b_Beb3bda599f76c60",
@@ -3846,7 +5349,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://0472.org/hls/cgtn.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://res.cctvnews.cctv.com/video/3005/record/cctv/merge1/133396667284143308839013005/8fbd6180bdef4da19f6155cf6b4652e1",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💕分享者直播5",
@@ -3864,12 +5399,17 @@
    "bytes": 6114,
    "stream_tests": [
     {
+     "stream": "http://111.43.126.240:9003/hls/54/index.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
      "stream": "http://111.43.126.240:9003/hls/13/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://111.43.126.240:9003/hls/54/index.m3u8",
+     "stream": "http://111.43.126.240:9003/hls/33/index.m3u8",
      "ok": false,
      "why": "no_response"
     },
@@ -3880,11 +5420,6 @@
     },
     {
      "stream": "http://111.43.126.240:9003/hls/12/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://111.43.126.240:9003/hls/33/index.m3u8",
      "ok": false,
      "why": "no_response"
     }
@@ -3913,12 +5448,12 @@
    "bytes": 119416,
    "stream_tests": [
     {
-     "stream": "video://https://web.guangdianyun.tv/tv/?id=643&uin=1629",
+     "stream": "http://rihou.cc:555/tv/[mv]抖舞陪看",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "http://rihou.cc:555/tv/[mv]抖舞陪看",
+     "stream": "video://https://web.guangdianyun.tv/tv/?id=643&uin=1629",
      "ok": false,
      "why": "no_response"
     },
@@ -3939,7 +5474,39 @@
     }
    ],
    "streams_ok": 2,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://sns-video-default.xhscdn.com/stream/79/110/258/01e8c16291bd6f234f03700199336aa526_258.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://vd3.bdstatic.com/mda-mbiqgzsnfeyv74y6/v1-cae/1080p/mda-mbiqgzsnfeyv74y6.mp4",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💕分享者直播7",
@@ -3987,7 +5554,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/496e4c0e2de74aaf968651d447eeb12a/1200.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 480,
+       "h": 270
+      }
+     }
+    },
+    {
+     "stream": "http://newcntv.qcloudcdn.com/asp/hls/1200/0303000a/3/default/1156d95bcf554d0e9df1688e8a6fd55d/1200.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 480,
+       "h": 270
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💖分享者直播",
@@ -4081,7 +5680,39 @@
     }
    ],
    "streams_ok": 4,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=cctv1hd",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "https://live.264788.xyz/channel/xinjiangweishi?streamid=4f481f56ae39ce5d24203471de9df635&livekey=01WgOR41rriMmMkzNsd0Uoa",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   },
   {
    "name": "💝分享者直播+",
@@ -4112,7 +5743,7 @@
    "bytes": 3916,
    "stream_tests": [
     {
-     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -4122,7 +5753,7 @@
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
+     "stream": "http://74.91.26.218:82/live/cctv1hd.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
@@ -4138,7 +5769,39 @@
     }
    ],
    "streams_ok": 3,
-   "status": "ok"
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://74.91.26.218:82/live/cctv14hd.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
+    {
+     "stream": "http://74.91.26.218:82/live/gdxw.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    }
+   ]
   }
  ]
 }
