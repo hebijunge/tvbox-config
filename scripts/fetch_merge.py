@@ -3149,11 +3149,44 @@ def main() -> int:
     def testable(s: dict) -> bool:
         return s.get("type") in (0, 1) and isinstance(s.get("api"), str) and s["api"].startswith("http")
 
+    def first_m3u8_uri(body: bytes, base_url: str):
+        """取 m3u8 正文里第一条真实 URI 行（跳过 # 注释行），相对路径按 base_url 拼接。"""
+        for raw in body.decode("utf-8", "replace").splitlines():
+            line = raw.strip()
+            if not line or line.startswith("#"):
+                continue
+            if line.lower().startswith(("http://", "https://")):
+                return line
+            return urllib.parse.urljoin(base_url, line)
+        return None
+
+    def probe_m3u8_content(uri: str, depth: int, base_ms: int):
+        """取 uri 前 MAX_BODY 字节计时；若仍是 m3u8（master→子索引）则下钻，最多 2 层。
+
+        返回累计耗时（含索引），取不到可播放内容返回 None。"""
+        if depth > 2:
+            return None
+        try:
+            status, body, elapsed = http_get(uri, TEST_TIMEOUT, MAX_BODY)
+        except Exception:  # noqa: BLE001
+            return None
+        if status not in (200, 206) or not body:
+            return None
+        if body[:64].lstrip().lower().startswith(b"#extm3u"):
+            nxt = first_m3u8_uri(body, uri)
+            if not nxt:
+                return None  # 纯索引无分片，不算可播放内容
+            return probe_m3u8_content(nxt, depth + 1, base_ms + elapsed)
+        return base_ms + elapsed
+
     def check_site(s: dict):
         """验活 + 实测「取到内容耗时」，返回 (ok, ms)。
 
-        ms 是拿到有效配置正文（JSON/XML 头）的完整耗时——含 DNS/建连/正文读取，
-        不是空连通快；正文无效（HTML 错误页等）一律视为失败，不给速度。
+        ms 是拿到有效内容的完整耗时——含 DNS/建连/正文读取，不是空连通快。
+        正文三形态皆认：JSON（{ 头）/ XML（< 头）/ m3u8（#EXTM3U 头）；
+        m3u8 命中后下钻到真实分片（master→子索引→分片，最多 2 层）取前 MAX_BODY
+        字节计时，ms = 索引 + 分片累计耗时——测的才是「到能播放的内容」的速度，
+        而不是空索引；分片取不到视为失败。HTML 错误页等无效正文一律失败。
         """
         url = s["api"]
         ms = 0
@@ -3166,6 +3199,12 @@ def main() -> int:
                     low = head.lower()
                     if head[:1] in (b"{", b"<") and b"<html" not in low:
                         return True, ms
+                    if low.startswith(b"#extm3u"):
+                        nxt = first_m3u8_uri(body, url)
+                        if nxt:
+                            seg_ms = probe_m3u8_content(nxt, 1, ms)
+                            if seg_ms is not None:
+                                return True, seg_ms
             except Exception:  # noqa: BLE001
                 pass
         return False, ms
