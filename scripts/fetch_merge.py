@@ -163,7 +163,8 @@ UPSTREAMS = [
     {"name": "top98", "kind": "tvbox", "url": "http://home.jundie.top:81/top98.json"},
     # ---- 2026-09-19 接K20260729 清单验活后新增（实测报告：飞书云文档 WinbdkIMEoGWfNxVTrVcqtpGnxs）----
     # 王二小 kstore：96 sites（spider 2026-09-17 版），直连 152ms；容灾备选 http://tv.999888987.xyz/（63 sites 旧版）暂不收
-    {"name": "wex/newwex", "kind": "tvbox", "url": "https://9280.kstore.vip/newwex.json"},
+    {"name": "wex/newwex", "kind": "tvbox", "url": "https://9280.kstore.vip/newwex.json",
+     "mirrors": ["http://new.xn--4kq62z5rby2qupq9ub.top"]},
     # PG：74 sites / 29 lives；spider 为相对路径 ./pg.jar，依赖同源 jar（依赖收集失败时走自动黑名单）
     {"name": "pg/jsm", "kind": "tvbox", "url": "https://www.252035.xyz/p/jsm.json"},
     # 肥猫：39 sites；必须用 /tv 路径（根路径 / 为损坏配置）；IDN 域名已转 punycode 供 urllib 直连
@@ -198,7 +199,10 @@ UPSTREAMS = [
      "url": "https://0.12yue.de5.net/tvbox/%E6%9B%B4%E6%96%B0%E4%B8%93%E7%94%A8%E6%8E%A5%E5%8F%A3.json"},  # 更新专用接口：11 sites
     {"name": "xingfu/bbm", "kind": "tvbox", "url": "http://150.158.52.248/tgyg/bbm.json"},    # 幸福年年：127 sites / 9 lives
     # 饭太硬主线：JPEG 伪装壳，decode 链 shell_base64 解出；47 sites / 6 lives（2~6 线同内容字节一致未收）
-    {"name": "fantaiying/tv", "kind": "tvbox", "url": "http://www.xn--sss604efuw.net/tv"},
+    # 第七批（2026-09-22）：4 个同源镜像（sha256 与主 URL 逐字节一致）并入 mirrors
+    {"name": "fantaiying/tv", "kind": "tvbox", "url": "http://www.xn--sss604efuw.net/tv",
+     "mirrors": ["http://www.xn--sss604efuw.cc/tv", "http://fty.xxooo.cf/tv",
+                 "http://fty.888484.xyz/tv", "http://fty.333232.xyz/tv"]},
     # 嗷呜：三线同内容（aowu.json / 嗷呜.tv 伪装 / config.webp 壳），收无解码依赖的纯 JSON 线；78 sites / 7 lives
     {"name": "aowu/kstore", "kind": "tvbox", "url": "https://9763.kstore.vip/aowu.json"},
     # 少儿频道：25 sites（纯 JSON 无直播）
@@ -230,6 +234,70 @@ UPSTREAMS = [
     # 星微Vip：伪装路径「测试勿传」实为纯 JSON；60 sites / 3 lives（URL 已 percent-encode）
     {"name": "xingwei/kstore", "kind": "tvbox",
      "url": "https://7337.kstore.vip/xw/%E6%B5%8B%E8%AF%95%E5%8B%BF%E4%BC%A0"},
+    # ---- 第七批 P1 点播大源入口收编（2026-09-22，task 7688297741897698251）----
+    # 来源：Lightconer/tvbox-ysc-config config/sources.json（34 条）+ Supprise0901/tvbox_live warehouse.txt（66 条）。
+    # 全量 100 条经三层归一去重 + 逐条验证：21 条新收（下）、5 条并入既有 mirrors、12 条与既有
+    # UPSTREAMS/canary URL 重复、10 条内容同源不重收、51 条不可用（502/404/SSL/格式坏）不硬塞。
+    # 验证口径：fetch 成功 + decode_config + parse_tvbox 过 MIN_BYTES/MIN_ITEMS 门槛；中文域名转 punycode、
+    # 中文路径 percent-encode（生产 fetch_merge 同口径）；裸 IP 条目为单点源，失效由自动黑名单兜底。
+    # 王二小放牛娃 tvbox 面：63 sites / 2 lives（另一面 new.王二小放牛娃.top 与 wex/newwex 同内容，已并入其 mirrors）
+    {"name": "ysc/wangxiaoer-tvbox", "kind": "tvbox", "url": "http://tvbox.xn--4kq62z5rby2qupq9ub.top"},
+    # ---- Supprise0901/api 仓单（gh-proxy 前缀 blob 链接实测可直出 JSON，保持已验证形态）----
+    # 天天&巧计：31 sites / 1 live / 5 parses
+    {"name": "sv/tiantian-qiaoji", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/tiantian.json"},
+    # api 总仓：90 sites / 8 lives / 15 parses
+    {"name": "sv/api", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/api.json"},
+    # 肥猫 blob 面：50 sites；fatcat/tv 主源本轮三次 502 无法做内容比对，归属待复验（自动黑名单兜底）
+    {"name": "sv/feimao", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/feimao.json"},
+    # 王二小 blob 面：78 sites / 2 lives
+    {"name": "sv/wangxiaoer", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/wangxiaoer.json"},
+    # 小布点：74 sites
+    {"name": "sv/xiaobudian", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/xiaobudian.json"},
+    # 小米：32 sites / 1 live
+    {"name": "sv/xiaomi", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/xiaomi.json"},
+    # 小傻：134 sites / 1 live / 9 parses（本批最大面之一）
+    {"name": "sv/xiaosa", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/xiaosa.json"},
+    # 龙在此(关注TG@stymei1)：234 sites / 3 lives / 27 parses，单接口站点数之最
+    {"name": "sv/liucn-m", "kind": "tvbox", "url": "https://raw.liucn.cc/box/m.json"},
+    # 科技长青：72 sites（kstore 直连）
+    {"name": "sv/changqing", "kind": "tvbox", "url": "https://13413.kstore.space/tv/changqing.json"},
+    # 东曦视界：82 sites / 1 live / 10 parses
+    {"name": "sv/iqinu", "kind": "tvbox", "url": "https://box.iqinu.com/"},
+    # 分享者：168 sites / 9 lives / 25 parses（maoystv/6）
+    {"name": "sv/fenxiangzhe", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://raw.githubusercontent.com/maoystv/6/main/001.json"},
+    # 乐哥短剧：41 sites / 1 live / 15 parses（短剧专面，lege0001/TVbox）
+    {"name": "sv/lege-dj", "kind": "tvbox",
+     "url": "https://gh-proxy.org/https://raw.githubusercontent.com/lege0001/TVbox/refs/heads/main/TV/dj.json"},
+    # 真心(FongMi-z)：43 sites（www.252035.xyz 与 pg/jsm 同主机不同路径）
+    {"name": "sv/fongmi-z", "kind": "tvbox", "url": "https://www.252035.xyz/z/FongMi.json"},
+    # 小哥哥：86 sites / 1 live；裸 IP:3 单点源，失效走自动黑名单
+    {"name": "sv/xiaogege", "kind": "tvbox", "url": "http://47.96.82.41:3/"},
+    # 全影多仓(影视仓.com)：43 sites / 3 lives（IDN 已转 punycode）
+    {"name": "sv/quanying", "kind": "tvbox", "url": "http://xn--5mqx81b535a.com/"},
+    # ---- play.iptv365.org 系列（路径含中文，已 percent-encode；round3 复测全过）----
+    # 天微：97 sites
+    {"name": "sv/tianwei", "kind": "tvbox",
+     "url": "https://play.iptv365.org/%E5%A4%A9%E5%BE%AE/api.json"},
+    # 天天开心：126 sites（本批站点数次高）
+    {"name": "sv/tiantiankaixin", "kind": "tvbox",
+     "url": "https://play.iptv365.org/%E5%A4%A9%E5%A4%A9%E5%BC%80%E5%BF%83/api.json"},
+    # 香雅情：55 sites
+    {"name": "sv/xiangyaqing", "kind": "tvbox",
+     "url": "https://play.iptv365.org/%E9%A6%99%E9%9B%85%E6%83%85/api.json"},
+    # 白嫖：9 sites
+    {"name": "sv/baipiao", "kind": "tvbox",
+     "url": "https://play.iptv365.org/%E7%99%BD%E5%AB%96/api.json"},
+    # 戏曲音乐：10 sites
+    {"name": "sv/xiquyinyue", "kind": "tvbox",
+     "url": "https://play.iptv365.org/%E6%88%8F%E6%9B%B2%E9%9F%B3%E4%B9%90/api.json"},
 ]
 
 # P0：直播源上游。2026-09-21 直播线融合扩容（六批调研落地，task 7687996812807916527）：
