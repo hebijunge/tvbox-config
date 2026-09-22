@@ -183,6 +183,53 @@ UPSTREAMS = [
     # franksun1211/TVBOX（228★，2026-09-12 推送）：CKS2026.json 60 sites / 2 lives / 4 parses（内含 /* */ 块注释，经状态机清洗可解析）；
     # XCTV.json（APP/TVBoxOSC/XC/，教育向直播源）转直播线任务处理；qiaoji8.json 等其余 19 个配置已登记 candidate_upstreams.json 候选池走 canary 收编
     {"name": "franksun/cks2026", "kind": "tvbox", "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/CKS2026.json"},
+    # ---- 2026-09-22 吸收 lubin776/tvbox-api-backup list.txt：45 条接口与既有清单全量对比去重后新增 20 条 ----
+    # 对比基线：UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT + canary(state/extra_upstreams.json) + candidate_upstreams.json。
+    # 重复不加：肥猫(fatcat/tv)、挺好、小马、心魔、俊宇(top98)、clun、动漫（既有 UPSTREAMS 或 canary 已收）；
+    #   王二小/王二小2线（aiwex.json 与既有 wex/newwex 字节级一致）。
+    # 同内容变体不重复收：饭太硬 2~6 线（与主线 19683B 字节一致）、嗷呜 /tv 与 config.webp（与 aowu.json 同内容 78 sites）。
+    # 不可用不硬塞（验活证据同期归档）：潇洒(APP清单非配置)、南风两线(AES 布局 decode 链解不开)、
+    #   嗨哥魔改(## 注释行主管线不识别)、时光(字符串含裸控制符 json.loads 拒收)、传说/分享者(返回 HTML)、
+    #   驸马(404)、小米(占位文本「后会有期」)。
+    # 中文路径/IDN 一律 percent-encode/punycode 供 urllib 直连；伪装扩展名（.png 等）内容已实测可被 decode 链解析。
+    {"name": "bocai/x4pro", "kind": "tvbox", "url": "https://0.12yue.de5.net/5/x4pro.json"},  # 菠菜pro：206 sites
+    {"name": "bocai/x4", "kind": "tvbox", "url": "https://0.12yue.de5.net/5/x4.json"},        # 菠菜园：55 sites
+    {"name": "bocai/update", "kind": "tvbox",
+     "url": "https://0.12yue.de5.net/tvbox/%E6%9B%B4%E6%96%B0%E4%B8%93%E7%94%A8%E6%8E%A5%E5%8F%A3.json"},  # 更新专用接口：11 sites
+    {"name": "xingfu/bbm", "kind": "tvbox", "url": "http://150.158.52.248/tgyg/bbm.json"},    # 幸福年年：127 sites / 9 lives
+    # 饭太硬主线：JPEG 伪装壳，decode 链 shell_base64 解出；47 sites / 6 lives（2~6 线同内容字节一致未收）
+    {"name": "fantaiying/tv", "kind": "tvbox", "url": "http://www.xn--sss604efuw.net/tv"},
+    # 嗷呜：三线同内容（aowu.json / 嗷呜.tv 伪装 / config.webp 壳），收无解码依赖的纯 JSON 线；78 sites / 7 lives
+    {"name": "aowu/kstore", "kind": "tvbox", "url": "https://9763.kstore.vip/aowu.json"},
+    # 少儿频道：25 sites（纯 JSON 无直播）
+    {"name": "shaoer/tv", "kind": "tvbox",
+     "url": "https://0.12yue.de5.net/5/tv%E5%B0%91%E5%84%BF.json"},
+    {"name": "feimao2/catvod", "kind": "tvbox", "url": "https://jk.catvod.site"},              # 肥猫2线：22 sites（与 fatcat/tv 不同内容）
+    {"name": "laozhang/serv00", "kind": "tvbox", "url": "https://zhangqun1818.serv00.net/zq/api.json"},  # 老张：19 sites
+    # 周J：27 sites / 4 lives；沙箱直连 raw 超时，主 URL 走 gh-proxy.com（同 liu673cn/m 口径，直连留作镜像）
+    {"name": "zhouj/box", "kind": "tvbox",
+     "url": "https://gh-proxy.com/raw.githubusercontent.com/zhoujck/config/main/box",
+     "mirrors": ["https://raw.githubusercontent.com/zhoujck/config/main/box"]},
+    {"name": "cainisi/tv", "kind": "tvbox", "url": "https://tv.xn--yhqu5zs87a.top"},           # 菜妮丝：55 sites
+    {"name": "xiaxia/qk4k", "kind": "tvbox", "url": "https://11405.kstore.space/xiaye/qk4k.json"},  # 夏夏影视：43 sites
+    {"name": "xiaokai/kai", "kind": "tvbox", "url": "https://jihulab.com/jyqhkd/kd/-/raw/main/kai.json"},  # 小凯：28 sites
+    {"name": "dongli/chigua", "kind": "tvbox", "url": "https://chigua.eu.org"},                # 东篱：93 sites / 12 lives（壳 base64 解码）
+    {"name": "juwan/xhz", "kind": "tvbox", "url": "http://xhztv.top/xhz"},                     # 聚玩：54 sites
+    # 哈吉米：伪装 .png 扩展名实为纯 JSON；175 sites / 11 lives（URL 已 percent-encode）
+    {"name": "hajimi/kstore", "kind": "tvbox",
+     "url": "https://17264.kstore.space/%E5%93%88%E5%9F%BA%E7%B1%B3.png"},
+    {"name": "zhenliu/cccimg", "kind": "tvbox",
+     "url": "https://cccimg.com/down.php/7d1f30263b3f2bf3deda2d7faeef4844.zhen6"},            # 真六：47 sites / 9 lives
+    # 小虎斑：2423 AES-128-CBC 加密配置，decode 链 aes2423 解出；64 sites / 1 lives（IDN+中文路径已转码）
+    {"name": "xiaohuban/hb", "kind": "tvbox",
+     "url": "http://hb.xn--yet24tmq1a.site:25252/%E4%BB%85%E4%BE%9B%E6%B5%8B%E8%AF%95"},
+    # 天神：PNG 伪装 + 壳 + AES 双层解码链；102 sites；主 URL 走 raw 直连（实测可达），gh-proxy 留作镜像
+    {"name": "tianshen/iy", "kind": "tvbox",
+     "url": "https://raw.githubusercontent.com/IY-CPU/IY/main/%E5%A4%A9%E7%A5%9EIY.png",
+     "mirrors": ["https://gh-proxy.com/raw.githubusercontent.com/IY-CPU/IY/main/%E5%A4%A9%E7%A5%9EIY.png"]},
+    # 星微Vip：伪装路径「测试勿传」实为纯 JSON；60 sites / 3 lives（URL 已 percent-encode）
+    {"name": "xingwei/kstore", "kind": "tvbox",
+     "url": "https://7337.kstore.vip/xw/%E6%B5%8B%E8%AF%95%E5%8B%BF%E4%BC%A0"},
 ]
 
 # P0：直播源上游。2026-09-21 直播线融合扩容（六批调研落地，task 7687996812807916527）：
