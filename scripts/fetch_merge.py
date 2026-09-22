@@ -2455,6 +2455,44 @@ JS_PROBE_FILE = os.environ.get("JS_PROBE_FILE", "probe/js_probe.json")
 CSP_PROBE_FILE = os.environ.get("CSP_PROBE_FILE", "probe/csp_probe.json")
 
 
+def merge_check_latency(probe_path: str, latency: dict, now_str: str) -> dict:
+    """把 [3/6] 验活实测的「取到内容耗时」合并进 sites_probe.json。
+
+    每条站点记录新增 check_ms / check_at 附加字段——不动 l1/l2 等探针原字段，
+    不影响搜索可用性判定；rank_sites.speed_of 会优先使用新鲜的 check_ms 排序。
+    """
+    doc: dict = {}
+    if os.path.isfile(probe_path):
+        try:
+            with open(probe_path, encoding="utf-8") as f:
+                doc = json.load(f)
+        except (OSError, json.JSONDecodeError):
+            doc = {}
+    if not isinstance(doc, dict):
+        doc = {}
+    entries = {r.get("key"): r for r in (doc.get("sites") or [])
+               if isinstance(r, dict) and r.get("key")}
+    for key, ms in (latency or {}).items():
+        ent = entries.get(key)
+        if ent is None:
+            ent = {"key": key}
+            entries[key] = ent
+            doc.setdefault("sites", []).append(ent)
+        ent["check_ms"] = int(ms)
+        ent["check_at"] = now_str
+    doc["check_summary"] = {
+        "generated_at": now_str,
+        "measured": len(latency or {}),
+        "unit": "ms；取到有效配置内容的完整耗时（DNS+建连+正文读取）",
+    }
+    try:
+        with open(probe_path, "w", encoding="utf-8") as f:
+            json.dump(doc, f, ensure_ascii=False, indent=1)
+    except OSError:
+        return {"written": 0}
+    return {"written": len(latency or {})}
+
+
 def apply_rank(tvbox: dict) -> dict:
     """按「分类 → 搜索可用性 → 实测速度」重排 sites，并写 group / 校正 searchable。
 
@@ -3116,18 +3154,25 @@ def main() -> int:
         return s.get("type") in (0, 1) and isinstance(s.get("api"), str) and s["api"].startswith("http")
 
     def check_site(s: dict):
+        """验活 + 实测「取到内容耗时」，返回 (ok, ms)。
+
+        ms 是拿到有效配置正文（JSON/XML 头）的完整耗时——含 DNS/建连/正文读取，
+        不是空连通快；正文无效（HTML 错误页等）一律视为失败，不给速度。
+        """
         url = s["api"]
+        ms = 0
         for _ in range(2):  # 失败重试一次
             try:
-                status, body, _ = http_get(url, TEST_TIMEOUT, MAX_BODY)
+                status, body, elapsed = http_get(url, TEST_TIMEOUT, MAX_BODY)
+                ms = elapsed
                 if status == 200 and body:
                     head = body[:1024].lstrip()
                     low = head.lower()
                     if head[:1] in (b"{", b"<") and b"<html" not in low:
-                        return True
+                        return True, ms
             except Exception:  # noqa: BLE001
                 pass
-        return False
+        return False, ms
 
     to_test = [] if SKIP_SITE_TEST else [s for s in sites if testable(s)]
     limit = int(os.environ.get("SITE_LIMIT", "0"))
@@ -3135,7 +3180,7 @@ def main() -> int:
         to_test = to_test[:limit]
     print(f"[3/6] 站点验活：{len(to_test)}/{len(sites)} 个直连站点，并发 {CONCURRENCY} ...", flush=True)
     t0 = time.time()
-    verdict = {}
+    verdict: dict = {}  # key -> (ok, ms)：ok=验活通过，ms=取到有效内容耗时（最后一轮）
     with cf.ThreadPoolExecutor(CONCURRENCY) as ex:
         futs = {ex.submit(check_site, s): s for s in to_test}
         done = 0
@@ -3144,7 +3189,7 @@ def main() -> int:
             try:
                 verdict[s["key"]] = fut.result()
             except Exception:  # noqa: BLE001
-                verdict[s["key"]] = False
+                verdict[s["key"]] = (False, 0)
             done += 1
             if done % 100 == 0:
                 print(f"  ... {done}/{len(to_test)} ({time.time()-t0:.0f}s)", flush=True)
@@ -3153,7 +3198,7 @@ def main() -> int:
     kept_sites = []
     now_str = now.strftime("%Y-%m-%d %H:%M:%S")
     for s in sites:
-        if testable(s) and verdict.get(s["key"]) is False:
+        if testable(s) and (verdict.get(s["key"]) or (True, 0))[0] is False:
             # O3 站点验活历史：连续 SITE_FAIL_LIMIT 轮失败才剔除；未达阈值暂留观察
             ent = apply_site_verdict(site_state, s.get("key") or "", s.get("name") or "", False, now_str)
             if ent.get("removed"):
@@ -3169,8 +3214,19 @@ def main() -> int:
                 apply_site_verdict(site_state, s.get("key") or "", s.get("name") or "", True, now_str)
             kept_sites.append(s)
     save_site_state(site_state)
-    tested_pass = sum(1 for v in verdict.values() if v)
+    tested_pass = sum(1 for v in verdict.values() if v and v[0])
     print(f"    通过 {tested_pass}/{len(to_test)}，剔除 {len(removed)}，保留 {len(kept_sites)} 站点", flush=True)
+
+    # ---- 站点速度：把「取到内容耗时」并入 sites_probe.json，作为新鲜排序依据 ----
+    check_latency: dict = {k: int(v[1]) for k, v in verdict.items() if v[0] and v[1] > 0}
+    if check_latency:
+        _ordered = sorted(check_latency.items(), key=lambda kv: kv[1])
+        _p50 = _ordered[len(_ordered) // 2][1]
+        print(f"    速度实测：{len(check_latency)} 站取到内容耗时中位 {_p50}ms"
+              f"（最快 {_ordered[0][1]}ms / {_ordered[0][0][:24]}）", flush=True)
+        _ck_stats = merge_check_latency(PROBE_FILE, check_latency, now_str)
+        if _ck_stats.get("written"):
+            print(f"    速度数据已并入 {PROBE_FILE}（{len(check_latency)} 条 check_ms）", flush=True)
 
     # ---- 成人内容发布开关（默认不发布，见 PUBLISH_ADULT 的说明）----
     adult_excluded_sites: list = []
@@ -3338,10 +3394,13 @@ def main() -> int:
         short_doc.pop("spider", None)
     adult_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
     adult_doc["lives"] = adult_lives
-    # 按上游来源归类：先按 _origin 排序，同源内按 name，产物内部结构更可读
+    # 按上游来源归类；同源块内按「取到内容耗时」升序（用户 2026-09-23 要求：有内容的
+    # 加载速度快的排前面），没实测到的沉到同源末尾，再按 name 稳定收尾
     adult_sites_sorted = sorted(
         [s for s in adult_sites if isinstance(s, dict)],
-        key=lambda x: ((x.get("_origin") or "~"), (x.get("name") or "")),
+        key=lambda x: ((x.get("_origin") or "~"),
+                       check_latency.get(x.get("key"), 10 ** 9),
+                       (x.get("name") or "")),
     )
     adult_doc["sites"] = adult_sites_sorted
     if not adult_doc.get("spider"):
@@ -3439,6 +3498,13 @@ def main() -> int:
             "note": f"O3 站点验活历史记忆；连续 {SITE_FAIL_LIMIT} 轮失败剔除，通过自动复位回捞",
             "tracked": len(site_state),
             "removed": sum(1 for v in site_state.values() if isinstance(v, dict) and v.get("removed")),
+        },
+        "site_speed": {
+            "note": "check_ms = 取到有效配置内容的完整耗时（DNS+建连+正文读取），已并入 sites_probe.json 供 rank_sites 排序；adult.json 同源块内也按此升序",
+            "measured": len(check_latency),
+            "p50_ms": (sorted(check_latency.values())[len(check_latency) // 2]
+                       if check_latency else None),
+            "probe_file": PROBE_FILE,
         },
         "runtime": {
             "gh_mirrors": GH_MIRRORS,

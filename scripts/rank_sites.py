@@ -145,6 +145,25 @@ def latency_of(probe: dict):
     return ms if isinstance(ms, int) and ms > 0 else UNKNOWN_LATENCY
 
 
+def fresh_check_ms(probe: dict) -> int:
+    """验活实测的「取到内容耗时」（check_ms，fetch_merge [3/6] 并入）。
+
+    只认 STALE_DAYS 内的记录——这是当天验活时拿到的有效配置正文耗时（含
+    DNS/建连/正文读取），比旧的 l1 探针更贴近今天的真实速度；过期则返回 0。
+    """
+    ms = (probe or {}).get("check_ms")
+    at = (probe or {}).get("check_at") or ""
+    if not (isinstance(ms, int) and ms > 0 and at):
+        return 0
+    try:
+        dt = datetime.strptime(str(at).replace("T", " ")[:19], "%Y-%m-%d %H:%M:%S")
+        if (datetime.now() - dt).total_seconds() > STALE_DAYS * 86400:
+            return 0
+    except (ValueError, TypeError):
+        return 0
+    return ms
+
+
 def speed_of(key, probe_map: dict, spider_map: dict, js_map: dict = None, csp_map: dict = None,
              drpy_map: dict = None):
     """速度取值：HTTP 采集接口 > 真机 csp 实测 > JS 分类页实测 > drpy 五关实测 > type3 连通性。"""
@@ -152,6 +171,10 @@ def speed_of(key, probe_map: dict, spider_map: dict, js_map: dict = None, csp_ma
     if p:
         if p.get("level") == "L?":
             return UNKNOWN_LATENCY, "本机不可达"
+        # 当天验活的「取到内容耗时」优先——比旧 l1 探针更贴近今天的真实速度
+        ck = fresh_check_ms(p)
+        if ck:
+            return ck, "验活实测"
         ms = latency_of(p)
         if ms < UNKNOWN_LATENCY:
             return ms, "http实测"
