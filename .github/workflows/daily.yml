@@ -17,7 +17,7 @@ concurrency:
 jobs:
   fetch-merge:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90  # 2026-09-23: 全量上游+镜像去重+解析清洗+分类直播实测已超 40min，job 级超时误杀（多轮 run 40min 整点被 cancel 实证）
     steps:
       - uses: actions/checkout@v4
         with:
