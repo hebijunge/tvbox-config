@@ -599,11 +599,13 @@ def _iter_ordered_groups(groups):
 def write_verified_txt(cmap, verified, path, extra_keep=6):
     """输出 lives/live_verified.txt。分组构建见 _build_groups（第十三批与 m3u 输出共用）。"""
     groups = _build_groups(cmap, verified, extra_keep)
+    # 2026-09-23 用户口径修正：同 write_precise_txt，同台名逐行重复（线路1/2/3 可切换）。
     with open(path, "w", encoding="utf-8") as f:
         for gname, chans in _iter_ordered_groups(groups):
             f.write("%s,#genre#\n" % gname)
             for std, lines in chans.items():
-                f.write("%s,%s\n" % (std, "#".join(lines)))
+                for _u in lines:
+                    f.write("%s,%s\n" % (std, _u))
     return {c: len(chs) for c, chs in groups.items()}
 
 
@@ -624,11 +626,14 @@ def write_precise_txt(cmap, verified, path):
         groups[gk][name] = list(verified[std])
     if "港台" in groups:
         groups["港台"] = hk_clean_sort(groups["港台"])
+    # 2026-09-23 用户口径修正：线路不挤在一行 # 拼接，改为同台名逐行重复——
+    # 播放器对同名行自动合并为一个台，切线路时显示「线路1/线路2/线路3」。
     with open(path, "w", encoding="utf-8") as f:
         for gname, chans in _iter_ordered_groups(groups):
             f.write("%s,#genre#\n" % gname)
             for name, lines in chans.items():
-                f.write("%s,%s\n" % (name, "#".join(lines)))
+                for _i, _u in enumerate(lines, 1):
+                    f.write("%s,%s\n" % (name, _u))
     return {c: len(chs) for c, chs in groups.items()}
 
 
