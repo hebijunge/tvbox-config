@@ -325,6 +325,8 @@ def norm_channel(name):
     if not n:
         return "", ""
     low = n.lower().replace(" ", "").replace("\u3000", "")
+    # 2026-09-24 修复：先整段剥 [bd]/[hd]/[sd] 等短来源标签（含方括号），防「[BD]cctv1」剥完只剩 bdcctv1、匹配不上 ^cctv 而漏并进 CCTV-1
+    low = re.sub(r"\[[a-z0-9]{1,4}\]", "", low)
     low = re.sub(r"[\[\]()（）【】「」]|超清|高清|标清|蓝光|1080p?|720p?|4k|50fps?|60fps?|hd|sd|fhd|测试", "", low)
     m = re.match(r"^cctv[-−]?(\d+)(\+?)", low)
     if m:
