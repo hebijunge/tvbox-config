@@ -743,7 +743,8 @@ def classify_site_strong_only(s, overrides: dict = None) -> str:
 
 
 # ==================== 解析池（parses）清洗 ====================
-# adult.json 等分类产物复用 vod 的 parses 全集（TVBox 站点不依赖 parses，parses 是
+# short.json 等分类产物复用 vod 的 parses 全集（adult.json 自 2026-09-23 起按所有者
+# 指令不再携带 parses；TVBox 站点不依赖 parses，parses 是
 # 全局播放器池）。但历史版本未做去重，导致「一堆没用的解析」：
 #   · 同一 URL 多个不同 name（如 jx.xmflv.com 至少 5 个别名）
 #   · localhost/127.0.0.1/192.168.x 等本地代理引用（用户环境不可用）
@@ -3501,6 +3502,9 @@ def main() -> int:
                        (x.get("name") or "")),
     )
     adult_doc["sites"] = adult_sites_sorted
+    # 所有者 2026-09-23 指令：adult.json 不需要解析接口——去掉 parses 字段，
+    # 成人分类只保留站点+直播；tvbox/vod/short 的全局解析池不受影响。
+    adult_doc.pop("parses", None)
     if not adult_doc.get("spider"):
         adult_doc.pop("spider", None)
     with open("short.json", "w", encoding="utf-8") as f:
@@ -3514,7 +3518,7 @@ def main() -> int:
     adult_origin_breakdown = _C()
     for s in adult_sites_sorted:
         adult_origin_breakdown[s.get("_origin") or "~(无origin)"] += 1
-    adult_out = f"adult.json（{len(adult_sites)} sites + {len(adult_lives)} lives + {len(parses)} parses）"
+    adult_out = f"adult.json（{len(adult_sites)} sites + {len(adult_lives)} lives，无 parses）"
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"
