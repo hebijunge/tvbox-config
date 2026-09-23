@@ -553,15 +553,10 @@ def build_curated_lives(repo_dir: str):
         print("[curated] 大分类拆分跳过:", _e, flush=True)
 
     # 优质第三方直播源（来自本次会话 live_probe 实测 status=ok）
-    THIRD_PARTY_OK = {
-        # 2026-09-23 用户指令「去掉没用的解析」：Guovin 5 条与聚合内容重复，剔除；
-        # 仅保留聚合未覆盖的平台直播 5 条（实测 ok、内容不重叠）
-        "YY·轮播":    ("https://sub.ottiptv.cc/yylunbo.m3u", "轮播"),
-        "虎牙一起看":  ("https://sub.ottiptv.cc/huyayqk.m3u", "直播"),
-        "斗鱼一起看":  ("https://sub.ottiptv.cc/douyuyqk.m3u", "直播"),
-        "B站直播":     ("https://sub.ottiptv.cc/bililive.m3u", "直播"),
-        "咪咕歌手":    ("https://mgtv.ottiptv.cc/mglist.m3u", "直播"),
-    }
+    THIRD_PARTY_OK = {}
+    # 2026-09-24 用户指令「按我意思来：约 9 条以内」——平台直播 5 条全部移出 live.json
+    # （14 条 → 9 条 = 精准测速版 1 + 聚合全量 1 + 7 大分类）；Guovin 5 条此前已剔除。
+    # 实测源仍保留在 lives/live_verified.txt / live_precise.txt 聚合产物里，不丢线路。
     for nm, (u, _g) in THIRD_PARTY_OK.items():
         curated.append({"name": nm, "type": 1, "url": u, "group": _g})
 
@@ -3656,7 +3651,7 @@ def main() -> int:
             _l["group"] = _live_group_of(_l.get("name"))
     # 2026-09-23 用户指令「把那些没用的解析都去掉」：第三方杂源（重复/失效大量存在，
     # 实测 167 条里仅少量可用且与聚合重复）不再进入 live.json，只保留仓库自有
-    # 聚合精选条目（精准测速版 + 聚合全量 + 7 大分类 + 平台直播）。
+    # 聚合精选条目（精准测速版 + 聚合全量 + 7 大分类 = 9 条；2026-09-24 用户指令平台直播 5 条移出）。
     # 成人主题条目仍在上面的循环里下放 adult.json，不受影响。
     live["lives"] = curated_lives
     with open("vod.json", "w", encoding="utf-8") as f:
@@ -3753,7 +3748,7 @@ def main() -> int:
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"
-          f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：精准测速版+全量+7大分类+平台直播）/ list.json", flush=True)
+          f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：精准测速版+全量+7大分类（9条））/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)
