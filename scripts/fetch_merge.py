@@ -509,6 +509,16 @@ def build_curated_lives(repo_dir: str):
         "ua": "TVBox",
         "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
     }]
+    # 2026-09-23 用户指令：更精准的版本——只收逐线路实测通过的频道，
+    # 每频道多线路全部按探流耗时升序（首条=最快）。文件生成失败时不加该条目。
+    if os.path.exists(os.path.join("lives", "live_precise.txt")):
+        curated.insert(0, {
+            "name": "直播·精准测速版(频道多线路按实测速度排序)",
+            "type": 1,
+            "url": _RAW + "lives/live_precise.txt",
+            "ua": "TVBox",
+            "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+        })
 
     # 2026-09-23 live.json 大分类拆分：按 live_verified 分组切 7 个分类源文件，
     # 每个大分类一条 type=1 源（小分类=台名条目，多线路可切换、按速度排序）。
@@ -544,12 +554,8 @@ def build_curated_lives(repo_dir: str):
 
     # 优质第三方直播源（来自本次会话 live_probe 实测 status=ok）
     THIRD_PARTY_OK = {
-        # (url, group)；2026-09-23 修正 live_satellite/live_hkmo_tw 两个失效文件名
-        "Guovin·央视": (_RAW + "lives/live_cctv.txt", "央视"),
-        "Guovin·卫视": (_RAW + "lives/live_weishi.txt", "卫视"),
-        "Guovin·港台": (_RAW + "lives/live_gangtai.txt", "港台"),
-        "Guovin·其他": (_RAW + "lives/live_other.txt", "其他"),
-        "Guovin·总集": ("https://ghproxy.net/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u", "其他"),
+        # 2026-09-23 用户指令「去掉没用的解析」：Guovin 5 条与聚合内容重复，剔除；
+        # 仅保留聚合未覆盖的平台直播 5 条（实测 ok、内容不重叠）
         "YY·轮播":    ("https://sub.ottiptv.cc/yylunbo.m3u", "轮播"),
         "虎牙一起看":  ("https://sub.ottiptv.cc/huyayqk.m3u", "直播"),
         "斗鱼一起看":  ("https://sub.ottiptv.cc/douyuyqk.m3u", "直播"),
@@ -3648,11 +3654,11 @@ def main() -> int:
     for _l in cleaned:
         if not _l.get("group"):
             _l["group"] = _live_group_of(_l.get("name"))
-    live["lives"] = curated_lives + sorted(
-        [l for l in cleaned if l not in curated_lives],
-        key=lambda x: (_BIG.index(x["group"]) if x.get("group") in _BIG else 99,
-                       x.get("name") or "")
-    )
+    # 2026-09-23 用户指令「把那些没用的解析都去掉」：第三方杂源（重复/失效大量存在，
+    # 实测 167 条里仅少量可用且与聚合重复）不再进入 live.json，只保留仓库自有
+    # 聚合精选条目（精准测速版 + 聚合全量 + 7 大分类 + 平台直播）。
+    # 成人主题条目仍在上面的循环里下放 adult.json，不受影响。
+    live["lives"] = curated_lives
     with open("vod.json", "w", encoding="utf-8") as f:
         json.dump(vod, f, ensure_ascii=False, indent=1)
     with open("live.json", "w", encoding="utf-8") as f:
@@ -3747,7 +3753,7 @@ def main() -> int:
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"
-          f" / live.json（{len(live['lives'])} 条直播源 / 其中聚合 1 条 + 第三方精选）/ list.json", flush=True)
+          f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：精准测速版+全量+7大分类+平台直播）/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)

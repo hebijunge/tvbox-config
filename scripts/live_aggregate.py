@@ -607,6 +607,31 @@ def write_verified_txt(cmap, verified, path, extra_keep=6):
     return {c: len(chs) for c, chs in groups.items()}
 
 
+def write_precise_txt(cmap, verified, path):
+    """输出 lives/live_precise.txt（2026-09-23 用户指令：更精准的版本）。
+    只收逐线路实测通过的频道（verified 键），频道内全部线路已按探流耗时升序
+    （首条=最快，播放器默认取首条）；未实测/实测未通过的频道一律不入精准版。
+    分组与输出序同 live_verified.txt（央视→卫视→地方-省→港台→轮播→直播→其他），
+    港台组沿用 hk_clean_sort 清洗排序。返回 {组名: 频道数}。"""
+    groups = OrderedDict()
+    for std in verified:
+        ent = cmap.get(std)
+        if not ent:
+            continue
+        gk = _fold_group(ent["class"])
+        name = ent.get("name") or std
+        groups.setdefault(gk, OrderedDict())
+        groups[gk][name] = list(verified[std])
+    if "港台" in groups:
+        groups["港台"] = hk_clean_sort(groups["港台"])
+    with open(path, "w", encoding="utf-8") as f:
+        for gname, chans in _iter_ordered_groups(groups):
+            f.write("%s,#genre#\n" % gname)
+            for name, lines in chans.items():
+                f.write("%s,%s\n" % (name, "#".join(lines)))
+    return {c: len(chs) for c, chs in groups.items()}
+
+
 def write_verified_m3u(cmap, verified, path, extra_keep=6):
     """输出 lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）。
     与 txt 同源同数据（_build_groups），仅格式不同：
@@ -824,7 +849,8 @@ def build_sources(repo):
 
 def main(repo=None, out_txt="lives/live_verified.txt",
          out_m3u="lives/live_verified.m3u", out_json="live_channels.json",
-         out_multicast="lives/live_multicast.txt"):
+         out_multicast="lives/live_multicast.txt",
+         out_precise="lives/live_precise.txt"):
     repo = repo or os.path.dirname(sys_path)
     sources = build_sources(repo)
     print("loading %d sources ..." % len(sources), flush=True)
@@ -834,6 +860,8 @@ def main(repo=None, out_txt="lives/live_verified.txt",
     verified, raw = test_channel_lines(cmap, budget_s=420)
     print("line tests done in %.0fs, verified channels: %d" % (time.time() - t0, len(verified)), flush=True)
     stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
+    precise_stats = write_precise_txt(cmap, verified, os.path.join(repo, out_precise))
+    print("precise groups:", precise_stats, flush=True)
     m3u_stats = write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
     mc_stats = write_multicast_txt(os.path.join(repo, out_multicast))
     print("groups:", stats, flush=True)
