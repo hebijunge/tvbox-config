@@ -3731,8 +3731,13 @@ def main() -> int:
     # 「只是不声明」：不进 Release 附件白名单 / Pages / 导航页，也不在 README 与日报声明。
     with open("adult.json", "w", encoding="utf-8") as f:
         json.dump(adult_doc, f, ensure_ascii=False, indent=1)
-    with open("adult_live.json", "w", encoding="utf-8") as f:
-        json.dump(adult_live_doc, f, ensure_ascii=False, indent=1)
+    # 2026-09-23 修复（daily run 35816486949 / 35830045274 连续 failure 实证）：
+    # adult_live.json 不再由 daily 生成覆写。所有者指令升级后它是「频道级全量验活
+    # （8578 频道逐条实测）+ 按加载到有效内容的速度排序」的静态人工维护产物
+    # （含 adult_live_channels/cat1..21.txt）；daily 的粗粒度源级探活版本会覆盖掉它。
+    # 且本文件每轮重写但不在提交白名单 → 成为未暂存改动 →
+    # `git pull --rebase origin main` 报 "You have unstaged changes" 退出 128。
+    print("[skip] adult_live.json 保持仓库现版（频道级验活静态产物），本轮不覆写", flush=True)
     # 按上游仓库归类的拆分（供 status.json 报告）
     from collections import Counter as _C
     adult_origin_breakdown = _C()
