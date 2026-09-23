@@ -499,7 +499,8 @@ def build_curated_lives(repo_dir: str):
     except Exception as e:  # 单次聚合失败不影响主流程
         print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
 
-    ver_txt_url = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt"
+    _RAW = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
+    ver_txt_url = _RAW + "lives/live_verified.txt"
     curated = [{
         "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
         "type": 1,
@@ -508,21 +509,54 @@ def build_curated_lives(repo_dir: str):
         "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
     }]
 
+    # 2026-09-23 live.json 大分类拆分：按 live_verified 分组切 7 个分类源文件，
+    # 每个大分类一条 type=1 源（小分类=台名条目，多线路可切换、按速度排序）。
+    _BIG_ORDER = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
+    _buckets = {c: [] for c in _BIG_ORDER}
+    _cur_grp = None
+    try:
+        with open(os.path.join("lives", "live_verified.txt"), encoding="utf-8") as _f:
+            for _ln in _f:
+                _ln = _ln.rstrip()
+                if not _ln:
+                    continue
+                if _ln.endswith(",#genre#"):
+                    _g = _ln[: -len(",#genre#")]
+                    _cur_grp = _g if _g in _BIG_ORDER else ("地方" if _g.startswith("地方-") else "其他")
+                    continue
+                _buckets[_cur_grp or "其他"].append(_ln)
+        for _c in _BIG_ORDER:
+            _fn = os.path.join("lives", "live_cat_%s.txt" % _c)
+            with open(_fn, "w", encoding="utf-8") as _f:
+                _f.write("%s,#genre#\n" % _c + "\n".join(_buckets[_c]) + "\n")
+            if _buckets[_c]:
+                curated.append({
+                    "name": "%s·聚合(小分类频道/多线路)" % _c,
+                    "type": 1,
+                    "url": _RAW + "lives/live_cat_%s.txt" % _c,
+                    "ua": "TVBox",
+                    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+                    "group": _c,
+                })
+    except Exception as _e:  # 拆分失败不影响主流程，聚合条目仍在
+        print("[curated] 大分类拆分跳过:", _e, flush=True)
+
     # 优质第三方直播源（来自本次会话 live_probe 实测 status=ok）
     THIRD_PARTY_OK = {
-        "Guovin·央视": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cctv.txt",
-        "Guovin·卫视": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_satellite.txt",
-        "Guovin·港台": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_hkmo_tw.txt",
-        "Guovin·其他": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_other.txt",
-        "Guovin·总集": "https://ghproxy.net/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u",
-        "YY·轮播":    "https://sub.ottiptv.cc/yylunbo.m3u",
-        "虎牙一起看":  "https://sub.ottiptv.cc/huyayqk.m3u",
-        "斗鱼一起看":  "https://sub.ottiptv.cc/douyuyqk.m3u",
-        "B站直播":     "https://sub.ottiptv.cc/bililive.m3u",
-        "咪咕歌手":    "https://mgtv.ottiptv.cc/mglist.m3u",
+        # (url, group)；2026-09-23 修正 live_satellite/live_hkmo_tw 两个失效文件名
+        "Guovin·央视": (_RAW + "lives/live_cctv.txt", "央视"),
+        "Guovin·卫视": (_RAW + "lives/live_weishi.txt", "卫视"),
+        "Guovin·港台": (_RAW + "lives/live_gangtai.txt", "港台"),
+        "Guovin·其他": (_RAW + "lives/live_other.txt", "其他"),
+        "Guovin·总集": ("https://ghproxy.net/https://raw.githubusercontent.com/Guovin/iptv-api/gd/output/result.m3u", "其他"),
+        "YY·轮播":    ("https://sub.ottiptv.cc/yylunbo.m3u", "轮播"),
+        "虎牙一起看":  ("https://sub.ottiptv.cc/huyayqk.m3u", "直播"),
+        "斗鱼一起看":  ("https://sub.ottiptv.cc/douyuyqk.m3u", "直播"),
+        "B站直播":     ("https://sub.ottiptv.cc/bililive.m3u", "直播"),
+        "咪咕歌手":    ("https://mgtv.ottiptv.cc/mglist.m3u", "直播"),
     }
-    for nm, u in THIRD_PARTY_OK.items():
-        curated.append({"name": nm, "type": 1, "url": u})
+    for nm, (u, _g) in THIRD_PARTY_OK.items():
+        curated.append({"name": nm, "type": 1, "url": u, "group": _g})
 
     adult_lives = []
     for name, url, ch_count in ADULT_LIVE_SOURCES:
@@ -3399,10 +3433,30 @@ def main() -> int:
             })
             continue
         cleaned.append(l)
-    # 聚合精选 + 第三方实测 ok 在前；其余按名字升序保留
+    # 2026-09-23 live.json 大分类组织：每条源按 group 归入 7 大分类，组内按名字排序
+    _BIG = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
+
+    def _live_group_of(name):
+        n = name or ""
+        if re.search(r"cctv|cgtn|央视|中央", n, re.I):
+            return "央视"
+        if "卫视" in n:
+            return "卫视"
+        if any(k in n for k in ("港", "台", "TVB", "翡翠", "澳")) and "电台" not in n:
+            return "港台"
+        if any(k in n for k in ("轮播", "一起看")):
+            return "轮播"
+        if any(k in n for k in ("虎牙", "斗鱼", "哔哩", "b站", "bilibili", "咪咕", "电竞", "直播", "体育", "MV")):
+            return "直播"
+        return "其他"
+
+    for _l in cleaned:
+        if not _l.get("group"):
+            _l["group"] = _live_group_of(_l.get("name"))
     live["lives"] = curated_lives + sorted(
         [l for l in cleaned if l not in curated_lives],
-        key=lambda x: (x.get("name") or "")
+        key=lambda x: (_BIG.index(x["group"]) if x.get("group") in _BIG else 99,
+                       x.get("name") or "")
     )
     with open("vod.json", "w", encoding="utf-8") as f:
         json.dump(vod, f, ensure_ascii=False, indent=1)
