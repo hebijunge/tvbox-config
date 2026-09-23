@@ -810,6 +810,9 @@ def probe_adult_lives(adult_lives: list, *, timeout: int = 8, max_bytes: int = 3
         # 可访问在前，同档内加载耗时升序（快的在前）；不可访问沉底
         key_fn = lambda p: (not p["stream_ok"], not p["list_ok"], p["ms"], p["item"].get("name") or "")
     probed.sort(key=key_fn)
+    # 标记实测可访问标志（装配阶段据所有者指令剔除不可访问的）
+    for p in probed:
+        p["item"]["_probe_stream_ok"] = bool(p["stream_ok"])
     out = [p["item"] for p in probed]
     stats["after"] = len(out)
     return out, stats
@@ -921,6 +924,10 @@ def verify_adult_sites(adult_sites: list, check_latency: dict, *, timeout: int =
         p["item"].get("name") or "",
     )
     probed.sort(key=key_fn)
+    # 标记实测可播放/可搜索标志（装配阶段据所有者指令剔除不可播放的）
+    for p in probed:
+        p["item"]["_probe_play_ok"] = bool(p["play_ok"])
+        p["item"]["_probe_search_ok"] = bool(p["search_ok"])
     out = [p["item"] for p in probed]
     stats["after"] = len(out)
     return out, stats
@@ -3689,7 +3696,10 @@ def main() -> int:
     # 成人站点验收（按所有者 2026-09-23 指令：搜索有结果 + 可播放为准并排序）
     adult_sites_verified, adult_verify_stats = verify_adult_sites(
         adult_sites_sorted, check_latency, timeout=8)
-    adult_doc["sites"] = adult_sites_verified
+    # 所有者 2026-09-23 后续指令：只要可播放的，播放不了就不要留——剔除未实测到
+    # 可播放的站点（csp/jar 类按「不可外部验证」一并剔除，按加载耗时排前）
+    adult_proved = [s for s in adult_sites_verified if s.get("_probe_play_ok")]
+    adult_doc["sites"] = adult_proved
     # 所有者 2026-09-23 指令：adult.json 不需要解析接口——去掉 parses 字段，
     # 成人分类只保留站点；直播单独拆出 adult_live.json（按所有者同批指令）。
     adult_doc.pop("parses", None)
@@ -3697,9 +3707,11 @@ def main() -> int:
     if not adult_doc.get("spider"):
         adult_doc.pop("spider", None)
     # 成人直播源：测速 + 抽首流验活 + 按加载速度排序（所有者 2026-09-23 指令：
-    # 「可访问、加载有内容、按加载速度排序」），单独写到 adult_live.json。
+    # 「可访问、加载有内容、按加载速度排序」），单独写到 adult_live.json；
+    # 所有者后续指令：不可访问的剔除留保。
     adult_lives_sorted, adult_live_stats = probe_adult_lives(adult_lives, timeout=8, max_bytes=32768)
-    adult_live_doc = {"lives": adult_lives_sorted}
+    adult_lives_alive = [l for l in adult_lives_sorted if l.get("_probe_stream_ok")]
+    adult_live_doc = {"lives": adult_lives_alive}
     if adult_doc.get("spider"):
         # 直播配置一般不需 spider；保留以防个别源依赖
         adult_live_doc["spider"] = adult_doc["spider"]
