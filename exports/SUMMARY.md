@@ -1,35 +1,38 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-09-23T02:13:23
+生成时间：2026-09-23T11:12:18
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 3066 | 122 | 525 | 1004 | 1415 |
-| 直播 | 235 | 0 | 0 | 235 | 0 |
+| 点播 | 2689 | 120 | 537 | 640 | 1392 |
+| 直播 | 230 | 0 | 0 | 230 | 0 |
 
-较上轮变化：新增 548｜掉线 1｜恢复 3｜移除 107（点播）；新增 53｜掉线 0｜恢复 0｜移除 47（直播）
+较上轮变化：新增 138｜掉线 4｜恢复 3｜移除 515（点播）；新增 44｜掉线 0｜恢复 0｜移除 49（直播）
 
 ## 点播掉线（前 10）
 
-- ✨短剧好看✨乐哥甄选✨（degraded → dead）
+- 💖分享异果（healthy → dead）
+- 💖分享魅影（degraded → dead）
+- 🎈影视┃大全（degraded → dead）
+- 网盘 | 观影（degraded → dead）
 
 ## 点播恢复（前 10）
 
-- 😐影视大全（dead → degraded）
-- 😄┃永乐┃视频（dead → degraded）
-- 动漫 | 爱弹幕[js]（dead → degraded）
+- 修罗｜磁力（dead → degraded）
+- 修罗|弹幕（dead → degraded）
+- ✨短剧好看✨乐哥甄选✨（dead → degraded）
 
 ## 点播新增（前 10）
 
-- *AR（unknown）
-- *佳丽（unknown）
-- *色南国资源（unknown）
-- *色窝（unknown）
-- *花椒（unknown）
-- *蛋蛋视频（unknown）
-- *酷伦（unknown）
-- *酷豆（unknown）
-- ★黄瓜(直连)（unknown）
-- ♠️木耳┃影视（unknown）
+- 影视 • 极速[直连]（unknown）
+- ❤新浪资源（unknown）
+- 🍀光速HTTP（unknown）
+- Ck资源（unknown）
+- 无尽采集2（unknown）
+- 155（unknown）
+- 🍀新浪HTTPS（unknown）
+- 最大点播（unknown）
+- 纯净采集（unknown）
+- 金鹰采集（unknown）
