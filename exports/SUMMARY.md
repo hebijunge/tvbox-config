@@ -1,38 +1,35 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-09-23T00:02:51
+生成时间：2026-09-23T02:13:23
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 2625 | 121 | 516 | 602 | 1386 |
-| 直播 | 229 | 0 | 0 | 229 | 0 |
+| 点播 | 3066 | 122 | 525 | 1004 | 1415 |
+| 直播 | 235 | 0 | 0 | 235 | 0 |
 
-较上轮变化：新增 121｜掉线 4｜恢复 3｜移除 169（点播）；新增 11｜掉线 0｜恢复 0｜移除 8（直播）
+较上轮变化：新增 548｜掉线 1｜恢复 3｜移除 107（点播）；新增 53｜掉线 0｜恢复 0｜移除 47（直播）
 
 ## 点播掉线（前 10）
 
-- 😄┃永乐┃视频（degraded → dead）
-- 🎈影视┃大全（degraded → dead）
-- 修罗｜磁力（degraded → dead）
-- 修罗|弹幕（degraded → dead）
+- ✨短剧好看✨乐哥甄选✨（degraded → dead）
 
 ## 点播恢复（前 10）
 
-- 🔥🔥首发（dead → degraded）
-- 🐎追番┃1080P（dead → degraded）
-- 🥝金曼┃影视（dead → degraded）
+- 😐影视大全（dead → degraded）
+- 😄┃永乐┃视频（dead → degraded）
+- 动漫 | 爱弹幕[js]（dead → degraded）
 
 ## 点播新增（前 10）
 
-- 💖分享U|酷（unknown）
-- 🍀光速HTTP（unknown）
-- 🚀小马·️天堂┃采集（unknown）
-- 🍀新浪资源（unknown）
-- 影视 • 极速[直连]（unknown）
-- 🍀鲸鱼资源（unknown）
-- 影视 • 索尼[直连]（unknown）
-- TV-最大点播（unknown）
-- ❤新浪资源（unknown）
-- 🍊柚子资源（unknown）
+- *AR（unknown）
+- *佳丽（unknown）
+- *色南国资源（unknown）
+- *色窝（unknown）
+- *花椒（unknown）
+- *蛋蛋视频（unknown）
+- *酷伦（unknown）
+- *酷豆（unknown）
+- ★黄瓜(直连)（unknown）
+- ♠️木耳┃影视（unknown）
