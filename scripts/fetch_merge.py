@@ -924,10 +924,12 @@ def verify_adult_sites(adult_sites: list, check_latency: dict, *, timeout: int =
         p["item"].get("name") or "",
     )
     probed.sort(key=key_fn)
-    # 标记实测可播放/可搜索标志（装配阶段据所有者指令剔除不可播放的）
+    # 标记实测可播放/可搜索/不可外部验证标志（装配阶段按所有者口径过滤：
+    # 「播放不了的就不要留」仅适用于可外部验证的站点；csp/jar 类不剔除）
     for p in probed:
         p["item"]["_probe_play_ok"] = bool(p["play_ok"])
         p["item"]["_probe_search_ok"] = bool(p["search_ok"])
+        p["item"]["_probe_unverified"] = bool(p.get("unverified"))
     out = [p["item"] for p in probed]
     stats["after"] = len(out)
     return out, stats
@@ -3696,10 +3698,12 @@ def main() -> int:
     # 成人站点验收（按所有者 2026-09-23 指令：搜索有结果 + 可播放为准并排序）
     adult_sites_verified, adult_verify_stats = verify_adult_sites(
         adult_sites_sorted, check_latency, timeout=8)
-    # 所有者 2026-09-23 后续指令：只要可播放的，播放不了就不要留——剔除未实测到
-    # 可播放的站点（csp/jar 类按「不可外部验证」一并剔除，按加载耗时排前）
-    adult_proved = [s for s in adult_sites_verified if s.get("_probe_play_ok")]
-    adult_doc["sites"] = adult_proved
+    # 所有者 2026-09-23 口径（评论 7688619739198819507 + 7688623894944681185）：
+    # 「只要可播放的，播放不了的就不要留」+「csp 不剔除」——剔除的只有可外部
+    # 验证但实测不可播放的站点；csp/jar 类（不可外部验证）保留、排实测可播放之后。
+    adult_kept = [s for s in adult_sites_verified
+                  if s.get("_probe_play_ok") or s.get("_probe_unverified")]
+    adult_doc["sites"] = adult_kept
     # 所有者 2026-09-23 指令：adult.json 不需要解析接口——去掉 parses 字段，
     # 成人分类只保留站点；直播单独拆出 adult_live.json（按所有者同批指令）。
     adult_doc.pop("parses", None)
@@ -3715,6 +3719,12 @@ def main() -> int:
     if adult_doc.get("spider"):
         # 直播配置一般不需 spider；保留以防个别源依赖
         adult_live_doc["spider"] = adult_doc["spider"]
+    # _probe_* 是内部验收标记，不得泄漏进产物；产出前剥掉
+    _PROBE_KEYS = ("_probe_play_ok", "_probe_search_ok", "_probe_unverified", "_probe_stream_ok")
+    adult_doc["sites"] = [{k: v for k, v in s.items() if k not in _PROBE_KEYS}
+                          for s in adult_doc["sites"]]
+    adult_live_doc["lives"] = [{k: v for k, v in l.items() if k not in _PROBE_KEYS}
+                               for l in adult_live_doc["lives"]]
     with open("short.json", "w", encoding="utf-8") as f:
         json.dump(short_doc, f, ensure_ascii=False, indent=1)
     # 所有者 2026-09-22/23 指令：adult.json / adult_live.json 每天产出并随 daily 提交更新到仓库；
