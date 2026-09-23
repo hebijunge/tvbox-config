@@ -3621,7 +3621,7 @@ def main() -> int:
             u = u.replace("http://http://", "http://", 1)
         l["url"] = u
         # 成人主题 lives 一律下放到 adult.json
-        if any(k in (l.get("name") or "").lower() for k in ("传媒816", "18+", "成人", "pron", "live18")):
+        if any(k in str(l.get("name") or "").lower() for k in ("传媒816", "18+", "成人", "pron", "live18")):
             adult_lives.append({
                 "name": l.get("name"), "type": l.get("type", 1),
                 "url": l.get("url"), "group": "成人直播",
@@ -3632,7 +3632,7 @@ def main() -> int:
     _BIG = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
 
     def _live_group_of(name):
-        n = name or ""
+        n = str(name or "")
         if re.search(r"cctv|cgtn|央视|中央", n, re.I):
             return "央视"
         if "卫视" in n:
