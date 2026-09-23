@@ -30,6 +30,7 @@ import sys
 import time
 import urllib.request
 import urllib.error
+import urllib.parse
 import concurrent.futures as cf
 from datetime import datetime, timezone, timedelta
 
@@ -742,9 +743,193 @@ def classify_site_strong_only(s, overrides: dict = None) -> str:
     return "vod"
 
 
+# ==================== adult 直播源测速与成人站点搜索验收 ====================
+PROBE_STREAM_RANGE = (0, 2047)  # 直播抽验流 2KB（与 aa5a88d 通用做法对齐）
+
+
+def _parse_live_list_first_stream(body: bytes, url: str) -> str | None:
+    """从 txt（行 "name,url"，#genre# 块标记）或 m3u（#EXTINF 后的 URL）取第一条 http(s) 流。"""
+    txt = body.decode("utf-8", "replace")
+    for raw in txt.splitlines():
+        line = raw.strip()
+        if not line or line.startswith("#EXTM3U"):
+            continue
+        if line.startswith("#"):
+            continue
+        if "," in line and line.split(",", 1)[1].strip().lower().startswith(("http://", "https://")):
+            return line.split(",", 1)[1].strip()
+        if line.lower().startswith(("http://", "https://")):
+            return line
+    return None
+
+
+def probe_adult_lives(adult_lives: list, *, timeout: int = 8, max_bytes: int = 32768) -> tuple:
+    """成人直播源测速 + 抽首流验活，返回 (sorted_lives, stats)。
+
+    ms = 列表文件下载耗时（"加载有内容" 的口径）。stream_ok = 从列表里抽第一条流做
+    Range 抽段是否 2xx（非 2xx 视为不可访问）。安全阀：stream_ok 率 < 20% 视为网络/抽
+    样异常，保留全部并按列表下载耗时排序、不剔除（保护沙箱受限环境）。
+    """
+    stats = {"before": len(adult_lives), "after": 0, "stream_ok": 0, "stream_dead": 0,
+             "safety_valve_triggered": False}
+    if not adult_lives:
+        return adult_lives, stats
+    probed = []
+    for l in adult_lives:
+        url = l.get("url")
+        ms = 0
+        list_ok = False
+        try:
+            status, body, elapsed = http_get(url, timeout, max_bytes)
+            ms = elapsed
+            list_ok = bool(status == 200 and body)
+        except Exception:
+            list_ok = False
+        stream_ok = False
+        stream_ms = 0
+        if list_ok:
+            stream_uri = _parse_live_list_first_stream(body, url)
+            if stream_uri:
+                try:
+                    st, _, el = http_get(stream_uri, timeout, 0, rng=PROBE_STREAM_RANGE)
+                    stream_ms = el
+                    if st in (200, 206):
+                        stream_ok = True
+                except Exception:
+                    pass
+        probed.append({
+            "item": l, "ms": ms, "list_ok": list_ok,
+            "stream_ok": stream_ok, "stream_ms": stream_ms,
+        })
+        stats["stream_ok" if stream_ok else "stream_dead"] += 1
+    if stats["before"] > 0 and stats["stream_ok"] / stats["before"] < 0.20:
+        stats["safety_valve_triggered"] = True
+        # 安全阀：保留全部，仅按列表下载耗时排（升序=快的在前）
+        key_fn = lambda p: (not p["list_ok"], p["ms"], p["item"].get("name") or "")
+    else:
+        # 可访问在前，同档内加载耗时升序（快的在前）；不可访问沉底
+        key_fn = lambda p: (not p["stream_ok"], not p["list_ok"], p["ms"], p["item"].get("name") or "")
+    probed.sort(key=key_fn)
+    out = [p["item"] for p in probed]
+    stats["after"] = len(out)
+    return out, stats
+
+
+# 搜索词降级序列——对苹果CMS V10 类站点（api 返回 JSON、ac=videolist 协议）
+SEARCH_KEYWORDS = ("麻豆", "爱", "传媒")
+
+
+def _adult_search_and_play(api_url: str, timeout: int = 8) -> dict:
+    """对单个站点 api 做「搜索有结果 + 可播放」验收，返回 {search_ok, play_ok, ms_total, vod_name}。
+
+    流程：依次试关键词 ?ac=videolist&wd=<kw> → JSON.list 非空 → 取首个 vod_id →
+    ?ac=videolist&ids=<id> → 解析 vod_play_url 中第一个 m3u8 → Range 抽段验证 2xx。
+    任一步失败按实际失败位置返回。csp_/jar 类（api 非 http）调用方应在调用前过滤。
+    """
+    import json as _json
+    res = {"search_ok": False, "play_ok": False, "ms_total": 0, "vod_name": ""}
+    if not api_url.startswith(("http://", "https://")):
+        return res
+    sep = "&" if "?" in api_url else "?"
+    t0 = time.time()
+    list_payload = None
+    for kw in SEARCH_KEYWORDS:
+        try:
+            status, body, _ = http_get(f"{api_url}{sep}ac=videolist&wd={urllib.parse.quote(kw)}", timeout, 65536)
+            if status != 200 or not body:
+                continue
+            j = _json.loads(body.decode("utf-8", errors="replace") or "{}")
+            lst = (j.get("list") or [])
+            if isinstance(lst, list) and lst:
+                res["search_ok"] = True
+                list_payload = (kw, lst[0])
+                res["vod_name"] = lst[0].get("vod_name") or ""
+                break
+        except Exception:
+            continue
+    if not res["search_ok"] or not list_payload:
+        res["ms_total"] = int((time.time() - t0) * 1000)
+        return res
+    vod_id = (list_payload[1].get("vod_id") or "")
+    if not vod_id:
+        res["ms_total"] = int((time.time() - t0) * 1000)
+        return res
+    play_url = ""
+    try:
+        status, body, _ = http_get(f"{api_url}{sep}ac=videolist&ids={vod_id}", timeout, 65536)
+        if status == 200 and body:
+            j = _json.loads(body.decode("utf-8", errors="replace") or "{}")
+            lst = j.get("list") or []
+            if lst:
+                # TVBox vod_play_url 格式：name$url#name2$url2；先按 # 取首集再按 $ 取 URL
+                field = (lst[0].get("vod_play_url") or "")
+                first = field.split("#", 1)[0]
+                parts = first.split("$")
+                play_url = parts[-1].strip() if parts else ""
+    except Exception:
+        pass
+    if play_url.lower().startswith(("http://", "https://")):
+        try:
+            st, _, _ = http_get(play_url, timeout, 0, rng=PROBE_STREAM_RANGE)
+            if st in (200, 206):
+                res["play_ok"] = True
+        except Exception:
+            pass
+    res["ms_total"] = int((time.time() - t0) * 1000)
+    return res
+
+
+def verify_adult_sites(adult_sites: list, check_latency: dict, *, timeout: int = 8) -> tuple:
+    """成人站点「搜索有结果 + 可播放」验收 + 排序，返回 (sorted_sites, stats)。
+
+    csp_/jar 类（api 非 http）走不可外部验证 → 标 unverified，按 check_latency 兜底排序；
+    其余走 _adult_search_and_play。排序键：(play_ok, search_ok, ms_total, name)；
+    unverified 排最后，按 check_latency 升序兜底。
+    """
+    stats = {"before": len(adult_sites), "after": 0, "play_ok": 0, "search_ok": 0,
+             "unverified": 0, "search_dead": 0, "total_ms": 0}
+    if not adult_sites:
+        return adult_sites, stats
+    probed = []
+    for s in adult_sites:
+        api = s.get("api") or ""
+        if not api.startswith(("http://", "https://")):
+            probed.append({"item": s, "search_ok": False, "play_ok": False,
+                           "ms_total": 0, "unverified": True})
+            stats["unverified"] += 1
+            continue
+        try:
+            r = _adult_search_and_play(api, timeout=timeout)
+        except Exception:
+            r = {"search_ok": False, "play_ok": False, "ms_total": 0, "vod_name": ""}
+        probed.append({"item": s, **r, "unverified": False})
+        stats["total_ms"] += r.get("ms_total") or 0
+        if r["play_ok"]:
+            stats["play_ok"] += 1
+            stats["search_ok"] += 1
+        elif r["search_ok"]:
+            stats["search_ok"] += 1
+        else:
+            stats["search_dead"] += 1
+    # 排序：可播放 > 可搜索 > 不可外部验证（csp 类） > 搜索失败
+    # 同组内速度升序
+    key_fn = lambda p: (
+        not p["play_ok"],                                   # False < True → play_ok 排前
+        not p["search_ok"],                                 # 同理 search_ok
+        p["unverified"],                                    # unverified 沉底
+        p.get("ms_total") or 0,                             # 同档内速度升序
+        p["item"].get("name") or "",
+    )
+    probed.sort(key=key_fn)
+    out = [p["item"] for p in probed]
+    stats["after"] = len(out)
+    return out, stats
+
+
+
 # ==================== 解析池（parses）清洗 ====================
 # short.json 等分类产物复用 vod 的 parses 全集（adult.json 自 2026-09-23 起按所有者
-# 指令不再携带 parses；TVBox 站点不依赖 parses，parses 是
+# 指令不再携带 parses；TVBox 站点不依赖 parses，parses 是。adult_live.json 同日拆分。
 # 全局播放器池）。但历史版本未做去重，导致「一堆没用的解析」：
 #   · 同一 URL 多个不同 name（如 jx.xmflv.com 至少 5 个别名）
 #   · localhost/127.0.0.1/192.168.x 等本地代理引用（用户环境不可用）
@@ -3501,24 +3686,37 @@ def main() -> int:
                        check_latency.get(x.get("key"), 10 ** 9),
                        (x.get("name") or "")),
     )
-    adult_doc["sites"] = adult_sites_sorted
+    # 成人站点验收（按所有者 2026-09-23 指令：搜索有结果 + 可播放为准并排序）
+    adult_sites_verified, adult_verify_stats = verify_adult_sites(
+        adult_sites_sorted, check_latency, timeout=8)
+    adult_doc["sites"] = adult_sites_verified
     # 所有者 2026-09-23 指令：adult.json 不需要解析接口——去掉 parses 字段，
-    # 成人分类只保留站点+直播；tvbox/vod/short 的全局解析池不受影响。
+    # 成人分类只保留站点；直播单独拆出 adult_live.json（按所有者同批指令）。
     adult_doc.pop("parses", None)
+    adult_doc.pop("lives", None)
     if not adult_doc.get("spider"):
         adult_doc.pop("spider", None)
+    # 成人直播源：测速 + 抽首流验活 + 按加载速度排序（所有者 2026-09-23 指令：
+    # 「可访问、加载有内容、按加载速度排序」），单独写到 adult_live.json。
+    adult_lives_sorted, adult_live_stats = probe_adult_lives(adult_lives, timeout=8, max_bytes=32768)
+    adult_live_doc = {"lives": adult_lives_sorted}
+    if adult_doc.get("spider"):
+        # 直播配置一般不需 spider；保留以防个别源依赖
+        adult_live_doc["spider"] = adult_doc["spider"]
     with open("short.json", "w", encoding="utf-8") as f:
         json.dump(short_doc, f, ensure_ascii=False, indent=1)
-    # 所有者 2026-09-22 指令：adult.json 每天产出并随 daily 提交更新到仓库；
+    # 所有者 2026-09-22/23 指令：adult.json / adult_live.json 每天产出并随 daily 提交更新到仓库；
     # 「只是不声明」：不进 Release 附件白名单 / Pages / 导航页，也不在 README 与日报声明。
     with open("adult.json", "w", encoding="utf-8") as f:
         json.dump(adult_doc, f, ensure_ascii=False, indent=1)
+    with open("adult_live.json", "w", encoding="utf-8") as f:
+        json.dump(adult_live_doc, f, ensure_ascii=False, indent=1)
     # 按上游仓库归类的拆分（供 status.json 报告）
     from collections import Counter as _C
     adult_origin_breakdown = _C()
     for s in adult_sites_sorted:
         adult_origin_breakdown[s.get("_origin") or "~(无origin)"] += 1
-    adult_out = f"adult.json（{len(adult_sites)} sites + {len(adult_lives)} lives，无 parses）"
+    adult_out = f"adult.json（{len(adult_sites_verified)} sites 可播放 {adult_verify_stats['play_ok']}/{adult_verify_stats['before']}）+ adult_live.json（{len(adult_lives_sorted)} lives 可访问 {adult_live_stats['stream_ok']}/{adult_live_stats['before']}）"
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"
