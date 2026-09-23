@@ -1,0 +1,212 @@
+//非凡资源网 非凡资源备用网址:ffzy.tv ffzy1.tv ffzy2.tv ffzy3.tv ffzy4.tv ffzy5.tv cj.ffzyapi.com api.ffzyapi.com
+//http://ffzy.tv/index.php/vod/type/id/13.html
+//http://api.ffzyapi.com/index.php/ajax/data?mid=1&tid=2&page=1
+//https://svip.ffzyplay.com/?url=
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=list
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&t=13&pg=1
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&wd=庆余年第二季
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&wd=张若昀
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&wd=许凯
+//https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&ids=66696
+//http://cj.ffzyapi.com/index.php/ajax/suggest.html?mid=1&wd=庆余年
+//http://cj.ffzyapi.com/index.php/ajax/suggest.html?mid=1&wd=庆余年
+
+//cj.ffzyapi.com -> ffzy5.tv
+//Block China and HK Region
+  
+ {
+    "主页url":"https://cj.ffzyapi.com",
+    "站名":"非凡资源",
+    "首页":"电视剧",
+    "请求头":"User-Agent$Mozilla/5.0 (iPhone; CPU iPhone OS 15_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/14.0 Mobile/15E148 Safari/604.1",
+    //first time filter extraction
+	"二次截取":"\"list\"*[&&]",
+	//second time filter extraction
+    "数组":"{&&\"vod_content\"",
+    "图片":"vod_pic\"*\"&&\"",
+    "标题":"vod_name\"*\"&&\"",
+    //"标题":"vod_name\"*\"&&\"+🌸+vod_id\":&&,",
+    "链接":"http://cj.ffzyapi.com/api.php/provide/vod/at/json/?ac=detail&ids=+\"vod_id\":&&,", //API
+	     //https://cj.ffzyapi.com/api.php/provide/vod/at/json/?ac=detail&ids=51855
+    "副标题":"vod_remarks\":\"&&\"[替换:更新至第>> #更至第>> #]+🌸+\"vod_actor\":\"&&\"", 
+    //"副标题":"ids=+\"vod_id\":&&,", //vod_area vod_score vod_hits vod_actor
+    
+    //"搜索模式":"1",
+    //"搜索url":"/index.php/ajax/suggest.html?mid=1&wd={wd}",
+    //"搜索数组二次截取":"\"list\"*[&&]",
+    //"搜索数组":"{&&}",
+    //"搜索图片":"\"pic\"*\"&&\"",
+    //"搜索标题":"\"name\"*\"&&\"",
+    //"搜索链接":"https://cj.ffzyapi.com/index.php/vod/detail/id/+\"id\":&&,+.html",
+
+	"搜索模式":"1",
+    "搜索url":"http://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&wd={wd}", //https://cj.ffzyapi.com/api.php/provide/vod/?ac=detail&wd=庆余年第二季
+    "搜索数组二次截取":"\"list\"*[&&]",
+    "搜索数组":"{&&}",
+    "搜索图片":"vod_pic\"*\"&&\"",
+    "搜索标题":"vod_name\"*\"&&\"",
+    "搜索副标题":"vod_remarks\":\"&&\"[替换:更新至第>> #更至第>> #]+🌸+\"vod_actor\":\"&&\"", 
+    "搜索链接":"http://cj.ffzyapi.com/api.php/provide/vod/at/json/?ac=detail&ids=+\"vod_id\":&&,", //API
+    
+//API    
+	"影片类型":"vod_class\"*\"&&\"[替换:剧情>>电视剧#]",
+    "影片年代":"vod_year\"*\"&&\"",
+    "影片地区":"vod_area\"*\"&&\"",
+    "导演":"vod_director\"*\"&&\"+⚡️+vod_remarks\"*\"&&\"[替换:更新至第>> #更至第>> #]",
+    "主演":"vod_actor\"*\"&&\"",
+    "简介":"🌸+vod_remarks\"*\"&&\"[替换:更新至第>> #]+🌸+vod_content\"*\"&&\"",
+    //"简介": "vod_play_from\"*\"&&\"+$+$+$+#",
+	
+	
+    //only one source title
+    //"线路二次截取":"<div><i>feifan</i><i>ffm3u8</i></div>",
+	"线路数组":"vod_play_from\"*\"&&\"", //"vod_play_from":"feifan$$$ffm3u8", 
+    "线路标题":"&&[替换:feifan>>♦️feifan#ffm3u8>>♦️ffm3u8#]",
+//API 
+	//"播放二次截取": "", //第01集$https:\/\/leshiyuncdn.36s.top\/20240523\/EN5z5Tz9\/index.m3u8#
+	"播放数组":"vod_play_url\"*\"&&\"+#",
+    "播放列表":"&&#",
+    "播放标题":"&&",
+	"播放链接":"&&",
+    
+
+    "分类":"国产剧$13#国产动漫$29#韩国剧$15#电影$6#电视剧$13#综艺$25#动漫$29#伦理片$34#记录片$20#短剧$36#",
+    "分类url":"https://cj.ffzyapi.com/api.php/provide/vod/at/json/?ac=detail&t={cateId}&pg={catePg}&limit=20",
+
+    
+	"筛选":{
+    "34":[{"key":"cateId","name":"类型","value":[
+        {"n":"电影","v":"1"},
+        {"n":"动作片","v":"6"},
+        {"n":"喜剧片","v":"7"},
+        {"n":"爱情片","v":"8"},
+        {"n":"科幻片","v":"9"},
+        {"n":"恐怖片","v":"10"},
+        {"n":"剧情片","v":"11"},
+        {"n":"战争片","v":"12"},
+        {"n":"纪录片","v":"20"}
+        ]
+        },
+        {"key":"cateId","name":"类型","value":[
+        {"n":"剧集","v":"2"},
+        {"n":"国产剧","v":"13"},
+        {"n":"港台剧","v":"14"},
+        {"n":"韩国剧","v":"15"},
+        {"n":"欧美剧","v":"16"},
+        {"n":"台湾剧","v":"21"},
+        {"n":"日本剧","v":"22"},
+        {"n":"海外剧","v":"23"},
+        {"n":"泰国剧","v":"24"}
+        ]
+        },
+        {"key":"cateId","name":"类型","value":[
+        {"n":"综艺","v":"3"},
+        {"n":"大陆综艺","v":"25"},
+        {"n":"港台综艺","v":"26"},
+        {"n":"日韩综艺","v":"27"},
+        {"n":"欧美综艺","v":"28"}
+        ]
+        },
+        {"key":"cateId","name":"类型","value":[
+        {"n":"动漫","v":"4"},
+        {"n":"国产动漫","v":"29"},
+        {"n":"日本动漫","v":"30"},
+        {"n":"欧美动漫","v":"31"},
+        {"n":"港台动漫","v":"32"},
+        {"n":"海外动漫","v":"33"}
+        ]
+        }
+        ],
+      
+	"6":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"电影","v":"6"},
+        {"n":"动作片","v":"6"},
+        {"n":"喜剧片","v":"7"},
+        {"n":"爱情片","v":"8"},
+        {"n":"科幻片","v":"9"},
+        {"n":"恐怖片","v":"10"},
+        {"n":"剧情片","v":"11"},
+        {"n":"战争片","v":"12"},
+        {"n":"纪录片","v":"20"}
+        ]
+        }
+        ],
+      
+	"2":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"剧集","v":"2"},
+        {"n":"国产剧","v":"13"},
+        {"n":"韩国剧","v":"15"},
+        {"n":"港台剧","v":"14"},
+        {"n":"欧美剧","v":"16"},
+        {"n":"台湾剧","v":"21"},
+        {"n":"日本剧","v":"22"},
+        {"n":"海外剧","v":"23"},
+        {"n":"泰国剧","v":"24"}
+        ]
+        }
+        ],
+	"13":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"剧集","v":"2"},
+        {"n":"国产剧","v":"13"},
+        {"n":"韩国剧","v":"15"},
+        {"n":"港台剧","v":"14"},
+        {"n":"欧美剧","v":"16"},
+        {"n":"台湾剧","v":"21"},
+        {"n":"日本剧","v":"22"},
+        {"n":"海外剧","v":"23"},
+        {"n":"泰国剧","v":"24"}
+        ]
+        }
+        ],
+	"15":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"剧集","v":"2"},
+        {"n":"国产剧","v":"13"},
+        {"n":"韩国剧","v":"15"},
+        {"n":"港台剧","v":"14"},
+        {"n":"欧美剧","v":"16"},
+        {"n":"台湾剧","v":"21"},
+        {"n":"日本剧","v":"22"},
+        {"n":"海外剧","v":"23"},
+        {"n":"泰国剧","v":"24"}
+        ]
+        }
+        ],
+	"25":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"综艺","v":"25"},
+        {"n":"大陆综艺","v":"25"},
+        {"n":"港台综艺","v":"26"},
+        {"n":"日韩综艺","v":"27"},
+        {"n":"欧美综艺","v":"28"}
+        ]
+        }
+        ],
+	"29":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"动漫","v":"29"},
+        {"n":"国产动漫","v":"29"},
+        {"n":"日本动漫","v":"30"},
+        {"n":"欧美动漫","v":"31"},
+        {"n":"港台动漫","v":"32"},
+        {"n":"海外动漫","v":"33"}
+        ]
+        }
+        ],
+            
+	"4":[
+        {"key":"cateId","name":"类型","value":[
+        {"n":"动漫","v":"4"},
+        {"n":"国产动漫","v":"29"},
+        {"n":"日本动漫","v":"30"},
+        {"n":"欧美动漫","v":"31"},
+        {"n":"港台动漫","v":"32"},
+        {"n":"海外动漫","v":"33"}
+        ]
+        }
+        ]
+        }
+}
