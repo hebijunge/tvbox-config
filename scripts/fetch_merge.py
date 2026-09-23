@@ -489,7 +489,7 @@ ADULT_LIVE_SOURCES = [
 
 
 def build_curated_lives(repo_dir: str):
-    """产出 lives/live_verified.txt + 聚合精选 entry + 优质第三方 live entries + 成人 lives。
+    """产出 lives/live_verified.txt + live.json 单一直播接口（分类在文件内分组）+ 成人 lives。
     调用本函数后，写入 live.json / adult.json 时各取所需。"""
     import os as _os
     sys.path.insert(0, _os.path.join(repo_dir, "scripts"))
@@ -509,19 +509,13 @@ def build_curated_lives(repo_dir: str):
         "ua": "TVBox",
         "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
     }]
-    # 2026-09-23 用户指令：更精准的版本——只收逐线路实测通过的频道，
-    # 每频道多线路全部按探流耗时升序（首条=最快）。文件生成失败时不加该条目。
-    if os.path.exists(os.path.join("lives", "live_precise.txt")):
-        curated.insert(0, {
-            "name": "直播·精准测速版(频道多线路按实测速度排序)",
-            "type": 1,
-            "url": _RAW + "lives/live_precise.txt",
-            "ua": "TVBox",
-            "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-        })
+    # 2026-09-24 用户指令「一个接口里，包含那几个分类」：live.json 只保留这一个接口，
+    # 央视/卫视/地方/港台/轮播/直播/其他等分类全部在 live_verified.txt 文件内部
+    # 用「组名,#genre#」分组呈现（逐行同台名重复=多线路可切换）。不再拆多个接口。
+    # （精准测速版 live_precise.txt 仍生成，供想用更精简源的场合自行取用。）
 
-    # 2026-09-23 live.json 大分类拆分：按 live_verified 分组切 7 个分类源文件，
-    # 每个大分类一条 type=1 源（小分类=台名条目，多线路可切换、按速度排序）。
+    # 2026-09-23 大分类拆分（2026-09-24 起仅供备查）：按 live_verified 分组切 7 个
+    # 分类源文件；cat 文件仍生成到 lives/ 目录，但不再各自成为 live.json 接口。
     _BIG_ORDER = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
     _buckets = {c: [] for c in _BIG_ORDER}
     _cur_grp = None
@@ -540,23 +534,12 @@ def build_curated_lives(repo_dir: str):
             _fn = os.path.join("lives", "live_cat_%s.txt" % _c)
             with open(_fn, "w", encoding="utf-8") as _f:
                 _f.write("%s,#genre#\n" % _c + "\n".join(_buckets[_c]) + "\n")
-            if _buckets[_c]:
-                curated.append({
-                    "name": "%s·聚合(小分类频道/多线路)" % _c,
-                    "type": 1,
-                    "url": _RAW + "lives/live_cat_%s.txt" % _c,
-                    "ua": "TVBox",
-                    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-                    "group": _c,
-                })
     except Exception as _e:  # 拆分失败不影响主流程，聚合条目仍在
         print("[curated] 大分类拆分跳过:", _e, flush=True)
 
-    # 优质第三方直播源（来自本次会话 live_probe 实测 status=ok）
+    # 优质第三方直播源：2026-09-24 用户指令「一个接口里包含那几个分类」后，live.json
+    # 固定为单接口（聚合·分类直播），Guovin/平台直播等第三方条目一律不再进入。
     THIRD_PARTY_OK = {}
-    # 2026-09-24 用户指令「按我意思来：约 9 条以内」——平台直播 5 条全部移出 live.json
-    # （14 条 → 9 条 = 精准测速版 1 + 聚合全量 1 + 7 大分类）；Guovin 5 条此前已剔除。
-    # 实测源仍保留在 lives/live_verified.txt / live_precise.txt 聚合产物里，不丢线路。
     for nm, (u, _g) in THIRD_PARTY_OK.items():
         curated.append({"name": nm, "type": 1, "url": u, "group": _g})
 
@@ -3651,7 +3634,7 @@ def main() -> int:
             _l["group"] = _live_group_of(_l.get("name"))
     # 2026-09-23 用户指令「把那些没用的解析都去掉」：第三方杂源（重复/失效大量存在，
     # 实测 167 条里仅少量可用且与聚合重复）不再进入 live.json，只保留仓库自有
-    # 聚合精选条目（精准测速版 + 聚合全量 + 7 大分类 = 9 条；2026-09-24 用户指令平台直播 5 条移出）。
+    # 聚合精选条目（单接口：聚合·分类直播，分类在 live_verified.txt 内 #genre# 分组）。
     # 成人主题条目仍在上面的循环里下放 adult.json，不受影响。
     live["lives"] = curated_lives
     with open("vod.json", "w", encoding="utf-8") as f:
@@ -3748,7 +3731,7 @@ def main() -> int:
     print(f"[5/6] 产出：tvbox.json / vod.json（{len(vod.get('sites', []))} sites + {len(vod.get('parses', []))} parses）"
           f" / short.json（{len(short_sites)} sites + {len(parses)} parses）"
           f" / {adult_out}"
-          f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：精准测速版+全量+7大分类（9条））/ list.json", flush=True)
+          f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：单接口·分类全在文件内分组）/ list.json", flush=True)
 
     with open("list.json", "w", encoding="utf-8") as f:
         json.dump(interfaces, f, ensure_ascii=False, indent=1)
