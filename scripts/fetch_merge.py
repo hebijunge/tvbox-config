@@ -61,6 +61,10 @@ MAX_BODY = 4096             # 验活最多读取字节数
 # gh.zwy.one 624KB/s（用户侧 Release 实测 7119KB/s）；ghproxy.cxkpro.top 434KB/s（用户侧 5292KB/s）；
 # v6.gh-proxy.org 260KB/s；ghproxy.net 47KB/s（慢管但稳定）；ghfast.top/gh.llkk.cc/rwa.ihtw.moe/ghp.ci
 # 沙箱侧限流/502 不可作首选，留作轮换兜底（GitHub runner 与用户侧网络画像不同，可能表现更好）。
+# batch18 调研补充（2026-09-24 深夜 / 09-25 00:15–00:30 复核）：gh-proxy.com 对 Guovin 路径在深夜时段 404、
+# 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住；输出侧 GHPROXY 维持首位
+#（09-19 实测双优），后续新引用引用前建议按当日实测选择镜像。jsdelivr 主域在沙箱网关 400，
+# 引用 jsdelivr 应显式用 fastly.jsdelivr.net 子域（extra_upstreams jyoketsu 条目已按此规范化）。
 GH_MIRRORS = [m.strip() for m in os.environ.get(
     "GH_MIRRORS",
     "https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,https://v6.gh-proxy.org/,"
@@ -186,6 +190,11 @@ UPSTREAMS = [
     # franksun1211/TVBOX（228★，2026-09-12 推送）：CKS2026.json 60 sites / 2 lives / 4 parses（内含 /* */ 块注释，经状态机清洗可解析）；
     # XCTV.json（APP/TVBoxOSC/XC/，教育向直播源）转直播线任务处理；qiaoji8.json 等其余 19 个配置已登记 candidate_upstreams.json 候选池走 canary 收编
     {"name": "franksun/cks2026", "kind": "tvbox", "url": "https://raw.githubusercontent.com/franksun1211/TVBOX/main/CKS2026.json"},
+    # ---- 2026-09-25 吸收（batch18 调研 P1）：动漫城 yingm.cc 专项动漫配置 ----
+    # 27 站（全 type=3，drpy2/js 双栈）+ 20 parses（27 接口中解析最多的一份）；spider jar 挂 jihulab。
+    # 调研按站点名对账 19/27 已覆盖；按 merge key 实测净新增 csp_Ying（樱花动漫）1 站 + 15 条 parses
+    #（Demo 占位 parse 由管线自动过滤）。相对路径 ./js/... 由 UPSTREAM_BASES/deps 改写机制落仓。
+    {"name": "yingm/dm", "kind": "tvbox", "url": "https://www.yingm.cc/dm/dm.json"},  # 2026-09-25 实测 200/8737B/0.42s
     # ---- 2026-09-22 吸收 lubin776/tvbox-api-backup list.txt：45 条接口与既有清单全量对比去重后新增 20 条 ----
     # 对比基线：UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT + canary(state/extra_upstreams.json) + candidate_upstreams.json。
     # 重复不加：肥猫(fatcat/tv)、挺好、小马、心魔、俊宇(top98)、clun、动漫（既有 UPSTREAMS 或 canary 已收）；
@@ -260,6 +269,10 @@ UPSTREAMS = [
     # 小布点：74 sites
     {"name": "sv/xiaobudian", "kind": "tvbox",
      "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/xiaobudian.json"},
+    # 摸鱼直连 canary（batch18 调研 P2，2026-09-25）：y456y.com 与小不点配置字节级同源（sha 97b4afc95aec…），
+    # 内容已随 sv/xiaobudian 进聚合；本条只监控不合并——Supprise0901 GitHub 镜像失联时可按当日实测把直连源转正。
+    {"name": "canary/moyu-direct", "kind": "tvbox", "canary": True,
+     "url": "http://www.y456y.com"},  # 2026-09-24 调研实测 200/37183B
     # 小米：32 sites / 1 live
     {"name": "sv/xiaomi", "kind": "tvbox",
      "url": "https://gh-proxy.org/https://github.com/Supprise0901/api/blob/main/xiaomi.json"},

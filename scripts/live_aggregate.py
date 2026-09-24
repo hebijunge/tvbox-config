@@ -14,6 +14,7 @@ import json
 import os
 import re
 import time
+import urllib.parse
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
@@ -89,6 +90,9 @@ SOURCE_PRIORITY = [
     "xuy132", "svefnz",
     "yy", "huya", "douyu", "bili", "mgtv", "catvod",
     "fmm_v6",
+    # batch18：live.hacks.tools 四分类（hacks_cctv/hacks_weishi/hacks_difang/chunwan），
+    # 线路序排在既有源之后——hacks 线路在频道内作为补充线路排列
+    "hacks_cctv", "hacks_weishi", "hacks_difang", "chunwan",
 ]
 
 HKTW_KW = ("凤凰", "tvb", "翡翠", "明珠", "香港", "无线", "有线", "hib", "rthk",
@@ -177,7 +181,7 @@ COUNTY_PROV = {'诸暨': '浙江', '龙游': '浙江', '龙泉': '浙江', '遂�
 PROVINCE_ORDER = [p for p, _k in PROVINCE_TABLE]
 
 # 输出大分类顺序（用户目标口径）：央视 / 卫视 / 地方(按地区) / 港台 / 轮播 / 直播 / 其他
-BIG_ORDER = ("央视", "卫视", "港台", "轮播", "直播", "其他", "地方")  # 2026-09-24 用户指令：港台/轮播/直播/其他放到地方之上
+BIG_ORDER = ("央视", "春晚(季节性)", "卫视", "港台", "轮播", "直播", "其他", "地方")  # 2026-09-24 用户指令：港台/轮播/直播/其他放到地方之上；batch18：春晚(季节性)专项组紧随央视（历史春晚轮播，节假日场景）
 
 
 def big_cat(cls):
@@ -291,7 +295,9 @@ _VOD_URL_RE = re.compile(
     r"|slbfsl\.com/\d{8}/"                        # slbfsl 点播日期桶
     r"|\.cdn2020\.com/video/m3u8/"                # cdn2020 视频 m3u8（主命中模式）
     r"|maa1804\.com/f/"                           # maa1804 成人视频 CDN
-    r"|kwimgs\.com/(?:bs3/video-hls|upic)/"       # 快手视频 CDN（VOD 伪装直播，用户真机实证）
+    # 2026-09-25 用户指令：去掉 .mp4/快手 VOD 规则过滤（kwimgs.com/bs3/video-hls|upic/）
+    # ——该规则会误杀 hacks 春晚频道的历史录像（21 条中 19 条为快手 CDN 点播文件）。
+    # 点播/失效行由下游逐行探测兜底剔除，不再在源头按 URL 特征丢弃。
     r"|redtraffic\."                              # redtraffic 系列（成人流量统计/广告）
     r"|adultiptv\.net/"                           # adultiptv.net（成人 IPTV 列表）
     r"|/live/(?:pornstar|bigass|hardcore|bbw|amateur|hentai)\.m3u8"  # 明确成人分类直播 m3u8
@@ -566,6 +572,16 @@ def classify_source(url):
         return "catvod"
     if "fmml_ipv6" in u or "ipv6" in u:
         return "fmm_v6"
+    # batch18：live.hacks.tools 分类 URL → sid（供配置穿透等路径识别来源）
+    if "live.hacks.tools" in u:
+        if "央视" in urllib.parse.unquote(u):
+            return "hacks_cctv"
+        if "卫视" in urllib.parse.unquote(u):
+            return "hacks_weishi"
+        if "地方" in urllib.parse.unquote(u):
+            return "hacks_difang"
+        if "春晚" in urllib.parse.unquote(u):
+            return "chunwan"
     return "misc"
 
 
@@ -602,6 +618,11 @@ def build_channel_map(sources, repo):
             std, cls = norm_channel(name)
             if not std:
                 continue
+            # batch18：春晚历史轮播专项分组（hacks 春晚源，seasonal）——
+            # 「xxxx年春晚」类频道 norm_channel 落不进任何大分类，会散入「其他」；
+            # 这里按来源强制落「春晚(季节性)」专项组（组序见 BIG_ORDER）
+            if sid == "chunwan" and "春晚" in (name or ""):
+                cls = "春晚(季节性)"
             # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
             if is_adult(std) or is_adult(name):
                 continue
@@ -624,7 +645,7 @@ def _is_core_class(cls):
     """逐线路实测范围（预算内）：央视 / 卫视 / 港台 / 地方-省。
     轮播/直播/其他 不逐线路实测（量级太大且多为平台源），沿用既有行为口径；
     jobs 按输出序排序后提交，预算耗尽时优先保住央视/卫视/港台的实测覆盖。"""
-    return cls in ("央视", "卫视", "港台") or cls.startswith("地方-")
+    return cls in ("央视", "卫视", "港台", "春晚(季节性)") or cls.startswith("地方-")
 
 
 def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
@@ -1054,6 +1075,14 @@ def build_sources(repo):
         ("bili", "https://sub.ottiptv.cc/bililive.m3u"),
         ("mgtv", "https://mgtv.ottiptv.cc/mglist.m3u"),
         ("fmm_v6", "https://m3u.ibert.me/txt/fmml_ipv6.txt"),
+        # batch18（2026-09-25）吸收实施：live.hacks.tools 四分类（调研批 P0/P1 结论落地，
+        # task 7689228802869693633）。当日实测：央视 21 / 卫视 35 / 地方 188 / 春晚 21 条。
+        # 该站 Cloudflare 对非 okhttp 指纹返回 400——本仓 http_get 默认 UA okhttp/3.15 实测可通。
+        # 路径含中文，一律 percent-encode 供 urllib 直连。
+        ("hacks_cctv", "https://live.hacks.tools/tv/ipv4/categories/%E5%A4%AE%E8%A7%86%E9%A2%91%E9%81%93.m3u"),
+        ("hacks_weishi", "https://live.hacks.tools/tv/ipv4/categories/%E5%8D%AB%E8%A7%86%E9%A2%91%E9%81%93.m3u"),
+        ("hacks_difang", "https://live.hacks.tools/tv/ipv4/categories/%E5%9C%B0%E6%96%B9%E9%A2%91%E9%81%93.m3u"),
+        ("chunwan", "https://live.hacks.tools/tv/ipv4/categories/%E6%98%A5%E6%99%9A%E9%A2%91%E9%81%93.m3u"),
     ])
     # 吸收点 P2-1：配置内 lives 条目套壳穿透后并入聚合源（追加在静态源之后）
     cfg_sources = collect_config_live_sources(repo)
