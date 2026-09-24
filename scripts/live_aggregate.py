@@ -966,12 +966,12 @@ def follow_live_shell(url: str, visited: set, timeout: int = 15) -> str:
 # 高命中源:fish2018/lib(天美/果冻/麻豆/星空/精东/国产传媒/pron/成人传媒/live18/18资源
 # /至尊/终极/Jable/18+/成人电影/美腿丝袜/经典/珍藏/绝品/vip源/花活 等)、FGBLH/HKL 与
 # FGBLH/fgrjk(日本女优 1-12 / EVILANGEL / FC2-PPV / 午夜剧场 / xxx视频资源 等)、
-# Kimentanm/aptv(业内公开的成人 IPTV 仓)、atsushi444/iptv-epg/Adult.m3u、
+# atsushi444/iptv-epg/Adult.m3u、
 # zwrt/IPTV/Files/Adult.m3u、jable.tv、几个传媒、cloud.7so.top/RO04U5/丽颖琼姿.m3u 等。
 # 筛选原则:只放明确的高置信词,防止误伤正常源。
 ADULT_SOURCE_RE = re.compile(
-    r"Kimentanm/aptv"
-    r"|/Adult\.m3u8?$"
+    # (Kimentanm/aptv 已于 11:0x 经实测纠正:iptv.m3u 全部为央视28/卫视37/历年春晚44/4K8K11,零成人内容,移回正常源)
+    r"/Adult\.m3u8?$"
     r"|fish2018/lib"
     r"|FGBLH/(?:HKL|fgrjk)"
     r"|jable\.tv"
@@ -1044,7 +1044,7 @@ def build_sources(repo):
         ("suxuang", "https://ghproxy.net/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u"),
         ("livefl", "https://ghproxy.net/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u"),
         ("zonghe", "http://193.123.86.190:14888/TV/iptv.php"),
-# ("kimentanm", ...)  # 2026-09-24 用户指令:Kimentanm/aptv 是成人 IPTV 仓,整源剔除
+        ("kimentanm", "https://gh.927223.xyz/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u"),
         # 2026-09-21 直播线融合：第五批实测有效上游（xuy132 txt 2648 条 / svefnz 338 频道含港澳台）
         ("xuy132", "https://ghproxy.net/https://raw.githubusercontent.com/xuy132/TV/master/output/result.txt"),
         ("svefnz", "https://ghproxy.net/https://raw.githubusercontent.com/svefnz/IPTVN/Files/IPTV.m3u"),
