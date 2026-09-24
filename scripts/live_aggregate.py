@@ -686,6 +686,19 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
     return verified, results
 
 
+def name_sort_key(name):
+    """组内频道排序键（2026-09-24 用户指令：所有分组内频道按首字母排序）：
+    中文转拼音、英数保留，数字段按数值自然序（CCTV-2 < CCTV-10）。
+    pypinyin 转写失败退回原名字典序。"""
+    try:
+        from pypinyin import lazy_pinyin
+        s = "".join(lazy_pinyin(name or "")).lower()
+    except Exception:
+        s = (name or "").lower()
+    parts = re.split(r"(\d+)", s)
+    return tuple((1, int(p), "") if p.isdigit() else (0, p, "") for p in parts)
+
+
 def _build_groups(cmap, verified, extra_keep=6):
     """分组构建（write_verified_txt / write_verified_m3u 共用，第十三批下沉）：
     1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
@@ -732,6 +745,11 @@ def _build_groups(cmap, verified, extra_keep=6):
                     groups["港台"][found] = [static_url] + cap_lines(lines)
             else:
                 groups["港台"][nm] = [static_url]
+    # 2026-09-24 用户指令：所有分组内频道按首字母（拼音）排序——
+    # 统一覆盖各组插入序（含港台组 hk_clean_sort 的习惯序：剔除逻辑保留、排序以拼音为准）
+    for gk in groups:
+        groups[gk] = OrderedDict(
+            sorted(groups[gk].items(), key=lambda kv: name_sort_key(kv[0])))
     return groups
 
 
