@@ -1,92 +1,12 @@
 {
  "entries": [
   {
-   "name": "直播·精准测速版(频道多线路按实测速度排序)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_precise.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_precise.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "channels": 713,
-   "groups": [
-    "卫视",
-    "地方-上海",
-    "地方-云南",
-    "地方-内蒙古",
-    "地方-北京",
-    "地方-吉林",
-    "地方-四川",
-    "地方-天津"
-   ],
-   "bytes": 55408,
-   "stream_tests": [
-    {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://173.208.212.130:8181/720p/haws.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://p2.vzan.com/slowlive/596867413819827251/live.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://zbbf2.ahbztv.com/live/418.m3u8",
-     "ok": true,
-     "why": "ct:application/x-mpegurl"
-    },
-    {
-     "stream": "https://frostview.squareweb.app/relay/m/aHR0cDovL3BhbGRpLnBybzo4MC9saXZlL3RvbmluaG8wMi9DYjQ5ODAzNy83MjM5OS5tM3U4.m3u8",
-     "ok": false,
-     "why": "no_response"
-    }
-   ],
-   "streams_ok": 4,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
-      }
-     }
-    },
-    {
-     "stream": "http://173.208.212.130:8181/720p/haws.m3u8",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1920,
-       "h": 1080
-      }
-     }
-    }
-   ]
-  },
-  {
    "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
    "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
    "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 4287,
+   "channels": 1201,
    "groups": [
     "其他",
     "卫视",
@@ -97,54 +17,39 @@
     "地方-吉林",
     "地方-四川"
    ],
-   "bytes": 397031,
+   "bytes": 93077,
    "stream_tests": [
     {
-     "stream": "http://dassby.qqff.top:99/live/测试南京信息/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=qhws",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://173.208.234.146/live/vlxyj.m3u8",
+     "stream": "http://112.46.105.20:8009/hls/19/index.m3u8",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "https://vod3.ttbfp5.com/20230402/tfPSfZZ0/index.m3u8",
-     "ok": false,
-     "why": "html_or_xml_page"
+     "stream": "https://cd-live-stream.news.cctvplus.com/live/smil:CHANNEL1.smil/playlist.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://wouu.net:9977/udp/239.93.0.219:5140",
-     "ok": false,
-     "why": "no_response"
+     "stream": "http://stream3.jlntv.cn:80/aac_slgb/playlist.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "https://5ce9406b73c33.streamlock.net/ONFM/livestream/playlist.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 5,
    "status": "ok",
    "ffprobe": [
     {
-     "stream": "http://38.75.136.137:98/gslb/dsdqbv/cctv1hd.m3u8?auth=test20251009",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
-      }
-     }
-    },
-    {
-     "stream": "http://173.208.234.146/live/vlxyj.m3u8",
+     "stream": "http://63.141.230.178:82/gslb/zbdq5.m3u8?id=qhws",
      "ok": true,
      "info": {
       "codecs": [
@@ -157,437 +62,19 @@
        "h": 1080
       }
      }
-    }
-   ]
-  },
-  {
-   "name": "央视·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_央视.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_央视.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "卫视·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_卫视.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_卫视.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "地方·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_地方.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_地方.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "港台·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_港台.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_港台.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "轮播·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_轮播.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_轮播.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "直播·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_直播.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_直播.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "其他·聚合(小分类频道/多线路)",
-   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_其他.txt",
-   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_cat_其他.txt",
-   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-   "ua": "TVBox",
-   "status": "dead",
-   "reason": "fetch_error",
-   "channels": 0
-  },
-  {
-   "name": "YY·轮播",
-   "url_raw": "https://sub.ottiptv.cc/yylunbo.m3u",
-   "url": "https://sub.ottiptv.cc/yylunbo.m3u",
-   "channels": 552,
-   "groups": [
-    "4K频道",
-    "car",
-    "other",
-    "sport",
-    "zonghe",
-    "列表更新时间"
-   ],
-   "bytes": 116023,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
     },
     {
-     "stream": "https://live.ottiptv.cc/yy/1382851576",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1354932438",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1354930954",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1355179797",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    }
-   ],
-   "streams_ok": 5,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
+     "stream": "http://112.46.105.20:8009/hls/19/index.m3u8",
      "ok": true,
      "info": {
       "codecs": [
        "h264",
-       "aac"
+       "mp2"
       ],
       "video": {
        "codec": "h264",
-       "w": 1924,
-       "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://live.ottiptv.cc/yy/1382851576",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "aac",
-       "h264"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "虎牙一起看",
-   "url_raw": "https://sub.ottiptv.cc/huyayqk.m3u",
-   "url": "https://sub.ottiptv.cc/huyayqk.m3u",
-   "channels": 1052,
-   "groups": [
-    "4K频道",
-    "一起看",
-    "列表更新时间",
-    "原创"
-   ],
-   "bytes": 201644,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/30539264",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/21059614",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/23663418",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/20985854",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    }
-   ],
-   "streams_ok": 5,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1924,
-       "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://live.ottiptv.cc/huya/30539264",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "text",
-       "aac",
-       "h264"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "斗鱼一起看",
-   "url_raw": "https://sub.ottiptv.cc/douyuyqk.m3u",
-   "url": "https://sub.ottiptv.cc/douyuyqk.m3u",
-   "channels": 941,
-   "groups": [
-    "4K频道",
-    "一起看",
-    "列表更新时间",
-    "原创IP"
-   ],
-   "bytes": 176894,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/10308225",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/4340136",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/9412454",
-     "ok": true,
-     "why": "ct:video/x-flv"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/8912038",
-     "ok": false,
-     "why": "http_404"
-    }
-   ],
-   "streams_ok": 4,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1924,
-       "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/10308225",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "aac",
-       "h264"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1920,
-       "h": 1080
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "B站直播",
-   "url_raw": "https://sub.ottiptv.cc/bililive.m3u",
-   "url": "https://sub.ottiptv.cc/bililive.m3u",
-   "channels": 210,
-   "groups": [
-    "4K频道",
-    "列表更新时间",
-    "情感杂谈",
-    "户外",
-    "手工绘画",
-    "时尚",
-    "沉浸体验",
-    "生活杂谈"
-   ],
-   "bytes": 41537,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "why": "ct:video/mp4"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/bilibili/1931550927",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/bilibili/900981",
-     "ok": false,
-     "why": "http_404"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/bilibili/25832529",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
-     "stream": "https://live.ottiptv.cc/bilibili/23675303",
-     "ok": false,
-     "why": "http_403"
-    }
-   ],
-   "streams_ok": 1,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/time/time.mp4",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1924,
-       "h": 1080
-      }
-     }
-    }
-   ]
-  },
-  {
-   "name": "咪咕歌手",
-   "url_raw": "https://mgtv.ottiptv.cc/mglist.m3u",
-   "url": "https://mgtv.ottiptv.cc/mglist.m3u",
-   "channels": 197,
-   "groups": [
-    "4K频道",
-    "乘风2026 回放",
-    "乘风2026 直播",
-    "歌手2026 回放",
-    "歌手2026 直播"
-   ],
-   "bytes": 75456,
-   "stream_tests": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24471412",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24352566",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24475156",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    }
-   ],
-   "streams_ok": 5,
-   "status": "ok",
-   "ffprobe": [
-    {
-     "stream": "https://cdn.jsdelivr.net/gh/feiyang666999/testvideo/sdr4kvideo/playlist.m3u8",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 3840,
-       "h": 2160
-      }
-     }
-    },
-    {
-     "stream": "http://mgtv.ottiptv.cc/vod/24293285",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1920,
-       "h": 1080
+       "w": 720,
+       "h": 576
       }
      }
     }
