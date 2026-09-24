@@ -962,6 +962,35 @@ def follow_live_shell(url: str, visited: set, timeout: int = 15) -> str:
     return url                        # 达到深度上限：以最后跟随到的 URL 为准
 
 
+# ---- 2026-09-24 源列表级成人过滤(用户指令:仓库名/文件名明显就整源剔除)----
+# 高命中源:fish2018/lib(天美/果冻/麻豆/星空/精东/国产传媒/pron/成人传媒/live18/18资源
+# /至尊/终极/Jable/18+/成人电影/美腿丝袜/经典/珍藏/绝品/vip源/花活 等)、FGBLH/HKL 与
+# FGBLH/fgrjk(日本女优 1-12 / EVILANGEL / FC2-PPV / 午夜剧场 / xxx视频资源 等)、
+# Kimentanm/aptv(业内公开的成人 IPTV 仓)、atsushi444/iptv-epg/Adult.m3u、
+# zwrt/IPTV/Files/Adult.m3u、jable.tv、几个传媒、cloud.7so.top/RO04U5/丽颖琼姿.m3u 等。
+# 筛选原则:只放明确的高置信词,防止误伤正常源。
+ADULT_SOURCE_RE = re.compile(
+    r"Kimentanm/aptv"
+    r"|/Adult\.m3u8?$"
+    r"|fish2018/lib"
+    r"|FGBLH/(?:HKL|fgrjk)"
+    r"|jable\.tv"
+    r"|几个传媒"
+    r"|/天美传媒|/果冻传媒|/麻豆传媒|/星空传媒|/精东影业"
+    r"|pron\.m3u|国产传媒|成人传媒|live18|18资源丰富|18\+"
+    r"|/色播|/大洋马|/大秀|/色诱|/色播聚合|/麻豆视频|/台湾成人"
+    r"|FC2-PPV|EVILANGEL|xxx视频资源|午夜剧场|丽颖琼姿"
+    r"|jable\.tv/|Jable嗅探|维护成人",
+    re.IGNORECASE,
+)
+
+
+def _is_adult_source(sid: str, url: str, name: str = "") -> bool:
+    """判定单个上游源是否为明显成人源——sid+url+name 任一命中即整源跳过。"""
+    blob = " ".join([sid or "", url or "", name or ""])
+    return bool(ADULT_SOURCE_RE.search(blob))
+
+
 def collect_config_live_sources(repo, max_entries=None):
     """从仓库 tvbox.json 的 lives 条目收集可穿透的直播源（追加进聚合源清单）。"""
     max_entries = max_entries or LIVE_CFG_SOURCES_MAX
@@ -982,6 +1011,9 @@ def collect_config_live_sources(repo, max_entries=None):
         if not isinstance(l, dict):
             continue
         name = str(l.get("name") or "").strip()
+        if name and _is_adult_source("", "", name):
+            print("  [adult-source-skip] name=%s" % name, flush=True)
+            continue
         urls = l.get("url")
         urls = [urls] if isinstance(urls, str) else (urls if isinstance(urls, list) else [])
         for u in urls:
@@ -989,6 +1021,9 @@ def collect_config_live_sources(repo, max_entries=None):
                 continue
             real = follow_live_shell(u.strip(), visited)
             if not real or real in seen_urls:
+                continue
+            if _is_adult_source("", real, name):
+                print("  [adult-source-skip] url=%s name=%s" % (real[:80], name), flush=True)
                 continue
             seen_urls.add(real)
             sid = "cfg:" + (name or re.sub(r"\W+", "-", real)[-24:])
@@ -1009,7 +1044,7 @@ def build_sources(repo):
         ("suxuang", "https://ghproxy.net/https://raw.githubusercontent.com/suxuang/myIPTV/main/ipv4.m3u"),
         ("livefl", "https://ghproxy.net/https://raw.githubusercontent.com/zeee-u/lzh06/main/fl.m3u"),
         ("zonghe", "http://193.123.86.190:14888/TV/iptv.php"),
-        ("kimentanm", "https://gh.927223.xyz/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u"),
+# ("kimentanm", ...)  # 2026-09-24 用户指令:Kimentanm/aptv 是成人 IPTV 仓,整源剔除
         # 2026-09-21 直播线融合：第五批实测有效上游（xuy132 txt 2648 条 / svefnz 338 频道含港澳台）
         ("xuy132", "https://ghproxy.net/https://raw.githubusercontent.com/xuy132/TV/master/output/result.txt"),
         ("svefnz", "https://ghproxy.net/https://raw.githubusercontent.com/svefnz/IPTVN/Files/IPTV.m3u"),
@@ -1025,6 +1060,12 @@ def build_sources(repo):
     if cfg_sources:
         print("config lives sources: %d collected" % len(cfg_sources), flush=True)
     sources.extend(cfg_sources)
+    before = len(sources)
+    sources = [(sid, u) for sid, u in sources
+               if not _is_adult_source(sid, u, "")]
+    dropped = before - len(sources)
+    if dropped:
+        print("  [adult-source-drop] total %d source(s) filtered at build_sources" % dropped, flush=True)
     return sources
 
 
