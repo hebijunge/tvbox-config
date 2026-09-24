@@ -179,6 +179,13 @@ def _judge_stream(status: int, headers, body) -> tuple:
     ctype = str((headers or {}).get("Content-Type") or "").lower()
     if "text/html" in ctype:
         return False, "html_content_type"
+    # 2026-09-24 VOD 假直播检测（用户真机实证「重庆卫视」播电影《黑玫瑰》）：
+    # m3u8 播放列表本体含 EXT-X-ENDLIST 或 PLAYLIST-TYPE:VOD 即点播内容伪装直播——
+    # 测速虽通过（能下载）但内容不是实时频道，播出来是电影/剧集，直接判失败。
+    if body is not None and b"#EXTINF" in body:
+        head = body[:2048].lower()
+        if b"#ext-x-endlist" in head or b"#ext-x-playlist-type:vod" in head:
+            return False, "vod_playlist_endlist"
     # m3u8 一级索引也有效（TVBox 会继续解析内层）
     return True, "ct:%s" % (ctype or "n/a")
 

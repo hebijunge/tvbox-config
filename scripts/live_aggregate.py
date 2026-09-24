@@ -291,6 +291,7 @@ _VOD_URL_RE = re.compile(
     r"|slbfsl\.com/\d{8}/"                        # slbfsl 点播日期桶
     r"|\.cdn2020\.com/video/m3u8/"                # cdn2020 视频 m3u8（主命中模式）
     r"|maa1804\.com/f/"                           # maa1804 成人视频 CDN
+    r"|kwimgs\.com/(?:bs3/video-hls|upic)/"       # 快手视频 CDN（VOD 伪装直播，用户真机实证）
     r"|redtraffic\."                              # redtraffic 系列（成人流量统计/广告）
     r"|adultiptv\.net/"                           # adultiptv.net（成人 IPTV 列表）
     r"|/live/(?:pornstar|bigass|hardcore|bbw|amateur|hentai)\.m3u8"  # 明确成人分类直播 m3u8
@@ -440,6 +441,11 @@ def norm_channel(name):
     low = n.lower().replace(" ", "").replace("\u3000", "")
     # 2026-09-24 修复：先整段剥 [bd]/[hd]/[sd] 等短来源标签（含方括号），防「[BD]cctv1」剥完只剩 bdcctv1、匹配不上 ^cctv 而漏并进 CCTV-1
     low = re.sub(r"\[[a-z0-9]{1,4}\]", "", low)
+    # 2026-09-24 修复：剥无括号的 bd/vga 等画质/来源前缀（后跟中文才剥，防误伤英文台名开头）
+    # ——freetv.fun 上游产生「bd浙江卫视」「vga宁夏卫视」类变体，不剥会与标准台名分裂（用户截图实证）
+    low = re.sub(r"^(?:bd|vga|hd|sd|fhd|uhd|4k|8k)[-–—]?(?=[\u4e00-\u9fff])", "", low)
+    # 2026-09-24 兜底：剥残留的 tvg-id= 属性前缀（parse_m3u 已修根因，此处防历史数据/其他路径）
+    low = re.sub(r'^tvg-(?:id|name)="?', "", low)
     low = re.sub(r"[\[\]()（）【】「」]|超清|高清|标清|蓝光|1080p?|720p?|4k|50fps?|60fps?|hd|sd|fhd|测试", "", low)
     # 2026-09-24：所有「CCTV」「央视」前缀的频道（含付费/专业频道）一律归「央视」组
     if low.startswith("cctv") or low.startswith("央视") or low.startswith("cetv"):
@@ -482,8 +488,13 @@ def parse_m3u(text):
         if not l:
             continue
         if l.startswith("#EXTINF"):
-            m = re.search(r",\s*(.+)$", l)
-            cur = m.group(1).strip() if m else None
+            # 2026-09-24 修复：显示名取最后一个逗号之后（rsplit）——上游存在把
+            # tvg-id/tvg-name 属性写在第一个逗号后的非标准行（如
+            # #EXTINF:-1,tvg-id="河北卫视" ...,河北卫视），旧逻辑取第一个逗号会截到
+            # 属性串，产生「tvg-id="河北卫视」脏频道名（用户截图实证）。
+            # 标准 m3u 显示名恒在最后一个逗号后；属性含逗号常见、显示名含逗号罕见。
+            parts = l.rsplit(",", 1)
+            cur = parts[1].strip() if len(parts) == 2 and parts[1].strip() else None
         elif l.startswith("#"):
             continue
         elif re.match(r"^https?://", l):
@@ -836,8 +847,13 @@ def parse_multicast(text):
         if not l:
             continue
         if l.startswith("#EXTINF"):
-            m = re.search(r",\s*(.+)$", l)
-            cur = m.group(1).strip() if m else None
+            # 2026-09-24 修复：显示名取最后一个逗号之后（rsplit）——上游存在把
+            # tvg-id/tvg-name 属性写在第一个逗号后的非标准行（如
+            # #EXTINF:-1,tvg-id="河北卫视" ...,河北卫视），旧逻辑取第一个逗号会截到
+            # 属性串，产生「tvg-id="河北卫视」脏频道名（用户截图实证）。
+            # 标准 m3u 显示名恒在最后一个逗号后；属性含逗号常见、显示名含逗号罕见。
+            parts = l.rsplit(",", 1)
+            cur = parts[1].strip() if len(parts) == 2 and parts[1].strip() else None
             continue
         if l.startswith("#"):
             continue
