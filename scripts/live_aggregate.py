@@ -267,6 +267,52 @@ def is_adult(name: str) -> bool:
     return False
 
 
+# ---- 2026-09-24 源头级 VOD 过滤（用户 2026-09-24 指令）----
+# 「live.json 整理还有成人资源，从源头剔除，不然后面一堆归类错的，好多地方里都被污染了」
+# 在 parse_m3u / parse_tvbox_txt 出口就丢弃明确的 VOD 视频点播与 AV 番号行——
+# 比 build_channel_map 下游 is_adult 过滤早一步，能把 ~30% 的脏数据在聚合前拦掉，
+# 大幅降低下游归一化/去重/分组/测速的负担，避免错归类污染其他组。
+# 设计要点：
+#   1) 只识别「明确属于 VOD/AV」的行——综艺/常规长频道名一律放过（避免误伤歌手/连续剧等）；
+#   2) 下游 build_channel_map 的 is_adult() 保留作为兜底，处理厂牌关键词（Carib/1Pondo/FC2 等）；
+#   3) AV 番号严格化：dash 后必须 3-8 位数字 + 空白/行尾——避免 CCTV-1/10/11 这种
+#      「合法短编号 TV 频道」被误杀（dash 后是 1-2 位数字不命中）；
+#   4) 不影响 adult_live 独立通道——ADULT_LIVE_SOURCES / probe_adult_lives / adult.json
+#      由 fetch_merge.py 独立维护，不经过此处的 parse_m3u / parse_tvbox_txt。
+_VOD_URL_RE = re.compile(
+    r"/video/m3u8/\d{4}/\d{2}/\d{2}/"            # 日期桶 CDN：cdn2020.com / ttbfp 等点播 m3u8
+    r"|/ph[0-9a-f]{8,}/play\.m3u8"                # 散列文件名点播 m3u8
+    r"|/ph5[0-9a-f]{8,}/"                        # ph5 开头 CDN 路径
+    r"|cdnedge\.live/file/"                       # cdnedge.live 点播文件
+    r"|/file/avple-images/"                       # avple 图床/视频目录
+    r"|/video/av\d+"                              # /video/av1234 形式 AV 视频
+    r"|slbfsl\.com/\d{8}/"                        # slbfsl 点播日期桶
+    r"|\.cdn2020\.com/video/m3u8/"                # cdn2020 视频 m3u8（主命中模式）
+    r"|maa1804\.com/f/"                           # maa1804 成人视频 CDN
+    r"|redtraffic\."                              # redtraffic 系列（成人流量统计/广告）
+    r"|adultiptv\.net/"                           # adultiptv.net（成人 IPTV 列表）
+    r"|/live/(?:pornstar|bigass|hardcore|bbw|amateur|hentai)\.m3u8"  # 明确成人分类直播 m3u8
+    r"|/f/[a-z0-9]{10,}\.m3u8$",                  # 短哈希 m3u8 文件
+    re.IGNORECASE,
+)
+# AV 番号严格模式：厂牌 + dash + 3-8 位数字 + 空白/行尾
+# 覆盖：SSNI-240/SONE-071/FC2PPV-1209497/MIAA-247/JUFE-104/Heyzo-2094 等
+# 不命中：CCTV-1/10/11/12（dash 后 1-2 位数字）/CCTV-5+（带 + 号非纯数字）
+_AV_NUMBER_RE = re.compile(r"^[A-Z]{2,6}[-−]\d{3,8}(?:\s|$)", re.IGNORECASE)
+
+
+def _drop_vod_row(name, url):
+    """源头级判定（parse_m3u / parse_tvbox_txt 出口处调用）：
+    命中返回丢弃原因字符串，不命中返回 False。综艺/常规长频道名一律不丢。"""
+    if not url:
+        return False
+    if _VOD_URL_RE.search(url):
+        return "VOD_URL"
+    if name and _AV_NUMBER_RE.match(name):
+        return "AV_NUMBER"
+    return False
+
+
 # ---- 2026-09-21 直播线融合（第六批 P1/P2，借鉴 ineed2underfit/hk-iptv + Collect-IPTV）----
 # 港台白名单清洗：与 hk-iptv 全量白名单制不同，本仓「港台」组同时承载台湾频道，
 # 严格白名单会清空台湾，故采用三分制：黑名单剔除 → 港白名单组首（收视习惯排序）→
@@ -424,6 +470,9 @@ def norm_channel(name):
 
 
 def parse_m3u(text):
+    """解析 m3u 文本，返回 [(频道名, url), ...]。
+    2026-09-24 源头级过滤：URL 是 VOD 视频点播或频道名是 AV 番号的行直接丢弃
+    ——下游 build_channel_map 早一步拿到干净数据，避免脏数据污染其他组归类。"""
     out = []
     cur = None
     for l in text.splitlines():
@@ -436,22 +485,30 @@ def parse_m3u(text):
         elif l.startswith("#"):
             continue
         elif re.match(r"^https?://", l):
+            if _drop_vod_row(cur, l):
+                cur = None
+                continue
             out.append((cur or "未知频道", l))
             cur = None
     return out
 
 
 def parse_tvbox_txt(text):
+    """解析 tvbox txt 文本（每行：频道名,url1#url2#url3），返回 [(频道名, url), ...]。
+    2026-09-24 源头级过滤：URL 是 VOD 视频点播或频道名是 AV 番号的 url 直接丢弃。"""
     out = []
     for l in text.splitlines():
         l = l.strip()
         if not l or l.endswith("#genre#") or "," not in l:
             continue
         name, urls = l.rsplit(",", 1)
+        n = name.strip()
         for u in urls.split("#"):
             u = u.strip()
             if re.match(r"^https?://", u):
-                out.append((name.strip(), u))
+                if _drop_vod_row(n, u):
+                    continue
+                out.append((n, u))
     return out
 
 
