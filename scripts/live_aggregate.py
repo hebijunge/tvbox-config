@@ -22,7 +22,13 @@ import sys
 sys.path.insert(0, sys_path)
 from live_probe import http_get, probe_stream  # noqa: E402
 
-MAX_LINES_PER_CH = 6
+MAX_LINES_PER_CH = int(os.environ.get("LIVE_LINES_MAX_PER_CH", "0"))
+CAP = MAX_LINES_PER_CH  # 别名保持下游兼容
+
+def cap_lines(lines, n=CAP):
+    """返回 lines；n<=0 表示不限。"""  
+    return list(lines) if n <= 0 else list(lines)[:n]
+
 
 # ---- 第十三批吸收实施（batch11 P1-1 / batch12 建议落地）：fanmingming/live 台标引用层 ----
 # 只做引用（URL 拼接），不镜像资产——fanmingming/live 为 GPL-3.0（28k+★，生态事实标准，
@@ -166,10 +172,12 @@ PROVINCE_TABLE = (
               "巴音郭楞", "阿克苏", "喀什", "和田", "伊犁", "塔城", "阿勒泰", "石河子",
               "兵团")),
 )
+COUNTY_PROV = {'诸暨': '浙江', '龙游': '浙江', '龙泉': '浙江', '遂昌': '浙江', '衢江': '浙江', '苍南': '浙江', '缙云': '浙江', '洞头': '浙江', '永嘉': '浙江', '武义': '浙江', '松阳': '浙江', '新昌': '浙江', '开化': '浙江', '庆元': '浙江', '平湖': '浙江', '嵊泗': '浙江', '嵊州': '浙江', '兰溪': '浙江', '余杭': '浙江', '余姚': '浙江', '云和': '浙江', '上虞': '浙江', '萧山': '浙江', '象山': '浙江', '之江': '浙江', '中国蓝': '浙江', '新沂': '江苏', '沭阳': '江苏', '涟水': '江苏', '睢宁': '江苏', '泗洪': '江苏', '泗阳': '江苏', '淮阴': '江苏', '溧水': '江苏', '靖江': '江苏', '宜兴': '江苏', '武进': '江苏', '江宁': '江苏', '句容': '江苏', '如东': '江苏', '光山': '河南', '兰考': '河南', '卫辉': '河南', '叶县': '河南', '唐河': '河南', '固始': '河南', '宝丰': '河南', '巩义': '河南', '扶沟': '河南', '新县': '河南', '新蔡': '河南', '桐柏': '河南', '泌阳': '河南', '淅川': '河南', '渑池': '河南', '温县': '河南', '潢川': '河南', '登封': '河南', '禹州': '河南', '西华': '河南', '郏县': '河南', '郸城': '河南', '鄢陵': '河南', '项城': '河南', '邓州': '河南', '荥阳': '河南', '灵宝': '河南', '滑县': '河南', '沁阳': '河南', '永城': '河南', '方城': '河南', '新野': '河南', '新安': '河南', '嵩县': '河南', '宜阳': '河南', '内黄': '河南', '内乡': '河南', '偃师': '河南', '义马': '河南', '郑州': '河南', '清河': '河北', '鹿泉': '河北', '平泉': '河北', '任丘': '河北', '兴隆': '河北', '昌黎': '河北', '乐至': '四川', '剑阁': '四川', '叙永': '四川', '名山': '四川', '旺苍': '四川', '松潘': '四川', '沐川': '四川', '泸县': '四川', '荥经': '四川', '营山': '四川', '汶川': '四川', '利州': '四川', '筠连': '四川', '金川': '四川', '长宁': '四川', '青神': '四川', '马尔康': '四川', '龙泉驿': '四川', '武胜': '四川', '汉源': '四川', '石棉': '四川', '蓬安': '四川', '叙州': '四川', '夹江': '四川', '垫江': '重庆', '万州': '重庆', '江津': '重庆', '万州三峡移民': '重庆', '德惠': '吉林', '九台': '吉林', '靖宇': '吉林', '敦化': '吉林', '龙井': '吉林', '梅河口': '吉林', '桦甸': '吉林', '磐石': '吉林', '舒兰': '吉林', '东丰': '吉林', '双辽': '吉林', '辉南': '吉林', '柳河': '吉林', '汪清': '吉林', '五台': '山西', '怀仁': '山西', '长子': '山西', '高平': '山西', '渭源': '甘肃', '白银': '甘肃', '陇川': '云南', '岷县': '甘肃', '靖远': '甘肃', '秦安': '甘肃', '贵南': '青海', '化隆': '青海', '可克达拉': '新疆', '通海': '云南', '津南': '天津', '云霄': '福建', '宾阳': '广西', '青州': '山东', '灌阳': '广西', '蒙城': '安徽', '内蒙经济': '内蒙古', '内蒙农牧': '内蒙古', '内蒙少儿': '内蒙古', '蒙语文化': '内蒙古', '德宏': '云南', '吉木萨尔': '新疆', '索伦': '内蒙古', '珲春': '吉林', '安图': '吉林'}
+
 PROVINCE_ORDER = [p for p, _k in PROVINCE_TABLE]
 
 # 输出大分类顺序（用户目标口径）：央视 / 卫视 / 地方(按地区) / 港台 / 轮播 / 直播 / 其他
-BIG_ORDER = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
+BIG_ORDER = ("央视", "卫视", "港台", "轮播", "直播", "其他", "地方")  # 2026-09-24 用户指令：港台/轮播/直播/其他放到地方之上
 
 
 def big_cat(cls):
@@ -200,6 +208,63 @@ LIVE_OTHER_MIN_LINES = int(os.environ.get("LIVE_OTHER_MIN_LINES", "2"))
 def _fold_group(cls):
     """内部类名 → 输出组键（电台折叠进 其他，其余原样；地方-省 已是组键形态）。"""
     return "其他" if cls == "电台" else cls
+
+
+# ---- 成人/违规频道黑名单（2026-09-24）：TVBox 主直播源是家用电视直播，本仓「其他」组
+# 之前被大量成人/AV/广告台污染（来自 aptv、zonghe 等综合源），整体屏蔽：含特征码或关键词。
+PORN_KW = (
+    # AV 厂牌/番号前缀
+    "fc2ppv", "carib-", "caribpr", "carib ", "1pon", "10mu", "heyzo", "heyeo", "259luxu",
+    "midv-", "ssis-", "ipzz-", "sone-", "stars-", "adn-", "juq-", "abf-", "abp-", "miaa-",
+    "dass-", "meyd-", "hmn-", "fsdss-", "pred-", "hbad-", "nkkd-", "tyd-", "sspd-", "iptd-",
+    "cawd-", "cwpbd-", "s2mbd-", "jufe-", "mmz", "jvid", "ipx-", "abw-", "mkbd-", "t28",
+    "swag", "hamesamurai", "h_4610", "gachipxxx",
+    # 站点/系列
+    "adultiptv", "brazzers", "naughty america", "hustler", "dorcel", "playboy",
+    "penthouse", "fake taxi", "japan hdv", "kinoxxx", "cum4k", "eroxhd", "pinkoclub",
+    "pinkerotic", "redlight", "miamitv", "hongkongdoll", "private", "pornstar",
+    # 中文/日文特征词
+    "无码", "中出", "輪姦", "轮奸", "亂交", "乱交", "援交", "做爱", "做愛", "口交",
+    "自慰", "巨乳", "人妻", "熟女", "潮吹", "高潮", "肛交", "后入", "後入",
+    "痴女", "骑乘", "騎乘", "足交", "颜射", "顏射", "淫", "肉棒", "小穴", "操逼",
+    "叫床", "情色", "色情", "av片", "jav", "一本道", "加勒比", "松視", "松视",
+    "無修正", "未修正", "高校生", "人乳", "手淫", "媚药", "媚藥",
+    # 2026-09-24 二轮补漏：中文短语/口语化标题/英文俚语（aptv/zonghe 上游常见）
+    # 注意：不加「激情/深夜」等太宽泛词——会误杀「激情广场舞/深夜食堂」等合法频道
+    "东京热", "東京熱", "素人", "av女", "看片", "fuck", "黃片", "黄片",
+    "黄直播", "sexy", "sexe", "porn", "xxx", "骚b", "骚逼", "约炮", "一夜情",
+    "少妇", "偷拍", "厕所", "車震", "车震", "換妻", "换妻", "按摩", "特殊服务",
+    "裸聊", "裸舞", "蜜桃", "蜜桃臀", "蜜桃视频", "蜜桃視頻",
+    "国产av", "國產av", "国产精品", "亚洲无码", "亚洲有码",
+    "成人影院", "情色影院", "色情影院", "免费黄", "免费av",
+    "果冻传媒", "麻豆传媒", "天美传媒", "皇家华人",
+    "91porn", "91 porn", "1024", "草榴", "榴社区", "水果派", "香蕉啪",
+    "福利姬", "大尺度", "小仙女", "探花",
+    # 2026-09-24 第三轮精准补充：含「激情」前缀但单独加「激情」会误杀「激情广场舞」；
+    # 仅捕获已知的成人/广告上下文组合
+    "激情午夜", "激情影院", "激情小视频", "激情视频", "激情在线", "激情免费", "激情啪啪",
+    "激情文学", "激情小说", "激情交友", "激情聊天",
+)
+# 仅命中纯数字短名（如 003/114/239）：来自某些 m3u 的「纯编号台位」，其中混编入大量
+# 成人频道——历史上 zero-padded 编号（≤3 位）与上述区段强相关，整体屏蔽
+ADULT_PURE_NUM = re.compile(r"^\d{1,3}$")
+# 【水果派】/【免费】前缀 + 日文 A 片标题特征
+ADULT_BRACKET_TAG = re.compile(r"^【(水果派|免费|愛欲|新晋|欧美版|歐美版|高清)】")
+# nXXXX/XXXX-XX-XX 编号台名（含连字符的纯数字/月份日期；前缀 n 为上游客编）
+ADULT_DATE_CODE = re.compile(r"^[a-z]?\d{4,6}[-_]\d{2,4}[-_]?\d{0,4}$")
+
+def is_adult(name: str) -> bool:
+    """判断频道名是否属于成人/AV/广告垃圾——整体不进 live_verified.txt。"""
+    low = (name or "").lower()
+    if any(kw in low for kw in PORN_KW):
+        return True
+    if ADULT_PURE_NUM.match(low.strip()):
+        return True
+    if ADULT_BRACKET_TAG.match(name or ""):
+        return True
+    if ADULT_DATE_CODE.match(low.strip()):
+        return True
+    return False
 
 
 # ---- 2026-09-21 直播线融合（第六批 P1/P2，借鉴 ineed2underfit/hk-iptv + Collect-IPTV）----
@@ -328,6 +393,9 @@ def norm_channel(name):
     # 2026-09-24 修复：先整段剥 [bd]/[hd]/[sd] 等短来源标签（含方括号），防「[BD]cctv1」剥完只剩 bdcctv1、匹配不上 ^cctv 而漏并进 CCTV-1
     low = re.sub(r"\[[a-z0-9]{1,4}\]", "", low)
     low = re.sub(r"[\[\]()（）【】「」]|超清|高清|标清|蓝光|1080p?|720p?|4k|50fps?|60fps?|hd|sd|fhd|测试", "", low)
+    # 2026-09-24：所有「CCTV」「央视」前缀的频道（含付费/专业频道）一律归「央视」组
+    if low.startswith("cctv") or low.startswith("央视") or low.startswith("cetv"):
+        return name.strip(), "央视"
     m = re.match(r"^cctv[-−]?(\d+)(\+?)", low)
     if m:
         # 仅编号主频道归央视；CCTV怀旧剧场/CCTV第一剧场 等付费频道不带编号，落到其他
@@ -345,6 +413,10 @@ def norm_channel(name):
         return n, "轮播"
     if re.search(r"电台|fm\d*$|广播", low):
         return n, "电台"
+    # 2026-09-24：先按县级表归组（精度高于省级关键词，命中即落省）
+    for c, p in COUNTY_PROV.items():
+        if c in n:
+            return n, "地方-" + p
     for prov, kws in PROVINCE_TABLE:
         if any(k in low for k in kws):
             return n, "地方-" + prov
@@ -460,6 +532,9 @@ def build_channel_map(sources, repo):
             std, cls = norm_channel(name)
             if not std:
                 continue
+            # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
+            if is_adult(std) or is_adult(name):
+                continue
             # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
             # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
             key = dedup_key(std)
@@ -482,7 +557,8 @@ def _is_core_class(cls):
     return cls in ("央视", "卫视", "港台") or cls.startswith("地方-")
 
 
-def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH, budget_s=420):
+def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
+                     budget_s=int(os.environ.get("LIVE_PROBE_BUDGET_S", "600"))):
     """核心频道逐线路实测，返回 {标准名: [通过 url]} 与全部明细。"""
     t0 = time.time()
     jobs = []
@@ -497,7 +573,7 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH, budget_s=420):
                 seen.add(u)
                 uniq.append((sid, u))
         ent["lines"] = uniq
-        jobs.append((std, uniq[:max_test]))
+        jobs.append((std, cap_lines(uniq, max_test) if max_test > 0 else uniq))
     # 2026-09-23 分类重构：实测任务按输出序（央视→卫视→港台→地方-省）提交，
     # 420s 预算耗尽时优先保证靠前大分类的线路实测覆盖
     jobs.sort(key=lambda j: group_sort_key(cmap[j[0]]["class"]))
@@ -536,7 +612,7 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH, budget_s=420):
         # 播放器默认取首条、卡顿可手动切后继线路）；未通过的线路不进 verified。
         good = sorted(((u, ms) for u, ok, _w, ms in lst if ok), key=lambda x: x[1])
         if good:
-            verified[std] = [u for u, _ms in good[:MAX_LINES_PER_CH]]
+            verified[std] = cap_lines([u for u, _ms in good])
     return verified, results
 
 
@@ -548,18 +624,23 @@ def _build_groups(cmap, verified, extra_keep=6):
        的频道不入主列表——实测数据 18196 条网络长尾中 17473 条为单去重线路未验证频道，
        全量保留会淹没多线路可用频道；电台豁免（量小且为功能性内容）；
     4) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
-    5) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）。"""
+    5) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）；
+    6) 2026-09-24 不限上限：verified 频道保留已实测线路（按速度序），其后补回未实测的剩余
+       线路（不限条数），让"有多少可用就显示多少"对未测完频道同样生效。"""
     groups = OrderedDict()
     for key, ent in cmap.items():
         name = ent.get("name") or key
         gk = _fold_group(ent["class"])
         if key in verified:
-            lines = verified[key]
+            tested = list(verified[key])           # 已实测，按速度升序
+            tested_set = set(tested)
+            untested = [u for _s, u in ent["lines"] if u not in tested_set]
+            lines = tested + cap_lines(untested, 0)  # 0=无限制
         else:
             n_distinct = len({u for _s, u in ent["lines"]})
             if ent["class"] == "其他" and n_distinct < LIVE_OTHER_MIN_LINES:
                 continue  # 其他组长尾裁剪：单线路未验证频道不进主列表
-            lines = [u for _sid, u in ent["lines"][:extra_keep]]
+            lines = cap_lines([u for _sid, u in ent["lines"]], extra_keep)
         groups.setdefault(gk, OrderedDict())
         if lines:
             groups[gk][name] = lines
@@ -578,7 +659,7 @@ def _build_groups(cmap, verified, extra_keep=6):
             if found:
                 lines = groups["港台"][found]
                 if static_url not in lines:
-                    groups["港台"][found] = ([static_url] + lines)[:MAX_LINES_PER_CH]
+                    groups["港台"][found] = [static_url] + cap_lines(lines)
             else:
                 groups["港台"][nm] = [static_url]
     return groups
@@ -598,7 +679,7 @@ def _iter_ordered_groups(groups):
             yield cat, groups[cat]
 
 
-def write_verified_txt(cmap, verified, path, extra_keep=6):
+def write_verified_txt(cmap, verified, path, extra_keep=CAP):
     """输出 lives/live_verified.txt。分组构建见 _build_groups（第十三批与 m3u 输出共用）。"""
     groups = _build_groups(cmap, verified, extra_keep)
     # 2026-09-23 用户口径修正：同 write_precise_txt，同台名逐行重复（线路1/2/3 可切换）。
@@ -639,7 +720,7 @@ def write_precise_txt(cmap, verified, path):
     return {c: len(chs) for c, chs in groups.items()}
 
 
-def write_verified_m3u(cmap, verified, path, extra_keep=6):
+def write_verified_m3u(cmap, verified, path, extra_keep=CAP):
     """输出 lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）。
     与 txt 同源同数据（_build_groups），仅格式不同：
     header 多源 EPG x-tvg-url（7 源冗余，见 FMM_EPG_URLS）+ catchup（zhi35 m3u 生态实证写法）；
