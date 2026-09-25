@@ -32,6 +32,8 @@ from datetime import datetime
 
 RAW_BASE = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
 
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def sha256_file(p):
     h = hashlib.sha256()

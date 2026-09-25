@@ -120,6 +120,13 @@ jobs:
         continue-on-error: true
         run: python scripts/pack_local.py || true
 
+      - name: 成人零泄漏门禁（P0-2 一票否决，exit 2 阻断提交）
+        # 规则库从 live_aggregate 常量导出（rules/*.json），实跑扫描 tvbox/vod/live/short/
+        # list/lives/stores/packs/state 等常规产物，命中成人关键词/域名黑名单/源模式即
+        # FAIL。历史已知漏点 173 处（鱼2018/lib / 纯数字台名 / FGBLH/HKL / 1024 / 厂牌词等），
+        # 见 state/adult_leak_report.json。
+        run: python scripts/adult_leak_check.py
+
       - name: 提交并推送（有变更时；守卫触发则仅落守卫日报）
         if: steps.fetch_merge.outputs.guard != 'true'
         run: |

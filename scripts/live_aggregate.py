@@ -17,6 +17,7 @@ import time
 import urllib.parse
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urlparse
 
 sys_path = os.path.dirname(os.path.abspath(__file__))
 import sys

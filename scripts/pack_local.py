@@ -341,11 +341,29 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
     zip_path = os.path.join(args.out, "tvbox-latest.zip")
     if os.path.isfile(zip_path):
         os.remove(zip_path)
+    # 同步随包文件清单——离线下用户可重跑门禁与重导规则
+    EXTRA_INCLUDES = [
+        ("rules/adult_host_blacklist.json", "rules/adult_host_blacklist.json"),
+        ("rules/adult_keywords.json",       "rules/adult_keywords.json"),
+        ("rules/adult_source_patterns.json","rules/adult_source_patterns.json"),
+        ("rules/channel_norm.json",         "rules/channel_norm.json"),
+        ("scripts/adult_leak_check.py",     "scripts/adult_leak_check.py"),
+        ("scripts/export_rules.py",         "scripts/export_rules.py"),
+        ("scripts/live_aggregate.py",       "scripts/live_aggregate.py"),
+    ]
+    extra_in_zip = []
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
         for dirpath, _, files in os.walk(build):
             for f in files:
                 fp = os.path.join(dirpath, f)
                 z.write(fp, os.path.relpath(fp, build).replace(os.sep, "/"))
+        for src_rel, zip_name in EXTRA_INCLUDES:
+            src_abs = os.path.join(ROOT, src_rel.replace("/", os.sep))
+            if os.path.isfile(src_abs):
+                z.write(src_abs, zip_name)
+                extra_in_zip.append(zip_name)
+            else:
+                log("!! 随包文件缺失：%s（跳过）" % src_rel)
     zsize = os.path.getsize(zip_path)
 
     # ---------- 6. 完整性校验：包内配置的每个引用必须命中包内文件 ----------
@@ -365,6 +383,50 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
             log("   %s → %s" % (n, r))
     else:
         log("完整性校验通过：包内所有相对路径引用均可解析")
+
+    # ---------- 7. manifest.json：每个 entry 的 sha256 + 大小，离线可重建校验 ----------
+    manifest = {
+        "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+        "zip": os.path.basename(zip_path),
+        "zip_size_bytes": zsize,
+        "algo": "sha256",
+        "entries": [],
+        "self_contained": {},
+    }
+    with zipfile.ZipFile(zip_path) as z:
+        names = sorted(z.namelist())
+        total_uncomp = 0
+        for n in names:
+            info = z.getinfo(n)
+            data = z.read(n)
+            h = hashlib.sha256(data).hexdigest()
+            manifest["entries"].append({
+                "name": n,
+                "size": info.file_size,
+                "compressed": info.compress_size,
+                "sha256": h,
+            })
+            total_uncomp += info.file_size
+        # 自包含覆盖率：包内规则 + 验证脚本是否齐
+        have = set(names)
+        req = {
+            "rules": ["rules/adult_host_blacklist.json", "rules/adult_keywords.json",
+                      "rules/adult_source_patterns.json", "rules/channel_norm.json"],
+            "scripts": ["scripts/adult_leak_check.py", "scripts/export_rules.py",
+                        "scripts/live_aggregate.py"],
+        }
+        cov = {}
+        for cat, lst in req.items():
+            present = sum(1 for x in lst if x in have)
+            cov[cat] = {"have": present, "need": len(lst),
+                        "ratio": "%.2f" % (present / len(lst))}
+        cov["overall"] = "%.2f" % (
+            sum(cov[k]["have"] for k in req) / sum(cov[k]["need"] for k in req))
+        manifest["self_contained"] = cov
+        manifest["entry_count"] = len(names)
+        manifest["total_uncompressed_bytes"] = total_uncomp
+    with zipfile.ZipFile(zip_path, "a", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+        z.writestr("manifest.json", json.dumps(manifest, ensure_ascii=False, indent=1))
 
     report = {
         "generated_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
