@@ -36,6 +36,8 @@ from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # scripts 内互相导入
 from config_decode import decode_config   # 吸收点 P1-1：混淆配置解码链（独立实现）
+import adult_leak_check as _adult_gate    # 门禁扫描语义单一事实源（P0-2 红线对齐）
+import live_aggregate as _la              # 词表驱动 adult 判定（is_adult / is_adult_url）
 
 BEIJING = timezone(timedelta(hours=8))
 UA = {"User-Agent": "okhttp/3.15", "Accept": "*/*"}
@@ -772,6 +774,56 @@ def classify_site_strong_only(s, overrides: dict = None) -> str:
     if any(t.lower() in target for t in STRONG_ADULT_TOKENS):
         return "adult"
     return "vod"
+
+
+# ==================== 门禁同口径终扫（P0-2 红线对齐，2026-09-26） ====================
+# 根因（daily run 36187372853 step17 门禁 3562 处命中 / be53fa8 轮同源 3213 处）：
+# 合并层 classify_site 的 STRONG/WEAK_ADULT_TOKENS 与门禁词表
+# （state/vocab/categories.json adult 节，live_aggregate/adult_leak_check 加载）
+# 是两套独立维护的词表。词表漂移后，上游重合并注入的成人采集站（玉兔/madouse/
+# Jable 等：命中门禁词表但不在合并层词表）以 vod 分类进入 tvbox.json，被 step17
+# 一票否决拦截。修法：不维护第三套词表——终扫直接复用门禁自己的扫描语义
+# （_scan_string：PORN_KW 子串 / is_adult_url 域名黑名单 / ADULT_SOURCE_RE 整源
+# 模式）与误报白名单（state/adult_leak_whitelist.txt，guarded 命中与门禁同口径
+# 放行），对将进入常规产物的站点/直播/解析/全局字段逐一扫描：
+#   站点/直播条目命中 → 重定向 adult.json 独立通道（与既有隔离通路同源）；
+#   解析/顶层字符串命中 → 直接剔除。
+# 由此「合并层产出 == 门禁可放行」按构造成立，词表后续只需维护 vocab 一份。
+
+ADULT_GATE_WHITELIST = _adult_gate._whitelist_res(
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                 "state", "adult_leak_whitelist.txt"))
+
+
+def adult_gate_scan(node):
+    """门禁同口径扫描任意 JSON 节点，返回 (real_hits, guarded_hits)。
+
+    扫描语义与 adult_leak_check 的 _scan_string / _iter_strings 完全一致：
+    任意字符串跑 PORN_KW 子串 / is_adult_url（含 :// 才跑）/ ADULT_SOURCE_RE；
+    命中误报白名单的记为 guarded（不剔除，与门禁放行口径一致）。
+    返回元组：(非白名单命中列表, 白名单拦截列表)，两者均为明细 dict。
+    """
+    hits = []
+    _adult_gate._iter_strings(node, "$", "merge-stage-sweep", hits, ADULT_GATE_WHITELIST)
+    real = [h for h in hits if h.get("kind") != "guarded"]
+    guarded = [h for h in hits if h.get("kind") == "guarded"]
+    return real, guarded
+
+
+def _split_by_adult_gate(items):
+    """按门禁同口径终扫切分条目列表，返回 (clean_items, gate_hits, guarded_count)。
+
+    gate_hits 为 [(条目, real_hits)]；clean_items 为零真实命中的干净条目。
+    """
+    clean, hits, guarded_n = [], [], 0
+    for it in items:
+        real, guarded = adult_gate_scan(it)
+        if real:
+            hits.append((it, real))
+        else:
+            clean.append(it)
+            guarded_n += len(guarded)
+    return clean, hits, guarded_n
 
 
 # ==================== adult 直播源测速与成人站点搜索验收 ====================
@@ -3525,6 +3577,7 @@ def main() -> int:
 
     # ---- 成人内容发布开关（默认不发布，见 PUBLISH_ADULT 的说明）----
     adult_excluded_sites: list = []
+    _gate_hits: list = []  # 门禁同口径终扫命中（站点级，PUBLISH_ADULT=1 时跳过终扫）
     if not PUBLISH_ADULT:
         before = len(kept_sites)
         adult_excluded_sites = [s for s in kept_sites if classify_site(s, category_overrides, origin_votes) == "adult"]
@@ -3534,6 +3587,20 @@ def main() -> int:
                   f"（{before} → {len(kept_sites)}）；成人源完整写入仓库根 adult.json"
                   f"（随 daily 提交更新，不进 Release/Pages/导航页）",
                   flush=True)
+        # 门禁同口径终扫（P0-2 红线对齐）：classify_site 词表与门禁词表是两套词表，
+        # 漂移即泄漏（run 36187372853 实证 3562 处）。此处用门禁自己的扫描语义
+        # 复扫全部剩余站点，命中者重定向 adult.json 通道——合并层产出按构造等于
+        # 门禁可放行；误报白名单（guarded）命中与门禁同口径留在常规产物。
+        kept_sites, _gate_hits, _guarded_n = _split_by_adult_gate(kept_sites)
+        if _gate_hits:
+            adult_excluded_sites.extend(s for s, _ in _gate_hits)
+            print(f"    [adult] 门禁同口径终扫：{len(_gate_hits)} 个站点命中成人特征，"
+                  f"重定向 adult.json（{before} → {len(kept_sites)}，白名单放行 {_guarded_n} 处）",
+                  flush=True)
+            for _s, _h in _gate_hits[:20]:
+                print(f"      - {_s.get('name')}（{_s.get('_origin') or '~'}）"
+                      f"rule={_h[0].get('rule')} val={(_h[0].get('value') or '')[:40]}",
+                      flush=True)
 
     # ---- [4/6] 直播源分类测速优选 ----
     print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
@@ -3598,10 +3665,40 @@ def main() -> int:
         print("    已保留上次缓存（工作树 tvbox.json 未被覆盖）；详见 state/guard_last.json", flush=True)
         return 2
 
+    # ---- 门禁同口径终扫（直播/解析/全局字段）----
+    # 上游合并的 lives 条目与 parses 此前不做 adult 过滤（直播仅靠 live.json 清洗
+    # 循环的 5 个硬编码 token），同样存在词表漂移泄漏面。统一在写主产物前按门禁
+    # 口径处理：直播条目重定向 adult.json，解析与顶层字符串字段直接剔除。
+    lives, _life_gate_hits, _life_guarded = _split_by_adult_gate(
+        [l for l in lives if isinstance(l, dict)])
+    _life_gate_items = [l for l, _ in _life_gate_hits]
+    parses, _parse_gate_hits, _parse_guarded = _split_by_adult_gate(
+        [p for p in parses if isinstance(p, dict)])
+    if _life_gate_hits or _parse_gate_hits:
+        print(f"    [adult] 门禁同口径终扫：{len(_life_gate_hits)} 条直播重定向 adult.json / "
+              f"{len(_parse_gate_hits)} 条解析剔除（白名单放行 {_life_guarded + _parse_guarded} 处）",
+              flush=True)
+        for _l, _h in _life_gate_hits[:10]:
+            print(f"      - live:{_l.get('name')} rule={_h[0].get('rule')} "
+                  f"val={(_h[0].get('value') or '')[:40]}", flush=True)
+        for _p, _h in _parse_gate_hits[:10]:
+            print(f"      - parse:{_p.get('name')} rule={_h[0].get('rule')} "
+                  f"val={(_h[0].get('value') or '')[:40]}", flush=True)
+
     tvbox = dict(merged)
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    # 门禁同口径终扫（顶层字符串字段）：spider/wallpaper 等非容器字段命中即剔除
+    #（正常值为本地 jar 相对路径或壁纸图 URL，不可能命中词表；命中即上游注入）。
+    for _gk in list(tvbox.keys()):
+        if isinstance(tvbox.get(_gk), str):
+            _real, _guarded = adult_gate_scan(tvbox[_gk])
+            if _real:
+                print(f"    [adult] 门禁同口径终扫：顶层字段 {_gk} 命中成人特征，剔除"
+                      f"（rule={_real[0].get('rule')} val={(_real[0].get('value') or '')[:40]}）",
+                      flush=True)
+                tvbox.pop(_gk)
     # 关键：给「走全局 spider」的源补回它来源上游那份 spider，否则它们会指向不含所需爬虫类的包
     osp_stats = assign_origin_spiders(tvbox, site_origin_name, upstream_spider, spider_origin_info)
     if osp_stats.get("assigned"):
@@ -3634,6 +3731,12 @@ def main() -> int:
     # ---- 直播重构：以本次实测聚合为主入口（央视/卫视/港台分组 + 核心频道多线路）----
     repo_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     curated_lives, adult_lives = build_curated_lives(repo_dir)
+    # 门禁同口径终扫命中的直播条目下放 adult.json（与既有「成人直播」通道同格式）
+    for l in _life_gate_items:
+        adult_lives.append({
+            "name": l.get("name"), "type": l.get("type", 1),
+            "url": l.get("url"), "group": "成人直播",
+        })
     # 1. 移除 live.json 里已知不可用的相对路径 / 本地代理条目；保留其余第三方作为备用
     _REJECT_PREFIX = ("http://127.0.0.1", "http://localhost", "http://0.0.0.0")
     _ALLOWED_SCHEME = ("http://", "https://")
@@ -3827,6 +3930,14 @@ def main() -> int:
             "sites_untested": len(sites) - len(to_test),
             "sites_secondary_dedup": len(dup_drops),
             "mirrors_skipped": mirror_count,
+            "adult_gate_sweep": {
+                "note": "P0-2 红线对齐（2026-09-26）：写主产物前按门禁口径终扫，"
+                        "站点/直播命中重定向 adult.json，解析/顶层字符串命中剔除；"
+                        "词表事实源=state/vocab/categories.json（单一维护）",
+                "sites_redirected": len(_gate_hits),
+                "lives_redirected": len(_life_gate_hits),
+                "parses_dropped": len(_parse_gate_hits),
+            },
             "lives": len(lives),
             "parses": len(parses),
             "deps_total": dep_stats["total"],
