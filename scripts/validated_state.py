@@ -24,10 +24,10 @@
   }
 
 跨日衰减（第 4 层去重，apply_decay）：
-  - 连续 not_pass（unavailable 或 disabled）天数 >= watch_after_days(3)
-    → stage=watch：保留状态但默认排除出聚合/分发产物；
-  - 连续 not_pass 天数 >= out_after_days(7)
-    → stage=out：标记 decayed=true 归档淘汰（不再进任何产物，条目留档可审计）；
+  - not_pass = history 中非 fully/partially 的任何档位（unavailable/not-parsable/drift 等，同计 streak）；
+  - disabled（fail-limit 连续 3 次不达标停用）条目即时 stage=out（decayed=true；通过仍可复位回捞）；
+  - 未停用条目：连续 not_pass 天数 >= watch_after_days(3) → stage=watch：保留状态但默认排除出聚合/分发产物；
+    连续 not_pass 天数 >= out_after_days(7) → stage=out：标记 decayed=true 归档淘汰（条目留档可审计）；
   - 任一日通过（fully/partially）即复位 streak 与 stage（自动回捞）。
 
 本模块 stdlib only。
@@ -63,7 +63,8 @@ DEFAULT_POLICY = {
         "watch_after_days": 3,
         "out_after_days": 7,
         "not_pass_levels": ["unavailable"],
-        "note": "连续 N 日 not_pass（unavailable 或 disabled）进入衰减："
+        "not_pass_levels_note": "凡非 fully/partially 的档位（not-parsable/drift 等）同计 streak",
+        "note": "disabled（fail-limit 停用）即时 out；未停用条目按连续 N 日 not_pass 衰减："
                 "watch=默认排除出聚合/分发产物；out=归档淘汰（decayed=true）不进任何产物；任一日通过即复位回捞",
     },
 }

@@ -1,0 +1,98 @@
+{
+ "verdict": "PASS",
+ "total_hits": 8,
+ "violation_count": 0,
+ "whitelisted_count": 8,
+ "hits": [],
+ "whitelisted": [
+  {
+   "file": "tvbox.json",
+   "where": "/sites[1458]/ext",
+   "kind": "guarded",
+   "value": "AXa/dhw2PLXN7GTzaamHOCEf9KWdx8b5bp7n8hAmf9Boa6AZrB5/hhb4qGO6kjkz/Oh5Uei9rzPWsZlQ",
+   "rule": "porn_kw:mmz"
+  },
+  {
+   "file": "tvbox.json",
+   "where": "/sites[3191]/ext",
+   "kind": "guarded",
+   "value": "7lj763gg0939795l0264j881k412jji0g0k6980k98j36973020k0ll6lk184k400h9k4jgh8312j18i",
+   "rule": "porn_kw:1024"
+  },
+  {
+   "file": "vod.json",
+   "where": "/sites[1458]/ext",
+   "kind": "guarded",
+   "value": "AXa/dhw2PLXN7GTzaamHOCEf9KWdx8b5bp7n8hAmf9Boa6AZrB5/hhb4qGO6kjkz/Oh5Uei9rzPWsZlQ",
+   "rule": "porn_kw:mmz"
+  },
+  {
+   "file": "vod.json",
+   "where": "/sites[3191]/ext",
+   "kind": "guarded",
+   "value": "7lj763gg0939795l0264j881k412jji0g0k6980k98j36973020k0ll6lk184k400h9k4jgh8312j18i",
+   "rule": "porn_kw:1024"
+  },
+  {
+   "file": "stores/csp.json",
+   "where": "/sites[1005]/ext",
+   "kind": "guarded",
+   "value": "AXa/dhw2PLXN7GTzaamHOCEf9KWdx8b5bp7n8hAmf9Boa6AZrB5/hhb4qGO6kjkz/Oh5Uei9rzPWsZlQ",
+   "rule": "porn_kw:mmz"
+  },
+  {
+   "file": "stores/csp.json",
+   "where": "/sites[1794]/ext",
+   "kind": "guarded",
+   "value": "7lj763gg0939795l0264j881k412jji0g0k6980k98j36973020k0ll6lk184k400h9k4jgh8312j18i",
+   "rule": "porn_kw:1024"
+  },
+  {
+   "file": "sync/feishu_config_latest.json",
+   "where": "/sites[1458]/ext",
+   "kind": "guarded",
+   "value": "AXa/dhw2PLXN7GTzaamHOCEf9KWdx8b5bp7n8hAmf9Boa6AZrB5/hhb4qGO6kjkz/Oh5Uei9rzPWsZlQ",
+   "rule": "porn_kw:mmz"
+  },
+  {
+   "file": "sync/feishu_config_latest.json",
+   "where": "/sites[3191]/ext",
+   "kind": "guarded",
+   "value": "7lj763gg0939795l0264j881k412jji0g0k6980k98j36973020k0ll6lk184k400h9k4jgh8312j18i",
+   "rule": "porn_kw:1024"
+  }
+ ],
+ "scope": {
+  "top": [
+   "tvbox.json",
+   "vod.json",
+   "live.json",
+   "short.json",
+   "list.json",
+   "live_channels.json",
+   "index.html",
+   "README.md",
+   "state/live_checks.json",
+   "state/live_check_meta.json",
+   "state/live_test_progress.jsonl"
+  ],
+  "dirs": [
+   "lives",
+   "stores",
+   "json",
+   "sync",
+   "packs"
+  ],
+  "scope_source": "rules/gate_criteria.json",
+  "scope_fallback_reason": null,
+  "whitelist": "state/adult_leak_whitelist.txt",
+  "include_snapshot": false,
+  "excluded": [
+   "adult.json",
+   "adult_live.json",
+   "adult_live_channels/",
+   "rules/",
+   "snapshot/"
+  ]
+ }
+}

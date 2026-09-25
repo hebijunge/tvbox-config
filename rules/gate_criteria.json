@@ -56,7 +56,7 @@
    "L1": "同 key(规范键) 同 api 去重；同 key 不同 api 改名保留（产品 key 保持原样）",
    "L2": "内容指纹 type + api(规范键) + jar(_jar_abs 优先)",
    "L3": "lives/parses 归并：name(规范键) + URL(规范键)",
-   "L4": "跨日衰减：validated.json history 连续 not_pass(unavailable 或 disabled) >= watch_after_days(3) 日→watch（排除出聚合/分发默认输出）、>= out_after_days(7) 日→out（归档淘汰 decayed=true）；任一日通过自动复位回捞"
+   "L4": "跨日衰减：not_pass=history 中非 fully/partially 的任何档位（unavailable/not-parsable/drift 等，同计 streak）；validated.json 连续 not_pass >= watch_after_days(3) 日→watch（排除出聚合/分发默认输出）、>= out_after_days(7) 日→out（归档淘汰 decayed=true）；disabled（fail-limit 连续 3 次不达标停用）条目即时 out，streak 路径仅对未停用条目生效；任一日通过自动复位回捞"
   },
   "single_definition": "scripts/dedup_layers.py + scripts/validated_state.py；飞书线 dedup_merge6 与 GitHub 线均引用本实现，禁止另建副本",
   "source_of_truth": "state/validated.json（双线唯一验证状态；飞书线经 scripts/feishu_patrol_bridge.py 读写，GitHub 线经 fetch_merge/check_upstreams 读写）"
