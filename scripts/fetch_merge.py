@@ -510,12 +510,34 @@ def build_curated_lives(repo_dir: str):
     调用本函数后，写入 live.json / adult.json 时各取所需。"""
     import os as _os
     sys.path.insert(0, _os.path.join(repo_dir, "scripts"))
+    # 2026-09-25 P0-3 测速与发布解耦：优先消费「最近一次成功直播测速结果」。
+    # 测速由独立 job（live-speedtest.yml）执行并提交 state/live_check_meta.json +
+    # lives/ 产物；本 job 只消费：元数据 26h 内（LIVE_MAX_AGE_S 可调）→ 不在本
+    # 流程内重跑逐线路实测（9 连 cancelled 的历史根因就是测速塞进发布流程）。
+    # 元数据缺失/过期 → 回退本轮内聚合（保底：直播产物永远有产出）。
+    _max_age = int(_os.environ.get("LIVE_MAX_AGE_S", str(26 * 3600)))
+    _meta_p = _os.path.join(repo_dir, "state", "live_check_meta.json")
+    _fresh = False
     try:
-        import live_aggregate as _la  # noqa: WPS433
-        _la.main(repo=repo_dir, out_txt=_os.path.join("lives", "live_verified.txt"),
-                 out_json="live_channels.json")
-    except Exception as e:  # 单次聚合失败不影响主流程
-        print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
+        with open(_meta_p, encoding="utf-8") as _f:
+            _meta = json.load(_f)
+        _age = time.time() - datetime.strptime(_meta["updated"], "%Y-%m-%dT%H:%M:%S").timestamp()
+        _have_out = _os.path.isfile(_os.path.join(repo_dir, "lives", "live_verified.txt"))
+        if _have_out and 0 <= _age < _max_age:
+            _fresh = True
+            print("[curated] 消费最近一次成功直播测速结果：%.1fh 前（shard=%s，%s 频道，verified=%s）"
+                  % (_age / 3600, _meta.get("shard"), _meta.get("channels"),
+                     _meta.get("verified_channels")), flush=True)
+    except Exception as _e:
+        print("[curated] 测速快照元数据不可读（%s），回退本轮聚合" % _e, flush=True)
+    if not _fresh:
+        try:
+            import live_aggregate as _la  # noqa: WPS433
+            _shard = _os.environ.get("LIVE_SHARD") or None
+            _la.main(repo=repo_dir, out_txt=_os.path.join("lives", "live_verified.txt"),
+                     out_json="live_channels.json", shard=_shard)
+        except Exception as e:  # 单次聚合失败不影响主流程
+            print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
 
     _RAW = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
     ver_txt_url = _RAW + "lives/live_verified.txt"

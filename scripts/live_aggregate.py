@@ -261,16 +261,24 @@ ADULT_DATE_CODE = re.compile(r"^[a-z]?\d{4,6}[-_]\d{2,4}[-_]?\d{0,4}$")
 
 def is_adult(name: str) -> bool:
     """判断频道名是否属于成人/AV/广告垃圾——整体不进 live_verified.txt。"""
-    low = (name or "").lower()
-    if any(kw in low for kw in PORN_KW):
-        return True
+    return bool(adult_rule_of(name))
+
+
+def adult_rule_of(name: str) -> str:
+    """返回命中规则标签（空字符串=非成人）。供门禁报告带规则可读。"""
+    if not name:
+        return ""
+    low = name.lower()
+    for kw in PORN_KW:
+        if kw in low:
+            return "porn_kw:%s" % kw[:16]
     if ADULT_PURE_NUM.match(low.strip()):
-        return True
-    if ADULT_BRACKET_TAG.match(name or ""):
-        return True
+        return "pure_number_station"
+    if ADULT_BRACKET_TAG.match(name):
+        return "bracket_tag"
     if ADULT_DATE_CODE.match(low.strip()):
-        return True
-    return False
+        return "date_code"
+    return ""
 
 
 # ---- 2026-09-24 源头级 VOD 过滤（用户 2026-09-24 指令）----
@@ -626,6 +634,9 @@ def build_channel_map(sources, repo):
             # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
             if is_adult(std) or is_adult(name):
                 continue
+            # 2026-09-25 P0-2 成人隔离红线·第三重判定：频道 URL 命中 adult 根域黑名单即整行剔除
+            if is_adult_url(u):
+                continue
             # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
             # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
             key = dedup_key(std)
@@ -648,13 +659,87 @@ def _is_core_class(cls):
     return cls in ("央视", "卫视", "港台", "春晚(季节性)") or cls.startswith("地方-")
 
 
+PROGRESS_PATH = os.environ.get("LIVE_PROGRESS_PATH", os.path.join("state", "live_test_progress.jsonl"))
+PROGRESS_TTL_OK_S = int(os.environ.get("LIVE_PROGRESS_TTL_OK_S", str(20 * 3600)))
+PROGRESS_TTL_FAIL_S = int(os.environ.get("LIVE_PROGRESS_TTL_FAIL_S", str(4 * 3600)))
+SOURCE_HARD_TIMEOUT_S = float(os.environ.get("LIVE_SOURCE_TIMEOUT_S", "40"))
+
+
+def _pkey(std, u):
+    """progress 键：频道归一化键 + URL 的稳定哈希（跨 run 可续跑）。"""
+    return hashlib.sha1(("%s|%s" % (std, u)).encode("utf-8")).hexdigest()[:16]
+
+
+def load_progress(path=PROGRESS_PATH):
+    """读 progress.jsonl → {pkey: (ok, ts, ms)}。坏行跳过。"""
+    ent = {}
+    try:
+        with open(path, encoding="utf-8") as f:
+            for ln in f:
+                ln = ln.strip()
+                if not ln:
+                    continue
+                try:
+                    r = json.loads(ln)
+                    ent[str(r.get("k"))] = (bool(r.get("ok")), float(r.get("ts", 0) or 0),
+                                            float(r.get("ms", 0) or 0))
+                except Exception:  # noqa: BLE001
+                    continue
+    except FileNotFoundError:
+        pass
+    return ent
+
+
+def append_progress(rows, path=PROGRESS_PATH):
+    """追加快测记录行 [{k,ok,ms,why}]。目录不存在自动建。"""
+    if not rows:
+        return
+    d = os.path.dirname(path)
+    if d and not os.path.isdir(d):
+        os.makedirs(d, exist_ok=True)
+    now = time.time()
+    with open(path, "a", encoding="utf-8") as f:
+        for k, ok, ms, why in rows:
+            f.write(json.dumps({"k": k, "ok": bool(ok), "ms": round(ms, 3),
+                                "why": why, "ts": now}, ensure_ascii=False) + "\n")
+
+
+def shard_select(key, shard):
+    """分片轮转：shard 形如 "i/n"；按 key 的 sha1 稳定取模。None / "0/1" = 全量。
+    跨 run 轮转 i 即可在 n 轮内覆盖全量频道（hash 稳定，与频道增删无关）。"""
+    if not shard:
+        return True
+    try:
+        i, n = str(shard).split("/")
+        i, n = int(i), int(n)
+    except Exception:  # noqa: BLE001
+        return True
+    if n <= 1:
+        return True
+    return int(hashlib.sha1(str(key).encode("utf-8")).hexdigest(), 16) % n == i % n
+
+
 def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
-                     budget_s=int(os.environ.get("LIVE_PROBE_BUDGET_S", "600"))):
-    """核心频道逐线路实测，返回 {标准名: [通过 url]} 与全部明细。"""
+                     budget_s=int(os.environ.get("LIVE_PROBE_BUDGET_S", "600")),
+                     shard=None, progress=None, progress_path=PROGRESS_PATH):
+    """核心频道逐线路实测，返回 {标准名: [通过 url]} 与全部明细。
+
+    P0-3 测速与发布解耦（2026-09-25）：
+      - shard "i/n"：频道按归一化键稳定分片，本轮只实测第 i 片（跨 run 轮转覆盖全量）；
+      - progress_path：progress.jsonl 可续跑——ok 记录 TTL（默认 20h）内直接消费缓存、
+        不再探流；fail 记录短 TTL（默认 4h）内跳过（到期自动重试）；
+      - 单源硬超时 LIVE_SOURCE_TIMEOUT_S（默认 40s）：单上游线路累计探流超时后，
+        该源剩余线路本轮跳过（记 why=source-timeout，不写 progress，下轮自动重试），
+        防止单个慢源吃穿全局预算。"""
     t0 = time.time()
+    prog = load_progress(progress_path) if progress is None else dict(progress)
     jobs = []
+    n_shard_skip = 0
     for std, ent in cmap.items():
         if not _is_core_class(ent["class"]):
+            continue
+        if not shard_select(std, shard):
+            n_shard_skip += 1
             continue
         lines = sorted(ent["lines"], key=lambda x: (SOURCE_PRIORITY.index(x[0])
                         if x[0] in SOURCE_PRIORITY else 99))
@@ -666,10 +751,14 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
         ent["lines"] = uniq
         jobs.append((std, cap_lines(uniq, max_test) if max_test > 0 else uniq))
     # 2026-09-23 分类重构：实测任务按输出序（央视→卫视→港台→地方-省）提交，
-    # 420s 预算耗尽时优先保证靠前大分类的线路实测覆盖
+    # 预算耗尽时优先保证靠前大分类的实测覆盖
     jobs.sort(key=lambda j: group_sort_key(cmap[j[0]]["class"]))
     results = {}
     n = [0]
+    n_cached = [0]
+    sid_elapsed = {}
+    sid_skipped = set()
+    prog_rows = []
 
     def _probe_timed(u):
         """带计时的单线路实测（2026-09-23 线路按速度排序）：
@@ -684,10 +773,27 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
     with ThreadPoolExecutor(max_workers=8) as ex:
         futs = {}
         for std, lines in jobs:
+            if time.time() - t0 > budget_s:
+                break
             for sid, u in lines:
                 if time.time() - t0 > budget_s:
                     break
-                futs[ex.submit(_probe_timed, u)] = (std, u)
+                k = _pkey(std, u)
+                hit = prog.get(k)
+                if hit is not None:
+                    ok, ts, ms = hit
+                    ttl = PROGRESS_TTL_OK_S if ok else PROGRESS_TTL_FAIL_S
+                    if time.time() - ts < ttl:
+                        results.setdefault(std, []).append((u, ok, "cache", ms))
+                        n_cached[0] += 1
+                        n[0] += 1
+                        continue
+                # 单源硬超时：该源累计探流耗时超限，本轮剩余线路不再提交（下轮重试）
+                if sid in sid_skipped or sid_elapsed.get(sid, 0.0) > SOURCE_HARD_TIMEOUT_S:
+                    sid_skipped.add(sid)
+                    results.setdefault(std, []).append((u, False, "source-timeout", 0.0))
+                    continue
+                futs[ex.submit(_probe_timed, u)] = (std, u, sid)
             if time.time() - t0 > budget_s:
                 break
         # 2026-09-25 修复：预算只挡提交侧挡不住——submit 非阻塞，全部任务数秒内入队，
@@ -696,13 +802,21 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
         for fut in as_completed(futs):
             if time.time() - t0 > budget_s:
                 break
-            std, u = futs[fut]
+            std, u, sid = futs[fut]
             ok, why, ms = fut.result()
+            sid_elapsed[sid] = sid_elapsed.get(sid, 0.0) + ms
             results.setdefault(std, []).append((u, ok, why, ms))
+            if why != "source-timeout":
+                prog_rows.append({"k": _pkey(std, u), "ok": ok, "ms": ms, "why": why})
             n[0] += 1
             if n[0] % 50 == 0:
-                print("  tested %d lines ..." % n[0], flush=True)
+                print("  tested %d lines (cached %d) ..." % (n[0], n_cached[0]), flush=True)
         cancelled = sum(1 for f in futs if f.cancel())
+    append_progress([tuple(r[k2] for k2 in ("k", "ok", "ms", "why")) if isinstance(r, dict)
+                     else r for r in prog_rows], progress_path)
+    if prog_rows:
+        print("  progress: +%d rows, shard=%s shard_skip_ch=%d, source_timeout=%d"
+              % (len(prog_rows), shard or "-", n_shard_skip, len(sid_skipped)), flush=True)
     verified = {}
     for std, lst in results.items():
         # 线路按速度升序：实测通过者按探流耗时小→大排列（同一频道内首条=最快线路，
@@ -1018,6 +1132,46 @@ def _is_adult_source(sid: str, url: str, name: str = "") -> bool:
     return bool(ADULT_SOURCE_RE.search(blob))
 
 
+# ---- 2026-09-25 P0-2 adult 隔离红线·第三重判定：域名黑名单 ----
+# 域名清单按「实际产物」提取（用户 2026-09-25 指令）：根域来自仓库内 adult 实际产物
+# （adult.json / adult_live.json / adult_live_channels.json 5372 频道）的播放/接口域名
+# 频次统计，取根域后缀匹配；裸 IP 不入表（无法归因根域）。由 scripts/export_rules.py
+# 与本常量同步导出 rules/adult_host_blacklist.json（代码常量为唯一事实源）。
+ADULT_HOSTS = (
+    "mycamtv.net", "slbfsl.com", "cdnedge.live", "ddyunbo.com", "aosikazy12.com",
+    "redtraffic.xyz", "adultiptv.net", "lbbf9.com", "ckzy1com.com", "fhbf9.com",
+    "cbilant.com", "akadatel.com", "lbapi9.com", "askzybfvideo.com", "fhapi9.com",
+    "lsbbf1.com", "lajiao-bo.com", "dadi-bo.com", "49cdn.com", "tvdosug.net",
+    "bpzy1.com", "shayubf.com", "3sybf.com", "xiaojizy.live", "apidanaizi.com",
+    "douapi.cc", "jp-primehome.com", "streamlock.net", "ottclub.xyz",
+    # 既有补漏沉淀（此前散落在 ADULT_SOURCE_RE / PORN_KW 中的域名形态归并到这里）
+    "jable.tv", "javbus.com", "javdb.com", "91porn.com", "t66y.com",
+)
+# 子串级 token：匹配任意后缀变体（missav.ws / missav.zone …）或出现在 host 中的标记词
+ADULT_HOST_TOKENS = ("missav", "sleazyred", "hongkongdoll", "pornhub", "xvideos", "xnxx")
+_ADULT_HOST_RE = re.compile(
+    r"(?:^|\.)(?:" + "|".join(re.escape(h) for h in ADULT_HOSTS) + r")$",
+    re.IGNORECASE,
+)
+
+
+def is_adult_url(u: str) -> bool:
+    """URL 域名级成人判定（P0-2 第三重判定）。host 后缀匹配 ADULT_HOSTS，
+    或 host 含 ADULT_HOST_TOKENS 子串；非法 URL 放行给上游判定层。"""
+    if not u:
+        return False
+    try:
+        host = (urlparse(u if "//" in u else "//" + u, scheme="http").hostname or "").lower()
+    except Exception:  # noqa: BLE001
+        return False
+    if not host:
+        return False
+    if _ADULT_HOST_RE.search(host):
+        return True
+    return any(t in host for t in ADULT_HOST_TOKENS)
+
+
+
 def collect_config_live_sources(repo, max_entries=None):
     """从仓库 tvbox.json 的 lives 条目收集可穿透的直播源（追加进聚合源清单）。"""
     max_entries = max_entries or LIVE_CFG_SOURCES_MAX
@@ -1049,7 +1203,7 @@ def collect_config_live_sources(repo, max_entries=None):
             real = follow_live_shell(u.strip(), visited)
             if not real or real in seen_urls:
                 continue
-            if _is_adult_source("", real, name):
+            if _is_adult_source("", real, name) or is_adult_url(real):
                 print("  [adult-source-skip] url=%s name=%s" % (real[:80], name), flush=True)
                 continue
             seen_urls.add(real)
@@ -1097,32 +1251,126 @@ def build_sources(repo):
     sources.extend(cfg_sources)
     before = len(sources)
     sources = [(sid, u) for sid, u in sources
-               if not _is_adult_source(sid, u, "")]
+               if not _is_adult_source(sid, u, "") and not is_adult_url(u)]
     dropped = before - len(sources)
     if dropped:
         print("  [adult-source-drop] total %d source(s) filtered at build_sources" % dropped, flush=True)
     return sources
 
 
+def write_group_m3us(cmap, verified, outdir, extra_keep=CAP):
+    """P0-1 按组输出独立 m3u 文件（2026-09-25）：lives/groups/<组名>.m3u。
+    每文件 = #EXTM3U 头（同 live_verified.m3u 的多源 EPG/catchup）+ 该组全部频道
+    （#EXTINF group-title=<组名>，行序/内容与 live_verified.txt 完全同源）。
+    大分类组：央视/卫视/港台/轮播/直播/其他 + 春晚(季节性)；地方按省各出
+    地方-<省>.m3u。返回 {组名: 频道数}。"""
+    groups = _build_groups(cmap, verified, extra_keep)
+    os.makedirs(outdir, exist_ok=True)
+    stats = {}
+    for gname, chans in _iter_ordered_groups(groups):
+        fn = os.path.join(outdir, "%s.m3u" % gname)
+        with open(fn, "w", encoding="utf-8") as f:
+            f.write('#EXTM3U x-tvg-url="%s" %s\n' % (",".join(FMM_EPG_URLS), FMM_CATCHUP))
+            for name, lines in chans.items():
+                logo = fmm_logo_name(name)
+                f.write('#EXTINF:-1 tvg-name="%s" tvg-logo="%s%s.png" group-title="%s",%s\n'
+                        % (logo, FMM_TV_BASE, logo, gname, name))
+                for u in lines:
+                    f.write(u + "\n")
+        stats[gname] = len(chans)
+    # 清掉本轮已不再产出的旧组文件，防上轮组残留误导消费方
+    for fn in os.listdir(outdir):
+        if fn.endswith(".m3u") and fn[:-4] not in stats:
+            try:
+                os.remove(os.path.join(outdir, fn))
+            except OSError:
+                pass
+    return stats
+
+
+def _save_live_checks(repo, cmap, verified, shard, group_stats, test_meta):
+    """测速快照（P0-3 发布/测速解耦的介质）：
+    state/live_checks.json = 可离线重建全部直播产物的完整快照（channels 全量 +
+    verified 已测线路），state/live_check_meta.json = 轻量新鲜度标记（fetch_merge
+    据此决定是否消费最近一次成功测速结果）。"""
+    st = os.path.join(repo, "state")
+    os.makedirs(st, exist_ok=True)
+    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    doc = {"updated": now, "shard": shard or None, "group_stats": group_stats,
+           "test": test_meta,
+           "verified": {k: list(v) for k, v in verified.items()},
+           "channels": {k: {"name": v.get("name") or k, "class": v.get("class", ""),
+                            "lines": [list(x) for x in v.get("lines", [])]}
+                        for k, v in cmap.items()}}
+    with open(os.path.join(st, "live_checks.json"), "w", encoding="utf-8") as f:
+        json.dump(doc, f, ensure_ascii=False, indent=1)
+    with open(os.path.join(st, "live_check_meta.json"), "w", encoding="utf-8") as f:
+        json.dump({"updated": now, "shard": shard or None,
+                   "channels": len(cmap), "verified_channels": len(verified),
+                   "test": test_meta}, f, ensure_ascii=False, indent=1)
+
+
+def _load_live_checks(repo, path=None):
+    """读测速快照重建 cmap-lite / verified（--reuse-results 离线重建用）。
+    返回 (cmap, verified, meta)；文件缺失/损坏返回 None。"""
+    p = path or os.path.join(repo or ".", "state", "live_checks.json")
+    try:
+        with open(p, encoding="utf-8") as f:
+            doc = json.load(f)
+        cmap = OrderedDict()
+        for k, v in doc["channels"].items():
+            cmap[k] = {"name": v.get("name") or k, "class": v.get("class", ""),
+                       "lines": [tuple(x) for x in v.get("lines", [])], "_seen": set()}
+        return cmap, doc.get("verified", {}), doc
+    except Exception:  # noqa: BLE001
+        return None
+
+
 def main(repo=None, out_txt="lives/live_verified.txt",
          out_m3u="lives/live_verified.m3u", out_json="live_channels.json",
          out_multicast="lives/live_multicast.txt",
-         out_precise="lives/live_precise.txt"):
+         out_precise="lives/live_precise.txt",
+         shard=None, reuse_results=None):
+    """shard: "i/n" 分片轮转实测（None=全量）；reuse_results: 测速快照路径，
+    传入则零网络离线重建全部直播产物（自包含重建能力 + 发布消费测速解耦）。"""
     repo = repo or os.path.dirname(sys_path)
+    t_start = time.time()
+    if reuse_results:
+        got = _load_live_checks(repo, reuse_results)
+        if not got:
+            print("[live] reuse-results 快照不可用（%s），回退完整聚合" % reuse_results, flush=True)
+        else:
+            cmap, verified, _meta = got
+            print("[live] 复用测速快照：%d 频道 / %d 已验证" % (len(cmap), len(verified)), flush=True)
+            stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
+            write_precise_txt(cmap, verified, os.path.join(repo, out_precise))
+            write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
+            gstats = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
+            print("groups:", stats, flush=True)
+            print("group m3u:", gstats, flush=True)
+            _save_live_checks(repo, cmap, verified, "reuse", stats, {"mode": "reuse"})
+            return cmap, verified
+
     sources = build_sources(repo)
     print("loading %d sources ..." % len(sources), flush=True)
     cmap = build_channel_map(sources, repo)
     print("channels: %d" % len(cmap), flush=True)
     t0 = time.time()
-    verified, raw = test_channel_lines(cmap, budget_s=420)
+    verified, raw = test_channel_lines(cmap, budget_s=420, shard=shard)
+    n_probe = sum(1 for _u, _ok, w, _ms in
+                  (x for lst in raw.values() for x in lst) if w not in ("cache", "source-timeout"))
+    n_cache = sum(1 for _u, _ok, w, _ms in
+                  (x for lst in raw.values() for x in lst) if w == "cache")
     print("line tests done in %.0fs, verified channels: %d" % (time.time() - t0, len(verified)), flush=True)
     stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
     precise_stats = write_precise_txt(cmap, verified, os.path.join(repo, out_precise))
     print("precise groups:", precise_stats, flush=True)
     m3u_stats = write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
+    gstats = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
     mc_stats = write_multicast_txt(os.path.join(repo, out_multicast))
     print("groups:", stats, flush=True)
     print("m3u groups:", m3u_stats, flush=True)
+    print("group m3u:", gstats, flush=True)
     print("multicast groups:", mc_stats, flush=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump({
@@ -1132,8 +1380,19 @@ def main(repo=None, out_txt="lives/live_verified.txt",
                              "lines": [u for _s, u in v["lines"][:10]]}
                          for k, v in cmap.items()},
         }, f, ensure_ascii=False, indent=1)
+    _save_live_checks(repo, cmap, verified, shard, stats,
+                      {"mode": "full", "probed": n_probe, "cached": n_cache,
+                       "test_seconds": round(time.time() - t0, 1),
+                       "total_seconds": round(time.time() - t_start, 1)})
     return cmap, verified
 
 
 if __name__ == "__main__":
-    main()
+    _shard = os.environ.get("LIVE_SHARD")
+    _reuse = None
+    _args = sys.argv[1:]
+    if "--reuse-results" in _args:
+        _reuse = _args[_args.index("--reuse-results") + 1]
+    if "--shard" in _args:
+        _shard = _args[_args.index("--shard") + 1]
+    main(shard=_shard, reuse_results=_reuse)
