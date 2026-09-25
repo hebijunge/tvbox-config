@@ -690,13 +690,19 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
                 futs[ex.submit(_probe_timed, u)] = (std, u)
             if time.time() - t0 > budget_s:
                 break
+        # 2026-09-25 修复：预算只挡提交侧挡不住——submit 非阻塞，全部任务数秒内入队，
+        # 4400+ 条以 8 并发实跑 70min 撞死 job 90min 超时（9/23 起多轮 run cancelled 实证）。
+        # 收集侧同样受预算约束：预算耗尽即停止收集并取消未起跑任务，确保函数在预算内返回。
         for fut in as_completed(futs):
+            if time.time() - t0 > budget_s:
+                break
             std, u = futs[fut]
             ok, why, ms = fut.result()
             results.setdefault(std, []).append((u, ok, why, ms))
             n[0] += 1
             if n[0] % 50 == 0:
                 print("  tested %d lines ..." % n[0], flush=True)
+        cancelled = sum(1 for f in futs if f.cancel())
     verified = {}
     for std, lst in results.items():
         # 线路按速度升序：实测通过者按探流耗时小→大排列（同一频道内首条=最快线路，
