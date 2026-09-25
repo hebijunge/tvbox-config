@@ -66,7 +66,7 @@ def main() -> int:
             rec["error"] = err or ""
             if raw is None:
                 rec["error"] = info
-            outcome = record_result(state, name, ok_eval, whitelist_manual)
+            outcome = record_result(state, name, ok_eval, whitelist_manual, url=u["url"])
             if outcome == "disabled_now":
                 disabled_now.append(name)
             rec["fail_count"] = int(state[name].get("fail_count", 0))

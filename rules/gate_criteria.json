@@ -1,0 +1,64 @@
+{
+ "schema": "tvbox.gate_criteria/1",
+ "version": "2026-09-25.1",
+ "owner": "质检1号（评审）× 研发2号（执行）",
+ "review_process": "本文件是双线门禁口径的唯一权威定义。任何字段变更必须：commit 标注 [gate-change] 并提交质检1号评审通过后方可合入；未经评审的口径改动视为无效，质检复验以本文件裁决。",
+ "adult_zero_leak": {
+  "verdict_rule": "常规产物任一 adult 特征真实命中即 FAIL(exit 2) 一票否决；白名单命中 kind=guarded 不否决但入报告供质检复核",
+  "vocab_source": "state/vocab/categories.json（词表单源，两线不得另建词表副本）",
+  "scan": {
+   "top_files": ["tvbox.json", "vod.json", "live.json", "short.json", "list.json", "live_channels.json", "index.html", "README.md"],
+   "state_files": ["state/live_checks.json", "state/live_check_meta.json", "state/live_test_progress.jsonl"],
+   "dirs": ["lives", "stores", "json", "sync", "packs"],
+   "optional_snapshot": {"flag": "--include-snapshot", "dir": "snapshot"},
+   "excluded_reasons": {
+    "adult.json": "隔离通道本体，不属于常规消费通路",
+    "adult_live.json": "隔离通道本体",
+    "adult_live_channels/": "隔离通道本体",
+    "rules/": "adult 词表本体",
+    "snapshot/": "历史快照存档逐日只增不改，非消费通路（--include-snapshot 可审计）"
+   }
+  },
+  "whitelist_file": "state/adult_leak_whitelist.txt"
+ },
+ "grading": {
+  "live_five_levels": {
+   "fully": "时段内全部流测试 ok",
+   "partially": "时段内 1-2 次流测试 ok",
+   "unavailable": "时段内 0 次流测试 ok",
+   "not-parsable": "源 fetch 失败无流测试",
+   "drift": "频道数相对基线偏移 > 30%"
+  },
+  "drift_threshold": 0.30,
+  "real_availability_formula": "(fully*1.0 + partially*0.5 + drift*0.3) / graded_total（graded_total 不含 not-parsable）",
+  "timeslots": "stream_tests 按 index%3 分 morning/afternoon/evening，每时段 ≥3 次落库",
+  "upstream_levels": {
+   "fully_available": "配置可拉取且含 sites",
+   "partially_available": "JSON 有效但无 sites（有 lives/parses）",
+   "unavailable": "不可达/解析失败/HTML 页面/加密配置"
+  },
+  "compat_note": "health_report 4 级（healthy/degraded/unknown/dead）仅为兼容输出层，裁决以五级口径为准"
+ },
+ "thresholds": {
+  "upstream_fail_limit": 3,
+  "site_fail_limit": 3,
+  "probe_interval_days": 7,
+  "decay": {
+   "watch_after_days": 3,
+   "out_after_days": 7,
+   "not_pass_levels": ["unavailable"],
+   "note": "与 state/validated.json policy 段同源；validated.json 为运行时事实源，本处为口径声明"
+  }
+ },
+ "dedup": {
+  "layers": {
+   "L0": "规范键归一化（进 L1 之前）：URL=代理剥离(大小写不敏感/递归)+host小写去www+默认端口去除+尾斜杠/fragment去除、scheme 不参与比较；key=小写去分隔符；频道名=分组前缀剥离+全角转半角+繁转简+小写去分隔符（规则源 state/vocab/normalization.json）",
+   "L1": "同 key(规范键) 同 api 去重；同 key 不同 api 改名保留（产品 key 保持原样）",
+   "L2": "内容指纹 type + api(规范键) + jar(_jar_abs 优先)",
+   "L3": "lives/parses 归并：name(规范键) + URL(规范键)",
+   "L4": "跨日衰减：validated.json history 连续 not_pass(unavailable 或 disabled) >= watch_after_days(3) 日→watch（排除出聚合/分发默认输出）、>= out_after_days(7) 日→out（归档淘汰 decayed=true）；任一日通过自动复位回捞"
+  },
+  "single_definition": "scripts/dedup_layers.py + scripts/validated_state.py；飞书线 dedup_merge6 与 GitHub 线均引用本实现，禁止另建副本",
+  "source_of_truth": "state/validated.json（双线唯一验证状态；飞书线经 scripts/feishu_patrol_bridge.py 读写，GitHub 线经 fetch_merge/check_upstreams 读写）"
+ }
+}

@@ -40,6 +40,24 @@ TOP_FILES = ["tvbox.json", "vod.json", "live.json", "short.json", "list.json",
 STATE_FILES = ["state/live_checks.json", "state/live_check_meta.json",
                "state/live_test_progress.jsonl"]
 
+_GATE_FILE = os.path.join(ROOT, "rules", "gate_criteria.json")
+
+
+def _gate_scope():
+    """P1-A 门禁口径单一定义：扫描范围以 rules/gate_criteria.json 为准（变更须走质检评审）。
+    文件缺失/字段不全时退回内置默认（与本文件历史口径一致）并向 stderr 告警。"""
+    default_dirs = ["lives", "stores", "json", "sync", "packs"]
+    try:
+        g = json.load(open(_GATE_FILE, encoding="utf-8"))
+        sc = g["adult_zero_leak"]["scan"]
+        top, stf, dirs = sc["top_files"], sc["state_files"], sc["dirs"]
+        if top and stf and dirs:
+            return list(top), list(stf), list(dirs), None
+        return TOP_FILES, STATE_FILES, default_dirs, "gate_criteria 字段不全"
+    except Exception as e:  # noqa: BLE001
+        return TOP_FILES, STATE_FILES, default_dirs, str(e)
+
+
 _SITE_NAME_KEYS = ("name",)
 _SITE_URL_KEYS = ("api", "url", "jar", "playUrl", "ext")
 
@@ -218,8 +236,12 @@ def main():
     os.chdir(ROOT)
     wl = _whitelist_res(args.whitelist)
     hits = []
+    top_files, state_files, scan_dirs, gate_err = _gate_scope()
+    if gate_err:
+        print("[adult-leak] WARN 门禁口径文件不可用，退回内置默认扫描范围：%s" % gate_err,
+              file=sys.stderr)
 
-    for f in TOP_FILES + STATE_FILES:
+    for f in top_files + state_files:
         if os.path.isfile(f):
             if f.endswith(".json"):
                 scan_json(f, hits, wl)
@@ -228,7 +250,7 @@ def main():
 
     # 2026-09-25 质检整改：json/（解析规则库，曾漏 pornhub.json）与 sync/（飞书线同步
     # 配置，daily-fetch 每日作为上游吸收——此处泄漏等于每日撤销清洗结论）纳入扫描域。
-    for dirp in ("lives", "stores", "json", "sync"):
+    for dirp in scan_dirs:
         if not os.path.isdir(dirp):
             continue
         for dp, _dn, fs in os.walk(dirp):
@@ -264,7 +286,9 @@ def main():
         "whitelisted_count": len(guarded),
         "hits": real[:200],
         "whitelisted": guarded[:800],
-        "scope": {"top": TOP_FILES + STATE_FILES, "dirs": ["lives", "stores", "json", "sync", "packs"],
+        "scope": {"top": top_files + state_files, "dirs": scan_dirs,
+                  "scope_source": None if gate_err else "rules/gate_criteria.json",
+                  "scope_fallback_reason": gate_err,
                   "whitelist": args.whitelist if __import__("os").path.isfile(args.whitelist) else None,
                   "include_snapshot": bool(args.include_snapshot),
                   "excluded": ["adult.json", "adult_live.json", "adult_live_channels/",

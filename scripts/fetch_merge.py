@@ -82,7 +82,12 @@ MIN_BYTES_M3U = int(os.environ.get("MIN_BYTES_M3U", "1024"))       # m3u 类上�
 MIN_ENTRIES_M3U = int(os.environ.get("MIN_ENTRIES_M3U", "50"))     # m3u 至少多少条频道
 
 # ---- P0/P1：连续失败自动停用（黑白名单）----
-STATE_FILE = os.environ.get("STATE_FILE", "state/upstreams_state.json")
+# P1-A 双线职责收敛：验证状态唯一事实源 = state/validated.json（含 sources/sites 两段），
+# state/upstreams_state.json / state/sites_state.json 不再读写（见 scripts/validated_state.py）。
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import validated_state as _vs  # noqa: E402
+
+STATE_FILE = os.environ.get("STATE_FILE", "state/validated.json")  # 兼容引用；实际读写走 _vs
 BLACKLIST_AUTO = os.environ.get("BLACKLIST_AUTO", "state/blacklist_auto.txt")
 BLACKLIST_MANUAL = os.environ.get("BLACKLIST_MANUAL", "state/blacklist_manual.txt")
 WHITELIST_MANUAL = os.environ.get("WHITELIST_MANUAL", "state/whitelist_manual.txt")
@@ -2181,18 +2186,16 @@ def evaluate_upstream(u: dict, raw):
 # ---------------- P0/P1：状态、黑白名单 ----------------
 
 def load_state() -> dict:
-    try:
-        with open(STATE_FILE, "r", encoding="utf-8") as f:
-            s = json.load(f)
-        return s if isinstance(s, dict) else {}
-    except Exception:  # noqa: BLE001
-        return {}
+    """P1-A：sources 段读自 state/validated.json（单一事实源）。"""
+    return _vs.load_validated()["sources"]
 
 
 def save_state(state: dict):
-    os.makedirs(os.path.dirname(STATE_FILE) or ".", exist_ok=True)
-    with open(STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(state, f, ensure_ascii=False, indent=1, sort_keys=True)
+    """P1-A：sources 段写回 validated.json，落盘时应用第 4 层跨日衰减。"""
+    doc = _vs.load_validated()
+    doc["sources"] = state
+    _vs.apply_decay(doc)
+    _vs.save_validated(doc, note="GitHub 发现验证线写回（fetch_merge）")
 
 
 def read_name_list(path: str) -> list:
@@ -2203,10 +2206,15 @@ def read_name_list(path: str) -> list:
         return []
 
 
-def record_result(state: dict, name: str, ok: bool, whitelist_manual: list) -> str:
-    """更新连续失败计数；达阈值自动停用（手动白名单保护）。返回 'ok'/'disabled_now'/'failing'。"""
+def record_result(state: dict, name: str, ok: bool, whitelist_manual: list, url: str = None) -> str:
+    """更新连续失败计数；达阈值自动停用（手动白名单保护）。返回 'ok'/'disabled_now'/'failing'。
+    P1-A：同步写按日历史（第 4 层跨日衰减依据）与规范键 ckey（双线接口键）。"""
     now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S")
     ent = state.get(name) if isinstance(state.get(name), dict) else {}
+    if url:
+        ent.setdefault("url", url)
+        ent["ckey"] = _vs.canonical_key(url)
+    _vs.record_day(ent, ok)
     if ok:
         ent.update({"fail_count": 0, "last_ok_at": now, "disabled": False, "disabled_reason": ""})
         state[name] = ent
@@ -2234,18 +2242,15 @@ def sync_blacklist_auto(state: dict):
 
 
 def load_site_state() -> dict:
-    try:
-        with open(SITE_STATE_FILE, "r", encoding="utf-8") as f:
-            s = json.load(f)
-        return s if isinstance(s, dict) else {}
-    except Exception:  # noqa: BLE001
-        return {}
+    """P1-A：sites 段读自 state/validated.json（单一事实源）。"""
+    return _vs.load_validated()["sites"]
 
 
 def save_site_state(site_state: dict):
-    os.makedirs(os.path.dirname(SITE_STATE_FILE) or ".", exist_ok=True)
-    with open(SITE_STATE_FILE, "w", encoding="utf-8") as f:
-        json.dump(site_state, f, ensure_ascii=False, indent=1, sort_keys=True)
+    """P1-A：sites 段写回 validated.json（同一事实源文件）。"""
+    doc = _vs.load_validated()
+    doc["sites"] = site_state
+    _vs.save_validated(doc, note="GitHub 线站点验活历史写回（fetch_merge）")
 
 
 def apply_site_verdict(site_state: dict, key: str, name: str, ok: bool, now: str) -> dict:
@@ -3235,7 +3240,7 @@ def main() -> int:
                 rec["mirror_of"] = seen_sha[rec["sha256"]]
                 rec["status"] = "ok"
                 rec["grade"] = "镜像"
-                record_result(state, name, True, whitelist_manual)  # 健康分照常刷新，主域失效时可接管
+                record_result(state, name, True, whitelist_manual, url=u.get("url"))  # 健康分照常刷新，主域失效时可接管
                 rec["fail_count"] = 0
                 rec["last_ok_at"] = state[name].get("last_ok_at", "")
                 checks.append(rec)
@@ -3249,7 +3254,7 @@ def main() -> int:
         ok_eval, status_tag, detail, err = evaluate_upstream(u, raw)
         rec["status"] = status_tag
         rec["error"] = err or ""
-        outcome = record_result(state, name, ok_eval, whitelist_manual)
+        outcome = record_result(state, name, ok_eval, whitelist_manual, url=u.get("url"))
         if outcome == "disabled_now":
             disabled_now_list.append(name)
         rec["fail_count"] = int(state[name].get("fail_count", 0))

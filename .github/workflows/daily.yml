@@ -151,7 +151,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/guard_last.json state/upstreams_state.json state/blacklist_auto.txt || true
+          git add state/guard_last.json state/validated.json state/blacklist_auto.txt || true
           if git diff --cached --quiet; then
             echo "守卫触发且无状态变更，跳过提交"
           else
