@@ -1,7 +1,7 @@
 {
   "schema": "tvbox.live_vocab.categories/1",
-  "version": "2026-09-25.1",
-  "source_note": "央视/港台/轮播/地方：词表来自 live_aggregate 既有 PROVINCE_TABLE + HKTW_KW + iptv-org 大中华区官方 alt_names，辅以实测 142 CCTV / 81 港台 / 116 卫视 / 14 轮播样本补充；adult：来自 committed PORN_KW + 域 diff 所得 adult 独占二级域；local 多媒体 scheme rtp/udp 优先归地方。",
+  "version": "2026-09-25.2",
+  "source_note": "央视/港台/轮播/地方：词表来自 live_aggregate 既有 PROVINCE_TABLE + HKTW_KW + iptv-org 大中华区官方 alt_names，辅以实测 142 CCTV / 81 港台 / 116 卫视 / 14 轮播样本补充；adult：来自 committed PORN_KW + 域 diff 所得 adult 独占二级域；local 多媒体 scheme rtp/udp 优先归地方。 | 2026-09-25 项1 整改：依据质检1号 #1150 点名证据补 host 8 域 + kw 5 词（待 QC 复跑评审） | 2026-09-25 项1 整改 round2：补 host 8 域 + kw 6 词（含 jable）；处理 _proxy 镜像与 sync 直播成人频道（依据 QC #1150 预确认） | 2026-09-25 项1 整改 round2：补 host 8 域 + kw 6 词（含 jable）；处理 _proxy 镜像与 sync 直播成人频道（依据 QC #1150 预确认） | 2026-09-25 项1 整改 round2：补 host 8 域 + kw 6 词（含 jable 大小写）；处理 _proxy 镜像 + tvbox/vod/sync 三处 lives 数组（依据 QC #1150 预确认）",
   "priority": [
     "source_marker",
     "adult",
@@ -207,7 +207,13 @@
       "激情文学",
       "激情小说",
       "激情交友",
-      "激情聊天"
+      "激情聊天",
+      "玉兔",
+      "小黄书",
+      "乱伦",
+      "madouse",
+      "麻豆",
+      "jable"
     ],
     "name_pure_num_regex": "^\\d{1,3}$",
     "name_bracket_tag_regex": "^【(水果派|免费|愛欲|新晋|欧美版|歐美版|高清)】",
@@ -250,7 +256,13 @@
       "javbus.com",
       "javdb.com",
       "91porn.com",
-      "t66y.com"
+      "t66y.com",
+      "apiyutu.com",
+      "slapibf.com",
+      "madouse.la",
+      "siwazyw.com",
+      "91md.la",
+      "pornhub.com"
     ],
     "host_blacklist_pattern": "(?:^|[.\\-])(adult|xxx|porn|javhd|javbd|hentai|hcomic|18plus|xxbobo|xbobo|missav|sleazyred|hongkongdoll|pornhub|xvideos|xnxx)(?:[.\\-]|$)",
     "shared_cdn_no_blacklist": [
@@ -275,7 +287,14 @@
       "hongkongdoll",
       "pornhub",
       "xvideos",
-      "xnxx"
+      "xnxx",
+      "apiyutu",
+      "slapibf",
+      "jable",
+      "madouse",
+      "siwazyw",
+      "91porn",
+      "91md"
     ]
   },
   "cctv": {

@@ -1,39 +1,23 @@
-# 每日健康日报（人读版）
+# TVBox 健康日报 · 五级判级
 
-生成时间：2026-09-25T02:38:43
+生成时间: 2026-09-25T15:24:18
 
-## 总览
+## 五级计数
 
-| 类别 | 总量 | healthy | degraded | unknown | dead |
-|---|---|---|---|---|---|
-| 点播 | 3758 | 112 | 515 | 1745 | 1386 |
-| 直播 | 361 | 0 | 0 | 361 | 0 |
+| 级别 | 含义 | 计数 |
+|---|---|---|
+| fully | 三时段流测试全 ok | 0 |
+| partially | 部分 ok | 1 |
+| unavailable | 0 ok | 0 |
+| not-parsable | 源 fetch 失败/无 stream_tests | 0 |
+| drift | channels 偏移 >30% | 0 |
 
-较上轮变化：新增 1298｜掉线 6｜恢复 2｜移除 649（点播）；新增 180｜掉线 0｜恢复 0｜移除 85（直播）
+## 真实可用率
 
-## 点播掉线（前 10）
+**availability = 0.5** （(fully*1.0 + partially*0.5 + drift*0.3) / (fully+partially+unavailable+drift)）
 
-- 推荐┃龙门影视（degraded → dead）
-- 萌蛋（degraded → dead）
-- 🚀秒播┃爱看剧场（degraded → dead）
-- 🙀乌猫┃影视（degraded → dead）
-- 🆖短剧┃TV（degraded → dead）
-- 🛸碟迷┃影视（degraded → dead）
+## 与原 4 级 healthy/degraded/unknown/dead 兼容
 
-## 点播恢复（前 10）
-
-- 5️⃣南瓜┃影院（dead → degraded）
-- 影视|视觉（dead → degraded）
-
-## 点播新增（前 10）
-
--  🍁唐人街（unknown）
--  🍁海外看影视（unknown）
-- 39影视(聚)（unknown）
-- 51看剧(优)（unknown）
-- 523zyw523av（unknown）
-- 523zyw523zy（unknown）
-- 789盘(优)（unknown）
-- 8090资源(官)（unknown）
-- 8K影视(聚)（unknown）
-- 99zy99资源（unknown）
+`exports/health_report.json` 保留原 4 级口径输出（`interfaces.health` 列）；
+`state/live_checks.json` 新增 `grading_meta.five_level_counts` + `real_availability` 字段
+供 CI 钩子与日报消费。

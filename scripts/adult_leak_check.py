@@ -44,19 +44,57 @@ _SITE_NAME_KEYS = ("name",)
 _SITE_URL_KEYS = ("api", "url", "jar", "playUrl", "ext")
 
 
-def _iter_site_fields(obj):
-    """递归产出 (name, url) 字段对：dict 中 name 键 + 各 URL 键。"""
-    if isinstance(obj, dict):
-        names = [v for k, v in obj.items() if k in _SITE_NAME_KEYS and isinstance(v, str)]
-        urls = [v for k, v in obj.items() if k in _SITE_URL_KEYS and isinstance(v, str)]
-        for n in names:
-            for u in urls or [""]:
-                yield n, u
-        for v in obj.values():
-            yield from _iter_site_fields(v)
-    elif isinstance(obj, list):
-        for x in obj:
-            yield from _iter_site_fields(x)
+def _whitelist_res(whitelist_path):
+    """读误报白名单（每行一条正则，# 注释）。全部命中须可解释——白名单随仓库提交，
+    红线规则变更走质检评审（2026-09-25 质检1号独立验证整改项）。"""
+    if not whitelist_path or not os.path.isfile(whitelist_path):
+        return []
+    res = []
+    for ln in open(whitelist_path, encoding="utf-8"):
+        ln = ln.strip()
+        if ln and not ln.startswith("#"):
+            res.append(re.compile(ln, re.IGNORECASE))
+    return res
+
+
+def _scan_string(s, where, path, hits, wl):
+    """单字符串值扫描（QC 对齐口径：词/域子串命中即报，不做字段裁剪）。
+    URL 形态字符串另跑域名黑名单判定。命中且命中白名单时以 kind=guarded
+    显式记录（不静默跳过）——供质检复核白名单合理性；未命中不产生记录。"""
+    low = s.lower()
+    rule = None
+    for kw in la.PORN_KW:
+        if kw.lower() in low:
+            rule = "porn_kw:%s" % kw[:16]
+            break
+    if rule is None and "://" in s and la.is_adult_url(s):
+        rule = "host_blacklist"
+    if rule is None:
+        m = la.ADULT_SOURCE_RE.search(s)
+        if m:
+            rule = "source_pattern:%s" % m.group(0)[:24]
+    if rule is None:
+        return
+    kind = "guarded" if (wl and any(rx.search(s) for rx in wl)) else "word"
+    hits.append({"file": path, "where": where, "kind": kind,
+                 "value": s[:80], "rule": rule})
+
+
+def _iter_strings(node, where, path, hits, wl):
+    """全字段递归：任意 string 值都扫（含 categories/notes/嵌套 ext），不再限 name/url 子集。"""
+    if isinstance(node, str):
+        _scan_string(node, where or "$", path, hits, wl)
+    elif isinstance(node, dict):
+        for k, v in node.items():
+            if isinstance(k, str):
+                _scan_string(k, where + "/<key:%s>" % k[:24] if len(where) < 120 else where,
+                             path, hits, wl)
+            _iter_strings(v, (where + "/" + str(k))[:160] if len(where) < 150 else where,
+                          path, hits, wl)
+    elif isinstance(node, list):
+        for i, x in enumerate(node):
+            _iter_strings(x, "%s[%d]" % (where, i) if len(where) < 150 else where,
+                          path, hits, wl)
 
 
 def _name_reason(n):
@@ -75,33 +113,13 @@ def _url_reason(u):
     return False, ""
 
 
-def scan_json(path, hits):
+def scan_json(path, hits, wl=()):
     try:
         doc = json.load(open(path, encoding="utf-8"))
     except Exception as e:  # noqa: BLE001
         hits.append({"file": path, "where": "<json-load>", "err": str(e)[:80]})
         return
-    stack = [(doc, "")]
-    while stack:
-        node, where = stack.pop()
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if k in _SITE_NAME_KEYS and isinstance(v, str):
-                    ok, rule = _name_reason(v)
-                    if ok:
-                        hits.append({"file": path, "where": where + "/" + k,
-                                     "kind": "name", "value": v[:60], "rule": rule})
-                elif k in _SITE_URL_KEYS and isinstance(v, str):
-                    ok, rule = _url_reason(v)
-                    if ok:
-                        hits.append({"file": path, "where": where + "/" + k,
-                                     "kind": "url", "value": v[:80], "rule": rule})
-                if isinstance(v, (dict, list)):
-                    stack.append((v, where + "/" + str(k)))
-        elif isinstance(node, list):
-            for i, x in enumerate(node):
-                if isinstance(x, (dict, list)):
-                    stack.append((x, where + "/%d" % i))
+    _iter_strings(doc, "", path, hits, wl)
 
 
 def scan_text(path, hits, re_only=False):
@@ -185,53 +203,39 @@ def scan_zip(path, hits):
         hits.append({"file": path, "where": "<zip>", "err": str(e)[:80]})
 
 
-def scan_json_into(doc, path, hits):
-    stack = [(doc, "")]
-    while stack:
-        node, where = stack.pop()
-        if isinstance(node, dict):
-            for k, v in node.items():
-                if k in _SITE_NAME_KEYS and isinstance(v, str):
-                    ok, rule = _name_reason(v)
-                    if ok:
-                        hits.append({"file": path, "where": where + "/" + k,
-                                     "kind": "name", "value": v[:60], "rule": rule})
-                elif k in _SITE_URL_KEYS and isinstance(v, str):
-                    ok, rule = _url_reason(v)
-                    if ok:
-                        hits.append({"file": path, "where": where + "/" + k,
-                                     "kind": "url", "value": v[:80], "rule": rule})
-                if isinstance(v, (dict, list)):
-                    stack.append((v, where + "/" + str(k)))
-        elif isinstance(node, list):
-            for i, x in enumerate(node):
-                if isinstance(x, (dict, list)):
-                    stack.append((x, where + "/%d" % i))
+def scan_json_into(doc, path, hits, wl=()):
+    _iter_strings(doc, "", path, hits, wl)
 
 
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--include-snapshot", action="store_true")
     ap.add_argument("--report", default=os.path.join("state", "adult_leak_report.json"))
+    ap.add_argument("--whitelist", default=os.path.join("state", "adult_leak_whitelist.txt"),
+                    help="误报白名单（正则逐行，# 注释；默认 state/adult_leak_whitelist.txt，"
+                         "存在才加载。白名单命中以 kind=guarded 显式入报告，供质检复核）")
     args = ap.parse_args()
     os.chdir(ROOT)
+    wl = _whitelist_res(args.whitelist)
     hits = []
 
     for f in TOP_FILES + STATE_FILES:
         if os.path.isfile(f):
             if f.endswith(".json"):
-                scan_json(f, hits)
+                scan_json(f, hits, wl)
             else:
                 scan_text(f, hits, re_only=(f in ("index.html", "README.md")))
 
-    for dirp in ("lives", "stores"):
+    # 2026-09-25 质检整改：json/（解析规则库，曾漏 pornhub.json）与 sync/（飞书线同步
+    # 配置，daily-fetch 每日作为上游吸收——此处泄漏等于每日撤销清洗结论）纳入扫描域。
+    for dirp in ("lives", "stores", "json", "sync"):
         if not os.path.isdir(dirp):
             continue
         for dp, _dn, fs in os.walk(dirp):
             for f in fs:
                 p = os.path.join(dp, f)
                 if f.endswith(".json"):
-                    scan_json(p, hits)
+                    scan_json(p, hits, wl)
                 else:
                     scan_text(p, hits)
 
@@ -245,15 +249,23 @@ def main():
             for f in fs:
                 p = os.path.join(dp, f)
                 if f.endswith(".json"):
-                    scan_json(p, hits)
+                    scan_json(p, hits, wl)
                 else:
                     scan_text(p, hits)
 
+    # 2026-09-25 质检整改：白名单命中（kind=guarded）不计入一票否决，
+    # 单独计数入报告供质检复核白名单合理性；verdict 只看真实命中。
+    real = [h for h in hits if h.get("kind") != "guarded"]
+    guarded = [h for h in hits if h.get("kind") == "guarded"]
     report = {
-        "verdict": "PASS" if not hits else "FAIL",
+        "verdict": "PASS" if not real else "FAIL",
         "total_hits": len(hits),
-        "hits": hits[:200],
-        "scope": {"top": TOP_FILES + STATE_FILES, "dirs": ["lives", "stores", "packs"],
+        "violation_count": len(real),
+        "whitelisted_count": len(guarded),
+        "hits": real[:200],
+        "whitelisted": guarded[:800],
+        "scope": {"top": TOP_FILES + STATE_FILES, "dirs": ["lives", "stores", "json", "sync", "packs"],
+                  "whitelist": args.whitelist if __import__("os").path.isfile(args.whitelist) else None,
                   "include_snapshot": bool(args.include_snapshot),
                   "excluded": ["adult.json", "adult_live.json", "adult_live_channels/",
                                "rules/", "snapshot/"]},
@@ -261,17 +273,17 @@ def main():
     os.makedirs(os.path.dirname(args.report) or ".", exist_ok=True)
     with open(args.report, "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
-    if hits:
-        print("[adult-leak] FAIL：%d 处命中（一票否决，阻断发布）" % len(hits))
-        for h in hits[:20]:
+    if real:
+        print("[adult-leak] FAIL：%d 处命中（一票否决，阻断发布）" % len(real))
+        for h in real[:20]:
             rule = h.get("rule") or h.get("kind") or ""
             val = h.get("value") or h.get("err") or ""
             print("  %s %s  rule=%s  value=%s" % (
                 h.get("file", "?"), h.get("where", "?"), rule, val[:50]))
+        print("白名单拦截 %d 处（guard 记录入报告，待质检复核）" % len(guarded))
         print("报告：%s" % args.report)
         return 2
-    print("[adult-leak] PASS：常规产物零泄漏（%d 文件域扫描通过）" % (
-        len(TOP_FILES) + len(STATE_FILES) + 2))
+    print("[adult-leak] PASS：常规产物零泄漏（白名单拦截 %d 处，guard 明细入报告）" % len(guarded))
     print("报告：%s" % args.report)
     return 0
 
