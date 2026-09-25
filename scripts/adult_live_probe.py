@@ -60,8 +60,10 @@ async def probe_one(client, sem, url):
                 r = await client.get(url, headers=HEADERS, follow_redirects=True)
                 if 200 <= r.status_code < 300:
                     return True, r.status_code
-                if r.status_code < 500 and r.status_code != 429:
-                    return False, r.status_code  # 4xx 明确死，不重试（429 限流除外）
+                # 仅 404/410 等「资源不存在」类 4xx 与 5xx 视为死；
+                # 400/403/429 常是 CDN 对数据中心 IP 的 WAF 拦截，重试后交守卫判
+                if r.status_code < 500 and r.status_code not in (400, 403, 429):
+                    return False, r.status_code
             except Exception:
                 pass
             if attempt == 0:
@@ -88,13 +90,14 @@ async def probe_all(urls):
     return verdict
 
 
-UNREACHABLE_CODES = {0, 403, 429}
+UNREACHABLE_CODES = {0, 400, 403, 429}
 
 
 def guard_verdict(verdict):
-    """host 级守卫：Runner 出网 IP 可能被部分 CDN 拦截/限流，整域全死且状态码为
-    不可达类（连接失败/403/429）时，判定为「环境不可达」而非 URL 死链，全部保留。
-    只有真实 HTTP 响应（404/502 等）或同 host 存在存活 URL 时才认定死链。"""
+    """host 级守卫：Runner 出网 IP 会被部分 CDN 拦截/限流，表现为整域 403/400/429/
+    连接失败——这些都是环境信号而非死链证据，一律保留不删。
+    死链只认 404/410/5xx 这类「资源不存在/服务端错误」的真实响应
+    （同 host 有存活 URL 时该 host 的响应全部可信）。"""
     from urllib.parse import urlparse
     from collections import Counter
     host_urls = {}
@@ -103,18 +106,17 @@ def guard_verdict(verdict):
     guarded, host_report = {}, {}
     for host, us in host_urls.items():
         codes = Counter(verdict[u]["code"] for u in us)
-        any_alive = any(verdict[u]["ok"] for u in us)
         host_report[host] = {"total": len(us), "alive": sum(1 for u in us if verdict[u]["ok"]),
                              "codes": {str(k): v for k, v in codes.most_common(6)}}
         for u in us:
             v = verdict[u]
             if v["ok"]:
                 guarded[u] = {"ok": True, "code": v["code"]}
-            elif any_alive or v["code"] not in UNREACHABLE_CODES:
-                guarded[u] = {"ok": False, "code": v["code"]}
-            else:
-                # 环境 不可达：host 全死 + 不可达类状态码 → 保留不删
+            elif v["code"] in UNREACHABLE_CODES:
+                # 环境不可达类（连接失败/400/403/429）→ 保留不删
                 guarded[u] = {"ok": True, "code": v["code"], "unverifiable": True}
+            else:
+                guarded[u] = {"ok": False, "code": v["code"]}
     return guarded, host_report
 
 
