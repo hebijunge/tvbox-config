@@ -112,9 +112,10 @@ def main():
     ap.add_argument("--push", action="store_true", help="合并后提交并推送 GitHub")
     ap.add_argument("--dry-run", action="store_true", help="只读不写")
     a = ap.parse_args()
+    inputs_abs = [os.path.abspath(p) for p in a.inputs]  # 先解析输入路径，再切 repo 目录
     os.chdir(a.repo)
     doc = vs.load_validated(".")
-    rows = load_rows(a.inputs)
+    rows = load_rows(inputs_abs)
     stat = merge(doc, rows)
     before = len(doc["sources"])
     decay = vs.apply_decay(doc)
