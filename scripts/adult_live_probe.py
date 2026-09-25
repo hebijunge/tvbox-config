@@ -146,7 +146,7 @@ def main():
         print("no cat files", flush=True)
         return 2
 
-    # 1) 收集全量唯一 URL
+    # 1) 收集全量唯一 URL（cat 文件 + adult_live_channels.json 频道，两者都探）
     url_map = {}  # url -> set of file
     for p in cat_files:
         for l in read_lines(p):
@@ -155,6 +155,12 @@ def main():
                 continue
             for u in URL_RE.findall(s):
                 url_map.setdefault(u, set()).add(os.path.basename(p))
+    ch_path = os.path.join(ROOT, "adult_live_channels.json")
+    ch = json.load(open(ch_path, encoding="utf-8"))
+    chans = ch.get("channels", [])
+    for c in chans:
+        for u in URL_RE.findall(json.dumps(c, ensure_ascii=False)):
+            url_map.setdefault(u, set()).add("adult_live_channels.json")
     urls = sorted(url_map)
     print("[probe] files=%d urls=%d" % (len(cat_files), len(urls)), flush=True)
 
@@ -208,11 +214,7 @@ def main():
     print("[live] lives pruned=%d kept=%d" % (pruned, len(kept_lives)), flush=True)
 
     # 5) adult_live_channels.json 联动：剔除死链频道（仅剔除「已探过且死」的 URL；
-    #    未在本池 cat 文件中出现、未探过的 URL 一律保留，防止误删）
-    ch_path = os.path.join(ROOT, "adult_live_channels.json")
-    ch = json.load(open(ch_path, encoding="utf-8"))
-    chans = ch.get("channels", [])
-
+    #    万一仍有未探过的 URL，一律保留，防止误删）
     def chan_alive(c):
         urls = URL_RE.findall(json.dumps(c, ensure_ascii=False))
         if not urls:
