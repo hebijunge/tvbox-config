@@ -196,6 +196,16 @@ def load_validated(root=".") -> dict:
         doc = {}
     doc.setdefault("schema", SCHEMA)
     doc.setdefault("policy", json.loads(json.dumps(DEFAULT_POLICY)))
+    # 声明字段（note/not_pass_levels_note）由代码侧 DEFAULT_POLICY 刷新——
+    # 口径文案修订后旧文件中的陈旧声明随下次读取自动更新（阈值类字段仍尊重文件内既有值）。
+    pol = doc["policy"]
+    if isinstance(pol, dict):
+        pol.setdefault("decay", {})
+        if isinstance(pol["decay"], dict):
+            pol["decay"].setdefault("watch_after_days", DEFAULT_POLICY["decay"]["watch_after_days"])
+            pol["decay"].setdefault("out_after_days", DEFAULT_POLICY["decay"]["out_after_days"])
+            pol["decay"]["note"] = DEFAULT_POLICY["decay"]["note"]
+            pol["decay"]["not_pass_levels_note"] = DEFAULT_POLICY["decay"]["not_pass_levels_note"]
     doc.setdefault("sources", {})
     doc.setdefault("sites", {})
     return doc

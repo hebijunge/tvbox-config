@@ -47,7 +47,8 @@
    "watch_after_days": 3,
    "out_after_days": 7,
    "not_pass_levels": ["unavailable"],
-   "note": "与 state/validated.json policy 段同源；validated.json 为运行时事实源，本处为口径声明"
+   "not_pass_levels_note": "凡非 fully/partially 的档位（not-parsable/drift 等）同计 streak",
+   "note": "与 scripts/validated_state.py DEFAULT_POLICY 同源：disabled（fail-limit 停用）即时 out；未停用条目按连续 N 日 not_pass 衰减——watch=默认排除出聚合/分发产物，out=归档淘汰（decayed=true）不进任何产物，任一日通过即复位回捞。validated.json 为运行时事实源，本处为口径声明"
   }
  },
  "dedup": {
