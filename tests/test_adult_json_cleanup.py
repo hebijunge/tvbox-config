@@ -243,3 +243,48 @@ def test_coerce_parse_type():
     assert _coerce_parse_type("abc") is None
     assert _coerce_parse_type(None) is None
     assert _coerce_parse_type([1]) is None
+
+def test_wogg_netdisk_not_adult():
+    """2026-09-26 用户裁定：「玩偶」(wogg 系 4K 网盘影视站) 不属于成人分类。
+
+    此前「玩偶」是弱信号词，feishu-sync 上游含真成人站 → 上游投票把
+    13 个玩偶网盘站连带扫进 adult.json。移出词表后：
+    - 即使有上游投票（origin_votes 命中）也必须留 vod；
+    - 真成人站仍正常判 adult（词表其余部分不受影响）。
+    """
+    wogg_sites = [
+        {"key": "玩偶", "name": "👽玩偶哥哥┃4K弹幕", "api": "csp_WoGG",
+         "ext": {"siteUrl": "https://www.wogg.net/"}, "_origin": "feishu-sync"},
+        {"key": "玩偶哥哥-4", "name": "玩偶|4k网盘", "api": "csp_Wogg",
+         "ext": {"site": "https://wogg.xxooo.cf/"}, "_origin": "feishu-sync"},
+        {"key": "WOJH", "name": "玩偶聚合", "api": "csp_wojh", "_origin": "feishu-sync"},
+        {"key": "玩偶-3", "name": "玩偶", "api": "csp_Doll", "_origin": "feishu-sync"},
+        {"key": "玩偶弹幕", "name": "💯4K玩偶丨臻享HDR", "api": "csp_Wogg", "_origin": "feishu-sync"},
+    ]
+    votes = {"feishu-sync": 9}
+    for s in wogg_sites:
+        assert classify_site(s, origin_votes=votes) == "vod", \
+            f"玩偶网盘站被误判 adult: {s.get('name')}"
+        assert classify_site_strong_only(s) == "vod", \
+            f"strong-only 误判玩偶 adult: {s.get('name')}"
+    # 玩偶不再出现在任何成人词表
+    assert "玩偶" not in STRONG_ADULT_TOKENS
+    assert "玩偶" not in WEAK_ADULT_TOKENS
+    # 真成人站不受影响
+    assert classify_site({"name": "🔞小鸡资源", "key": "xjz",
+                          "api": "https://api.xiaojizy.live/provide/vod"},
+                         origin_votes=votes) == "adult"
+    assert classify_site({"name": "番号 | 采集", "key": "fhapi9",
+                          "api": "http://fhapi9.com/api.php/provide/vod/",
+                          "_origin": "feishu-sync"},
+                         origin_votes=votes) == "adult"
+
+
+import unittest as _unittest
+
+
+class WoggNetdiskClassification(_unittest.TestCase):
+    """CI(unittest discover)入口：玩偶网盘站回归 vod 的用例。"""
+
+    def test_wogg_netdisk_not_adult_ci(self):
+        test_wogg_netdisk_not_adult()
