@@ -135,12 +135,15 @@ def scan_text(path, hits, re_only=False):
                     hits.append({"file": path, "where": "L%d" % i,
                                  "kind": "url", "value": mu.group(0)[:80], "rule": rule})
             continue
+        # name,url 形式的 txt/m3u（仅当明显可解析为「名,url」时跑 name reason）
+        # ——纯 url 行（无逗号）跳过 name 判定，避免 1024/jav 等 url 路径数字被错杀
         parts = ln.split(",", 1)
         nm = parts[0].strip()
         u = parts[1].strip() if len(parts) > 1 else ""
         if ln.endswith("#genre#"):
             nm = ln[:-len("#genre#")].rstrip(",")
-        if nm:
+        # 名称侧必须非空且不含协议头（防止把裸 URL 误当名称）才跑 name reason
+        if nm and not nm.startswith(("http://", "https://", "rtmp://", "rtsp://")):
             ok, rule = _name_reason(nm)
             if ok:
                 hits.append({"file": path, "where": "L%d" % i,

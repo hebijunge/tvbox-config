@@ -29,19 +29,22 @@ def main():
 
     docs = {
         "adult_keywords.json": {
-            "_说明": "频道级 adult 词表（P0-2 第二重判定）。事实源=live_aggregate.PORN_KW，"
-                     "历轮真机产物补漏沉淀；is_adult()=词表命中 ∨ 纯数字短台位 ∨ "
+            "_说明": "频道级 adult 词表（P0-2 第二重判定）。事实源=state/vocab/categories.json "
+                     "（adult.name_keywords，2026-09-25 P0 收口集成起 live_aggregate 也从词表加载）；"
+                     "is_adult()=词表命中 ∨ 纯数字短台位 ∨ "
                      "【水果派/免费/愛欲】括号标 ∨ AV 番号日期码。",
             "porn_keywords": list(la.PORN_KW),
-            "pure_number_station": r"^\d{1,3}$",
+            "pure_number_station": la.ADULT_PURE_NUM.pattern,
             "bracket_tag": la.ADULT_BRACKET_TAG.pattern,
             "date_code": la.ADULT_DATE_CODE.pattern,
         },
         "adult_host_blacklist.json": {
-            "_说明": "域名级 adult 黑名单（P0-2 第三重判定）。后缀域根域取自仓库 adult "
+            "_说明": "域名级 adult 黑名单（P0-2 第三重判定）。事实源=state/vocab/categories.json "
+                     "（adult.host_blacklist_exact/tokens/pattern）；根域取自仓库 adult "
                      "实际产物（adult.json/adult_live.json/adult_live_channels.json，"
                      "5372 频道）播放与接口域名频次统计；子串 token 匹配任意后缀变体；"
-                     "裸 IP 不入表。is_adult_url()=host 后缀命中 ∨ token 子串命中。",
+                     "裸 IP 不入表；shared_cdn_no_blacklist 白名单优先放行。"
+                     "is_adult_url()=词表边界正则命中（含 token）。",
             "suffix_domains": list(la.ADULT_HOSTS),
             "host_tokens": list(la.ADULT_HOST_TOKENS),
         },

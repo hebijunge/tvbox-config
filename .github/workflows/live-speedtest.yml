@@ -1,0 +1,151 @@
+name: live-speedtest
+# 直播测速独立工作流（P0-3 测速与发布解耦，2026-09-25）：
+# - daily-fetch 不再内嵌测速；测速拆为独立 job，每 6h 一次分片轮转
+# - 4 shard × 6h = 全量覆盖一周期 ~24h；progress.jsonl 续跑（ok TTL 20h / fail TTL 4h）
+# - 发布只消费 state/live_check_meta.json 的「最近一次成功」标记（fetch_merge 26h 内即视为新鲜）
+# - 产物：lives/live_verified.txt / lives/live_verified.m3u / lives/live_precise.txt /
+#        lives/live_multicast.txt / live_channels.json / state/live_checks.json /
+#        state/live_test_progress.jsonl / state/live_check_meta.json
+#
+# 触发策略：4 个 cron 各自跑一片（每日各一片一次）。本工作流并发组 live-speedtest 顺序执行；
+# 任意 shard 卡死不会阻塞同组其他 shard（cancel-in-progress=false，单 shard 失败不影响下次）。
+#
+# 北京时间换算（UTC+8）：
+#   shard 0/4 → 00 UTC = 08 北京（晨间）首次拉取前序 cache
+#   shard 1/4 → 06 UTC = 14 北京（午后）覆盖上午分流
+#   shard 2/4 → 12 UTC = 20 北京（晚高峰前）
+#   shard 3/4 → 18 UTC = 02 北京（凌晨值守，规避白天 CI 配额高峰）
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # shard 0/4
+    - cron: "0 6 * * *"   # shard 1/4
+    - cron: "0 12 * * *"  # shard 2/4
+    - cron: "0 18 * * *"  # shard 3/4
+  workflow_dispatch:
+    inputs:
+      shard:
+        description: "手动触发可指定 shard 形如 i/n（不指定=全量 0/1）"
+        required: false
+        default: "0/1"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-speedtest
+  cancel-in-progress: false
+
+jobs:
+  speedtest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35  # 单 shard 探流预算 ~ LIVE_PROBE_BUDGET_S=600 + 落盘 + push
+    env:
+      # 单 shard 实测预算（秒）：600 = fetch_merge 默认；单 shard 1/4 频道量通常 8~12min 收敛
+      LIVE_PROBE_BUDGET_S: "600"
+      # progress.jsonl 续跑 TTL：ok 20h（与发布新鲜度 26h 窗口对齐，留 6h 余量给发布 job 自身跑完）
+      LIVE_PROGRESS_TTL_OK_S: "72000"
+      # fail 4h 重试（避免上游抖动立刻重测，又保证下游确能感知）
+      LIVE_PROGRESS_TTL_FAIL_S: "14400"
+      # 单源硬超时 40s（防单源吃穿全局预算；与 live_aggregate 默认一致）
+      LIVE_SOURCE_TIMEOUT_S: "40"
+      # 26h 新鲜度窗口 = fetch_merge 消费元数据的判定阈值；这里只为日志注释，不影响实测
+      LIVE_MAX_AGE_S: "93600"
+    steps:
+      - name: 解析本次 shard
+        id: shard
+        run: |
+          # workflow_dispatch 优先；cron 走 schedule 上下文推 shard index
+          if [ -n "${{ inputs.shard }}" ] && [ "${{ inputs.shard }}" != "0/1" ]; then
+            echo "value=${{ inputs.shard }}" >> "$GITHUB_OUTPUT"
+            echo "from=manual" >> "$GITHUB_OUTPUT"
+          else
+            # 从 GitHub event.cron 推断 shard：cron 串第 3 字段（小时）决定 shard
+            case "${{ github.event.schedule }}" in
+              "0 0 * * *")  S="0/4" ;;
+              "0 6 * * *")  S="1/4" ;;
+              "0 12 * * *") S="2/4" ;;
+              "0 18 * * *") S="3/4" ;;
+              *)            S="0/1" ;;  # 手动 dispatch 没指定 shard → 全量
+            esac
+            echo "value=$S" >> "$GITHUB_OUTPUT"
+            echo "from=cron" >> "$GITHUB_OUTPUT"
+          fi
+          echo "本次 shard=$S（trigger=${{ steps.shard.outputs.from }}）"
+
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 完整历史便于 git pull --rebase
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 加载 progress.jsonl（续跑）
+        # cron 跨 run 自动续跑：pull --rebase 后 state/live_test_progress.jsonl 已含上次 cache
+        # ok 记录 20h TTL 内直接消费，fail 记录 4h TTL 到期重试；新 shard 仅实测本片频道
+        run: |
+          if [ -f state/live_test_progress.jsonl ]; then
+            echo "progress.jsonl 已就绪：$(wc -l < state/live_test_progress.jsonl) 行"
+          else
+            echo "progress.jsonl 首次创建（空 progress 实测）"
+            mkdir -p state
+            : > state/live_test_progress.jsonl
+          fi
+
+      - name: 单 shard 实测（--shard ${{ steps.shard.outputs.value }}）
+        id: speedtest
+        # 测速总预算 35min；任一 shard 失败仅本 run 退出非零，下次 cron 续跑 progress 兜底
+        continue-on-error: true
+        run: |
+          python scripts/live_aggregate.py --shard "${{ steps.shard.outputs.value }}"
+          rc=$?
+          echo "rc=$rc" >> "$GITHUB_OUTPUT"
+          if [ "$rc" -ne 0 ]; then
+            echo "::warning::shard=${{ steps.shard.outputs.value }} 实测退出 $rc，下次 cron 续跑"
+          fi
+          exit 0
+
+      - name: 校验元数据新鲜度元数据完整性
+        # 测速快照若完全为空（cmap 为空），live_check_meta.json 仍会写但 channels=0，
+        # fetch_merge 会视为非 fresh 而回退本轮内聚合（保底：直播产物永远有产出）。
+        run: |
+          if [ ! -f state/live_check_meta.json ]; then
+            echo "::error::speedtest 未产出 live_check_meta.json"
+            exit 1
+          fi
+          python - <<'PY'
+          import json, time
+          from datetime import datetime
+          with open("state/live_check_meta.json", encoding="utf-8") as f:
+              meta = json.load(f)
+          ts = datetime.strptime(meta["updated"], "%Y-%m-%dT%H:%M:%S").timestamp()
+          age_h = (time.time() - ts) / 3600
+          print(f"meta: channels={meta.get('channels')} verified={meta.get('verified_channels')} "
+                f"shard={meta.get('shard')} age={age_h:.1f}h")
+          assert meta.get("channels", 0) > 0, "channels==0 元数据对 fetch_merge 无消费价值"
+          PY
+
+      - name: 提交并推送
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 测速产物全部入库；progress.jsonl 必然存在（步骤「加载 progress.jsonl」已 ensure）
+          git add lives/live_verified.txt \
+                  lives/live_verified.m3u \
+                  lives/live_precise.txt \
+                  lives/live_multicast.txt \
+                  lives/groups/ \
+                  live_channels.json \
+                  state/live_checks.json \
+                  state/live_check_meta.json \
+                  state/live_test_progress.jsonl
+          if git diff --cached --quiet; then
+            echo "本次 shard 无新测速产物，跳过提交"
+          else
+            # shard 写进提交信息便于回溯（哪个 shard 在何时跑过）
+            SD="${{ steps.shard.outputs.value }}"
+            git commit -m "chore(speedtest): live shard $SD $(date -u +%Y-%m-%dT%H:%M)"
+            git pull --rebase origin main || true
+            git push
+          fi

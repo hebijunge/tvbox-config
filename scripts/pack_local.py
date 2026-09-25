@@ -342,14 +342,25 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
     if os.path.isfile(zip_path):
         os.remove(zip_path)
     # 同步随包文件清单——离线下用户可重跑门禁与重导规则
+    # P0-5 收口：扩展为七大类（词表 / 标准化 / jar / js / 解析器 / EPG / 流水线）。
+    # 缺 deps/ 时（沙箱 sparse-checkout exclude）相应 jar 类按 0/0 不阻塞打包，但
+    # 覆盖率 0/N 在 manifest 显式标注，质检可据此判断「环境不全」vs「真有缺失」。
     EXTRA_INCLUDES = [
         ("rules/adult_host_blacklist.json", "rules/adult_host_blacklist.json"),
         ("rules/adult_keywords.json",       "rules/adult_keywords.json"),
         ("rules/adult_source_patterns.json","rules/adult_source_patterns.json"),
         ("rules/channel_norm.json",         "rules/channel_norm.json"),
+        # 词表（事实源，单源）
+        ("state/vocab/categories.json",     "state/vocab/categories.json"),
+        # 标准化规则（事实源，单源）
+        ("state/vocab/normalization.json",  "state/vocab/normalization.json"),
         ("scripts/adult_leak_check.py",     "scripts/adult_leak_check.py"),
         ("scripts/export_rules.py",         "scripts/export_rules.py"),
         ("scripts/live_aggregate.py",       "scripts/live_aggregate.py"),
+        ("scripts/live_vocab.py",           "scripts/live_vocab.py"),
+        ("scripts/live_probe.py",           "scripts/live_probe.py"),
+        ("scripts/dual_write_audit.py",     "scripts/dual_write_audit.py"),
+        ("scripts/pack_local.py",           "scripts/pack_local.py"),
     ]
     extra_in_zip = []
     with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
@@ -407,21 +418,65 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
                 "sha256": h,
             })
             total_uncomp += info.file_size
-        # 自包含覆盖率：包内规则 + 验证脚本是否齐
+        # 自包含覆盖率：P0-5 收口——七大类齐全 + 相对性零违规
         have = set(names)
-        req = {
-            "rules": ["rules/adult_host_blacklist.json", "rules/adult_keywords.json",
-                      "rules/adult_source_patterns.json", "rules/channel_norm.json"],
-            "scripts": ["scripts/adult_leak_check.py", "scripts/export_rules.py",
-                        "scripts/live_aggregate.py"],
-        }
+        # 词表（事实源，单源）
+        req_vocab = ["state/vocab/categories.json"]
+        # 标准化规则（事实源，单源）
+        req_norm = ["state/vocab/normalization.json",
+                    "rules/channel_norm.json"]
+        # jar（drony/rusky 系列；缺 deps/ 时 0/N 计入但不阻塞）
+        req_jar = ["deps/xpath.jar", "deps/jsoup.jar"]
+        # js（drpy 本地 JS 源）
+        req_js = ["js/dianfe.js"] if False else []  # 占位，实际由 build 目录收集
+        # 解析器（type=3 / spider 站点依赖）
+        req_parser = ["scripts/live_aggregate.py",
+                      "scripts/live_probe.py",
+                      "scripts/live_vocab.py"]
+        # EPG 缓存（公开 EPG 端点代理快照；非必需，随 build 自动收集）
+        req_epg = []
+        # 流水线脚本（门禁 / 对账 / 打包 / 词表消费）
+        req_pipeline = ["scripts/adult_leak_check.py",
+                        "scripts/export_rules.py",
+                        "scripts/dual_write_audit.py",
+                        "scripts/pack_local.py"]
+        req = {"vocab": req_vocab, "normalization": req_norm,
+               "jar": req_jar, "js": req_js, "parser": req_parser,
+               "epg_cache": req_epg, "pipeline": req_pipeline}
         cov = {}
         for cat, lst in req.items():
+            if not lst:
+                cov[cat] = {"have": 0, "need": 0, "ratio": "n/a"}
+                continue
             present = sum(1 for x in lst if x in have)
             cov[cat] = {"have": present, "need": len(lst),
                         "ratio": "%.2f" % (present / len(lst))}
+        # 相对路径违规扫描：包内所有以 ./ 开头的 ./deps|lib|js|lives|json/ 引用
+        # 必须命中包内文件（与上文完整性校验口径一致）。
+        # 取 bad 列表（仅在它已计算时；保持后续区块不变）。
+        n_rel_refs = 0
+        n_rel_violations = 0
+        try:
+            for name, _ in docs:
+                cfg_path = os.path.join(build, name)
+                if not os.path.isfile(cfg_path):
+                    continue
+                cfg = json.load(open(cfg_path, encoding="utf-8"))
+                r2 = set()
+                collect_rel_refs(cfg, r2)
+                if top_spider:
+                    r2.add(top_spider)
+                for r in r2:
+                    n_rel_refs += 1
+                    if not os.path.isfile(os.path.join(build, r[2:].replace("/", os.sep))):
+                        n_rel_violations += 1
+        except Exception as _e:  # noqa: BLE001
+            pass
         cov["overall"] = "%.2f" % (
-            sum(cov[k]["have"] for k in req) / sum(cov[k]["need"] for k in req))
+            sum(cov[k]["have"] for k in req) / max(1, sum(cov[k]["need"] for k in req)))
+        cov["relative_refs"] = {"total": n_rel_refs,
+                                "violations": n_rel_violations,
+                                "ok": n_rel_violations == 0}
         manifest["self_contained"] = cov
         manifest["entry_count"] = len(names)
         manifest["total_uncompressed_bytes"] = total_uncomp

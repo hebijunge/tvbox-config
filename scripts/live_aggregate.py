@@ -215,50 +215,31 @@ def _fold_group(cls):
     return "其他" if cls == "电台" else cls
 
 
-# ---- 成人/违规频道黑名单（2026-09-24）：TVBox 主直播源是家用电视直播，本仓「其他」组
-# 之前被大量成人/AV/广告台污染（来自 aptv、zonghe 等综合源），整体屏蔽：含特征码或关键词。
-PORN_KW = (
-    # AV 厂牌/番号前缀
-    "fc2ppv", "carib-", "caribpr", "carib ", "1pon", "10mu", "heyzo", "heyeo", "259luxu",
-    "midv-", "ssis-", "ipzz-", "sone-", "stars-", "adn-", "juq-", "abf-", "abp-", "miaa-",
-    "dass-", "meyd-", "hmn-", "fsdss-", "pred-", "hbad-", "nkkd-", "tyd-", "sspd-", "iptd-",
-    "cawd-", "cwpbd-", "s2mbd-", "jufe-", "mmz", "jvid", "ipx-", "abw-", "mkbd-", "t28",
-    "swag", "hamesamurai", "h_4610", "gachipxxx",
-    # 站点/系列
-    "adultiptv", "brazzers", "naughty america", "hustler", "dorcel", "playboy",
-    "penthouse", "fake taxi", "japan hdv", "kinoxxx", "cum4k", "eroxhd", "pinkoclub",
-    "pinkerotic", "redlight", "miamitv", "hongkongdoll", "private", "pornstar",
-    # 中文/日文特征词
-    "无码", "中出", "輪姦", "轮奸", "亂交", "乱交", "援交", "做爱", "做愛", "口交",
-    "自慰", "巨乳", "人妻", "熟女", "潮吹", "高潮", "肛交", "后入", "後入",
-    "痴女", "骑乘", "騎乘", "足交", "颜射", "顏射", "淫", "肉棒", "小穴", "操逼",
-    "叫床", "情色", "色情", "av片", "jav", "一本道", "加勒比", "松視", "松视",
-    "無修正", "未修正", "高校生", "人乳", "手淫", "媚药", "媚藥",
-    # 2026-09-24 二轮补漏：中文短语/口语化标题/英文俚语（aptv/zonghe 上游常见）
-    # 注意：不加「激情/深夜」等太宽泛词——会误杀「激情广场舞/深夜食堂」等合法频道
-    "东京热", "東京熱", "素人", "av女", "看片", "fuck", "黃片", "黄片",
-    "黄直播", "sexy", "sexe", "porn", "xxx", "骚b", "骚逼", "约炮", "一夜情",
-    "少妇", "偷拍", "厕所", "車震", "车震", "換妻", "换妻", "按摩", "特殊服务",
-    "裸聊", "裸舞", "蜜桃", "蜜桃臀", "蜜桃视频", "蜜桃視頻",
-    "国产av", "國產av", "国产精品", "亚洲无码", "亚洲有码",
-    "成人影院", "情色影院", "色情影院", "免费黄", "免费av",
-    "果冻传媒", "麻豆传媒", "天美传媒", "皇家华人",
-    "91porn", "91 porn", "1024", "草榴", "榴社区", "水果派", "香蕉啪",
-    "福利姬", "大尺度", "小仙女", "探花",
-    # 2026-09-24 产物核验补漏（处理后成品仍残留 2 条）
-    "gay", "欧美版", "歐美版",
-    # 2026-09-24 第三轮精准补充：含「激情」前缀但单独加「激情」会误杀「激情广场舞」；
-    # 仅捕获已知的成人/广告上下文组合
-    "激情午夜", "激情影院", "激情小视频", "激情视频", "激情在线", "激情免费", "激情啪啪",
-    "激情文学", "激情小说", "激情交友", "激情聊天",
-)
+# ---- 成人/违规频道黑名单（2026-09-24 立规；2026-09-25 P0 收口集成改为词表驱动）----
+# TVBox 主直播源是家用电视直播，本仓「其他」组之前被大量成人/AV/广告台污染（来自
+# aptv、zonghe 等综合源），整体屏蔽：含特征码或关键词。
+# 【词表消费对齐（P0 收口集成）】事实源 = state/vocab/categories.json（adult 节：
+# name_keywords + name_pure_num/bracket/date 三正则 + host 黑名单），与研发1号
+# 词表体系（scripts/live_vocab.py）共用一套词表，本文件只加载不再硬编码——
+# 避免双轨两套词表漂移。历轮真机产物补漏沉淀的 14 词 / 35 域 / 6 token 已于
+# 2026-09-25 迁入 categories.json（见其 source_note）。
+
+def _load_vocab_adult():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        os.pardir, "state", "vocab", "categories.json")
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)["adult"]
+
+
+_VOCAB_ADULT = _load_vocab_adult()
+PORN_KW = tuple(_VOCAB_ADULT["name_keywords"])
 # 仅命中纯数字短名（如 003/114/239）：来自某些 m3u 的「纯编号台位」，其中混编入大量
 # 成人频道——历史上 zero-padded 编号（≤3 位）与上述区段强相关，整体屏蔽
-ADULT_PURE_NUM = re.compile(r"^\d{1,3}$")
+ADULT_PURE_NUM = re.compile(_VOCAB_ADULT["name_pure_num_regex"])
 # 【水果派】/【免费】前缀 + 日文 A 片标题特征
-ADULT_BRACKET_TAG = re.compile(r"^【(水果派|免费|愛欲|新晋|欧美版|歐美版|高清)】")
+ADULT_BRACKET_TAG = re.compile(_VOCAB_ADULT["name_bracket_tag_regex"])
 # nXXXX/XXXX-XX-XX 编号台名（含连字符的纯数字/月份日期；前缀 n 为上游客编）
-ADULT_DATE_CODE = re.compile(r"^[a-z]?\d{4,6}[-_]\d{2,4}[-_]?\d{0,4}$")
+ADULT_DATE_CODE = re.compile(_VOCAB_ADULT["name_date_code_regex"])
 
 def is_adult(name: str) -> bool:
     """判断频道名是否属于成人/AV/广告垃圾——整体不进 live_verified.txt。"""
@@ -391,6 +372,21 @@ S2T_MAP = {
     "誌": "志", "質": "质", "選": "选", "譯": "译", "談": "谈", "靚": "靓", "購": "购",
     "賣": "卖", "廠": "厂", "銷": "销", "麗": "丽", "間": "间", "雙": "双",
 }
+
+# 【词表消费对齐（P0 收口集成）】繁简归一事实源 = state/vocab/normalization.json
+# （t2s 表，研发1号词表体系维护）；内置 S2T_MAP 为离线兜底（CI 词表缺失时仍可用）。
+# 取并集去重：词表与内置值零冲突（已核对），并集后归一键更全（745+9 字）。
+def _load_vocab_t2s():
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                        os.pardir, "state", "vocab", "normalization.json")
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f).get("t2s", {})
+    except Exception:  # noqa: BLE001  词表缺失/损坏时退回内置 83 字
+        return {}
+
+
+S2T_MAP.update(_load_vocab_t2s())
 
 # 别名归一（应用于去重键，全词小写匹配；保守条目，只并明显同台异名）
 ALIAS_MAP = {
@@ -1137,28 +1133,33 @@ def _is_adult_source(sid: str, url: str, name: str = "") -> bool:
 # 域名清单按「实际产物」提取（用户 2026-09-25 指令）：根域来自仓库内 adult 实际产物
 # （adult.json / adult_live.json / adult_live_channels.json 5372 频道）的播放/接口域名
 # 频次统计，取根域后缀匹配；裸 IP 不入表（无法归因根域）。由 scripts/export_rules.py
-# 与本常量同步导出 rules/adult_host_blacklist.json（代码常量为唯一事实源）。
-ADULT_HOSTS = (
-    "mycamtv.net", "slbfsl.com", "cdnedge.live", "ddyunbo.com", "aosikazy12.com",
-    "redtraffic.xyz", "adultiptv.net", "lbbf9.com", "ckzy1com.com", "fhbf9.com",
-    "cbilant.com", "akadatel.com", "lbapi9.com", "askzybfvideo.com", "fhapi9.com",
-    "lsbbf1.com", "lajiao-bo.com", "dadi-bo.com", "49cdn.com", "tvdosug.net",
-    "bpzy1.com", "shayubf.com", "3sybf.com", "xiaojizy.live", "apidanaizi.com",
-    "douapi.cc", "jp-primehome.com", "streamlock.net", "ottclub.xyz",
-    # 既有补漏沉淀（此前散落在 ADULT_SOURCE_RE / PORN_KW 中的域名形态归并到这里）
-    "jable.tv", "javbus.com", "javdb.com", "91porn.com", "t66y.com",
-)
+# 与本常量同步导出 rules/adult_host_blacklist.json。
+# 【词表消费对齐（P0 收口集成）】事实源已迁至 state/vocab/categories.json
+# （adult.host_blacklist_exact / host_blacklist_tokens / host_blacklist_pattern /
+# shared_cdn_no_blacklist），本文件只加载；iptvxxx.net 因与 shared_cdn_no_blacklist
+# 冲突按误伤防护不收黑名单。共用 CDN 白名单命中直接放行（防误伤正常频道）。
+ADULT_HOSTS = tuple(_VOCAB_ADULT["host_blacklist_exact"])
 # 子串级 token：匹配任意后缀变体（missav.ws / missav.zone …）或出现在 host 中的标记词
-ADULT_HOST_TOKENS = ("missav", "sleazyred", "hongkongdoll", "pornhub", "xvideos", "xnxx")
-_ADULT_HOST_RE = re.compile(
+ADULT_HOST_TOKENS = tuple(_VOCAB_ADULT["host_blacklist_tokens"])
+_ADULT_HOST_RE = re.compile(_VOCAB_ADULT["host_blacklist_pattern"], re.IGNORECASE)
+# 精选域名后缀匹配（词表 host_blacklist_exact；生产实证清单，优先级最高、不适用共用 CDN 豁免）
+_ADULT_HOST_EXACT_RE = re.compile(
     r"(?:^|\.)(?:" + "|".join(re.escape(h) for h in ADULT_HOSTS) + r")$",
     re.IGNORECASE,
 )
+_SHARED_CDN_DOMAINS = tuple(_VOCAB_ADULT.get("shared_cdn_no_blacklist", []))
+
+
+def _is_shared_cdn_host(host: str) -> bool:
+    """host 落在共用 CDN 白名单（注册域后缀命中）→ 不按成人 token 处理（防误伤）。"""
+    return any(host == d or host.endswith("." + d) for d in _SHARED_CDN_DOMAINS)
 
 
 def is_adult_url(u: str) -> bool:
-    """URL 域名级成人判定（P0-2 第三重判定）。host 后缀匹配 ADULT_HOSTS，
-    或 host 含 ADULT_HOST_TOKENS 子串；非法 URL 放行给上游判定层。"""
+    """URL 域名级成人判定（P0-2 第三重判定）。判定序：
+    ① 词表精选域名后缀命中 → True（生产实证，不受共用 CDN 豁免影响）；
+    ② 共用 CDN 白名单命中 → False（防误伤正常频道）；
+    ③ 词表边界正则（含 token）命中 → True；非法 URL 放行给上游判定层。"""
     if not u:
         return False
     try:
@@ -1167,9 +1168,11 @@ def is_adult_url(u: str) -> bool:
         return False
     if not host:
         return False
-    if _ADULT_HOST_RE.search(host):
+    if _ADULT_HOST_EXACT_RE.search(host):
         return True
-    return any(t in host for t in ADULT_HOST_TOKENS)
+    if _is_shared_cdn_host(host):
+        return False
+    return bool(_ADULT_HOST_RE.search(host))
 
 
 

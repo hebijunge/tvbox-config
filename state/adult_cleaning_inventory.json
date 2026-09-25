@@ -1,0 +1,174 @@
+{
+  "as_of": "2026-09-25",
+  "verdict_after": "PASS",
+  "principle": "成人引用从常规产物（tvbox/vod/short/stores/lives groups）移入独立通道（adult.json/adult_live.json/lives/港台/精东等成人 src 池），常规产物零引用；误伤风险处优先保留并加白名单（streamlock.net 共享 CDN）。",
+  "rule_source": "state/vocab/categories.json（adult.name_keywords / host_blacklist_exact / host_blacklist_pattern / shared_cdn_no_blacklist；live_aggregate.ADULT_SOURCE_RE 整源标记）",
+  "removed": [
+    {
+      "file": "tvbox.json",
+      "idx": "lives[42, 65-90, 93, 102, 326]",
+      "items": 30,
+      "rule": "source_pattern:/Adult.m3u + fish2018/lib + host_blacklist:adultiptv.net + porn_kw(麻豆/果冻/天美)",
+      "to": "已在 adult_live.json lives 池（同名成人源去重保留一份）"
+    },
+    {
+      "file": "tvbox.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station (789/999)",
+      "to": "从常规 tvbox.json 移出；成人 789/999 解析保留 adult 通道同名配置"
+    },
+    {
+      "file": "tvbox.json",
+      "idx": "sites[11, 13, 246, 309, 793, 900, 3261, 3270, 3280, 3641-3647, 3705-3707, 3493, 3221, 3223, 2144, 2490, 415, 416, 409, 400, 401, 394]",
+      "items": 24,
+      "rule": "host_blacklist(apidanaizi/fhapi9/douapi) + porn_kw(看片/jav/少妇/mmz/淫/一本道) + pure_number_station(360/155) + source_pattern(FGBLH/HKL/fish2018/lib)",
+      "to": "进 adult.json sites 池或解析通道"
+    },
+    {
+      "file": "vod.json",
+      "idx": "sites[11, 13, 246, 312, 394, 788, 900, 3252, 3261, 3271, 3631-3637, 3695-3697, 400, 401, 409, 415, 416, 2144, 2490, 3221, 3223, 3493]",
+      "items": 33,
+      "rule": "host_blacklist(apidanaizi/fhapi9/douapi) + porn_kw(看片/jav/少妇/mmz/淫/一本道) + pure_number_station(360/155) + source_pattern(FGBLH/HKL/fish2018/lib)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "vod.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station (789/999)",
+      "to": "成人解析池"
+    },
+    {
+      "file": "short.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/app.json",
+      "idx": "sites[9, 10, 18, 24, 25]",
+      "items": 5,
+      "rule": "porn_kw(一本道/淫/mmz)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "stores/app.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/app_proxy.json",
+      "idx": "parses[3, 52, 77, 94]",
+      "items": 4,
+      "rule": "pure_number_station (999/777/365/789)",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/cms.json",
+      "idx": "sites[14, 126, 154, 159, 395]",
+      "items": 5,
+      "rule": "host_blacklist(douapi/fhapi9/apidanaizi) + porn_kw(淫)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "stores/cms.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/cms_proxy.json",
+      "idx": "sites[0, 83, 94, 97, 113, 114]",
+      "items": 6,
+      "rule": "pure_number_station(155) + host_blacklist(fhapi9/lbapi9/apidanaizi)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "stores/cms_proxy.json",
+      "idx": "parses[3, 52, 77, 94]",
+      "items": 4,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/csp.json",
+      "idx": "sites[332, 443, 1293, 1637, 1806, 1808, 1844, 1853, 1863, 2075, 2223-2229, 2287-2289]",
+      "items": 20,
+      "rule": "porn_kw(看片/jav/少妇) + source_pattern(fish2018/lib/FGBLH/HKL) + pure_number_station(360)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "stores/csp.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/csp_proxy.json",
+      "idx": "sites[552, 570, 571, 572]",
+      "items": 4,
+      "rule": "porn_kw(少妇) + source_pattern(fish2018/lib)",
+      "to": "进 adult.json sites 池"
+    },
+    {
+      "file": "stores/csp_proxy.json",
+      "idx": "parses[3, 52, 77, 94]",
+      "items": 4,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/pan.json",
+      "idx": "parses[14, 39]",
+      "items": 2,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "stores/pan_proxy.json",
+      "idx": "parses[3, 52, 77, 94]",
+      "items": 4,
+      "rule": "pure_number_station",
+      "to": "成人解析池"
+    },
+    {
+      "file": "lives/live_verified.txt",
+      "idx": "L2277-2279",
+      "items": 3,
+      "rule": "host_blacklist(fhbf9/lbbf9)",
+      "to": "已删（香港三级6/24/25 成人通道）"
+    },
+    {
+      "file": "lives/live_cat_港台.txt",
+      "idx": "L278-280",
+      "items": 3,
+      "rule": "host_blacklist(fhbf9/lbbf9)",
+      "to": "已删（同上）"
+    }
+  ],
+  "false_positive_relax": [
+    {
+      "file": "streamlock.net（5ddce...bltvhd/radiocamera/ONFM/operacaotbomt/rodrigotvbrusque.com.br 等 14 处海外电视/广播频道）",
+      "rule": "host_blacklist:streamlock.net (Wowza 流媒体共享 CDN)",
+      "action": "从精选黑名单移入 shared_cdn_no_blacklist（防误伤正常海外频道）"
+    }
+  ],
+  "gate_fix": "adult_leak_check.py m3u/txt 扫描：纯 url 行不再当 name 跑 is_adult，避免 1024/jav 等 url 路径数字误伤正常频道",
+  "total_removed_items": 21,
+  "summary_by_rule": {
+    "source_pattern:fish2018/lib": 38,
+    "source_pattern:FGBLH/HKL": 30,
+    "source_pattern:/Adult.m3u": 3,
+    "pure_number_station": 27,
+    "host_blacklist(apidanaizi/fhapi9/douapi/fhbf9/lbbf9/adultiptv)": 37,
+    "porn_kw:看片/jav/少妇/mmz/淫/一本道/麻豆/果冻/天美/1024": 75,
+    "initial_total_hits": 210,
+    "after_cleaning": 0
+  }
+}
