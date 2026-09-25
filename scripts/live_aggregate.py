@@ -614,39 +614,98 @@ def load_source(sid, url, repo):
     return parse_tvbox_txt(text)
 
 
+def _merge_channel_rows(cmap, rows, sid):
+    """把一组 (频道名, URL) 行按统一口径并入 cmap（build_channel_map 内循环抽取）：
+    norm_channel 归类 → is_adult(名) → is_adult_url(URL) → dedup_key 聚合键 →
+    URL 级去重。iptvorg 晋升流汇入（merge_iptvorg_promoted）复用同一口径。"""
+    for name, u in rows:
+        std, cls = norm_channel(name)
+        if not std:
+            continue
+        # batch18：春晚历史轮播专项分组（hacks 春晚源，seasonal）——
+        # 「xxxx年春晚」类频道 norm_channel 落不进任何大分类，会散入「其他」；
+        # 这里按来源强制落「春晚(季节性)」专项组（组序见 BIG_ORDER）
+        if sid == "chunwan" and "春晚" in (name or ""):
+            cls = "春晚(季节性)"
+        # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
+        if is_adult(std) or is_adult(name):
+            continue
+        # 2026-09-25 P0-2 成人隔离红线·第三重判定：频道 URL 命中 adult 根域黑名单即整行剔除
+        if is_adult_url(u):
+            continue
+        # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
+        # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
+        key = dedup_key(std)
+        ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": [],
+                                    "_seen": set()})
+        if group_sort_key(cls) < group_sort_key(ent["class"]):
+            ent["class"] = cls
+        # 2026-09-23 分类重构：频道内 URL 级去重——同一 URL 被多条上游重复收录
+        # 时只记一条（旧口径下未实测频道会出现 6 条一模一样的「假线路」）
+        if u not in ent["_seen"]:
+            ent["_seen"].add(u)
+            ent["lines"].append((sid, u))
+
+
 def build_channel_map(sources, repo):
     cmap = OrderedDict()
     for sid, url in sources:
         chans = load_source(sid, url, repo)
         print("  [%s] %d channels" % (sid, len(chans)), flush=True)
-        for name, u in chans:
-            std, cls = norm_channel(name)
-            if not std:
-                continue
-            # batch18：春晚历史轮播专项分组（hacks 春晚源，seasonal）——
-            # 「xxxx年春晚」类频道 norm_channel 落不进任何大分类，会散入「其他」；
-            # 这里按来源强制落「春晚(季节性)」专项组（组序见 BIG_ORDER）
-            if sid == "chunwan" and "春晚" in (name or ""):
-                cls = "春晚(季节性)"
-            # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
-            if is_adult(std) or is_adult(name):
-                continue
-            # 2026-09-25 P0-2 成人隔离红线·第三重判定：频道 URL 命中 adult 根域黑名单即整行剔除
-            if is_adult_url(u):
-                continue
-            # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
-            # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
-            key = dedup_key(std)
-            ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": [],
-                                        "_seen": set()})
-            if group_sort_key(cls) < group_sort_key(ent["class"]):
-                ent["class"] = cls
-            # 2026-09-23 分类重构：频道内 URL 级去重——同一 URL 被多条上游重复收录
-            # 时只记一条（旧口径下未实测频道会出现 6 条一模一样的「假线路」）
-            if u not in ent["_seen"]:
-                ent["_seen"].add(u)
-                ent["lines"].append((sid, u))
+        _merge_channel_rows(cmap, chans, sid)
     return cmap
+
+
+# ---- 2026-09-25 P1 收口：iptv-org canary 晋升流汇入 ----
+# 数据源：state/upstreams/iptvorg.normal.json（canary_promote.py --promote 产物，
+# 形态与 extra_upstreams.json 同构：{"generated_at", "upstreams":[{name,url,...}]}）。
+# 汇入口径与 adult 三重红线完全同链：① 每条先过 _is_adult_source(sid,url,name)
+# （源级词表正则）；② _merge_channel_rows 内 is_adult(名) + is_adult_url(URL)；
+# ③ norm_channel + dedup_key 与其余上游同一聚合键（繁简/别名/后缀归一 + URL 去重）。
+# 文件缺失 / 为空 / 损坏一律 no-op（首晋升前 state/upstreams/ 尚不存在，不报错）。
+IPTVORG_PROMOTED_PATH = os.path.join("state", "upstreams", "iptvorg.normal.json")
+
+
+def load_iptvorg_promoted(repo):
+    """读 canary 晋升产物，返回 [(name, url)]。缺失/空/损坏 → []（no-op）。"""
+    path = os.path.join(repo, IPTVORG_PROMOTED_PATH)
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        rows = []
+        for ent in (data or {}).get("upstreams") or []:
+            if not isinstance(ent, dict):
+                continue
+            u = (ent.get("url") or "").strip()
+            name = (ent.get("name") or "").strip()
+            if u and name:
+                rows.append((name, u))
+        return rows
+    except FileNotFoundError:
+        return []
+    except Exception as e:  # noqa: BLE001  损坏不阻断聚合，照常 no-op
+        print("[iptvorg] promoted 文件读取失败（忽略，no-op）: %s" % e, flush=True)
+        return []
+
+
+def merge_iptvorg_promoted(cmap, repo):
+    """把 iptv-org 晋升频道并入聚合 cmap，返回并入条数（0=文件缺失/全过滤）。"""
+    rows = load_iptvorg_promoted(repo)
+    if not rows:
+        return 0
+    kept = [(n, u) for n, u in rows
+            if not _is_adult_source("iptvorg", u, n)]
+    dropped = len(rows) - len(kept)
+    if dropped:
+        print("[iptvorg] promoted 源级 adult 过滤剔除 %d 条" % dropped, flush=True)
+    if not kept:
+        return 0
+    before = sum(len(v["lines"]) for v in cmap.values())
+    _merge_channel_rows(cmap, kept, "iptvorg")
+    after = sum(len(v["lines"]) for v in cmap.values())
+    print("[iptvorg] promoted 汇入 %d 条（新增线路 %d）" % (len(kept), after - before),
+          flush=True)
+    return after - before
 
 
 def _is_core_class(cls):
@@ -1358,7 +1417,12 @@ def main(repo=None, out_txt="lives/live_verified.txt",
     sources = build_sources(repo)
     print("loading %d sources ..." % len(sources), flush=True)
     cmap = build_channel_map(sources, repo)
-    print("channels: %d" % len(cmap), flush=True)
+    # 2026-09-25 P1 收口：iptv-org canary 晋升流汇入（adult 三重红线同口径）。
+    # 放在其余上游之后并入：norm_channel/dedup_key 聚合键与 URL 级去重会自动
+    # 与既有频道合并或新增频道；无晋升产物时 no-op。
+    n_iptvorg = merge_iptvorg_promoted(cmap, repo)
+    print("channels: %d (iptvorg promoted lines: %d)" % (len(cmap), n_iptvorg),
+          flush=True)
     t0 = time.time()
     verified, raw = test_channel_lines(cmap, budget_s=420, shard=shard)
     n_probe = sum(1 for _u, _ok, w, _ms in
