@@ -60,8 +60,8 @@ async def probe_one(client, sem, url):
                 r = await client.get(url, headers=HEADERS, follow_redirects=True)
                 if 200 <= r.status_code < 300:
                     return True, r.status_code
-                if r.status_code < 500:
-                    return False, r.status_code  # 4xx 明确死，不重试
+                if r.status_code < 500 and r.status_code != 429:
+                    return False, r.status_code  # 4xx 明确死，不重试（429 限流除外）
             except Exception:
                 pass
             if attempt == 0:
@@ -207,11 +207,20 @@ def main():
         write_lines(live_path, json.dumps(live, ensure_ascii=False, indent=2).split("\n"))
     print("[live] lives pruned=%d kept=%d" % (pruned, len(kept_lives)), flush=True)
 
-    # 5) adult_live_channels.json 联动：剔除死链频道
+    # 5) adult_live_channels.json 联动：剔除死链频道（仅剔除「已探过且死」的 URL；
+    #    未在本池 cat 文件中出现、未探过的 URL 一律保留，防止误删）
     ch_path = os.path.join(ROOT, "adult_live_channels.json")
     ch = json.load(open(ch_path, encoding="utf-8"))
     chans = ch.get("channels", [])
-    kept_ch = [c for c in chans if line_alive(json.dumps(c, ensure_ascii=False), verdict)[0]]
+
+    def chan_alive(c):
+        urls = URL_RE.findall(json.dumps(c, ensure_ascii=False))
+        if not urls:
+            return True
+        known = [verdict[u]["ok"] for u in urls if u in verdict]
+        return any(known) if known else True
+
+    kept_ch = [c for c in chans if chan_alive(c)]
     ch["channels"] = kept_ch
     if not args.dry_run:
         write_lines(ch_path, json.dumps(ch, ensure_ascii=False, indent=2).split("\n"))
