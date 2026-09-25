@@ -1,117 +1,74 @@
 {
-  "entries": [
+ "entries": [
+  {
+   "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
+   "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
+   "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
+   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+   "ua": "TVBox",
+   "channels": 6242,
+   "groups": [
+    "其他",
+    "卫视",
+    "地方-上海",
+    "地方-云南",
+    "地方-内蒙古",
+    "地方-北京",
+    "地方-吉林",
+    "地方-四川"
+   ],
+   "bytes": 554762,
+   "stream_tests": [
     {
-      "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
-      "url_raw": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
-      "url": "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_verified.txt",
-      "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-      "ua": "TVBox",
-      "channels": 6245,
-      "groups": [
-        "其他",
-        "卫视",
-        "地方-上海",
-        "地方-云南",
-        "地方-内蒙古",
-        "地方-北京",
-        "地方-吉林",
-        "地方-四川"
-      ],
-      "bytes": 554952,
-      "stream_tests": [
-        {
-          "stream": "http://198.204.228.26/live/sdwshd.m3u8",
-          "ok": true,
-          "why": "ct:application/vnd.apple.mpegurl"
-        },
-        {
-          "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
-          "ok": true,
-          "why": "ct:audio/x-mpegurl"
-        },
-        {
-          "stream": "https://live.ottiptv.cc/huya/22360453",
-          "ok": true,
-          "why": "ct:video/x-flv"
-        },
-        {
-          "stream": "https://event.pull.hebtv.com/jishi/nongminpindao.m3u8",
-          "ok": false,
-          "why": "http_404"
-        },
-        {
-          "stream": "http://124.88.144.73:1935/live/dywt/playlist.m3u8",
-          "ok": false,
-          "why": "no_response"
-        }
-      ],
-      "streams_ok": 3,
-      "status": "ok",
-      "ffprobe": [
-        {
-          "stream": "http://198.204.228.26/live/sdwshd.m3u8",
-          "ok": true,
-          "info": {
-            "codecs": [
-              "h264",
-              "aac"
-            ],
-            "video": {
-              "codec": "h264",
-              "w": 1280,
-              "h": 720
-            }
-          }
-        },
-        {
-          "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
-          "ok": true,
-          "info": {
-            "codecs": [
-              "h264",
-              "aac"
-            ],
-            "video": {
-              "codec": "h264",
-              "w": 1920,
-              "h": 1080
-            }
-          }
-        }
-      ],
-      "grading": {
-        "grade": "partially",
-        "ok_count": 3,
-        "total_count": 5,
-        "fully": 0,
-        "partially": 1,
-        "unavailable": 0,
-        "drift": 0
-      },
-      "timeslots": {
-        "morning": "partially",
-        "afternoon": "partially",
-        "evening": "fully"
-      },
-      "timeslot_probes": {
-        "morning": 2,
-        "afternoon": 2,
-        "evening": 1
-      }
-    }
-  ],
-  "grading_meta": {
-    "five_level_counts": {
-      "fully": 0,
-      "partially": 1,
-      "unavailable": 0,
-      "not-parsable": 0,
-      "drift": 0
+     "stream": "http://198.204.228.26/live/sdwshd.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
-    "real_availability": 0.5,
-    "formula": "(fully*1.0 + partially*0.5 + drift*0.3) / (fully+partially+unavailable+drift)",
-    "timeslot_partition": "morning/afternoon/evening (index % 3)",
-    "generated_at": "2026-09-25T15:24:18",
-    "note": "项6 整改 round2：基于现有 stream_tests 字段分桶补齐五级 + 真实可用率，待 live_probe 增加 true timeslot 调度后切到原生三次/时段落库。"
+    {
+     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
+     "ok": true,
+     "why": "ct:audio/x-mpegurl"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/huya/23863787",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://live.lalifeier.eu.org/hebtv/hbnm.m3u8?t=1746307365&key=f8b778466518d5f6d89b1a38fcbea28d",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "http://124.88.144.73:1935/live/dywt/playlist.m3u8",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 3,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "http://198.204.228.26/live/sdwshd.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
+    {
+     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
+     "ok": false,
+     "why": "probe_failed"
+    }
+   ]
   }
+ ]
 }
