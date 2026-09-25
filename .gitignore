@@ -15,3 +15,19 @@ state/*.db-journal
 logs/
 packs/
 state/adult_leak_report.json
+
+
+# iptv-org 原始抓取缓存（channels 7.8MB / streams ~17MB，可由 fetch 重建）；
+# fetch_meta.json（溯源 commit_sha）很小，照常入库。
+state/iptvorg/channels.json
+state/iptvorg/streams.json
+state/iptvorg/feeds.json
+state/iptvorg/blocklist.json
+state/canary/*.bak-*
+state/vocab/*.bak-*
+
+# snapshot 止血（2026-09-25 P1 收口，总调度拍板：不做 git 历史重写）：
+# 上游原始抓取快照不再每日入 git（累计 172MB/2591 文件）。历史日已归档到
+# Release snapshot-archive（snapshot-YYYYMMDD.zip），主干树只保留最新一日
+# （由 scripts/snapshot_rotate.py 每日轮换：git rm --cached 旧日 + git add -f 新日）。
+snapshot/

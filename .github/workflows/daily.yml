@@ -134,8 +134,11 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # adult.json 每日随聚合产出并提交更新（所有者 2026-09-22 指令）；它不进 Release
           # 附件白名单 / Pages / 导航页，也不在 README 声明——公开通路隔离见 pages.yml 与下方白名单。
+          # snapshot 止血（2026-09-25 P1 收口）：git add 前先轮换——解除旧日跟踪 +
+          # 强制跟踪最新一日（主干树只保留最新快照；历史日归档 Release snapshot-archive）。
+          python scripts/snapshot_rotate.py || true
           git add tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json README.md \
-                  index.html lives/ state/ snapshot/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
+                  index.html lives/ state/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
           # pack_report.json 仅在 pack_local 成功时存在，防缺失阻断提交
           [ -f packs/pack_report.json ] && git add packs/pack_report.json || true
           if git diff --cached --quiet; then
@@ -189,3 +192,6 @@ jobs:
           # adult.json 不在本白名单（「不声明」通路）；release_cleanup 永不清理名单仅作兜底。
           python scripts/release_cleanup.py \
             --keep tvbox.json,vod.json,live.json,short.json,list.json,status.json,checks.json,tvbox-latest.zip || true
+          # snapshot 止血（2026-09-25 P1 收口）：snapshot-archive 归档库 14 天滚动清理
+          # （历史日快照归档 Release；独立于 latest 白名单，不受 release_cleanup 影响）。
+          python scripts/snapshot_rotate.py --prune-release || true
