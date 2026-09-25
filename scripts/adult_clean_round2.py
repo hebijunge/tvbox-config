@@ -4,7 +4,7 @@
 import json, re, copy, datetime, argparse
 from pathlib import Path
 
-ROOT = Path('/home/gem/.aily/workdir/task_7685173114648398784/repo')
+ROOT = Path(__file__).resolve().parent.parent
 VOCAB = json.loads((ROOT / 'state' / 'vocab' / 'categories.json').read_text(encoding='utf-8'))
 INVENTORY = ROOT / 'state' / 'adult_cleaning_inventory.json'
 
@@ -110,7 +110,9 @@ def update_vocab():
             VOCAB['adult']['name_keywords'].append(kw)
     VOCAB['version'] = '2026-09-25.2'
     VOCAB.setdefault('source_note', '')
-    VOCAB['source_note'] += ' | 2026-09-25 项1 整改 round2：补 host 8 域 + kw 6 词（含 jable 大小写）；处理 _proxy 镜像 + tvbox/vod/sync 三处 lives 数组（依据 QC #1150 预确认）'
+    _R2_NOTE = '2026-09-25 项1 整改 round2：补 host 8 域 + kw 6 词（含 jable 大小写）；处理 _proxy 镜像 + tvbox/vod/sync 三处 lives 数组（依据 QC #1150 预确认）'
+    if _R2_NOTE not in VOCAB['source_note']:
+        VOCAB['source_note'] += ' | ' + _R2_NOTE
     (ROOT / 'state' / 'vocab' / 'categories.json').write_text(json.dumps(VOCAB, ensure_ascii=False, indent=2), encoding='utf-8')
 
 

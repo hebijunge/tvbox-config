@@ -21,7 +21,7 @@
 import json, datetime, sys
 from pathlib import Path
 
-ROOT = Path('/home/gem/.aily/workdir/task_7685173114648398784/repo')
+ROOT = Path(__file__).resolve().parent.parent
 LCK = ROOT / 'state' / 'live_checks.json'
 SUMMARY = ROOT / 'exports' / 'SUMMARY.md'
 
