@@ -88,6 +88,36 @@ async def probe_all(urls):
     return verdict
 
 
+UNREACHABLE_CODES = {0, 403, 429}
+
+
+def guard_verdict(verdict):
+    """host 级守卫：Runner 出网 IP 可能被部分 CDN 拦截/限流，整域全死且状态码为
+    不可达类（连接失败/403/429）时，判定为「环境不可达」而非 URL 死链，全部保留。
+    只有真实 HTTP 响应（404/502 等）或同 host 存在存活 URL 时才认定死链。"""
+    from urllib.parse import urlparse
+    from collections import Counter
+    host_urls = {}
+    for u, v in verdict.items():
+        host_urls.setdefault(urlparse(u).netloc, []).append(u)
+    guarded, host_report = {}, {}
+    for host, us in host_urls.items():
+        codes = Counter(verdict[u]["code"] for u in us)
+        any_alive = any(verdict[u]["ok"] for u in us)
+        host_report[host] = {"total": len(us), "alive": sum(1 for u in us if verdict[u]["ok"]),
+                             "codes": {str(k): v for k, v in codes.most_common(6)}}
+        for u in us:
+            v = verdict[u]
+            if v["ok"]:
+                guarded[u] = {"ok": True, "code": v["code"]}
+            elif any_alive or v["code"] not in UNREACHABLE_CODES:
+                guarded[u] = {"ok": False, "code": v["code"]}
+            else:
+                # 环境 不可达：host 全死 + 不可达类状态码 → 保留不删
+                guarded[u] = {"ok": True, "code": v["code"], "unverifiable": True}
+    return guarded, host_report
+
+
 def line_alive(line, verdict):
     urls = URL_RE.findall(line)
     if not urls:
@@ -164,12 +194,15 @@ def main():
     urls = sorted(url_map)
     print("[probe] files=%d urls=%d" % (len(cat_files), len(urls)), flush=True)
 
-    # 2) 探活
-    verdict = asyncio.run(probe_all(urls))
+    # 2) 探活 + host 级守卫（防 Runner IP 被 CDN 拦截导致整域误判死）
+    raw_verdict = asyncio.run(probe_all(urls))
+    verdict, host_report = guard_verdict(raw_verdict)
     alive = sum(1 for v in verdict.values() if v["ok"])
     dead = len(verdict) - alive
+    unverifiable = sum(1 for v in verdict.values() if v.get("unverifiable"))
     rate = alive / len(verdict) if verdict else 0
-    print("[probe] alive=%d dead=%d rate=%.1f%%" % (alive, dead, rate * 100), flush=True)
+    print("[probe] alive=%d dead=%d unverifiable_kept=%d rate=%.1f%%" % (
+        alive, dead, unverifiable, rate * 100), flush=True)
     if rate < MIN_ALIVE_RATE:
         print("ABORT: alive rate %.1f%% < %.0f%%, probe env abnormal, no writes" % (
             rate * 100, MIN_ALIVE_RATE * 100), flush=True)
@@ -244,11 +277,13 @@ def main():
         "urls": len(verdict),
         "alive": alive,
         "dead": dead,
+        "unverifiable_kept": unverifiable,
         "alive_rate": round(rate, 4),
         "removed_lines": sum(v["removed"] for v in per_file.values()),
         "removed_files": removed_files,
         "lives_pruned": pruned,
         "channels_json": {"before": len(chans), "after": len(kept_ch)},
+        "per_host": host_report,
         "per_file": per_file,
     }
     os.makedirs(os.path.dirname(REPORT), exist_ok=True)
