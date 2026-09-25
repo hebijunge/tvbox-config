@@ -47,6 +47,22 @@ REJECT_AFTER_DAYS = int(os.environ.get("canary.REJECT_AFTER_DAYS", "21"))
 PROBE_WORKERS = int(os.environ.get("canary.PROBE_WORKERS", "8"))
 PROBE_TIMEOUT = int(os.environ.get("canary.PROBE_TIMEOUT", "8"))
 
+# NSFW 交叉核对（2026-09-26 策略变更 [gate-change]：用户裁定取消 7 天实习期后，
+# 原方案 §4.5「仅审计不自动处置」的前提不再成立——没有观察窗兜底，iptv-org
+# categories=xxx 频道必须在晋升闸门内自动拦截，否则成人内容会直接漏进用户侧产物。
+# adult 零泄漏是仓库最高优先级硬约束（rules/gate_criteria.json adult_zero_leak）。
+NSFW_CROSSCHECK = os.path.join(REPO, "state", "canary", "iptvorg_nsfw_crosscheck.json")
+
+
+def load_nsfw_ids():
+    """从交叉核对文件读疑似违禁频道 id 集合；文件缺失/损坏返回空集（不阻断晋升）。"""
+    try:
+        with open(NSFW_CROSSCHECK, encoding="utf-8") as f:
+            doc = json.load(f)
+        return set((c.get("id") or "").strip() for c in doc.get("channels", []) if c.get("id"))
+    except Exception:  # noqa: BLE001
+        return set()
+
 TZ = timezone(timedelta(hours=8))
 
 # 探活响应判定：JSON/HTML/text 拒，音频/视频魔数或 m3u8 文本放行（与 v27 内容校验同思路）
@@ -119,8 +135,11 @@ def cmd_probe(pool, limit):
 
 
 def gate_verdict(entry, stability_days=STABILITY_DAYS, hit_rate=HIT_RATE_THRESHOLD,
-                 max_failures=MAX_FAILURES, reject_labels=REJECT_LABELS):
-    """三道闸门（方案 §4.1）。返回 (admitted: bool, reason: str|None)。"""
+                 max_failures=MAX_FAILURES, reject_labels=REJECT_LABELS,
+                 nsfw_ids=frozenset()):
+    """三道闸门（方案 §4.1）+ NSFW 硬反证。返回 (admitted: bool, reason: str|None)。"""
+    if nsfw_ids and (entry.get("iptv_channel_id") or "") in nsfw_ids:
+        return False, "nsfw 反证 (iptv-org categories=xxx)"   # 闸 3 硬反证，先判
     labels = set(entry.get("labels") or [])
     hit = labels & set(reject_labels)
     if hit:
@@ -140,12 +159,15 @@ def gate_verdict(entry, stability_days=STABILITY_DAYS, hit_rate=HIT_RATE_THRESHO
 
 def cmd_promote(pool, dry_run, pool_path=CANARY_POOL):
     entries = pool.get("entries", [])
+    nsfw_ids = load_nsfw_ids()
+    if nsfw_ids:
+        print("[promote] NSFW 交叉核对硬闸门：%d 个频道 id 拦截" % len(nsfw_ids), flush=True)
     promoted, rejected_now, kept = [], [], []
     for e in entries:
         if e.get("admitted"):
             kept.append(e)
             continue
-        ok, reason = gate_verdict(e)
+        ok, reason = gate_verdict(e, nsfw_ids=nsfw_ids)
         if ok:
             e["admitted"] = True
             e["admit_date"] = _today()

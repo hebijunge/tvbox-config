@@ -290,7 +290,8 @@ def cross_validate_adult(channel_name: str, iptv_id: str | None, channels_index:
 ### 第二阶段（M3 初）— Canary 池 + 收编判定
 - canary_promote.py 实现三道闸门
 - 每日 05:00 定时任务纳入（与现有巡检并行）
-- 7 天观察期通过后开始晋升
+- ~~7 天观察期通过后开始晋升~~
+- **2026-09-26 策略变更 [gate-change]（用户裁定）**：取消 7 天稳定观察窗，改为「当日探活通过即转正」（`canary.STABILITY_DAYS=1` 运行参数，闸门代码零改动）。配套：§4.5 NSFW 交叉核对由「仅审计不自动处置」升级为晋升硬闸门（`canary_promote.load_nsfw_ids`，观察窗取消后无人工兜底窗口，adult 零泄漏优先级最高）。既有 Geo-blocked / Not 24/7 标签反证闸门不变。首次执行：9-25 建池 384 条，9-26 探活 110/384 通过，转正 103 条（labels 反证剔除 68、当日探活失败 213）。
 
 ### 第三阶段（M3 末）— 跨平台反向校验
 - NSFW 反向校验通道接入

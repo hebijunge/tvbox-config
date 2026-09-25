@@ -77,6 +77,18 @@ class TestGates(unittest.TestCase):
         ok, _ = cp.gate_verdict(entry(labels=["Geo-blocked"], history=hist(2)))
         self.assertFalse(ok)
 
+    def test_nsfw_crosscheck_rejects(self):
+        # 2026-09-26 [gate-change] 实习期取消后 NSFW 交叉核对升级为硬闸门
+        e = entry(history=hist(7))
+        e["iptv_channel_id"] = "BananaTV.tw"
+        ok, reason = cp.gate_verdict(e, nsfw_ids={"BananaTV.tw", "AmazingTV.tw"})
+        self.assertFalse(ok)
+        self.assertIn("nsfw", reason)
+
+    def test_nsfw_empty_set_does_not_block(self):
+        ok, _ = cp.gate_verdict(entry(history=hist(7)), nsfw_ids=set())
+        self.assertTrue(ok)
+
 
 class TestPromoteRun(unittest.TestCase):
     def test_promote_writes_upstream_and_rejected(self):
