@@ -1,0 +1,46 @@
+name: adult-live-probe
+# adult 直播池探活瘦身：全量 URL 探活，原地剔除死链，联动 adult_live.json /
+# adult_live_channels.json / adult.m3u。守卫：存活率 <3% 视为环境异常不写盘。
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '23 2 * * 6'   # 每周六 02:23 UTC（北京时间周六 10:23）
+
+permissions:
+  contents: write
+
+concurrency:
+  group: adult-live-probe
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install httpx
+
+      - name: 探活瘦身
+        run: python scripts/adult_live_probe.py
+
+      - name: 提交（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add adult_live_channels/ adult_live.json adult_live_channels.json \
+                  state/adult_live_probe_report.json
+          if git diff --cached --quiet; then
+            echo "本轮无死链变化，跳过提交"
+          else
+            SUMMARY=$(python -c "import json;r=json.load(open('state/adult_live_probe_report.json'));print('alive %d / dead %d / removed %d lines / pruned %d sources'%(r['alive'],r['dead'],r['removed_lines'],r['lives_pruned']))")
+            git commit -m "chore(adult-live): 探活瘦身 $SUMMARY"
+            git pull --rebase origin main
+            git push
+          fi
