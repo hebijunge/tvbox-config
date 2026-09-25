@@ -31,3 +31,13 @@ state/vocab/*.bak-*
 # Release snapshot-archive（snapshot-YYYYMMDD.zip），主干树只保留最新一日
 # （由 scripts/snapshot_rotate.py 每日轮换：git rm --cached 旧日 + git add -f 新日）。
 snapshot/
+
+# P1-C 承接（2026-09-25）：sync/ 是飞书线临时入库通道，daily-fetch 吸收后与
+# tvbox.json 内容重复（实测 JSON 等价、1,070,614 B 双份）。已跟踪的
+# sync/feishu_config_latest.json 保留（通道不断，跟踪文件不受 ignore 影响），
+# 但不再跟踪新增副本；飞书线后续应改为临时不入库传递或显式 git add -f。
+sync/
+
+# .dualcheck/ 对账副本（飞书回读缓存，仅对账运行时需要）不再入库；
+# 历史对账副本已由 exports/dual_write_report_*.json 留痕，工作区副本保留。
+.dualcheck/

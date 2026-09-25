@@ -122,6 +122,18 @@ tvbox-config/
 分类写 `group` 八类：采集站 / 直连点播 / 蜘蛛源 / 本地JS / 网盘 / 短剧 / 成人 / 其他。
 排序键：分类 → 实测可搜 → 可用性档位 → 速度。
 
+**五层去重模型（点播 / 直播两条线统一口径，2026-09-25 P1-C 落档）**：
+
+| 层 | 点播线 | 直播线 | 状态 |
+|---|---|---|---|
+| 0 规范键归一化 | spec_key 入库前生成（normalization.json 单源） | `dedup_key`（繁简/别名/后缀归一） | 直播已上线；点播 spec_key 落库待实施 |
+| 1 key 层 | `key` 唯一 | `norm_channel` 标准名聚合 | 已上线 |
+| 2 指纹层 | `api+ext` sha1 指纹 | URL 级去重（同 URL 不重复记行） | 已上线 |
+| 3 镜像层 | L1 片名集合 Jaccard ≤0.8 并查集 | ——（上游源级去重由 canary 闸门承担） | 已上线 |
+| 4 跨日衰减 | 只影响排序不删数据，7 天窗口线性衰减 | validated/canary 探测历史滚动 | 设计确认，待实施 |
+
+统一原则：任何一层都只降权/标记，不物理删除；删除只留给健康分级（dead）与人工黑名单。
+
 ### 6.3 实测
 覆盖不同类型：HTTP 采集接口（L1-L3）、type3 连通性、drpy Node 沙箱五关（**CI 每日自动**）、csp 真机五关（**手工**）。
 记录状态码、延迟、等级、失败原因；**超时/本机不可达记为 unknown 而非 dead**（避免误杀）。
@@ -150,6 +162,12 @@ tvbox-config/
 
 每个站点都带：`_health`、`_checked_at`（最后检测时间）、`_latency_ms`、`_level`、`_source`（来源）、`_type`（用途）。
 
+### 6.6 iptv-org 直播 canary 线（2026-09-25 P1-B 合入）
+`live_iptvorg_adapter.py` 每日抓取 iptv-org 大中华区流 → `state/canary/iptvorg.json` 观察池；
+`canary_promote.py` 按 7 天稳定 + ≥60% 命中 + 反证标签闸门晋升 → `state/upstreams/iptvorg.normal.json`；
+`live_aggregate.py` 的 `merge_iptvorg_promoted()` 将晋升流汇入聚合（adult 三重红线同口径，无晋升产物时 no-op）。
+设计详见 `docs/iptvorg-adapter-plan.md`。
+
 ---
 
 ## 7. 几条踩过的坑（务必遵守）
@@ -162,3 +180,34 @@ tvbox-config/
 6. **Windows 上不要用 `os.path.normpath` 处理产物里的相对路径**：它会转成反斜杠，与磁盘的正斜杠路径永远匹配不上。
    `dep_audit.py` 第一版因此得出「868 个依赖 100% 未引用」的假结果——**照它清理会把全部依赖删光**，所以依赖审计坚持「只报告不删」。
 7. **drpy 引擎必须与 `drpy-core-lite.min.js` 同目录**：引擎内部相对自身路径 import 它，用 `lib/` 那份会 `ERR_MODULE_NOT_FOUND`。
+
+---
+
+## 8. tvbox.json 分片预案（P1-C 承接，2026-09-25 立案，未实施）
+
+**现状基线（2026-09-25）**：`tvbox.json` 1,070,614 B（1.07MB），sites 3711 + lives 392 条。
+触发阈值尚未达到，本节为预案，不急实施；触发前每次导出只打日志观测增速。
+
+### 8.1 触发条件（fetch_merge 导出末尾自动判定）
+- `tvbox.json` 体积 > **2MB**；或
+- sites + lives 条目总数 > **5000**。
+- 任一命中 → 自动产出分片并 `status.json` 标注 `sharded: true`；两阈值同时防单维误判。
+
+### 8.2 分片设计（预案）
+1. **维度**：沿用既有按类型分流（vod/spider/localjs/pan/short/live 已独立成文件），
+   超限时在类型内再按 `_source` / 分类切成 `tvbox-part<N>.json`，每片 ≤1.5MB / ≤2500 条。
+2. **主文件**：`tvbox.json` 保持 TVBox 客户端单文件结构不变，只收编体量最小的核心类型
+   （保证老订阅地址**永远可用**）；完整索引写 `tvbox.index.json`（片清单 + sha256 + 条目数）。
+3. **消费路径**：分片通过引导页 `index.html` 二级订阅（或后续验证 TVBox 多仓/嵌套
+   订阅语法后再直挂——**客户端兼容性属待验证项，实施前先真机确认**）。
+4. **发布**：分片随 daily.yml 进 Release latest 白名单（`tvbox-part*.json` 追加进
+   `release_cleanup --keep`），raw 通道同步；`.dualcheck` 对账清单由
+   `dual_write_audit.py --preset delivery` 自动覆盖（清单按磁盘存在物生成）。
+5. **回滚**：`EXPORT_SHARD=0`（env 开关）一键回单文件全量导出；分片文件是纯增量产物，
+   关闭后 Release 白名单外残留由 `release_cleanup.py` 次日自动清掉。
+
+### 8.3 实施步骤（触发后）
+1. `export_healthy.py` 增分片导出函数 + 阈值判定（单测覆盖切分边界：条目数、字节、片数）；
+2. `status.json` / `health_report.py` 增分片观测字段；
+3. daily.yml 白名单 + 引导页挂二级订阅入口；
+4. 真机验证二级订阅加载后，才允许把主订阅地址切换为分片版（此前主通路不动）。
