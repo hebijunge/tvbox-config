@@ -141,8 +141,18 @@ def scan_json(path, hits, wl=()):
 
 
 def scan_text(path, hits, re_only=False):
+    """文本/类文本扫描。装入时做二进制嗅探（前 8KB 含 NUL 即视为二进制）：
+    压缩/加密/图像等二进制字节流在文本正则会随机命中（ADULT_SOURCE_RE/substr），
+    造成「门禁扫二进制 zip/image 命中几千条 source_pattern」的伪阳性——本类不属
+    文本消费通路内容，二进制结构化扫描由 scan_zip 覆盖，跳过此类以恢复门禁语义
+    唯一性（2026-09-25 门禁 vs 合并词表漂移整改）。"""
     try:
-        txt = open(path, encoding="utf-8", errors="replace").read()
+        with open(path, "rb") as fh:
+            head = fh.read(8192)
+        if b"\x00" in head:
+            return
+        txt = head + open(path, "rb").read()[8192:] if len(head) == 8192 else head
+        txt = txt.decode("utf-8", errors="replace")
     except OSError as e:
         hits.append({"file": path, "where": "<read>", "err": str(e)[:80]})
         return
@@ -256,7 +266,11 @@ def main():
         for dp, _dn, fs in os.walk(dirp):
             for f in fs:
                 p = os.path.join(dp, f)
-                if f.endswith(".json"):
+                if f.endswith(".zip"):
+                    # 压缩包走结构化扫描（zip 名 + 内嵌 json/txt/m3u/html）；
+                    # 不再让 scan_text 把压缩字节当文本扫（会随机命中）。
+                    scan_zip(p, hits)
+                elif f.endswith(".json"):
                     scan_json(p, hits, wl)
                 else:
                     scan_text(p, hits)

@@ -463,7 +463,13 @@ PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
 
 
 def load_extra_upstreams() -> list:
-    """读取 canary 上游名单；开关关闭或文件缺失时返回空列表。"""
+    """读取 canary 上游名单；开关关闭或文件缺失时返回空列表。
+
+    2026-09-25 合并层成人泄漏治理：canary 来自自动发现（脚本无成人过滤，
+    曾吸入 jigedos/1024 等成人配置仓），按门禁同口径（PORN_KW/is_adult_url/
+    ADULT_SOURCE_RE）剔除，否则接口元数据进 list.json 命中门禁，配置内容
+    进 tvbox.json 又触发合并扫除——于源头拦截，避免下游多处补偿。
+    """
     if not EXTRA_UPSTREAMS_ON or not os.path.isfile(EXTRA_UPSTREAMS_FILE):
         return []
     try:
@@ -472,17 +478,44 @@ def load_extra_upstreams() -> list:
     except (OSError, json.JSONDecodeError):
         return []
     out = []
+    dropped = []
     for u in doc.get("upstreams", []):
         url, kind = u.get("url"), u.get("kind")
-        if url and kind in PARSERS:
-            ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
-            # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
-            if isinstance(u.get("mirrors"), list) and u["mirrors"]:
-                ent["mirrors"] = [m for m in u["mirrors"] if isinstance(m, str) and m]
-            out.append(ent)
+        if not (url and kind in PARSERS):
+            continue
+        rule = _candidate_adult_rule(u.get("name") or "", url)
+        if rule:
+            dropped.append((u.get("name") or url[-28:], rule))
+            continue
+        ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
+        # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
+        if isinstance(u.get("mirrors"), list) and u["mirrors"]:
+            ent["mirrors"] = [m for m in u["mirrors"] if isinstance(m, str) and m]
+        out.append(ent)
     if out:
         print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)
+    if dropped:
+        for nm, r in dropped:
+            print(f"    canary 成人特征剔除：{nm} rule={r}", flush=True)
     return out
+
+
+def _candidate_adult_rule(name: str, url: str):
+    """canary/自动发现上游的成人特征判定（与 adult 零泄漏门禁同口径）。
+    返回命中规则标签字符串；未命中返回 None。"""
+    for s in (name, url):
+        if not s:
+            continue
+        low = s.lower()
+        for kw in _la.PORN_KW:
+            if kw.lower() in low:
+                return "porn_kw:%s" % kw[:16]
+        if "://" in s and _la.is_adult_url(s):
+            return "host_blacklist"
+        m = _la.ADULT_SOURCE_RE.search(s)
+        if m:
+            return "source_pattern:%s" % m.group(0)[:24]
+    return None
 
 
 # ==================== 短剧/成人分类（独立收录 short.json / adult.json） ====================

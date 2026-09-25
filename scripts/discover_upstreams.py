@@ -703,14 +703,48 @@ def main() -> int:
     good = [r for r in results if r.get("kind") == "tvbox" and r["score"] >= 70]
     canary = [r for r in results if r["score"] >= args.canary_score and r.get("kind") == "tvbox"]
 
+    # 2026-09-25 合并层成人泄漏治理：canary 由全网自动捞回，无人工审核必经，
+    # 上游 URL 命中门禁同口径（PORN_KW/域名黑名单/源模式）即拒收——避免配置内容
+    # 进 tvbox.json 触发合并扫除、接口元数据进 list.json 命中门禁。剔除明细入
+    # 雷达报告供人工追溯，但 canary 列表永不收录此类源（修复点对点：曾吸入
+    # jigedos/1024 仓作为 auto/15-46s 进 list.json [142]）。
+    import live_aggregate as _la
+
+    def _adult_rule_of(url: str):
+        low = url.lower()
+        for kw in _la.PORN_KW:
+            if kw.lower() in low:
+                return "porn_kw:%s" % kw[:16]
+        if _la.is_adult_url(url):
+            return "host_blacklist"
+        m = _la.ADULT_SOURCE_RE.search(url)
+        if m:
+            return "source_pattern:%s" % m.group(0)[:24]
+        return None
+
+    canary_kept, canary_dropped = [], []
+    for r in canary:
+        rule = _adult_rule_of(r["url"])
+        if rule:
+            canary_dropped.append({"url": r["url"], "rule": rule, "score": r["score"]})
+        else:
+            canary_kept.append(r)
+    canary = canary_kept
+    if canary_dropped:
+        print(f"[discover] canary 成人特征剔除 {len(canary_dropped)} 条：")
+        for d in canary_dropped:
+            print(f"    - {d['url']}  rule={d['rule']}", flush=True)
+
     doc = {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "note": "自动发现的上游候选；高分配置已同步进 state/extra_upstreams.json 作为 canary 自动拉取",
         "auth": "token" if TOKEN else "anonymous",
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
         "summary": {"candidates": len(candidates), "reachable": len(results),
-                    "tvbox_configs": len(good), "canary": len(canary)},
+                    "tvbox_configs": len(good), "canary": len(canary),
+                    "canary_dropped_adult": len(canary_dropped)},
         "candidates": results[: args.top],
+        "canary_dropped_adult": canary_dropped,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
