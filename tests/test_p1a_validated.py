@@ -57,8 +57,10 @@ try:
     print("3 decay watch/out/回捞 OK; active_sources=", len(vs.active_sources(doc)))
 
     # 4) 飞书线桥接合并（拿真实复测样本 3 条）
+    _retest_fixture = "../retest_20260925.json"  # workdir 外部复测样本，CI/异构工作树下可能缺失
     rows = [{"name": r["name"], "url": r["url"], "level": r["level"], "date": "2026-09-25"}
-            for r in json.load(open("../retest_20260925.json"))[:3] if r.get("url")]
+            for r in (json.load(open(_retest_fixture))[:3] if os.path.exists(_retest_fixture) else [])
+            if r.get("url")]
     vs.migrate(".", extra_feishu=rows, note="P1-A selftest 桥接")
     doc2 = vs.load_validated()
     assert doc2["schema"] == vs.SCHEMA
@@ -83,4 +85,6 @@ except AssertionError as e:
 finally:
     shutil.copy("/tmp/validated.bak.json", "state/validated.json")
     print("状态已恢复到迁移版")
-sys.exit(0 if ok else 1)
+# unittest discover 兼容：导入期不触发 SystemExit（直跑仍按退出码收尾）
+if __name__ == "__main__":
+    sys.exit(0 if ok else 1)

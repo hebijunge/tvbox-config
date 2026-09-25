@@ -356,3 +356,59 @@ def cross_validate_adult(channel_name: str, iptv_id: str | None, channels_index:
 - streams.json：~17 MB（待二次实测）
 - blocklist.json：nsfw + dmca 两条原因分支
 - streams/{cn,hk,tw,mo}.m3u：4 个文件，预期 ~500 条流（实测待第二轮）
+---
+
+## 9. P1-B 实施记录（2026-09-25，研发1号）
+
+### 9.1 交付物
+
+| 文件 | 说明 |
+| --- | --- |
+| `scripts/live_iptvorg_adapter.py` | fetch / parse / to-upstream / to-canary 四段 + daily 幂等入口 + vocab / vocab-merge |
+| `scripts/canary_promote.py` | 逐日探活 + 三道闸门评估 + 晋升 / 21 天淘汰 |
+| `tests/test_iptvorg_adapter.py` | 13 用例（解析/形态/合并/词表） |
+| `tests/test_canary_promote.py` | 16 用例（闸门全场景 / 晋升落盘 / 内容判定） |
+| `state/canary/iptvorg.json` | canary 池（首跑 384 条，schema tvbox.live.canary.iptvorg/1） |
+| `state/canary/iptvorg_nsfw_crosscheck.json` | 大中华区 is_nsfw 20 条反向校验素材（仅审计） |
+| `state/vocab/normalization.iptvorg_additions.json` | 词表增量（CCTV 建议 23 条 + 其他频道 618 条待 review） |
+
+### 9.2 每日 05:00 巡检线挂载点（不重复拉取）
+
+```bash
+# 步骤 1：fetch(24h TTL，命中即跳过) -> parse -> to-canary（增量合并，保留历史）
+python3 scripts/live_iptvorg_adapter.py daily
+# 步骤 2：探活（同日重跑幂等跳过）-> 三道闸门 -> 晋升 / 淘汰
+python3 scripts/canary_promote.py --probe --promote
+```
+
+挂载位置协调（研发2号 P1-A / 总调度）：
+- iptv-org 数据**不进** validated.json / live_verified.txt——走独立 canary 文件
+  `state/canary/iptvorg.json`，仅晋升条目落 `state/upstreams/iptvorg.normal.json`
+  （source=iptv-org，等 live_aggregate 跑批汇入）。是否维持独立 canary 文件形态，
+  由总调度协调定夺（任务交付要求注明）。
+- fetch 有 24h TTL 缓存（`state/iptvorg/`），巡检线任意位置调用均不重复拉取；
+  两步均幂等，同日重跑无副作用。
+- fetch_meta.json 带 iptv-org database/iptv 两仓 commit_sha，canary 池 meta 内嵌溯源。
+
+### 9.3 词表增量合入流程（每周一 review）
+
+```bash
+python3 scripts/live_iptvorg_adapter.py vocab         # 生成/刷新增量文件
+# 人工 review state/vocab/normalization.iptvorg_additions.json
+python3 scripts/live_iptvorg_adapter.py vocab-merge   # 合入 normalization.json（备份+冲突检测+live_vocab 加载自检）
+```
+
+冲突策略：别名已映射到不同 canonical 时保留既有并报告；合入前自动备份 normalization.json.bak-<ts>。
+
+### 9.4 首跑实测（2026-09-25）
+
+- fetch 4 端点全 200，database@6ecf17e6 / iptv@9d8dca4f；TTL 复跑 0 新拉取、0 新入池（幂等成立）
+- 全量 31375 频道 / 17529 流 → 大中华区 1030（nsfw 20）→ 关联流 384 入池（孤儿流 17145 为无频道元数据匿名流，按方案不收）
+- 30 条真实探活：成功 14/30（46.7%）；闸门 dry-run：0 晋升（历史 < 7 天，符合预期）
+- 单测 67/67 全过（新增 29 + 既有 38 回归，CI 口径 unittest discover）
+
+### 9.5 闸门参数（当前生效）
+
+稳定 7 天（容错 0/7，弱网放宽 1/7 走 `canary.MAX_FAILURES`）· 命中率 ≥ 60%（`canary.HIT_RATE_THRESHOLD`）·
+labels 反证 Geo-blocked / Not 24/7（`REJECT_LABELS`）· 21 天未过入 rejected（`canary.REJECT_AFTER_DAYS`）·
+单批新入池 ≤ 500（`--max-new`，池膨胀防护）
