@@ -129,6 +129,10 @@ README_FILE = os.environ.get("README_FILE", "README.md")
 # 最近成功时间新、连续失败少的上游接管；健康分相同保持先到先得（不误伤已有源、避免抖动）
 # 一上游一适配器：kind 决定拉取后如何解析（tvbox=json 配置 / m3u=直播列表）
 UPSTREAMS = [
+    # 2026-09-25 双线融合：飞书巡检线（Aily 定时任务）每日复测+排重后的统一配置，
+    # 固定名每日覆盖推送至本仓库 sync/feishu_config_latest.json，作为常规上游参与合并。
+    {"name": "feishu-sync", "kind": "tvbox",
+     "url": "https://raw.githubusercontent.com/hebijunge/tvbox-config/main/sync/feishu_config_latest.json"},
     {"name": "juhe-tvapi", "kind": "tvbox",
      "url": "https://raw.githubusercontent.com/ccAzy/juhe-tvapi/main/config.json"},
     {"name": "qist/jsm", "kind": "tvbox", "url": "https://raw.githubusercontent.com/qist/tvbox/master/jsm.json"},
