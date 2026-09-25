@@ -280,6 +280,54 @@ def test_wogg_netdisk_not_adult():
                          origin_votes=votes) == "adult"
 
 
+def test_chigua_livegzguard_not_adult():
+    """2026-09-26 总调度裁定：「🏐吃瓜┃看球」(csp_LiveGzGuard，体育/吃瓜直播向) 移出 adult。
+
+    与玩偶系同理属误分类，但处置不同——「吃瓜」保留在弱信号词表（真吃瓜成人站
+    仍要靠它抓），只做条目级移除 + 人工覆盖表防回流：
+    - adult.json 不得再含 csp_LiveGzGuard / key=吃瓜 条目；
+    - state/category_overrides.json 覆盖表 "吃瓜"->"vod" 优先级最高，
+      即使 feishu-sync 上游投票命中也不回流 adult；
+    - 词表零改动：「吃瓜」仍在弱信号表、「看球」不入任何词表；
+    - 真吃瓜成人站（不同 key）判定不受影响。
+    """
+    import json as _json
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
+    with open(os.path.join(root, "adult.json"), encoding="utf-8") as f:
+        adult_cfg = _json.load(f)
+    for s in adult_cfg["sites"]:
+        blob = _json.dumps(s, ensure_ascii=False)
+        assert "csp_LiveGzGuard" not in blob, f"adult.json 残留 LiveGzGuard 条目: {blob[:120]}"
+        assert s.get("key") != "吃瓜", "adult.json 残留 key=吃瓜 条目"
+
+    from fetch_merge import load_category_overrides
+    overrides = load_category_overrides()
+    assert overrides.get("吃瓜") == "vod", \
+        f"覆盖表缺少 吃瓜->vod 防回流条目: {overrides}"
+
+    gz = {"key": "吃瓜", "name": "🏐吃瓜┃看球", "api": "csp_LiveGzGuard",
+          "_origin": "feishu-sync"}
+    votes = {"feishu-sync": 99}
+    assert classify_site(gz, overrides, votes) == "vod", \
+        "覆盖表未生效：吃瓜┃看球 被上游投票重新拉回 adult"
+    assert classify_site(gz, overrides, None) == "vod"
+
+    # 词表零改动：吃瓜仍在弱信号表、看球不进任何词表
+    assert "吃瓜" in WEAK_ADULT_TOKENS
+    assert "看球" not in STRONG_ADULT_TOKENS
+    assert "看球" not in WEAK_ADULT_TOKENS
+
+    # 真吃瓜成人站（不同 key）不受覆盖表影响：单吃瓜+上游投票 → adult；
+    # 弱信号多命中（吃瓜+成人）→ 无投票也 adult
+    real_adult = {"key": "吃瓜仓库", "name": "🔞吃瓜资源",
+                  "api": "https://example.com/api.php", "_origin": "feishu-sync"}
+    assert classify_site(real_adult, overrides, votes) == "adult"
+    multi = {"key": "cgx", "name": "吃瓜 depot",
+             "ext": '{"categories": ["成人"]}'}
+    assert classify_site(multi, overrides, None) == "adult"
+
+
 import unittest as _unittest
 
 
@@ -288,3 +336,10 @@ class WoggNetdiskClassification(_unittest.TestCase):
 
     def test_wogg_netdisk_not_adult_ci(self):
         test_wogg_netdisk_not_adult()
+
+
+class ChiguaLiveGzGuardClassification(_unittest.TestCase):
+    """CI(unittest discover)入口：吃瓜┃看球(LiveGzGuard) 条目级移出回归用例。"""
+
+    def test_chigua_livegzguard_not_adult_ci(self):
+        test_chigua_livegzguard_not_adult()
