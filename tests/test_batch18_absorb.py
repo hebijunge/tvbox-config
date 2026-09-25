@@ -148,15 +148,26 @@ class TestYingmUpstream(unittest.TestCase):
         self.assertEqual(len(dm["parses"]), 20)
         tv = json.load(open(os.path.join(REPO, "tvbox.json"), encoding="utf-8"))
         existing_keys = {s.get("key") for s in tv["sites"]}
-        net_new_sites = [s for s in dm["sites"] if s.get("key") not in existing_keys]
-        # 调研按站点名对账 8 个未收录；merge key 口径净新增 1 站（csp_Ying 樱花动漫）
-        self.assertEqual([s["key"] for s in net_new_sites], ["csp_Ying"])
         existing_parses = {p.get("name") for p in tv["parses"]}
+        net_new_sites = [s for s in dm["sites"] if s.get("key") not in existing_keys]
         net_new_parses = [p for p in dm["parses"]
                           if p.get("name") not in existing_parses
                           and p.get("url") not in ("Demo", "Web")
                           and str(p.get("url", "")).startswith("http")]
-        self.assertEqual(len(net_new_parses), 15)
+        # 质检遗留小补丁（单向断言）：调研 merge key 口径净新增 1 站（csp_Ying 樱花动漫）+ 15 parses；
+        # 每日 05:00 管线把 dm.json 落进 tvbox.json 后净新增归零属预期，
+        # 故不再锁死「净新增恰为 csp_Ying+15」，改为状态自适应断言：
+        #   - 未合并态：净新增恰为 csp_Ying，且 http 解析净新增 ≥15；
+        #   - 已合并态：csp_Ying 已入池，且 dm 的 http 解析全部在池。
+        dm_http_parse_names = {p.get("name") for p in dm["parses"]
+                               if p.get("url") not in ("Demo", "Web")
+                               and str(p.get("url", "")).startswith("http")}
+        if "csp_Ying" in existing_keys:
+            missing = dm_http_parse_names - existing_parses
+            self.assertFalse(missing, f"已合并态下 dm http 解析仍缺失: {sorted(missing)}")
+        else:
+            self.assertEqual([s["key"] for s in net_new_sites], ["csp_Ying"])
+            self.assertGreaterEqual(len(net_new_parses), 15)
 
 
 class TestGovernance(unittest.TestCase):
