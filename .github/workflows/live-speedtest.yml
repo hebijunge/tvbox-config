@@ -128,6 +128,13 @@ jobs:
           assert meta.get("channels", 0) > 0, "channels==0 元数据对 fetch_merge 无消费价值"
           PY
 
+      - name: adult 零泄漏门禁（提交前硬闸）
+        run: |
+          # 2026-09-27 质检修复：MyCamTV 曾经测速工作流写入 live_precise.txt 而无门禁。
+          # 本步与 daily 同口径——写池产物提交前必须通过 adult_leak_check，
+          # exit 2 = 有泄漏，作业失败即阻断提交。
+          python scripts/adult_leak_check.py
+
       - name: 提交并推送
         run: |
           git config user.name "github-actions[bot]"

@@ -1007,6 +1007,13 @@ def _build_groups(cmap, verified, extra_keep=6):
     groups = OrderedDict()
     for key, ent in cmap.items():
         name = ent.get("name") or key
+        # 2026-09-27 质检修复·输出层防御（MyCamTV 混入 live_precise.txt L186 实证）：
+        # ingest 层（build 阶段成人剔除）依赖词表，词表滞后窗口期成人台可漏网入库；
+        # 输出层按同一词表再拦一道——名称命中 adult 词表或任一线路 URL 命中域名
+        # 黑名单的频道不进任何分组/精准版输出。成人池由 ADULT_LIVE 独立通道维护，
+        # 不经本函数，无误伤。
+        if adult_rule_of(name) or any(is_adult_url(u) for _s, u in ent["lines"]):
+            continue
         gk = _fold_group(ent["class"])
         if key in verified:
             tested = list(verified[key])           # 已实测，按速度升序
@@ -1088,8 +1095,13 @@ def write_precise_txt(cmap, verified, path):
         ent = cmap.get(std)
         if not ent:
             continue
-        gk = _fold_group(ent["class"])
         name = ent.get("name") or std
+        # 2026-09-27 质检修复·输出层防御（同 _build_groups）：MyCamTV 污染
+        # live_precise.txt L186 实证——名称命中 adult 词表或线路 URL 命中域名
+        # 黑名单的频道不写入精准版，双保险防词表滞后窗口期回流。
+        if adult_rule_of(name) or any(is_adult_url(u) for u in verified[std]):
+            continue
+        gk = _fold_group(ent["class"])
         groups.setdefault(gk, OrderedDict())
         groups[gk][name] = list(verified[std])
     if "港台" in groups:
