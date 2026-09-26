@@ -1,6 +1,6 @@
 {
  "schema": "tvbox.gate_criteria/1",
- "version": "2026-09-25.1",
+ "version": "2026-09-26.1",
  "owner": "质检1号（评审）× 研发2号（执行）",
  "review_process": "本文件是双线门禁口径的唯一权威定义。任何字段变更必须：commit 标注 [gate-change] 并提交质检1号评审通过后方可合入；未经评审的口径改动视为无效，质检复验以本文件裁决。",
  "adult_zero_leak": {
@@ -9,14 +9,17 @@
   "scan": {
    "top_files": ["tvbox.json", "vod.json", "live.json", "short.json", "list.json", "live_channels.json", "index.html", "README.md"],
    "state_files": ["state/live_checks.json", "state/live_check_meta.json", "state/live_test_progress.jsonl"],
-   "dirs": ["lives", "stores", "json", "sync", "packs"],
+   "dirs": ["lives", "stores", "json", "sync", "packs", "exports"],
+   "audit_contexts": ["/gone[", "/dropped", "/removed", "local_ref_audit"],
+   "audit_contexts_note": "审计上下文豁免（2026-09-26.1，质检1号 N3）：扫描 JSON 内命中路径含上述片段的记录（health_report gone=已移除站点归档、status/dual_write 落榜审计等）按 kind=guarded 处理——审计记录本义就是登记被移除的成人站点，属内部审计口径而非消费内容；豁免逐条入报告供质检复核",
    "optional_snapshot": {"flag": "--include-snapshot", "dir": "snapshot"},
    "excluded_reasons": {
     "adult.json": "隔离通道本体，不属于常规消费通路",
     "adult_live.json": "隔离通道本体",
     "adult_live_channels/": "隔离通道本体",
     "rules/": "adult 词表本体",
-    "snapshot/": "历史快照存档逐日只增不改，非消费通路（--include-snapshot 可审计）"
+    "snapshot/": "历史快照存档逐日只增不改，非消费通路（--include-snapshot 可审计）",
+    "status.json": "内部审计文件（合并层落榜记录/清洗统计/验活历史），非消费产物，不入扫描域（2026-09-26.1 质检1号 N3 口径明示）"
    }
   },
   "whitelist_file": "state/adult_leak_whitelist.txt"

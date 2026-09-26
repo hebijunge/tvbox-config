@@ -10,10 +10,12 @@ daily.yml 在提交步之前硬门禁执行（无 continue-on-error）——泄�
   - URL：is_adult_url()（域名黑名单）+ ADULT_SOURCE_RE（整源标记）
   - 文本文件（README/index.html 等）：ADULT_SOURCE_RE 原文命中
 
-扫描范围（lives 分类/主配置/清单/店铺/导航页/本地包/测速快照）：
+扫描范围（lives 分类/主配置/清单/店铺/导航页/本地包/测速快照/导出接口清单）：
   tvbox.json vod.json live.json short.json list.json live_channels.json
   lives/**（含 groups/*.m3u）stores/*.json index.html README.md
   packs/*.zip（zip 内文件名 + 内嵌 json/text 配置）
+  exports/**（2026-09-26.1 [gate-change]：质检1号 N3 补扫描域；其中 gone/dropped/
+  removed/local_ref_audit 审计上下文按 guarded 豁免并显式入报告）
   state/live_checks.json state/live_test_progress.jsonl（新通路抽样）
 排除（隔离通道本体与状态归档，不属于「常规文件」）：
   adult.json adult_live.json adult_live_channels/** rules/（adult 词表本体）
@@ -58,6 +60,24 @@ def _gate_scope():
         return TOP_FILES, STATE_FILES, default_dirs, str(e)
 
 
+def _audit_context_res():
+    """审计上下文豁免（2026-09-26.1 [gate-change] 质检1号 N3）：扫描命中路径含
+    gate_criteria.adult_zero_leak.scan.audit_contexts 片段的记录按 guarded 处理。
+    审计记录（health_report gone=已移除站点归档、status/dual_write 落榜审计）本义
+    就是登记被移除的成人站点——它们出现在被扫描文件里是审计口径而非消费内容。
+    豁免逐条以 audit_context=true 入报告供质检复核。"""
+    default = ["/gone[", "/dropped", "/removed", "local_ref_audit"]
+    try:
+        g = json.load(open(_GATE_FILE, encoding="utf-8"))
+        segs = g["adult_zero_leak"]["scan"].get("audit_contexts") or default
+    except Exception:  # noqa: BLE001
+        segs = default
+    return [re.compile(re.escape(seg)) for seg in segs]
+
+
+_AUDIT_CTX_RES = _audit_context_res()
+
+
 _SITE_NAME_KEYS = ("name",)
 _SITE_URL_KEYS = ("api", "url", "jar", "playUrl", "ext")
 
@@ -93,9 +113,13 @@ def _scan_string(s, where, path, hits, wl):
             rule = "source_pattern:%s" % m.group(0)[:24]
     if rule is None:
         return
-    kind = "guarded" if (wl and any(rx.search(s) for rx in wl)) else "word"
-    hits.append({"file": path, "where": where, "kind": kind,
-                 "value": s[:80], "rule": rule})
+    is_audit = bool(_AUDIT_CTX_RES) and any(rx.search(where or "") for rx in _AUDIT_CTX_RES)
+    kind = "guarded" if (is_audit or (wl and any(rx.search(s) for rx in wl))) else "word"
+    rec = {"file": path, "where": where, "kind": kind,
+           "value": s[:80], "rule": rule}
+    if is_audit:
+        rec["audit_context"] = True
+    hits.append(rec)
 
 
 def _iter_strings(node, where, path, hits, wl):
