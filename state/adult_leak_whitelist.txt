@@ -7,3 +7,21 @@
 #   /sites[3208]/ext（1024 命中处于密文中段），两站点本体为常规影视聚合源。
 #   形态：≥50 位连续 [A-Za-z0-9+/=]（不含 & : . / 中文）即判定为密文 blob。
 ^[A-Za-z0-9+/=]{50,}$
+# 【2】直播线路广电 CDN 误报（2026-09-26，daily-fetch run 36236281904 门禁 FAIL 复盘引入，待质检1号评审）：
+#   18 处命中全部为正规频道直播线路 URL，关键词以随机形态出现在流编号/码率参数/加密分段中，
+#   非成人引用。证据（CI 日志 11:12:59 FAIL 明细，逐条对应频道名）：
+#   - tsfile 流编号：cctv-5/浙江卫视/黑龙江新闻（http://<ip>:<port>/tsfile/live/1024_1.m3u8，
+#     1024 为频道流 ID，同型线路在历史 live_checks 存量中已存在 47 处）
+#   - 咪咕 CDN 码率/路径参数：江苏城市/江苏影视/上海新闻综合 等 9 频道
+#     （gslbmgsplive.miguvideo.com/migu/kailu|wd_r{2,4}/...1024...，咪咕省级分发主机）
+#   - ottiptv 咪咕转发：南京教科（mursor.ottiptv.cc/migu/...）
+#   - akamaized 经典艺术台流 ID：天映经典（classicarts.akamaized.net/hls/live/1024257...）
+#   - 浙江广电新蓝网：香港卫视/浙江卫视（zwebl02.cztv.com/live/...1024...）
+#   - 芒果 TV 加密分段：hunantv（hlsal-ldvt.qing.mgtv.com/nn_live/...mmz...，密文子串同【1】原理）
+#   锚定原则：仅限上述可解释的 host/path 形态，不放宽通用 URL 规则。
+tsfile/live/\d+_1\.m3u8
+miguvideo\.com/(migu|wd_r\d)/
+mursor\.ottiptv\.cc/migu/
+classicarts\.akamaized\.net/hls/live/
+\.cztv\.com/live/
+mgtv\.com/nn_live/
