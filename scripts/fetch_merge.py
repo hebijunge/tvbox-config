@@ -582,7 +582,7 @@ def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
       ② state/live_checks.json 剔除成人频道键（含「前缀/台名」复合键逐段判定）。
     清洗只删不增；被删频道若属误杀，应走词表白名单复核流程，本函数不做放行。
     """
-    txt_p = _os.path.join(repo_dir, "lives", "live_verified.txt")
+    txt_p = os.path.join(repo_dir, "lives", "live_verified.txt")
     try:
         _kept, _dropped = [], 0
         with open(txt_p, encoding="utf-8") as _f:
@@ -604,7 +604,7 @@ def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
         pass
     except Exception as _e:  # 清洗失败不阻断发布，门禁终扫仍是最后防线
         print("[curated] 快照成人清洗异常（live_verified.txt）：", _e, flush=True)
-    _ck_p = _os.path.join(repo_dir, "state", "live_checks.json")
+    _ck_p = os.path.join(repo_dir, "state", "live_checks.json")
     try:
         with open(_ck_p, encoding="utf-8") as _f:
             _data = json.load(_f)
