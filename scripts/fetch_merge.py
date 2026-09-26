@@ -462,6 +462,17 @@ PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
 
 
 
+def _norm_jsdelivr(url):
+    """cdn.jsdelivr.net 主域在部分网络环境 400（见文件头 jsdelivr 注），统一规范为
+    fastly.jsdelivr.net 子域。2026-09-26 治理：09-21 的一次性 state 手工修正被
+    自动发现（discover_upstreams/evaluate_candidates 整文件重写 canary 池）用
+    cdn 形态盖回，治理测试 test_jsdelivr_normalized 在 CI 失败——归一化提为
+    管线不变量，canary 装载与两处收编写入口统一改写。"""
+    if isinstance(url, str) and "://cdn.jsdelivr.net/" in url:
+        return url.replace("://cdn.jsdelivr.net/", "://fastly.jsdelivr.net/")
+    return url
+
+
 def load_extra_upstreams() -> list:
     """读取 canary 上游名单；开关关闭或文件缺失时返回空列表。
 
@@ -483,6 +494,7 @@ def load_extra_upstreams() -> list:
         url, kind = u.get("url"), u.get("kind")
         if not (url and kind in PARSERS):
             continue
+        url = _norm_jsdelivr(url)
         rule = _candidate_adult_rule(u.get("name") or "", url)
         if rule:
             dropped.append((u.get("name") or url[-28:], rule))
@@ -490,7 +502,7 @@ def load_extra_upstreams() -> list:
         ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
         # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
         if isinstance(u.get("mirrors"), list) and u["mirrors"]:
-            ent["mirrors"] = [m for m in u["mirrors"] if isinstance(m, str) and m]
+            ent["mirrors"] = [_norm_jsdelivr(m) for m in u["mirrors"] if isinstance(m, str) and m]
         out.append(ent)
     if out:
         print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)

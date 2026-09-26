@@ -753,8 +753,13 @@ def main() -> int:
     # canary 名单：交给 fetch_merge.py 自动并入拉取，挂了会被自动黑名单兜住
     extra = []
     for i, r in enumerate(canary):
+        # 2026-09-26 治理：jsdelivr 主域规范为 fastly 子域（fetch_merge._norm_jsdelivr
+        # 同口径；否则整文件重写会把 cdn 形态盖回 state，治理测试失败）。
+        _u = r["url"]
+        if isinstance(_u, str) and "://cdn.jsdelivr.net/" in _u:
+            _u = _u.replace("://cdn.jsdelivr.net/", "://fastly.jsdelivr.net/")
         extra.append({"name": f"auto/{i+1}-{r['evidence'].get('sites', 0)}s",
-                      "kind": "tvbox", "url": r["url"], "auto": True,
+                      "kind": "tvbox", "url": _u, "auto": True,
                       "score": r["score"]})
     os.makedirs(os.path.dirname(args.canary_out) or ".", exist_ok=True)
     with open(args.canary_out, "w", encoding="utf-8") as f:

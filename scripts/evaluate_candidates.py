@@ -162,10 +162,14 @@ def write_canary(repo, picked, out_rel, min_unique):
         if kind_of(c) == "live":
             skipped_live.append(c)
             continue
+        _u = c.get("url")
+        # 2026-09-26 治理：jsdelivr 主域规范为 fastly 子域（与 fetch_merge._norm_jsdelivr 同口径）
+        if isinstance(_u, str) and "://cdn.jsdelivr.net/" in _u:
+            _u = _u.replace("://cdn.jsdelivr.net/", "://fastly.jsdelivr.net/")
         ups.append({
             "name": "auto-u%d-%dn" % (i, c.get("unique", 0)),
             "kind": "tvbox",
-            "url": c.get("url"),
+            "url": _u,
             "auto": True,
             "score": c.get("score", 0),
             "unique": c.get("unique", 0),
