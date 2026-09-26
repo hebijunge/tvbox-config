@@ -459,13 +459,23 @@ def norm_channel(name):
     # 2026-09-24 兜底：剥残留的 tvg-id= 属性前缀（parse_m3u 已修根因，此处防历史数据/其他路径）
     low = re.sub(r'^tvg-(?:id|name)="?', "", low)
     low = re.sub(r"[\[\]()（）【】「」]|超清|高清|标清|蓝光|1080p?|720p?|4k|50fps?|60fps?|hd|sd|fhd|测试", "", low)
+    # 2026-09-26 修复（用户实证 CCTV-1 裂成 5 个名字）：编号主频道归一化提前到
+    # startswith 兜底之前——旧代码 startswith("cctv") 提前 return，下方编号正则是
+    # 死代码，「CCTV1 / CCTV-1 / CCTV-01咪咕 / CCTV-1综合」从不归一、同一 URL 挂在
+    # 多个变体名下。描述性后缀并入主频道；亚洲/欧洲/美洲（CCTV-4 分版）不在后缀
+    # 表，保持独立频道不受影响。
+    m = re.match(r"^cctv[-−]?0*(\d{1,2})(\+?)"
+                 r"(?:咪咕)?(?:综合|财经|综艺|体育|体育赛事|电影|国防军事|电视剧|纪录|科教"
+                 r"|戏曲|社会与法|新闻|少儿|音乐|农业农村|奥林匹克|中文国际)?$", low)
+    if m and (1 <= int(m.group(1)) <= 17 or m.group(2)):
+        return "CCTV-%d%s" % (int(m.group(1)), m.group(2)), "央视"
+    m = re.match(r"^cetv[-−]?0*(\d{1,2})"
+                 r"(?:咪咕)?(?:综合教育|空中课堂|教育服务|职业教育)?$", low)
+    if m and 1 <= int(m.group(1)) <= 5:
+        return "CETV-%d" % int(m.group(1)), "央视"
     # 2026-09-24：所有「CCTV」「央视」前缀的频道（含付费/专业频道）一律归「央视」组
     if low.startswith("cctv") or low.startswith("央视") or low.startswith("cetv"):
         return name.strip(), "央视"
-    m = re.match(r"^cctv[-−]?(\d+)(\+?)", low)
-    if m:
-        # 仅编号主频道归央视；CCTV怀旧剧场/CCTV第一剧场 等付费频道不带编号，落到其他
-        return "CCTV-%d%s" % (int(m.group(1)), m.group(2)), "央视"
     if low.startswith(("cgtn", "cgtv")):
         return "CGTN", "央视"
     if any(k in low for k in HKTW_KW):
@@ -615,6 +625,33 @@ def load_source(sid, url, repo):
     return parse_tvbox_txt(text)
 
 
+# 2026-09-26：URL 自证频道号提取（cctv5 / cctv5p / cctv5+；cctv4k/cctv1hd 不命中）
+_CCTV_URL_TOKEN = re.compile(r"cctv[-_]?0*(\d{1,2})(\+?)(p)?(?:hd)?(?=[\./_?&=\-]|$)")
+
+
+def _name_url_conflict(std, u):
+    """URL 自证频道与归属名冲突检测（用户实证：rthk33 线路混进 CCTV-1、
+    cctv5p 线路混进 CCTV-5——URL 自己说明是别的频道时该行必是错误合并）。
+    仅对已归一的编号主频道（CCTV-1…17 / CCTV-5+）生效，其余频道一律放行。"""
+    lu = (u or "").lower()
+    ls = (std or "").lower()
+    if not lu.startswith(("http://", "https://")):
+        return False
+    mn = re.match(r"^cctv-(\d{1,2})(\+?)$", ls)
+    if mn:
+        if "rthk" in lu or "cetv" in lu or "cgtn" in lu:
+            return True
+        mu = _CCTV_URL_TOKEN.search(lu)
+        if mu:
+            if int(mu.group(1)) != int(mn.group(1)):
+                return True  # cctv2 的线路挂到 CCTV-1 名下
+            url_plus = bool(mu.group(2) or mu.group(3))
+            if url_plus != bool(mn.group(2)):
+                return True  # cctv5p(=CCTV-5+) 的线路挂到 CCTV-5（或反向）
+        return False
+    return False
+
+
 def _merge_channel_rows(cmap, rows, sid):
     """把一组 (频道名, URL) 行按统一口径并入 cmap（build_channel_map 内循环抽取）：
     norm_channel 归类 → is_adult(名) → is_adult_url(URL) → dedup_key 聚合键 →
@@ -633,6 +670,9 @@ def _merge_channel_rows(cmap, rows, sid):
             continue
         # 2026-09-25 P0-2 成人隔离红线·第三重判定：频道 URL 命中 adult 根域黑名单即整行剔除
         if is_adult_url(u):
+            continue
+        # 2026-09-26：URL 自证频道与归属名冲突拒收（rthk33 混进 CCTV-1、cctv5p 混进 CCTV-5）
+        if _name_url_conflict(std, u):
             continue
         # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
         # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
@@ -897,6 +937,24 @@ def name_sort_key(name):
     return tuple((1, int(p), "") if p.isdigit() else (0, p, "") for p in parts)
 
 
+_URL_STATUS_PATH = os.path.join("state", "live_pool_url_status.json")
+
+
+def _load_url_status():
+    """live-pool-prune 持久化的 URL 探活状态 {url: http_code}；缺失/损坏一律空表。"""
+    try:
+        with open(_URL_STATUS_PATH, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except Exception:
+        return {}
+
+
+def _alive_rank(u, status):
+    """线路排序键：探活存活(200/206)排前，其余（未测/连不上/403 等）保持原序殿后。"""
+    return 0 if status.get(u) in (200, 206) else 1
+
+
 def _build_groups(cmap, verified, extra_keep=6):
     """分组构建（write_verified_txt / write_verified_m3u 共用，第十三批下沉）：
     1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
@@ -908,6 +966,9 @@ def _build_groups(cmap, verified, extra_keep=6):
     5) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）；
     6) 2026-09-24 不限上限：verified 频道保留已实测线路（按速度序），其后补回未实测的剩余
        线路（不限条数），让"有多少可用就显示多少"对未测完频道同样生效。"""
+    # 2026-09-26（用户反馈线路排序乱）：未实测线路用 prune 持久化的探活状态排序，
+    # 存活(200/206)置顶、原相对顺序不变（稳定排序）；已实测频道的速度序保持不动。
+    _status = _load_url_status()
     groups = OrderedDict()
     for key, ent in cmap.items():
         name = ent.get("name") or key
@@ -916,12 +977,15 @@ def _build_groups(cmap, verified, extra_keep=6):
             tested = list(verified[key])           # 已实测，按速度升序
             tested_set = set(tested)
             untested = [u for _s, u in ent["lines"] if u not in tested_set]
+            untested.sort(key=lambda _u: _alive_rank(_u, _status))
             lines = tested + cap_lines(untested, 0)  # 0=无限制
         else:
             n_distinct = len({u for _s, u in ent["lines"]})
             if ent["class"] == "其他" and n_distinct < LIVE_OTHER_MIN_LINES:
                 continue  # 其他组长尾裁剪：单线路未验证频道不进主列表
-            lines = cap_lines([u for _sid, u in ent["lines"]], extra_keep)
+            _ls = [u for _sid, u in ent["lines"]]
+            _ls.sort(key=lambda _u: _alive_rank(_u, _status))
+            lines = cap_lines(_ls, extra_keep)
         groups.setdefault(gk, OrderedDict())
         if lines:
             groups[gk][name] = lines
