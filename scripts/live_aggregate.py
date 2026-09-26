@@ -121,6 +121,11 @@ _HKTW_CJK_KW = tuple(k for k in HKTW_KW if not re.fullmatch(r"[a-z0-9]+", k))
 #      CCTV 付费/专业频道（怀旧剧场/风云剧场/第一剧场 等）归「其他」。
 ZHIBO_KW = ("虎牙", "斗鱼", "哔哩", "b站", "bilibili", "咪咕", "电竞")
 LUNBO_KW = ("轮播", "一起看", "歌手")
+# 2026-09-27 用户指令「轮播组把歌手那些去掉」：《歌手2026》整季节目（芒果 mgtv
+# 轮播源，59 条实证）靠 LUNBO_KW 的「歌手」整批判归轮播组，属节目轮播/花絮而非
+# 电视直播。轮播组剔除名称含「歌手」的频道（直接不入任何输出，不回流其他组）；
+# LUNBO_KW 保留「歌手」用于把这类频道路由到轮播口径，剔除在其后执行。
+LUNBO_DROP_KW = ("歌手",)
 
 # 2026-09-26 用户实证：虎牙/YY 影视轮播房间以剧名/演员名/片名直接命名（如「三国演义」
 # 「狂飙」「周润发」），旧逻辑只认「轮播/一起看/歌手」关键词，这些全部落「其他」；其中
@@ -700,6 +705,10 @@ def _merge_channel_rows(cmap, rows, sid):
         # 这里按来源强制落「春晚(季节性)」专项组（组序见 BIG_ORDER）
         if sid == "chunwan" and "春晚" in (name or ""):
             cls = "春晚(季节性)"
+        # 2026-09-27 用户指令「轮播组把歌手那些去掉」：轮播组剔除名称含「歌手」的
+        # 节目轮播/花絮房间（《歌手2026》整季等），不入任何分组输出。
+        if cls == "轮播" and any(kw in std for kw in LUNBO_DROP_KW):
+            continue
         # 2026-09-24：成人/AV/广告台整体剔除（不进 live_verified.txt，也不进 adult.json——后者由 ADULT_LIVE 单独维护）
         if is_adult(std) or is_adult(name):
             continue
@@ -1458,6 +1467,17 @@ def write_group_txts(cmap, verified, outdir, extra_keep=CAP):
                     for u in lines:
                         f.write("%s,%s\n" % (name, u))
         stats[top] = sum(len(c) for _g, c in sections)
+    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：单仓需要单地址消费端点——
+    # 另写 lives/live_all.txt = 全部大组依序拼接的合并文件（组内分节头与 <组>.txt
+    # 完全一致；分组文件照旧保留），live.json 单条目指向它。
+    _all_path = os.path.join(os.path.dirname(os.path.abspath(outdir)), "live_all.txt")
+    with open(_all_path, "w", encoding="utf-8") as f:
+        for top, sections in merged.items():
+            for gname, chans in sections:
+                f.write("%s,#genre#\n" % (gname if top == "地方" else top))
+                for name, lines in chans.items():
+                    for u in lines:
+                        f.write("%s,%s\n" % (name, u))
     # 清掉本轮已不再产出的旧组文件，防上轮组残留误导消费方
     for fn in os.listdir(outdir):
         if fn.endswith(".txt") and fn[:-4] not in stats:

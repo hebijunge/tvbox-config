@@ -177,9 +177,12 @@ class TestGovernance(unittest.TestCase):
     def test_livejson_single_entry(self):
         with open(os.path.join(REPO, "live.json"), encoding="utf-8") as f:
             lj = json.load(f)
-        # 2026-09-26 分组化改造（e9c748d5）后 live.json=7 条分组接口
-        # （聚合·分类直播·<组> → lives/groups/<组>.txt），旧「单条入口」基线过时。
-        self.assertEqual(len(lj.get("lives", [])), 7)
+        # 2026-09-27 用户指令「live.json 只显示一个汇总的」：单仓单条目，
+        # 指向 lives/live_all.txt（全大组拼接文件，分组 txt/m3u 照旧保留）。
+        lives = lj.get("lives", [])
+        self.assertEqual(len(lives), 1)
+        self.assertEqual(lives[0]["name"], "聚合·分类直播")
+        self.assertTrue(lives[0]["url"].endswith("lives/live_all.txt"))
 
     def test_jsdelivr_normalized(self):
         with open(os.path.join(REPO, "state", "extra_upstreams.json"), encoding="utf-8") as f:

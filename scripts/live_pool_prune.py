@@ -185,25 +185,32 @@ def prune_txt(path, dead_urls, verdict=None):
 
 
 def prune_m3u(path, dead_urls):
-    """m3u 格式：#EXTINF 行与下一行 URL 成对，死链则整对删除。返回 (removed, lines_before)。"""
+    """m3u 格式：#EXTINF 行 + 其后连续 URL 行为一个频道块（同台多线路逐行重复，
+    2026-09-23 用户口径）。块内死链 URL 行剔除；块内全部 URL 死亡才整块删除——
+    与 prune_txt 的行级口径一致（频道只要有存活线路就保留）。
+    2026-09-27 修复：旧实现按「#EXTINF+下一行 URL」两行成对解析，多线路频道
+    的第 2+ 条 URL 脱离配对——首条死链时 EXTINF 被误删留下孤儿 URL 行、
+    非首条死链时删不掉，造成 txt/m3u 漂移（地方组 6 频道实证）。
+    返回 (removed, lines_before)。"""
     lines = load_lines(path)
     out, removed = [], 0
-    i = 0
-    while i < len(lines):
+    i, n = 0, len(lines)
+    while i < n:
         s = lines[i].rstrip("\n")
-        if s.startswith("#EXTINF") and i + 1 < len(lines) \
-                and is_stream_url(lines[i + 1].strip()):
-            url = lines[i + 1].strip()
-            if url in dead_urls:
-                removed += 1
-                i += 2
-                continue
+        if s.startswith("#EXTINF"):
+            block, i = [s], i + 1
+            while i < n and not lines[i].startswith("#EXTINF"):
+                u = lines[i].strip()
+                if u in dead_urls:
+                    removed += 1            # 死链 URL 行剔除
+                else:
+                    block.append(lines[i].rstrip("\n"))
+                i += 1
+            if any(is_stream_url(l.strip()) for l in block[1:]):
+                out.extend(block)           # 仍有存活线路：整块保留
+        else:
             out.append(s)
-            out.append(lines[i + 1].rstrip("\n"))
-            i += 2
-            continue
-        out.append(s)
-        i += 1
+            i += 1
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
     return removed, len(lines)

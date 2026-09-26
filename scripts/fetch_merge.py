@@ -720,20 +720,23 @@ def build_curated_lives(repo_dir: str):
             print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
 
     # 2026-09-26 用户指令「不要生成大文件，生成多个分组的 txt 和 m3u」：
-    # 直播产物改为 lives/groups/<组>.txt（+同名 .m3u），live.json 改 7 条分组接口。
-    # 池子（live_cctv/weishi/gangtai/other.txt 等供 tvbox.json Guovin 条目消费）
-    # 与精准/组播/原始源一律保留不动。
+    # 直播产物改为 lives/groups/<组>.txt（+同名 .m3u）；池子（live_cctv/weishi/
+    # gangtai/other.txt 等供 tvbox.json Guovin 条目消费）与精准/组播/原始源保留。
+    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：live.json 单条目改指
+    # lives/live_all.txt（由 live_aggregate.write_group_txts 随分组一并写出）。
     _RAW = "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
     _GROUPS = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
     curated = []
-    for _g in _GROUPS:
-        curated.append({
-            "name": "聚合·分类直播·" + _g,
-            "type": 1,
-            "url": _RAW + "lives/groups/%s.txt" % _g,
-            "ua": "TVBox",
-            "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-        })
+    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：回到单仓——7 条分组入口
+    # 在播放器里显示成 7 个仓，改为单条目「聚合·分类直播」指向 lives/live_all.txt
+    # （全大组依序拼接的合并文件，组内 #genre# 分节即播放器内分类导航）。
+    curated.append({
+        "name": "聚合·分类直播",
+        "type": 1,
+        "url": _RAW + "lives/live_all.txt",
+        "ua": "TVBox",
+        "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+    })
 
     # 优质第三方直播源：live.json 固定为分组接口（聚合·分类直播·*），
     # Guovin/平台直播等第三方条目一律不再进入。
