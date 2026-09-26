@@ -29,6 +29,9 @@ jobs:
         with:
           python-version: "3.11"
 
+      - name: 安装 pypinyin（频道拼音排序依赖，缺失时退回字典序）
+        run: pip install pypinyin
+
       - name: 单元测试（config_decode / 吸收点 P1-P2 行为回归）
         run: python -m unittest discover -s tests -v
 
