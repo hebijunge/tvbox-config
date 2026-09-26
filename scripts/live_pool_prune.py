@@ -83,12 +83,19 @@ def collect_urls():
     return list(urls)
 
 
+PROBE_DEADLINE = 12      # 单 URL 硬上限：直播流会持续吐流，httpx 单次读超时永远等不到，必须外层强杀
+PROBE_BUDGET = 1500      # 全局探活预算（秒）：到点取消剩余任务，按已探测结果继续剔除
+
+
 async def probe_one(client, sem, url):
     async with sem:
         try:
-            r = await client.get(url, headers={"Range": RANGE, "User-Agent": UA},
-                                 timeout=TIMEOUT, follow_redirects=True)
-            return url, r.status_code
+            async def _do():
+                r = await client.get(url, headers={"Range": RANGE, "User-Agent": UA},
+                                     timeout=TIMEOUT, follow_redirects=True)
+                return r.status_code
+            code = await asyncio.wait_for(_do(), PROBE_DEADLINE)
+            return url, code
         except Exception:
             return url, 0
 
@@ -96,11 +103,21 @@ async def probe_one(client, sem, url):
 async def probe_all(urls):
     sem = asyncio.Semaphore(CONCURRENCY)
     verdict = {}
+    t0 = time.monotonic()
     async with httpx.AsyncClient(http2=False) as client:
-        tasks = [probe_one(client, sem, u) for u in urls]
+        tasks = [asyncio.create_task(probe_one(client, sem, u)) for u in urls]
         done = 0
         for fut in asyncio.as_completed(tasks):
-            url, code = await fut
+            try:
+                url, code = await asyncio.wait_for(
+                    fut, PROBE_BUDGET - (time.monotonic() - t0))
+            except asyncio.TimeoutError:
+                print("BUDGET_EXHAUSTED: 探活预算耗尽，取消剩余 %d 条，未探测链接本轮保留"
+                      % (len(urls) - done), flush=True)
+                for t in tasks:
+                    t.cancel()
+                await asyncio.gather(*tasks, return_exceptions=True)
+                break
             verdict[url] = code
             done += 1
             if done % 500 == 0:
