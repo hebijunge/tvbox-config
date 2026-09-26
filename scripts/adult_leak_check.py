@@ -201,11 +201,20 @@ def scan_text(path, hits, re_only=False):
                              "kind": "url", "value": u[:80], "rule": rule})
 
 
-def scan_zip(path, hits):
+def scan_zip(path, hits, wl=()):
+    """zip 结构化扫描（包内条目语义与磁盘常规文件对齐，2026-09-26）：
+      - rules/ 与 state/vocab/ 前缀条目跳过——这两个目录是门禁 adult 词表本体，
+        磁盘侧本就不在扫描域（rules/ 显式排除、state/vocab 不入域）；打包进 zip
+        不改变其性质，逐字扫描词表只会命中词表自己（205+202 处伪阳性）。
+      - json 条目全字段扫描传入白名单 wl——与磁盘 top/dirs 文件同口径：
+        「白名单命中不计一票否决」不应因载体是 zip 而失效（ext 密文 blob 的
+        mmz/1024 随机子串、manifest sha256 hex 在磁盘侧均 guarded）。"""
     try:
         with zipfile.ZipFile(path) as z:
             for info in z.infolist():
                 nm = info.filename
+                if nm.startswith(("rules/", "state/vocab/")):
+                    continue
                 if la.ADULT_SOURCE_RE.search(nm) or la.is_adult(os.path.basename(nm)):
                     hits.append({"file": path, "where": "zip-name",
                                  "kind": "name", "value": nm,
@@ -225,7 +234,7 @@ def scan_zip(path, hits):
                         except Exception:  # noqa: BLE001
                             continue
                         sub = []
-                        scan_json_into(doc, os.path.basename(path) + "::" + nm, sub)
+                        scan_json_into(doc, os.path.basename(path) + "::" + nm, sub, wl)
                         hits.extend(sub)
     except zipfile.BadZipFile as e:
         hits.append({"file": path, "where": "<zip>", "err": str(e)[:80]})
@@ -260,6 +269,7 @@ def main():
 
     # 2026-09-25 质检整改：json/（解析规则库，曾漏 pornhub.json）与 sync/（飞书线同步
     # 配置，daily-fetch 每日作为上游吸收——此处泄漏等于每日撤销清洗结论）纳入扫描域。
+    scanned_zips = set()
     for dirp in scan_dirs:
         if not os.path.isdir(dirp):
             continue
@@ -269,7 +279,8 @@ def main():
                 if f.endswith(".zip"):
                     # 压缩包走结构化扫描（zip 名 + 内嵌 json/txt/m3u/html）；
                     # 不再让 scan_text 把压缩字节当文本扫（会随机命中）。
-                    scan_zip(p, hits)
+                    scan_zip(p, hits, wl)
+                    scanned_zips.add(os.path.abspath(p))
                 elif f.endswith(".json"):
                     scan_json(p, hits, wl)
                 else:
@@ -278,7 +289,11 @@ def main():
     if os.path.isdir("packs"):
         for f in sorted(os.listdir("packs")):
             if f.endswith(".zip"):
-                scan_zip(os.path.join("packs", f), hits)
+                p = os.path.join("packs", f)
+                # gate_criteria dirs 含 packs 时上方已扫过——去重防双扫伪计数
+                if os.path.abspath(p) in scanned_zips:
+                    continue
+                scan_zip(p, hits, wl)
 
     if args.include_snapshot and os.path.isdir("snapshot"):
         for dp, _dn, fs in os.walk("snapshot"):

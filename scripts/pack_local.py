@@ -39,6 +39,11 @@ REL_RE = re.compile(r"(\./(?:deps|lib|js|lives|json)/[^\s\"';|]+)")
 # 全局：本地路径索引（小写 + URL 解码键 -> 真实相对路径）
 PATH_IDX = {}
 
+# 全局：门禁命中成人特征的依赖（真实相对路径）。resolve_ref 一律视为缺失，
+# 引用它的站点/直播/解析走既有「依赖缺失→剔除」机制自然落榜——
+# 成人依赖文件因此不会进入 tvbox-latest.zip（P0-2 根治 deps/** 泄漏）。
+BLOCKED_DEPS = set()
+
 
 def log(msg):
     print("[%s] %s" % (datetime.now().strftime("%H:%M:%S"), msg), flush=True)
@@ -60,25 +65,32 @@ def build_path_idx():
 
 def resolve_ref(ref):
     """'./deps/...' -> 本地真实存在的相对路径；不存在返回 None。
-    兼容：大小写差异（Windows 落盘）、URL 编码差异（%xx vs 中文）。"""
+    兼容：大小写差异（Windows 落盘）、URL 编码差异（%xx vs 中文）。
+    命中 BLOCKED_DEPS（门禁判定成人）的文件一律返回 None（视为缺失）。"""
     p = ref[2:]
+    if p in BLOCKED_DEPS:
+        return None
+
+    def _ok(hit):
+        return None if (hit is None or hit in BLOCKED_DEPS) else hit
+
     if os.path.isfile(p):
-        return p
+        return _ok(p)
     hit = PATH_IDX.get(p.lower())
     if hit:
-        return hit
+        return _ok(hit)
     try:
         pu = urllib.parse.unquote(p).lower()
     except Exception:
         pu = p
     hit = PATH_IDX.get(pu)
     if hit:
-        return hit
+        return _ok(hit)
     try:
         pq = urllib.parse.quote(p).lower()
     except Exception:
         pq = p
-    return PATH_IDX.get(pq)
+    return _ok(PATH_IDX.get(pq))
 
 
 def collect_rel_refs(obj, out):
@@ -98,6 +110,67 @@ def site_rel_refs(site):
     out = set()
     collect_rel_refs(site, out)
     return out
+
+
+def _gate_dep_hit(gate, la, src, zip_name):
+    """按门禁 zip 内条目扫描语义（adult_leak_check.scan_zip 单条目口径，
+    与 tvbox-latest.zip 实际受检方式一致）预扫单个依赖文件：
+      - 文件名（含路径）命中 ADULT_SOURCE_RE / is_adult → 命中；
+      - .json/.txt/.m3u/.html → 原文 source_pattern 扫描；
+      - .json 另做全字段字符串扫描（zip 内无白名单，wl=() 同口径）；
+      - 其余扩展名（jar/js 等）门禁只扫文件名。
+    命中返回规则描述，干净返回 None。"""
+    base = os.path.basename(zip_name)
+    if la.ADULT_SOURCE_RE.search(zip_name) or la.is_adult(base):
+        return "zip-name:%s" % (la.adult_rule_of(base) or "source_pattern")
+    low = zip_name.lower()
+    if not low.endswith((".json", ".txt", ".m3u", ".html")):
+        return None
+    try:
+        with open(src, "rb") as fh:
+            txt = fh.read().decode("utf-8", errors="replace")
+    except OSError:
+        return None
+    if la.ADULT_SOURCE_RE.search(txt):
+        return "source_pattern:text"
+    if not low.endswith(".json"):
+        return None
+    try:
+        doc = json.loads(txt)
+    except Exception:  # noqa: BLE001
+        return None
+    hits = []
+    gate.scan_json_into(doc, zip_name, hits)
+    if hits:
+        h = hits[0]
+        return "%s@%s" % (h.get("rule") or h.get("kind") or "hit", h.get("where", "?"))
+    return None
+
+
+def filter_adult_deps(refs):
+    """P0-2 依赖成人预过滤（2026-09-26）：对配置实际引用的依赖文件按门禁
+    同口径预扫，命中者记入 BLOCKED_DEPS——引用它的站点/直播/解析走既有
+    「依赖缺失→剔除」机制自然落榜，不再进入 tvbox-latest.zip。
+    返回剔除文件数。门禁模块不可用时 fail-open（仅告警）：
+    依赖照常打包，由 CI 门禁兜底拦截——不因预过滤故障炸掉整个包。"""
+    try:
+        import adult_leak_check as gate
+        import live_aggregate as la
+    except Exception as e:  # noqa: BLE001
+        log("!! 门禁模块不可用，依赖成人预过滤跳过（CI 门禁兜底）：%s" % e)
+        return 0
+    blocked = 0
+    for r in sorted(refs):
+        src = resolve_ref(r)
+        if not src or src in BLOCKED_DEPS:
+            continue
+        rule = _gate_dep_hit(gate, la, src, r[2:])
+        if rule:
+            BLOCKED_DEPS.add(src)
+            blocked += 1
+            if blocked <= 30:
+                log("  剔除成人依赖 %s（%s）" % (src, rule))
+    return blocked
 
 
 def main():
@@ -145,6 +218,24 @@ def main():
 
     m = re.match(r"^(\./[^;]+)", shell.get("spider") or "")
     top_spider = m.group(1) if m else None
+
+    # ---------- 1.5 依赖成人预过滤（P0-2，2026-09-26）----------
+    # 对全部候选引用（含后续会被 dead/依赖缺失剔除的站点，宁多扫不漏扫）
+    # 按门禁同口径预扫；命中文件进 BLOCKED_DEPS，下面的站点过滤循环里
+    # 引用它们的站点自动按「依赖缺失」剔除，deps/** 不再进 zip。
+    pre_refs = set()
+    collect_rel_refs(base, pre_refs)
+    if top_spider:
+        pre_refs.add(top_spider)
+    if os.path.isfile(args.adult):
+        try:
+            collect_rel_refs(json.load(open(args.adult, encoding="utf-8")), pre_refs)
+        except Exception:  # noqa: BLE001
+            pass
+    n_blocked = filter_adult_deps(pre_refs)
+    if n_blocked:
+        log("依赖成人预过滤：剔除 %d 个命中文件（引用站点按依赖缺失剔除）"
+            % n_blocked)
 
     kept, drop_dead, drop_dep = [], 0, 0
     missing_refs = set()
