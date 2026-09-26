@@ -25,3 +25,15 @@ mursor\.ottiptv\.cc/migu/
 classicarts\.akamaized\.net/hls/live/
 \.cztv\.com/live/
 mgtv\.com/nn_live/
+# 【3】2026-09-26 task 7689782040580885721 第二轮 CI（run 36238948295）新增误报 7 处，
+# 全部为直播拉流 URL 中数字串恰好含「1024」：① 河南大象融媒县级台拉流（鄢陵综合，
+# 频道 ID 11024）；② 澳亚卫视官方拉流码率目录（mastvnet 4rlff1m/1024）；
+# ③ 中国移动银河互联网电视 IPv6 CDN（2409:8087::/32，yinhe 路径）；④ B 站直播间
+# 房间号任意数字（live.ottiptv.cc/bilibili/<房间号>）。同轮另抓到 1 处真成人
+# （B 站房间标题含乱伦）——不经白名单，已由消费侧清洗剔除
+# （fetch_merge._scrub_snapshot，commit 同批）+ 词表补精确日文关键词。
+# 锚定原则不变：仅限可解释的 host/path 形态，不放宽通用 URL 规则。
+dxhmt\.cn(?::\d+)?/tv/1\d{4}-1\.m3u8
+mastvnet\.com(?::\d+)?/[0-9a-z]+/1024/
+\[2409:8087:[0-9a-f:]+\]:6060/yinhe/
+live\.ottiptv\.cc/bilibili/\d+

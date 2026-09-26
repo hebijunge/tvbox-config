@@ -570,6 +570,64 @@ ADULT_LIVE_SOURCES = [
 ]
 
 
+def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
+    """消费测速快照前的成人频道兜底清洗（2026-09-26，task 7689782040580885721）。
+
+    背景：live-speedtest / adult-live-probe 等工作流直接提交 state/live_checks.json
+    与 lives/live_verified.txt，但它们不跑成人零泄漏门禁；本发布流程消费快照
+    等于原样继承脏频道（实证：run 36238948295 门禁抓到 B 站房间标题
+    「母亲节特别企划/义母乱伦童贞毕业/tz-056」，porn_kw:乱伦）。
+    这里以聚合同口径 is_adult(频道名) 在消费侧双写清洗：
+      ① lives/live_verified.txt 剔除成人频道行（含其全部线路）；
+      ② state/live_checks.json 剔除成人频道键（含「前缀/台名」复合键逐段判定）。
+    清洗只删不增；被删频道若属误杀，应走词表白名单复核流程，本函数不做放行。
+    """
+    txt_p = _os.path.join(repo_dir, "lives", "live_verified.txt")
+    try:
+        _kept, _dropped = [], 0
+        with open(txt_p, encoding="utf-8") as _f:
+            for _ln in _f:
+                _ln = _ln.rstrip("\n")
+                if not _ln or _ln.endswith(",#genre#"):
+                    _kept.append(_ln)
+                    continue
+                _name = _ln.split(",", 1)[0].strip()
+                if is_adult_fn(_name) or any(is_adult_fn(_seg) for _seg in _name.split("/")):
+                    _dropped += 1
+                    continue
+                _kept.append(_ln)
+        if _dropped:
+            with open(txt_p, "w", encoding="utf-8") as _f:
+                _f.write("\n".join(_kept) + ("\n" if _kept else ""))
+            print("[curated] 快照成人清洗：live_verified.txt 剔除 %d 行" % _dropped, flush=True)
+    except FileNotFoundError:
+        pass
+    except Exception as _e:  # 清洗失败不阻断发布，门禁终扫仍是最后防线
+        print("[curated] 快照成人清洗异常（live_verified.txt）：", _e, flush=True)
+    _ck_p = _os.path.join(repo_dir, "state", "live_checks.json")
+    try:
+        with open(_ck_p, encoding="utf-8") as _f:
+            _data = json.load(_f)
+        _chs = _data.get("channels") if isinstance(_data, dict) else None
+        if isinstance(_chs, dict):
+            _drop = []
+            for _k in list(_chs):
+                _segs = [_k] + _k.split("/")
+                if any(is_adult_fn(_seg) for _seg in _segs):
+                    _drop.append(_k)
+            if _drop:
+                for _k in _drop:
+                    _chs.pop(_k, None)
+                with open(_ck_p, "w", encoding="utf-8") as _f:
+                    json.dump(_data, _f, ensure_ascii=False)
+                print("[curated] 快照成人清洗：live_checks.json 剔除 %d 频道（%s…）"
+                      % (len(_drop), _drop[0][:24]), flush=True)
+    except FileNotFoundError:
+        pass
+    except Exception as _e:
+        print("[curated] 快照成人清洗异常（live_checks.json）：", _e, flush=True)
+
+
 def build_curated_lives(repo_dir: str):
     """产出 lives/live_verified.txt + live.json 单一直播接口（分类在文件内分组）+ 成人 lives。
     调用本函数后，写入 live.json / adult.json 时各取所需。"""
@@ -593,6 +651,14 @@ def build_curated_lives(repo_dir: str):
             print("[curated] 消费最近一次成功直播测速结果：%.1fh 前（shard=%s，%s 频道，verified=%s）"
                   % (_age / 3600, _meta.get("shard"), _meta.get("channels"),
                      _meta.get("verified_channels")), flush=True)
+            # 2026-09-26 消费侧成人清洗：测速快照未经频道名成人过滤，直接消费会
+            # 把脏频道带进发布产物与 live_checks.json（run 36238948295 门禁实证）。
+            # 按聚合同口径 is_adult 兜底剔除后再进入产物链。
+            try:
+                import live_aggregate as _la  # noqa: WPS433
+                _scrub_snapshot(repo_dir, _la.is_adult)
+            except Exception as _e:
+                print("[curated] 快照成人清洗跳过：", _e, flush=True)
     except Exception as _e:
         print("[curated] 测速快照元数据不可读（%s），回退本轮聚合" % _e, flush=True)
     if not _fresh:
