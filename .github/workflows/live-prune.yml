@@ -1,0 +1,52 @@
+name: live-pool-prune
+# 直播池死链剔除：探活全部频道级 URL，仅删除 404/410/5xx 真死链（400/403/429/
+# 连接失败一律保留——Runner 出网被 WAF 拦不可判死，与 adult-probe 同口径）。
+# 触发：daily-fetch 结束后自动（合并进来的死链当天清掉）+ 每周日补扫 + 手动。
+# 背景实测：央视组 893 条仅 33.4% 存活（502x288 / 500x168），daily 合并无探活，
+# speedtest 仅测速排序不剔除。
+
+on:
+  workflow_run:
+    workflows: ["daily-fetch"]
+    types: [completed]
+  schedule:
+    - cron: "0 21 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: live-pool-prune
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 安装依赖
+        run: pip install httpx
+
+      - name: 探活剔除死链
+        run: python scripts/live_pool_prune.py
+
+      - name: 提交（有变更时）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add lives/ state/live_pool_prune_report.json
+          if git diff --cached --quiet; then
+            echo "本轮无死链变化，跳过提交"
+          else
+            SUMMARY=$(python -c "import json;r=json.load(open('state/live_pool_prune_report.json'));print('probed %d / alive %d / dead %d / removed %d lines'%(r['probed'],r['alive'],r['dead'],r['removed_total_lines']))")
+            git commit -m "chore(live): 死链剔除 $SUMMARY"
+            git pull --rebase origin main
+            git push
+          fi
