@@ -10,6 +10,7 @@
      + live_channels.json 明细
 """
 import datetime
+import hashlib
 import json
 import os
 import re
