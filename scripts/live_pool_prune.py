@@ -139,9 +139,22 @@ def guard(verdict):
     return True
 
 
-def prune_txt(path, dead_urls):
-    """tvbox 分组格式：剔除死链行，顺带删除清空后的分组头。返回 (removed, lines_before)。"""
+# 排序豁免：live_precise.txt 频道内已按探流耗时升序（首条=最快），重排会破坏速度序
+REORDER_SKIP = {"lives/live_precise.txt"}
+
+
+def prune_txt(path, dead_urls, verdict=None):
+    """tvbox 分组格式：剔除死链行 + 每频道内存活(200/206)线路置顶（稳定排序，原相对
+    顺序不变），顺带删除清空后的分组头。返回 (removed, lines_before)。"""
     lines = load_lines(path)
+    reorder = path not in REORDER_SKIP and verdict is not None
+
+    def rank(entry):
+        if not reorder or "," not in entry:
+            return 1
+        u = entry.rsplit(",", 1)[-1].strip()
+        return 0 if verdict.get(u) in (200, 206) else 1
+
     out, removed = [], 0
     cur_header, cur_entries = None, []
     for line in lines:
@@ -150,6 +163,7 @@ def prune_txt(path, dead_urls):
             continue
         if "#genre#" in s:
             if cur_header is not None and cur_entries:
+                cur_entries.sort(key=rank)
                 out.append(cur_header)
                 out.extend(cur_entries)
             cur_header, cur_entries = s, []
@@ -162,6 +176,7 @@ def prune_txt(path, dead_urls):
         else:
             cur_entries.append(s)
     if cur_header is not None and cur_entries:
+        cur_entries.sort(key=rank)
         out.append(cur_header)
         out.extend(cur_entries)
     with open(path, "w", encoding="utf-8") as f:
@@ -208,7 +223,7 @@ def main():
     for path in TXT_FILES:
         if not os.path.exists(path):
             continue
-        removed, total = prune_txt(path, dead_urls)
+        removed, total = prune_txt(path, dead_urls, verdict)
         if removed:
             per_file[path] = {"removed": removed, "lines_before": total}
             print("%s: -%d lines" % (path, removed))
@@ -235,6 +250,9 @@ def main():
         "duration_seconds": round(time.time() - start, 1),
     }
     os.makedirs("state", exist_ok=True)
+    # 持久化 URL 级探活状态：次日 live_aggregate 聚合时用它做「存活线路置顶」排序
+    with open("state/live_pool_url_status.json", "w", encoding="utf-8") as f:
+        json.dump(verdict, f, ensure_ascii=False, sort_keys=True)
     with open("state/live_pool_prune_report.json", "w", encoding="utf-8") as f:
         json.dump(report, f, ensure_ascii=False, indent=1)
     print(json.dumps({k: report[k] for k in
