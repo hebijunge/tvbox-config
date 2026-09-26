@@ -148,7 +148,10 @@ jobs:
             echo "本轮无变更，跳过提交"
           else
             git commit -m "chore: daily update $(date -u +%Y-%m-%d)"
-            git pull --rebase origin main
+            # 2026-09-26 长跑 job 与并行 prune 工作流高频提交 lives/ 同批文件，
+            # rebase 冲突导致发布连续失败（run 36246598641：could not apply ec6bb69）。
+            # 产物发布语义 = 本 job 重算结果为准，冲突取本侧（-X theirs 指正在重放的 daily 提交）。
+            git pull --rebase -X theirs origin main
             git push
           fi
 
