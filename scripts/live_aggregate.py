@@ -1359,7 +1359,9 @@ def _save_live_checks(repo, cmap, verified, shard, group_stats, test_meta):
     据此决定是否消费最近一次成功测速结果）。"""
     st = os.path.join(repo, "state")
     os.makedirs(st, exist_ok=True)
-    now = datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+    # 2026-09-26 修复：本文件为 import datetime 模块导入，此处误写 datetime.now()
+    # 令 speedtest shard 实测跑完后在 meta 落盘处崩溃（live-speedtest run #5 实证）
+    now = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
     doc = {"updated": now, "shard": shard or None, "group_stats": group_stats,
            "test": test_meta,
            "verified": {k: list(v) for k, v in verified.items()},
