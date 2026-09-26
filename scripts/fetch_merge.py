@@ -570,22 +570,11 @@ ADULT_LIVE_SOURCES = [
 ]
 
 
-def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
-    """消费测速快照前的成人频道兜底清洗（2026-09-26，task 7689782040580885721）。
-
-    背景：live-speedtest / adult-live-probe 等工作流直接提交 state/live_checks.json
-    与 lives/live_verified.txt，但它们不跑成人零泄漏门禁；本发布流程消费快照
-    等于原样继承脏频道（实证：run 36238948295 门禁抓到 B 站房间标题
-    「母亲节特别企划/义母乱伦童贞毕业/tz-056」，porn_kw:乱伦）。
-    这里以聚合同口径 is_adult(频道名) 在消费侧双写清洗：
-      ① lives/live_verified.txt 剔除成人频道行（含其全部线路）；
-      ② state/live_checks.json 剔除成人频道键（含「前缀/台名」复合键逐段判定）。
-    清洗只删不增；被删频道若属误杀，应走词表白名单复核流程，本函数不做放行。
-    """
-    txt_p = os.path.join(repo_dir, "lives", "live_verified.txt")
+def _scrub_txt_file(path: str, is_adult_fn) -> None:
+    """tvbox 分组 txt 成人行剔除（含其全部线路；#genre# 组头保留）。"""
     try:
         _kept, _dropped = [], 0
-        with open(txt_p, encoding="utf-8") as _f:
+        with open(path, encoding="utf-8") as _f:
             for _ln in _f:
                 _ln = _ln.rstrip("\n")
                 if not _ln or _ln.endswith(",#genre#"):
@@ -597,13 +586,73 @@ def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
                     continue
                 _kept.append(_ln)
         if _dropped:
-            with open(txt_p, "w", encoding="utf-8") as _f:
+            with open(path, "w", encoding="utf-8") as _f:
                 _f.write("\n".join(_kept) + ("\n" if _kept else ""))
-            print("[curated] 快照成人清洗：live_verified.txt 剔除 %d 行" % _dropped, flush=True)
+            print("[curated] 快照成人清洗：%s 剔除 %d 行" % (os.path.basename(path), _dropped),
+                  flush=True)
     except FileNotFoundError:
         pass
     except Exception as _e:  # 清洗失败不阻断发布，门禁终扫仍是最后防线
-        print("[curated] 快照成人清洗异常（live_verified.txt）：", _e, flush=True)
+        print("[curated] 快照成人清洗异常（%s）：" % os.path.basename(path), _e, flush=True)
+
+
+def _scrub_m3u_file(path: str, is_adult_fn) -> None:
+    """m3u 成人频道剔除：#EXTINF 判名，命中连其后 URL 行一起删。"""
+    try:
+        _kept, _dropped = [], 0
+        _adult_cur = False
+        with open(path, encoding="utf-8") as _f:
+            for _ln in _f:
+                _ln = _ln.rstrip("\n")
+                if _ln.startswith("#EXTINF"):
+                    _name = _ln.rsplit(",", 1)[-1].strip()
+                    _adult_cur = bool(is_adult_fn(_name)) or any(
+                        is_adult_fn(_seg) for _seg in _name.split("/"))
+                    if _adult_cur:
+                        _dropped += 1
+                        continue
+                    _kept.append(_ln)
+                elif _ln.startswith("#"):
+                    _adult_cur = False  # 其他元信息行不影响后续条目
+                    _kept.append(_ln)
+                else:
+                    if _adult_cur:
+                        _dropped += 1
+                        continue
+                    _kept.append(_ln)
+        if _dropped:
+            with open(path, "w", encoding="utf-8") as _f:
+                _f.write("\n".join(_kept) + ("\n" if _kept else ""))
+            print("[curated] 快照成人清洗：%s 剔除 %d 条目" % (os.path.basename(path), _dropped),
+                  flush=True)
+    except FileNotFoundError:
+        pass
+    except Exception as _e:
+        print("[curated] 快照成人清洗异常（%s）：" % os.path.basename(path), _e, flush=True)
+
+
+def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
+    """消费测速快照前的成人频道兜底清洗（2026-09-26，task 7689782040580885721）。
+
+    背景：live-speedtest / adult-live-probe 等工作流直接提交 state/live_checks.json
+    与 lives/ 产物，但它们不跑成人零泄漏门禁；本发布流程消费快照等于原样继承
+    脏频道（实证：run 36238948295 门禁抓到 B 站房间标题
+    「母亲节特别企划/义母乱伦童贞毕业/tz-056」，porn_kw:乱伦）。
+    这里以聚合同口径 is_adult(频道名) 在消费侧双写清洗（2026-09-26 起产物为
+    lives/groups/<组>.txt + <组>.m3u 分组文件，不再有大文件 live_verified.txt）：
+      ① lives/groups/*.txt 剔除成人频道行（含其全部线路）；
+      ② lives/groups/*.m3u 剔除成人频道的 #EXTINF 及其 URL 行；
+      ③ state/live_checks.json 剔除成人频道键（含「前缀/台名」复合键逐段判定）。
+    清洗只删不增；被删频道若属误杀，应走词表白名单复核流程，本函数不做放行。
+    """
+    _gdir = os.path.join(repo_dir, "lives", "groups")
+    if os.path.isdir(_gdir):
+        for _fn in sorted(os.listdir(_gdir)):
+            _path = os.path.join(_gdir, _fn)
+            if _fn.endswith(".txt"):
+                _scrub_txt_file(_path, is_adult_fn)
+            elif _fn.endswith(".m3u"):
+                _scrub_m3u_file(_path, is_adult_fn)
     _ck_p = os.path.join(repo_dir, "state", "live_checks.json")
     try:
         with open(_ck_p, encoding="utf-8") as _f:
@@ -629,7 +678,7 @@ def _scrub_snapshot(repo_dir: str, is_adult_fn) -> None:
 
 
 def build_curated_lives(repo_dir: str):
-    """产出 lives/live_verified.txt + live.json 单一直播接口（分类在文件内分组）+ 成人 lives。
+    """产出 lives/groups/<组>.txt|.m3u 分组直播产物 + live.json 分组接口 + 成人 lives。
     调用本函数后，写入 live.json / adult.json 时各取所需。"""
     import os as _os
     sys.path.insert(0, _os.path.join(repo_dir, "scripts"))
@@ -645,7 +694,7 @@ def build_curated_lives(repo_dir: str):
         with open(_meta_p, encoding="utf-8") as _f:
             _meta = json.load(_f)
         _age = time.time() - datetime.strptime(_meta["updated"], "%Y-%m-%dT%H:%M:%S").timestamp()
-        _have_out = _os.path.isfile(_os.path.join(repo_dir, "lives", "live_verified.txt"))
+        _have_out = _os.path.isfile(_os.path.join(repo_dir, "lives", "groups", "央视.txt"))
         if _have_out and 0 <= _age < _max_age:
             _fresh = True
             print("[curated] 消费最近一次成功直播测速结果：%.1fh 前（shard=%s，%s 频道，verified=%s）"
@@ -665,50 +714,29 @@ def build_curated_lives(repo_dir: str):
         try:
             import live_aggregate as _la  # noqa: WPS433
             _shard = _os.environ.get("LIVE_SHARD") or None
-            _la.main(repo=repo_dir, out_txt=_os.path.join("lives", "live_verified.txt"),
+            _la.main(repo=repo_dir,
                      out_json="live_channels.json", shard=_shard)
         except Exception as e:  # 单次聚合失败不影响主流程
             print("[curated] live_aggregation 跳过：", e.getMessage() if hasattr(e, "getMessage") else e, flush=True)
 
-    _RAW = "https://ghproxy.net/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
-    ver_txt_url = _RAW + "lives/live_verified.txt"
-    curated = [{
-        "name": "聚合·分类直播(央视/卫视/地方/港台/轮播/直播/其他)",
-        "type": 1,
-        "url": ver_txt_url,
-        "ua": "TVBox",
-        "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
-    }]
-    # 2026-09-24 用户指令「一个接口里，包含那几个分类」：live.json 只保留这一个接口，
-    # 央视/卫视/地方/港台/轮播/直播/其他等分类全部在 live_verified.txt 文件内部
-    # 用「组名,#genre#」分组呈现（逐行同台名重复=多线路可切换）。不再拆多个接口。
-    # （精准测速版 live_precise.txt 仍生成，供想用更精简源的场合自行取用。）
+    # 2026-09-26 用户指令「不要生成大文件，生成多个分组的 txt 和 m3u」：
+    # 直播产物改为 lives/groups/<组>.txt（+同名 .m3u），live.json 改 7 条分组接口。
+    # 池子（live_cctv/weishi/gangtai/other.txt 等供 tvbox.json Guovin 条目消费）
+    # 与精准/组播/原始源一律保留不动。
+    _RAW = "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
+    _GROUPS = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
+    curated = []
+    for _g in _GROUPS:
+        curated.append({
+            "name": "聚合·分类直播·" + _g,
+            "type": 1,
+            "url": _RAW + "lives/groups/%s.txt" % _g,
+            "ua": "TVBox",
+            "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+        })
 
-    # 2026-09-23 大分类拆分（2026-09-24 起仅供备查）：按 live_verified 分组切 7 个
-    # 分类源文件；cat 文件仍生成到 lives/ 目录，但不再各自成为 live.json 接口。
-    _BIG_ORDER = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
-    _buckets = {c: [] for c in _BIG_ORDER}
-    _cur_grp = None
-    try:
-        with open(os.path.join("lives", "live_verified.txt"), encoding="utf-8") as _f:
-            for _ln in _f:
-                _ln = _ln.rstrip()
-                if not _ln:
-                    continue
-                if _ln.endswith(",#genre#"):
-                    _g = _ln[: -len(",#genre#")]
-                    _cur_grp = _g if _g in _BIG_ORDER else ("地方" if _g.startswith("地方-") else "其他")
-                    continue
-                _buckets[_cur_grp or "其他"].append(_ln)
-        for _c in _BIG_ORDER:
-            _fn = os.path.join("lives", "live_cat_%s.txt" % _c)
-            with open(_fn, "w", encoding="utf-8") as _f:
-                _f.write("%s,#genre#\n" % _c + "\n".join(_buckets[_c]) + "\n")
-    except Exception as _e:  # 拆分失败不影响主流程，聚合条目仍在
-        print("[curated] 大分类拆分跳过:", _e, flush=True)
-
-    # 优质第三方直播源：2026-09-24 用户指令「一个接口里包含那几个分类」后，live.json
-    # 固定为单接口（聚合·分类直播），Guovin/平台直播等第三方条目一律不再进入。
+    # 优质第三方直播源：live.json 固定为分组接口（聚合·分类直播·*），
+    # Guovin/平台直播等第三方条目一律不再进入。
     THIRD_PARTY_OK = {}
     for nm, (u, _g) in THIRD_PARTY_OK.items():
         curated.append({"name": nm, "type": 1, "url": u, "group": _g})
@@ -3916,7 +3944,8 @@ def main() -> int:
             _l["group"] = _live_group_of(_l.get("name"))
     # 2026-09-23 用户指令「把那些没用的解析都去掉」：第三方杂源（重复/失效大量存在，
     # 实测 167 条里仅少量可用且与聚合重复）不再进入 live.json，只保留仓库自有
-    # 聚合精选条目（单接口：聚合·分类直播，分类在 live_verified.txt 内 #genre# 分组）。
+    # 聚合精选条目（2026-09-26 起为 7 条分组接口：聚合·分类直播·<组>，
+    # 指向 lives/groups/<组>.txt）。
     # 成人主题条目仍在上面的循环里下放 adult.json，不受影响。
     live["lives"] = curated_lives
     with open("vod.json", "w", encoding="utf-8") as f:

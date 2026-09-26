@@ -3,10 +3,11 @@
 """live_aggregate.py — 频道级聚合：规范化、分类、多线路合并、逐线路实测。
 
 输入：源级测活通过的 m3u/tvbox-txt 源清单
-输出：lives/live_verified.txt（tvbox txt 分组格式，大分类 → 频道 → 多线路 # 合并；
+输出：lives/groups/<组>.txt + <组>.m3u 分组产物（2026-09-26 用户指令不再产出
+大文件；tvbox txt 分组格式，大分类 → 频道 → 多线路 # 合并；
      2026-09-23 分类重构：大分类 = 央视/卫视/地方-省(按地区)/港台/轮播/直播/其他，
      小分类 = 频道条目（如央视组下 CCTV-1 各台），每频道多 URL 可切换线路）
-     + lives/live_verified.m3u（第十三批：fanmingming/live 台标/EPG 引用层）
+     m3u 同内容带 fanmingming/live 台标/EPG 引用层）
      + live_channels.json 明细
 """
 import datetime
@@ -1420,27 +1421,66 @@ def build_sources(repo):
     return sources
 
 
-def write_group_m3us(cmap, verified, outdir, extra_keep=CAP):
-    """P0-1 按组输出独立 m3u 文件（2026-09-25）：lives/groups/<组名>.m3u。
-    每文件 = #EXTM3U 头（同 live_verified.m3u 的多源 EPG/catchup）+ 该组全部频道
-    （#EXTINF group-title=<组名>，行序/内容与 live_verified.txt 完全同源）。
-    大分类组：央视/卫视/港台/轮播/直播/其他 + 春晚(季节性)；地方按省各出
-    地方-<省>.m3u。返回 {组名: 频道数}。"""
+def _top_group(gname):
+    """地方-<省> 折叠到顶级组「地方」（2026-09-26 用户「文件太杂」收敛：
+    lives/groups/ 每大组一个 txt + 一个 m3u，不再 27 省 27 文件）。"""
+    return gname.split("-", 1)[0] if gname.startswith("地方-") else gname
+
+
+def write_group_txts(cmap, verified, outdir, extra_keep=CAP):
+    """按组输出 tvbox txt（2026-09-26 用户指令：不再产出整本 live_verified.txt
+    大文件，改为 lives/groups/<组>.txt 分组文件；地方 27 省合入单个 地方.txt，
+    省作「地方-<省>,#genre#」分节）。行序/内容与大文件完全同源。
+    返回 {顶级组名: 频道数}。"""
     groups = _build_groups(cmap, verified, extra_keep)
     os.makedirs(outdir, exist_ok=True)
-    stats = {}
+    merged = OrderedDict()
     for gname, chans in _iter_ordered_groups(groups):
-        fn = os.path.join(outdir, "%s.m3u" % gname)
-        with open(fn, "w", encoding="utf-8") as f:
-            f.write('#EXTM3U x-tvg-url="%s" %s\n' % (",".join(FMM_EPG_URLS), FMM_CATCHUP))
-            for name, lines in chans.items():
-                logo = fmm_logo_name(name)
-                f.write('#EXTINF:-1 tvg-name="%s" tvg-logo="%s%s.png" group-title="%s",%s\n'
-                        % (logo, FMM_TV_BASE, logo, gname, name))
-                for u in lines:
-                    f.write(u + "\n")
-        stats[gname] = len(chans)
+        merged.setdefault(_top_group(gname), []).append((gname, chans))
+    stats = {}
+    for top, sections in merged.items():
+        with open(os.path.join(outdir, "%s.txt" % top), "w", encoding="utf-8") as f:
+            for gname, chans in sections:
+                f.write("%s,#genre#\n" % (gname if top == "地方" else top))
+                for name, lines in chans.items():
+                    for u in lines:
+                        f.write("%s,%s\n" % (name, u))
+        stats[top] = sum(len(c) for _g, c in sections)
     # 清掉本轮已不再产出的旧组文件，防上轮组残留误导消费方
+    for fn in os.listdir(outdir):
+        if fn.endswith(".txt") and fn[:-4] not in stats:
+            try:
+                os.remove(os.path.join(outdir, fn))
+            except OSError:
+                pass
+    return stats
+
+
+def write_group_m3us(cmap, verified, outdir, extra_keep=CAP):
+    """P0-1 按组输出独立 m3u 文件：lives/groups/<组名>.m3u。
+    每文件 = #EXTM3U 头（同原 live_verified.m3u 的多源 EPG/catchup）+ 该组全部
+    频道，行序/内容与大文件完全同源。2026-09-26 收敛：地方 27 省合入单个
+    地方.m3u（#EXTINF group-title=地方-<省> 分节），组目录固定 7 m3u。
+    返回 {顶级组名: 频道数}。"""
+    groups = _build_groups(cmap, verified, extra_keep)
+    os.makedirs(outdir, exist_ok=True)
+    merged = OrderedDict()
+    for gname, chans in _iter_ordered_groups(groups):
+        merged.setdefault(_top_group(gname), []).append((gname, chans))
+    stats = {}
+    for top, sections in merged.items():
+        with open(os.path.join(outdir, "%s.m3u" % top), "w", encoding="utf-8") as f:
+            f.write('#EXTM3U x-tvg-url="%s" %s\n' % (",".join(FMM_EPG_URLS), FMM_CATCHUP))
+            for gname, chans in sections:
+                gt = gname if top == "地方" else top
+                for name, lines in chans.items():
+                    logo = fmm_logo_name(name)
+                    f.write('#EXTINF:-1 tvg-name="%s" tvg-logo="%s%s.png" group-title="%s",%s\n'
+                            % (logo, FMM_TV_BASE, logo, gt, name))
+                    for u in lines:
+                        f.write(u + "\n")
+        stats[top] = sum(len(c) for _g, c in sections)
+    # 清掉本轮已不再产出的旧组文件（含旧版 地方-<省>.m3u 27 文件），防残留误导
     for fn in os.listdir(outdir):
         if fn.endswith(".m3u") and fn[:-4] not in stats:
             try:
@@ -1490,8 +1530,7 @@ def _load_live_checks(repo, path=None):
         return None
 
 
-def main(repo=None, out_txt="lives/live_verified.txt",
-         out_m3u="lives/live_verified.m3u", out_json="live_channels.json",
+def main(repo=None, out_json="live_channels.json",
          out_multicast="lives/live_multicast.txt",
          out_precise="lives/live_precise.txt",
          shard=None, reuse_results=None):
@@ -1506,13 +1545,12 @@ def main(repo=None, out_txt="lives/live_verified.txt",
         else:
             cmap, verified, _meta = got
             print("[live] 复用测速快照：%d 频道 / %d 已验证" % (len(cmap), len(verified)), flush=True)
-            stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
             write_precise_txt(cmap, verified, os.path.join(repo, out_precise))
-            write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
-            gstats = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
-            print("groups:", stats, flush=True)
-            print("group m3u:", gstats, flush=True)
-            _save_live_checks(repo, cmap, verified, "reuse", stats, {"mode": "reuse"})
+            gstats = write_group_txts(cmap, verified, os.path.join(repo, "lives", "groups"))
+            gstats_m3u = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
+            print("groups:", gstats, flush=True)
+            print("group m3u:", gstats_m3u, flush=True)
+            _save_live_checks(repo, cmap, verified, "reuse", gstats, {"mode": "reuse"})
             return cmap, verified
 
     sources = build_sources(repo)
@@ -1531,25 +1569,25 @@ def main(repo=None, out_txt="lives/live_verified.txt",
     n_cache = sum(1 for _u, _ok, w, _ms in
                   (x for lst in raw.values() for x in lst) if w == "cache")
     print("line tests done in %.0fs, verified channels: %d" % (time.time() - t0, len(verified)), flush=True)
-    stats = write_verified_txt(cmap, verified, os.path.join(repo, out_txt))
+    # 2026-09-26 用户指令：不再产出整本 live_verified.txt / live_verified.m3u 大文件，
+    # 产物改为 lives/groups/<组>.txt + <组>.m3u 分组文件（地方 27 省合入单文件分节）。
+    gstats = write_group_txts(cmap, verified, os.path.join(repo, "lives", "groups"))
     precise_stats = write_precise_txt(cmap, verified, os.path.join(repo, out_precise))
-    print("precise groups:", precise_stats, flush=True)
-    m3u_stats = write_verified_m3u(cmap, verified, os.path.join(repo, out_m3u))
-    gstats = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
+    m3u_stats = write_group_m3us(cmap, verified, os.path.join(repo, "lives", "groups"))
     mc_stats = write_multicast_txt(os.path.join(repo, out_multicast))
-    print("groups:", stats, flush=True)
-    print("m3u groups:", m3u_stats, flush=True)
-    print("group m3u:", gstats, flush=True)
+    print("groups:", gstats, flush=True)
+    print("precise groups:", precise_stats, flush=True)
+    print("group m3u:", m3u_stats, flush=True)
     print("multicast groups:", mc_stats, flush=True)
     with open(out_json, "w", encoding="utf-8") as f:
         json.dump({
             "verified": verified,
-            "group_stats": stats,
+            "group_stats": gstats,
             "channels": {k: {"class": v["class"], "n_lines": len(v["lines"]),
                              "lines": [u for _s, u in v["lines"][:10]]}
                          for k, v in cmap.items()},
         }, f, ensure_ascii=False, indent=1)
-    _save_live_checks(repo, cmap, verified, shard, stats,
+    _save_live_checks(repo, cmap, verified, shard, gstats,
                       {"mode": "full", "probed": n_probe, "cached": n_cache,
                        "test_seconds": round(time.time() - t0, 1),
                        "total_seconds": round(time.time() - t_start, 1)})

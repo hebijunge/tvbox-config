@@ -3,7 +3,7 @@ name: live-speedtest
 # - daily-fetch 不再内嵌测速；测速拆为独立 job，每 6h 一次分片轮转
 # - 4 shard × 6h = 全量覆盖一周期 ~24h；progress.jsonl 续跑（ok TTL 20h / fail TTL 4h）
 # - 发布只消费 state/live_check_meta.json 的「最近一次成功」标记（fetch_merge 26h 内即视为新鲜）
-# - 产物：lives/live_verified.txt / lives/live_verified.m3u / lives/live_precise.txt /
+# - 产物：lives/groups/<组>.txt + <组>.m3u（2026-09-26 起不再产出大文件）/ lives/live_precise.txt /
 #        state/live_checks.json /（live_channels.json 由 .gitignore 屏蔽不入库，
 #        可由 state/live_checks.json 离线重建；2026-09-26 run #6 实证 git add
 #        被忽略文件会 exit 1）
@@ -133,11 +133,9 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           # 测速产物全部入库；progress.jsonl 必然存在（步骤「加载 progress.jsonl」已 ensure）
-          git add lives/live_verified.txt \
-                  lives/live_verified.m3u \
+          git add lives/groups/ \
                   lives/live_precise.txt \
                   lives/live_multicast.txt \
-                  lives/groups/ \
                   state/live_checks.json \
                   state/live_check_meta.json \
                   state/live_test_progress.jsonl

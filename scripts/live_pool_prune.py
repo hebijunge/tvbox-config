@@ -11,11 +11,10 @@
           连接失败（code=0，与 adult_live_probe 同口径，宁可漏删不误删）
 
 处理文件（txt: tvbox 分组格式；m3u: EXTINF+URL 对）：
-  lives/live_verified.txt  live.json「聚合·分类直播」消费
-  lives/live_cat_*.txt     分类中间产物
-  lives/live_cctv/weishi/gangtai/other.txt  tvbox.json「Guovin·」条目消费
+  lives/groups/*.txt        分组产物（2026-09-26 起替代 live_verified.txt / live_cat_*）
+  lives/groups/*.m3u        分组产物（替代 live_verified.m3u）
+  lives/live_cctv/weishi/gangtai/other.txt  tvbox.json「Guovin·」条目消费（池子保留）
   lives/live_precise/multicast/live.txt
-  lives/live_verified.m3u
 
 输出：state/live_pool_prune_report.json
 """
@@ -35,14 +34,6 @@ RANGE = "bytes=0-4095"
 DEAD_CODES = {404, 410} | set(range(500, 600))
 
 TXT_FILES = [
-    "lives/live_verified.txt",
-    "lives/live_cat_央视.txt",
-    "lives/live_cat_卫视.txt",
-    "lives/live_cat_地方.txt",
-    "lives/live_cat_港台.txt",
-    "lives/live_cat_直播.txt",
-    "lives/live_cat_轮播.txt",
-    "lives/live_cat_其他.txt",
     "lives/live_cctv.txt",
     "lives/live_weishi.txt",
     "lives/live_gangtai.txt",
@@ -51,7 +42,16 @@ TXT_FILES = [
     "lives/live_multicast.txt",
     "lives/live.txt",
 ]
-M3U_FILES = ["lives/live_verified.m3u"]
+M3U_FILES = []
+
+
+def _group_files(ext):
+    """lives/groups/ 分组产物（<组>.txt / <组>.m3u），目录缺失返回空。"""
+    gdir = os.path.join("lives", "groups")
+    try:
+        return [os.path.join(gdir, f) for f in sorted(os.listdir(gdir)) if f.endswith(ext)]
+    except OSError:
+        return []
 
 
 def is_stream_url(u):
@@ -65,7 +65,7 @@ def load_lines(path):
 
 def collect_urls():
     urls = {}
-    for path in TXT_FILES:
+    for path in TXT_FILES + _group_files(".txt"):
         if not os.path.exists(path):
             continue
         for line in load_lines(path):
@@ -73,7 +73,7 @@ def collect_urls():
                 u = line.rsplit(",", 1)[-1].strip()
                 if is_stream_url(u):
                     urls.setdefault(u, None)
-    for path in M3U_FILES:
+    for path in M3U_FILES + _group_files(".m3u"):
         if not os.path.exists(path):
             continue
         for line in load_lines(path):
@@ -227,7 +227,7 @@ def main():
         if removed:
             per_file[path] = {"removed": removed, "lines_before": total}
             print("%s: -%d lines" % (path, removed))
-    for path in M3U_FILES:
+    for path in M3U_FILES + _group_files(".m3u"):
         if not os.path.exists(path):
             continue
         removed, total = prune_m3u(path, dead_urls)
