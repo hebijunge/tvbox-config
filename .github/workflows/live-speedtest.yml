@@ -4,7 +4,9 @@ name: live-speedtest
 # - 4 shard × 6h = 全量覆盖一周期 ~24h；progress.jsonl 续跑（ok TTL 20h / fail TTL 4h）
 # - 发布只消费 state/live_check_meta.json 的「最近一次成功」标记（fetch_merge 26h 内即视为新鲜）
 # - 产物：lives/live_verified.txt / lives/live_verified.m3u / lives/live_precise.txt /
-#        lives/live_multicast.txt / live_channels.json / state/live_checks.json /
+#        state/live_checks.json /（live_channels.json 由 .gitignore 屏蔽不入库，
+#        可由 state/live_checks.json 离线重建；2026-09-26 run #6 实证 git add
+#        被忽略文件会 exit 1）
 #        state/live_test_progress.jsonl / state/live_check_meta.json
 #
 # 触发策略：4 个 cron 各自跑一片（每日各一片一次）。本工作流并发组 live-speedtest 顺序执行；
@@ -136,7 +138,6 @@ jobs:
                   lives/live_precise.txt \
                   lives/live_multicast.txt \
                   lives/groups/ \
-                  live_channels.json \
                   state/live_checks.json \
                   state/live_check_meta.json \
                   state/live_test_progress.jsonl
