@@ -324,6 +324,19 @@ UPSTREAMS = [
     # 戏曲音乐：10 sites
     {"name": "sv/xiquyinyue", "kind": "tvbox",
      "url": "https://play.iptv365.org/%E6%88%8F%E6%9B%B2%E9%9F%B3%E4%B9%90/api.json"},
+    # ---- 2026-09-26 吸收 zoo.ink TVBox 接口研究报告 P0 四源（task 7689782040580885721）----
+    # 报告 P0 ②ok线路1=11号托管源 与 ④神秘大佬 qist/jsm 经对账已在清单（sv/liucn-m、qist/jsm），不重复收。
+    # 本批实收 2 条，去重对账基线 2026-09-26 main（tvbox.json 3580 sites / 394 lives / 124 parses）：
+    # 拾光（xmbjm/svip）：246 sites / 20 直播组（外链 m3u/txt）/ 26 parses；merge-key 对账净新增 128 站 / 12 直播组 / 16 解析。
+    # 源文件带 UTF-8 BOM + 字符串内裸 CR LF，parse_tvbox 已加 strict=False 兜底（见适配器注释）。
+    # 主 URL gh-proxy.com 全前缀形态实测 200/108349B；两种代理形态与 raw 直连同 sha256，直连留作镜像。
+    {"name": "shiguang/svip", "kind": "tvbox",
+     "url": "https://gh-proxy.com/https://raw.githubusercontent.com/xmbjm/svip/refs/heads/main/svip.json",
+     "mirrors": ["https://gh-proxy.com/raw.githubusercontent.com/xmbjm/svip/refs/heads/main/svip.json",
+                 "https://raw.githubusercontent.com/xmbjm/svip/refs/heads/main/svip.json"]},
+    # 金鹰（550.3vcn.work）：106 sites / 1 直播组；对账重叠 91 站，净新增 15 站（含星芽短剧等 short 面）。
+    # 单主机源，失效走自动黑名单兜底。实测 200/69634B。
+    {"name": "jinying/wdjyys", "kind": "tvbox", "url": "http://550.3vcn.work/wdjyys.json"},
 ]
 
 # P0：直播源上游。2026-09-21 直播线融合扩容（六批调研落地，task 7687996812807916527）：
@@ -2189,9 +2202,17 @@ def fetch_raw(url: str, mirrors=None, ua_pool=None):
 
 
 def parse_tvbox(raw: bytes):
-    """适配器：TVBox json 配置。返回 dict。"""
+    """适配器：TVBox json 配置。返回 dict。
+
+    容错兜底（2026-09-26，拾光 xmbjm/svip 实测）：部分源字符串值内含裸控制符
+    （CR LF），严格 json.loads 必挂会被误判 dead 进自动黑名单；先严格解析，
+    失败再以 strict=False 重试（仅放宽字符串内控制符，其余语义不变）。"""
     txt = raw.decode("utf-8", "replace")
-    cfg = json.loads(strip_comments_and_clean(txt))
+    cleaned = strip_comments_and_clean(txt)
+    try:
+        cfg = json.loads(cleaned)
+    except json.JSONDecodeError:
+        cfg = json.loads(cleaned, strict=False)
     if not isinstance(cfg, dict):
         raise ValueError("top-level is not an object")
     return cfg
