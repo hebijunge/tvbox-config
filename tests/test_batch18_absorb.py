@@ -116,7 +116,8 @@ class TestHacksSources(unittest.TestCase):
             la.load_source = orig
         self.assertEqual(cmap["1987年春晚"]["class"], "春晚(季节性)")
         self.assertEqual(cmap["2024年春晚"]["class"], "春晚(季节性)")
-        self.assertEqual(cmap["cctv-1综合"]["class"], "央视")
+        # 2026-09-26 起编号主频道归一化提前（commit 3f04326）：「CCTV-1 综合」规范键为 cctv-1
+        self.assertEqual(cmap["cctv-1"]["class"], "央视")
 
     def test_big_order_and_core_class(self):
         self.assertIn("春晚(季节性)", la.BIG_ORDER)
