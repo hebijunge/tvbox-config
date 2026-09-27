@@ -77,6 +77,10 @@ def _audit_context_res():
 
 _AUDIT_CTX_RES = _audit_context_res()
 
+# ISO8601 时间戳值（updated_at/checked_at 等元数据）不含消费内容；
+# 其时区偏移形如 "...:55:18+08:00" 会让子串 "18+" 误命中成人词，扫描时整值跳过。
+_ISO_TS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}")
+
 
 _SITE_NAME_KEYS = ("name",)
 _SITE_URL_KEYS = ("api", "url", "jar", "playUrl", "ext")
@@ -125,7 +129,9 @@ def _scan_string(s, where, path, hits, wl):
 def _iter_strings(node, where, path, hits, wl):
     """全字段递归：任意 string 值都扫（含 categories/notes/嵌套 ext），不再限 name/url 子集。"""
     if isinstance(node, str):
-        _scan_string(node, where or "$", path, hits, wl)
+        # ISO 时间戳元数据整值跳过（updated_at 时区偏移误命中 "18+" 等），见 _ISO_TS_RE
+        if not _ISO_TS_RE.match(node):
+            _scan_string(node, where or "$", path, hits, wl)
     elif isinstance(node, dict):
         for k, v in node.items():
             if isinstance(k, str):
