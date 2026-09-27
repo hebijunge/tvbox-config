@@ -84,6 +84,10 @@ jobs:
           # canary 上游已按「独有站点数 unique>=3」自动收编（不是按 score），
           # 且失效由自动黑名单兜底，故开启并入。要停用改回 "0" 即可。
           EXTRA_UPSTREAMS: "1"
+          # 2026-09-27 临时：依赖落库路径修复（dep_local_path 剥离镜像前缀）后，
+          # 强制全量聚合以更新 tvbox.json 等产物中的 deps 引用为新路径。
+          # raw-store 默认上游无变化跳过聚合，故需此开关。迁移完成后可改回 "0"。
+          FORCE_FULL_RUN: "1"
         run: |
           python scripts/fetch_merge.py
           rc=$?
