@@ -32,6 +32,8 @@ import urllib.request
 import urllib.error
 import urllib.parse
 import concurrent.futures as cf
+import http.client
+import threading
 from datetime import datetime, timezone, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # scripts 内互相导入
@@ -39,10 +41,16 @@ from config_decode import decode_config   # 吸收点 P1-1：混淆配置解码�
 import adult_leak_check as _adult_gate    # 门禁扫描语义单一事实源（P0-2 红线对齐）
 import live_aggregate as _la              # 词表驱动 adult 判定（is_adult / is_adult_url）
 import raw_store                          # 输入层原始源镜像（落库/每日变化检测/上游删除保护）
+import pathutil                           # 跨平台路径安全工具（全仓库唯一事实源）
+import upstream_config as _ucfg           # 统一上游配置（config/upstreams.json，硬编码作 fallback）
+import upstream_changelog as _uclog       # 上游配置变更追踪（归一化 sha256，state/upstream_changelog.jsonl）
 
 BEIJING = timezone(timedelta(hours=8))
 UA = {"User-Agent": "okhttp/3.15", "Accept": "*/*"}
-FETCH_TIMEOUT = 15          # 单次拉取超时（秒）
+FETCH_TIMEOUT = 15          # 单次拉取超时（秒，旧合并超时，保留兼容）
+# 任务2：connect/read 拆分硬超时（env 可覆盖）。连接 10s 快速判死，读 30s 容忍慢大文件。
+FETCH_CONNECT_TIMEOUT = int(os.environ.get("FETCH_CONNECT_TIMEOUT", "10"))
+FETCH_READ_TIMEOUT = int(os.environ.get("FETCH_READ_TIMEOUT", "30"))
 
 # 吸收点 P1-3：上游拉取 UA 池（设计借鉴自参考仓库调研，代码独立实现）。
 # 拉取失败时轮换 UA + 指纹头重试，覆盖部分上游对单一 okhttp UA 的选择性拦截。
@@ -451,6 +459,51 @@ SHORTS_ADULT_UPSTREAMS = [
 ]
 
 ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT_UPSTREAMS
+
+
+def _merge_upstream_config():
+    """从 config/upstreams.json 合并上游配置，硬编码列表作 fallback。
+
+    config 中 enabled=True 的条目覆盖/补充硬编码；config 缺失或为空时
+    完全使用硬编码，保证向后兼容。
+    """
+    global UPSTREAMS, LIVE_UPSTREAMS, SHORTS_ADULT_UPSTREAMS, ALL_UPSTREAMS, UPSTREAM_BASES
+    cfg = _ucfg.load_config()
+    entries = cfg.get("upstreams", [])
+    if not entries:
+        return  # config 为空，保持硬编码
+    # 按类型分组
+    cfg_vod = [u for u in entries if u.get("type") == "vod" and u.get("enabled", True)]
+    cfg_live = [u for u in entries if u.get("type") == "live" and u.get("enabled", True)]
+    cfg_mixed = [u for u in entries if u.get("type") == "mixed" and u.get("enabled", True)]
+    # 转换为 fetch_merge 格式并去重（以 url 为 key，config 优先）
+    def _to_fm(u):
+        kind = "m3u" if u.get("type") == "live" else "tvbox"
+        e = {"name": u["name"], "kind": kind, "url": u["url"]}
+        if u.get("mirrors"):
+            e["mirrors"] = u["mirrors"]
+        return e
+    def _merge(hardcoded, cfg_entries):
+        seen = {u["url"] for u in cfg_entries}
+        result = [_to_fm(u) for u in cfg_entries]
+        for u in hardcoded:
+            if u["url"] not in seen:
+                result.append(u)
+                seen.add(u["url"])
+        return result
+    if cfg_vod:
+        UPSTREAMS = _merge(UPSTREAMS, cfg_vod)
+    if cfg_live:
+        LIVE_UPSTREAMS = _merge(LIVE_UPSTREAMS, cfg_live)
+    if cfg_mixed:
+        SHORTS_ADULT_UPSTREAMS = _merge(SHORTS_ADULT_UPSTREAMS, cfg_mixed)
+    ALL_UPSTREAMS = UPSTREAMS + LIVE_UPSTREAMS + SHORTS_ADULT_UPSTREAMS
+    # 重建 UPSTREAM_BASES
+    UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/"
+                      for u in (UPSTREAMS + SHORTS_ADULT_UPSTREAMS) if u.get("kind") == "tvbox"}
+
+
+_merge_upstream_config()
 
 UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAMS + SHORTS_ADULT_UPSTREAMS) if u.get("kind") == "tvbox"}
 
@@ -1416,7 +1469,23 @@ DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
 DEP_TIMEOUT = 25
 DEP_MAX_BYTES = 8 * 1024 * 1024
-DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "8"))
+# 任务3：总并发提到 16，同时按域名限速（默认同域最多 4 并发，避免 raw.githubusercontent.com 限流）
+DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "16"))
+DEP_DOMAIN_CONCURRENCY = int(os.environ.get("DEP_DOMAIN_CONCURRENCY", "4"))
+_DEP_DOMAIN_LOCK = threading.Lock()
+_DEP_DOMAIN_SEMAPHORES = {}
+
+
+def _domain_semaphore(url: str) -> "threading.Semaphore":
+    """按 URL host 的信号量：同域并发封顶 DEP_DOMAIN_CONCURRENCY。"""
+    import urllib.parse
+    host = (urllib.parse.urlparse(url).netloc or "default").lower()
+    with _DEP_DOMAIN_LOCK:
+        sem = _DEP_DOMAIN_SEMAPHORES.get(host)
+        if sem is None:
+            sem = threading.Semaphore(DEP_DOMAIN_CONCURRENCY)
+            _DEP_DOMAIN_SEMAPHORES[host] = sem
+        return sem
 # 沙箱/CI 网络受限时可跳过站点验活或强制用缓存
 SKIP_SITE_TEST = os.environ.get("SKIP_SITE_TEST", "0") == "1"
 SKIP_REFRESH = os.environ.get("SKIP_REFRESH", "0") == "1"
@@ -1542,28 +1611,9 @@ def is_file_ref(v: str):
     return None
 
 
-_WIN_BAD_CHARS = re.compile(r'[<>:"|?*\x00-\x1f]')
-
-
 def _sanitize_seg(seg: str) -> str:
-    """全平台把路径段里的非法字符替换掉（以 Windows 非法字符集为兜底标准）。
-
-    依赖落库的本地路径是从 URL 的 path 段拼出来的。镜像前缀 URL
-    （`https://gh-proxy.org/https://raw.githubusercontent.com/...`）的 path 里带 `https:`，
-    含冒号的目录名在 Windows 上非法（`WinError 123`），虽然 Linux 可创建，
-    但提交到远端后任何 Windows 用户 clone 都会整体失败。因此全平台统一 sanitize，
-    保证 CI 产物路径在所有平台可创建。
-    """
-    s = _WIN_BAD_CHARS.sub("_", seg)
-    # Windows 还禁止以点或空格结尾，且保留名（CON/PRN/NUL…）也要避开
-    s = s.rstrip(" .")
-    if not s:
-        return "_"
-    if s.upper().split(".")[0] in ("CON", "PRN", "AUX", "NUL",
-                                   "COM1", "COM2", "COM3", "COM4",
-                                   "LPT1", "LPT2", "LPT3"):
-        s = "_" + s
-    return s
+    """兼容包装：委托 pathutil.safe_segment（全仓库唯一事实源）。"""
+    return pathutil.safe_segment(seg)
 
 
 def dep_local_path(origin: str, url: str) -> str:
@@ -1571,7 +1621,7 @@ def dep_local_path(origin: str, url: str) -> str:
         name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or ""
         if not name or len(name) > 80:
             name = hashlib.md5(url.encode()).hexdigest()[:12]
-        return f"{DEPS_DIR}/remote/{_sanitize_seg(name)}"
+        return pathutil.check_path_length(f"{DEPS_DIR}/remote/{_sanitize_seg(name)}")
     u = urllib.parse.urlparse(url)
     # 剥离镜像前缀：https://<镜像域名>/https://<真实URL>
     # urlparse 后 path 以 /https:/ 或 /http:/ 开头说明是镜像前缀形式，
@@ -1593,7 +1643,8 @@ def dep_local_path(origin: str, url: str) -> str:
     path = "/".join(segs)
     if not path:
         path = hashlib.md5(url.encode()).hexdigest()[:12]
-    return f"{DEPS_DIR}/{_sanitize_seg(origin)}/{path}"
+    result = f"{DEPS_DIR}/{_sanitize_seg(origin)}/{path}"
+    return pathutil.check_path_length(result)
 
 
 def load_manifest() -> dict:
@@ -1742,6 +1793,14 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     manifest = load_manifest()
     now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00")
 
+    def _dep_download_throttled(u):
+        sem = _domain_semaphore(u)
+        sem.acquire()
+        try:
+            return dep_download(u)
+        finally:
+            sem.release()
+
     # ---- 1. 生成 (origin, url) 待收集清单 ----
     entries = []  # (kind_hint, url, origin)
 
@@ -1807,7 +1866,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             # 无条件拉上游 → raw-vod 账本 sha256 变化检测（变了才覆盖 deps/）；
             # 上游删除/404 → deps/ 本地生效文件即最后可用版（管线从不删除它），
             # 标记 deleted_upstream 继续使用，绝不跟随删除。
-            dl, dch = dep_download(url)
+            dl, dch = _dep_download_throttled(url)
             if dl is not None:
                 try:
                     raw_st = _vod_ingest(dl)
@@ -1844,7 +1903,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                     except OSError as e:  # noqa: BLE001
                         print(f"  [raw-store] {rkey} 入库失败：{e}", flush=True)
             else:
-                content, ch = dep_download(url)
+                content, ch = _dep_download_throttled(url)
                 rec["channel"] = ch if content else str(ch)
                 if content is None:
                     rec["err"] = str(ch)
@@ -2286,8 +2345,40 @@ def gh_url(u: str) -> str:
     return u
 
 
+class _SplitTimeoutHTTPConnection(http.client.HTTPConnection):
+    """connect 用传入 timeout，连接建立后把 socket 读超时切到 FETCH_READ_TIMEOUT。"""
+
+    def connect(self):
+        super().connect()
+        if self.sock is not None:
+            self.sock.settimeout(FETCH_READ_TIMEOUT)
+
+
+class _SplitTimeoutHTTPSConnection(http.client.HTTPSConnection):
+    def connect(self):
+        super().connect()
+        if self.sock is not None:
+            self.sock.settimeout(FETCH_READ_TIMEOUT)
+
+
+class _SplitHTTPHandler(urllib.request.HTTPHandler):
+    def http_open(self, req):
+        return self.do_open(_SplitTimeoutHTTPConnection, req)
+
+
+class _SplitHTTPSHandler(urllib.request.HTTPSHandler):
+    def https_open(self, req):
+        ctx = getattr(self, "_context", None)
+        return self.do_open(_SplitTimeoutHTTPSConnection, req, context=ctx)
+
+
+# 连接阶段用调用方传入的 timeout（connect_timeout），连接建立后所有 recv 走 read_timeout。
+_SPLIT_OPENER = urllib.request.build_opener(_SplitHTTPHandler(), _SplitHTTPSHandler())
+
+
 def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None, ua: str = None, xrw: str = None):
     """返回 (status, bytes, elapsed_ms)。非 2xx 抛异常。
+    timeout 为连接（connect）超时；连接建立后读超时固定 FETCH_READ_TIMEOUT。
     rng=(start, end) 时带 Range 头抽段请求（直播测速用，不整段下载）。
     ua/xrw 传入时覆盖默认 UA / 加 X-Requested-With 指纹头（P1-3 UA 池轮换）。"""
     headers = dict(UA)
@@ -2299,7 +2390,7 @@ def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None, ua: str = Non
         headers["Range"] = f"bytes={rng[0]}-{rng[1]}"
     req = urllib.request.Request(url, headers=headers)
     t0 = time.time()
-    with urllib.request.urlopen(req, timeout=timeout) as r:
+    with _SPLIT_OPENER.open(req, timeout=timeout) as r:
         data = r.read(max_bytes) if max_bytes else r.read()
     return r.status, data, int((time.time() - t0) * 1000)
 
@@ -2370,7 +2461,7 @@ def fetch_raw(url: str, mirrors=None, ua_pool=None):
         for pair in pool[:UA_ROTATE_MAX]:
             try:
                 status, raw, _ms = http_get(
-                    u, FETCH_TIMEOUT,
+                    u, FETCH_CONNECT_TIMEOUT,
                     ua=pair.get("User-Agent"),
                     xrw=pair.get("X-Requested-With") or None)
                 if ch == 0:
@@ -2380,7 +2471,7 @@ def fetch_raw(url: str, mirrors=None, ua_pool=None):
                 last_err = f"{type(e).__name__}: {e}"[:120]
     for u in gh_urls:
         try:
-            status, raw, _ms = http_get(u, FETCH_TIMEOUT)
+            status, raw, _ms = http_get(u, FETCH_CONNECT_TIMEOUT)
             return raw, f"mirror:{urllib.parse.urlparse(u).netloc}", u
         except Exception as e:  # noqa: BLE001
             last_err = f"{type(e).__name__}: {e}"[:120]
@@ -2546,6 +2637,127 @@ def sync_blacklist_auto(state: dict):
         f.write("# 自动黑名单：连续不达标自动停用的上游（由脚本维护，勿手工编辑）\n")
         for n in names:
             f.write(n + "\n")
+
+
+
+# ---------------- 任务5：上游指数退避重试 ----------------
+RETRY_FILE = os.environ.get("UPSTREAM_RETRY_FILE", "state/upstream_retry.json")
+
+
+def _load_json_dict(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_json_dict(path, data):
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
+
+
+def retry_should_skip(url: str, now_naive: datetime) -> bool:
+    """next_retry_at 在未来则本轮跳过（指数退避窗口内）。"""
+    ent = _load_json_dict(RETRY_FILE).get(url)
+    if not ent or ent.get("dead"):
+        return False
+    nra = ent.get("next_retry_at")
+    if not nra:
+        return False
+    try:
+        return datetime.strptime(nra, "%Y-%m-%d %H:%M:%S") > now_naive
+    except ValueError:
+        return False
+
+
+def retry_record_success(url: str):
+    d = _load_json_dict(RETRY_FILE)
+    if url in d:
+        d.pop(url, None)
+        _save_json_dict(RETRY_FILE, d)
+
+
+def retry_record_failure(url: str, category: str, now_naive: datetime):
+    """失败后 next_retry_at = now + 2^fail_count 天（上限14天）；累计超 30 天标 dead。
+    404 走 raw-store 删除保护，不进退避。"""
+    if category == "404":
+        return
+    d = _load_json_dict(RETRY_FILE)
+    ent = d.get(url, {"fail_count": 0})
+    fc = int(ent.get("fail_count", 0)) + 1
+    backoff_days = min(2 ** fc, 14)
+    first_fail = ent.get("first_fail_at") or now_naive.strftime("%Y-%m-%d %H:%M:%S")
+    try:
+        span = (now_naive - datetime.strptime(first_fail, "%Y-%m-%d %H:%M:%S")).days
+    except ValueError:
+        span = 0
+    ent.update({
+        "first_fail_at": first_fail,
+        "last_fail_at": now_naive.strftime("%Y-%m-%d %H:%M:%S"),
+        "fail_count": fc,
+        "next_retry_at": (now_naive + timedelta(days=backoff_days)).strftime("%Y-%m-%d %H:%M:%S"),
+        "dead": span >= 30,
+    })
+    d[url] = ent
+    _save_json_dict(RETRY_FILE, d)
+
+
+# ---------------- 任务6：失败原因分类 ----------------
+FAILURES_FILE = os.environ.get("UPSTREAM_FAILURES_FILE", "state/upstream_failures.json")
+
+
+def classify_failure(info, err, raw) -> str:
+    """把上游拉取/解析失败归为 404 / timeout / ssl_error / parse_error / empty_product / other。"""
+    txt = f"{err or ''} {info or ''}"
+    low = txt.lower()
+    if "404" in txt:
+        return "404"
+    if "timed out" in low or "timeout" in low:
+        return "timeout"
+    if "ssl" in low or "certificate" in low or "cert" in low:
+        return "ssl_error"
+    if "decode" in low or "json" in low or "parse" in low or "unicode" in low:
+        return "parse_error"
+    if raw is not None and ("too small" in low or "no usable" in low or ("only" in low and "entries" in low)):
+        return "empty_product"
+    return "other"
+
+
+def record_failure(url: str, category: str, detail: str):
+    d = _load_json_dict(FAILURES_FILE)
+    ent = d.get(url, {"count": 0})
+    ent["count"] = int(ent.get("count", 0)) + 1
+    ent["last_category"] = category
+    ent["last_detail"] = str(detail)[:160]
+    ent["last_at"] = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S")
+    d[url] = ent
+    _save_json_dict(FAILURES_FILE, d)
+
+
+# ---------------- 任务7：上游拉取延迟记录 ----------------
+LATENCY_FILE = os.environ.get("UPSTREAM_LATENCY_FILE", "state/upstream_latency.json")
+SLOW_MS = int(os.environ.get("UPSTREAM_SLOW_MS", "30000"))
+SLOW_STREAK = int(os.environ.get("UPSTREAM_SLOW_STREAK", "3"))
+
+
+def record_latency(url: str, ms: int):
+    """记录单次上游拉取耗时；avg 滚动平均；连续 >SLOW_MS 次标 slow。"""
+    d = _load_json_dict(LATENCY_FILE)
+    ent = d.get(url, {"samples": 0, "slow_count": 0})
+    n = int(ent.get("samples", 0)) + 1
+    prev_avg = float(ent.get("avg_latency", ms))
+    avg = int((prev_avg * (n - 1) + ms) / n)
+    slow_count = int(ent.get("slow_count", 0))
+    slow_count = slow_count + 1 if ms > SLOW_MS else 0
+    ent.update({"last_latency": ms, "avg_latency": avg, "samples": n,
+                "slow_count": slow_count, "slow": slow_count >= SLOW_STREAK})
+    d[url] = ent
+    _save_json_dict(LATENCY_FILE, d)
 
 
 def load_site_state() -> dict:
@@ -3496,15 +3708,20 @@ def main() -> int:
             UPSTREAM_BASES[u["name"]] = u["url"].rsplit("/", 1)[0] + "/"
     print(f"[1/6] 拉取 {len(active_upstreams)} 个上游（含 {len(LIVE_UPSTREAMS)} 个直播源上游）...", flush=True)
     fetchable = []
+    now_naive = now.replace(tzinfo=None)
     for u in active_upstreams:
         ok, tag = enabled_of(u, state, blacklist_manual, whitelist_manual)
+        if ok and retry_should_skip(u["url"], now_naive):
+            ok, tag = False, "backoff"   # 任务5：指数退避窗口内本轮跳过
         fetchable.append((u, ok, tag))
 
     def do_fetch(item):
         u, ok, _tag = item
         if not ok:
-            return u, None, "skipped", "", "", None
+            return u, None, "skipped", "", "", None, 0
+        _t0 = time.time()
         raw, info, ok_url = fetch_raw(u["url"], u.get("mirrors"))
+        fetch_ms = int((time.time() - _t0) * 1000)
         d_method = ""
         raw_st = None
         store_dir = os.path.join(raw_store.RAW_DIR, "live" if u["kind"] == "m3u" else "vod")
@@ -3533,7 +3750,7 @@ def main() -> int:
             raw, d_method = decode_config(raw)
             if raw is None:
                 info = f"decode failed: {d_method}"
-        return u, raw, info, ok_url, d_method, raw_st
+        return u, raw, info, ok_url, d_method, raw_st, fetch_ms
 
     with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
         fetched = list(ex.map(do_fetch, fetchable))
@@ -3541,7 +3758,7 @@ def main() -> int:
     snapshot_paths = []
     disabled_now_list = []
     rawstore_changed = []   # 本轮 raw-store 判定「有变化」的上游（驱动下游重跑；canary 除外）
-    for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method, raw_st) in zip(fetchable, fetched):
+    for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method, raw_st, fetch_ms) in zip(fetchable, fetched):
         name, kind = u["name"], u["kind"]
         state_ent = state.get(name) if isinstance(state.get(name), dict) else {}
         rec = {
@@ -3563,6 +3780,11 @@ def main() -> int:
             print(f"  SKIP {name}（{STATUS_CN.get(tag, tag)}）", flush=True)
             continue
 
+        try:
+            record_latency(u["url"], int(fetch_ms))   # 任务7：记录拉取耗时
+        except Exception:  # noqa: BLE001
+            pass
+
         if raw is not None:
             rec["bytes"] = len(raw)
             rec["sha256"] = sha12(raw)
@@ -3573,6 +3795,7 @@ def main() -> int:
                 rec["status"] = "ok"
                 rec["grade"] = "镜像"
                 record_result(state, name, True, whitelist_manual, url=u.get("url"))  # 健康分照常刷新，主域失效时可接管
+                retry_record_success(u["url"])   # 任务5：恢复后清除退避
                 rec["fail_count"] = 0
                 rec["last_ok_at"] = state[name].get("last_ok_at", "")
                 checks.append(rec)
@@ -3595,6 +3818,21 @@ def main() -> int:
             rec["error"] = info
         else:
             rec["channel"] = info
+        # 任务4：拉取并解析成功后记录配置变更（归一化 sha256，仅内容真正变化才写行）
+        if ok_eval and raw is not None:
+            try:
+                _uclog.record(u["url"], detail.get("cfg") if kind == "tvbox" else raw, size=len(raw))
+            except Exception:  # noqa: BLE001 —— 变更追踪失败不阻断主流程
+                pass
+        # 任务5：成功清退避；失败按分类进退避（404 不进退避，走 raw-store 删除保护）
+        if ok_eval:
+            retry_record_success(u["url"])
+        else:
+            _cat = classify_failure(info, err, raw)
+            record_failure(u["url"], _cat, err or info)
+            if _cat == "parse_error":
+                print(f"  [告警] {name} 上游解析失败（{str(err or info)[:80]}），需人工确认格式", flush=True)
+            retry_record_failure(u["url"], _cat, now_naive)
 
         if not ok_eval:
             checks.append(rec)
@@ -4022,8 +4260,34 @@ def main() -> int:
     prune_unlocalized_jars(tvbox)
     # 按「分类 → 搜索可用性 → 实测速度」重排站点（实现见 scripts/rank_sites.py）
     rank_stats = apply_rank(tvbox)
+    # 任务8：产物版本号（YYYY-MM-DD-bN，同日多次构建自增）与北京时间更新时间。
+    # TVBox 忽略未知字段，不影响解析；vod.json 由 tvbox 派生，自动继承。
+    today_str = now.strftime("%Y-%m-%d")
+    build_no = 1
+    try:
+        with open("tvbox.json", encoding="utf-8") as _pf:
+            _prev = json.load(_pf)
+        _pv = str(_prev.get("version", ""))
+        if _pv.startswith(today_str + "-b"):
+            build_no = int(_pv.rsplit("-b", 1)[-1]) + 1
+    except (OSError, json.JSONDecodeError, ValueError):
+        pass
+    tvbox["version"] = f"{today_str}-b{build_no}"
+    tvbox["updated_at"] = now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
+    # 任务3：写出前做站点名称清洗+重名处理（try/except 包裹，不阻断主流程）
+    try:
+        from normalize_names import normalize_sites
+        _norm_report = normalize_sites(tvbox.get("sites", []), in_place=True)
+        print(f"    [normalize_names] cleaned={_norm_report['cleaned_count']} "
+              f"tagged={len(_norm_report['renamed_with_tag'])} "
+              f"dup_removed={len(_norm_report['duplicates_removed'])}", flush=True)
+    except Exception as _e:
+        print(f"    [normalize_names] 跳过（{_e}）", flush=True)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
+    # 任务9：紧凑版（无空格无换行），内容与可读版完全一致
+    with open("tvbox_min.json", "w", encoding="utf-8") as f:
+        f.write(json.dumps(tvbox, ensure_ascii=False, separators=(",", ":")))
 
     # ---- 拆分产物：vod.json（点播）+ live.json（直播）----
     # vod.json = tvbox 去掉 lives（保留 spider / wallpaper / sites / parses 等点播相关字段）；
@@ -4101,6 +4365,9 @@ def main() -> int:
     live["lives"] = curated_lives
     with open("vod.json", "w", encoding="utf-8") as f:
         json.dump(vod, f, ensure_ascii=False, indent=1)
+    # 任务9：紧凑版
+    with open("vod_min.json", "w", encoding="utf-8") as f:
+        f.write(json.dumps(vod, ensure_ascii=False, separators=(",", ":")))
     with open("live.json", "w", encoding="utf-8") as f:
         json.dump(live, f, ensure_ascii=False, indent=1)
 

@@ -4,23 +4,6 @@
 独立验活脚本（validate workflow 用，与每日拉取 workflow 分离——azhansy/ds-tvbox 模式）：
   拉取全部上游 → P0 质量门槛 → 更新连续失败状态/自动停用 → 写 checks.json → README 可用性锚点回写。
 不产出 tvbox.json（拉取与验活频率解耦）。
-
-输入
-----
-  - fetch_merge.ALL_UPSTREAMS（硬编码 + canary 池）；state/ 里的连续失败计数、黑白名单。
-
-输出
-----
-  - checks.json：每条上游的本轮验活记录（字节/sha/站点数/评级/错误/连续失败次数）。
-  - state/ 里对应上游的 fail_count / last_ok_at / 自动停用状态。
-  - README 可用性锚点回写。
-
-关键设计决策
-------------
-  - 与每日拉取分离：拉取要快、验活要严，混在一条流水线会互相拖累；独立 validate
-    workflow 可单独跑、单独红灯。
-  - 连续失败才自动停用，单次失败不黑：避免偶发抖动误杀可用源；白名单人工源不受自动停用影响。
-  - 全部上游不可用时返回非 0，让 workflow 红灯提醒人工介入。
 """
 import os
 import sys
