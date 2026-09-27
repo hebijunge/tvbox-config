@@ -92,6 +92,85 @@ def jar_suffix_audit(files, repo, refs):
     return findings, rewrites
 
 
+def check_raw_vod_consistency(deps_manifest: dict, raw_vod_dir: str, repo: str) -> dict:
+    """deps/manifest.json 与 raw-vod/manifest.json 账本一致性校验。
+
+    背景（2026-09-27 落库改造）：deps/ 是「生效文件」，raw-vod/ 是「原始输入账本」
+    （账本模式不落字节，只记 sha256/状态）。两者按 ``origin|url`` 同 key、按
+    ``<origin>/<rel>`` 镜像路径对应。一旦两边漂移（key 缺失、URL 不一致、路径不镜像），
+    说明落库链路有静默错误，需要尽早告警。
+
+    校验项
+    ------
+      1. key 对称：deps 有而 raw-vod 缺（反之亦然）；
+      2. URL 一致：同 key 两边 url 不同；
+      3. 路径镜像：deps 的 ``local`` 应等于 ``"deps/" + raw-vod 的 path``。
+
+    注意
+    ----
+    ``raw-vod/`` 本地可能不存在（纯本地无账本），此时优雅降级为 ``present=False``，
+    不算失败，只在报告里标注。纯标准库。
+    """
+    report = {
+        "present": False,
+        "deps_entries": len(deps_manifest),
+        "raw_vod_entries": 0,
+        "missing_in_raw_vod": [],
+        "missing_in_deps": [],
+        "url_mismatch": [],
+        "path_mismatch": [],
+        "ok": True,
+    }
+    ledger_path = os.path.join(repo, raw_vod_dir, "manifest.json")
+    if not os.path.isfile(ledger_path):
+        report["note"] = f"{raw_vod_dir}/ 不存在，跳过一致性校验（本地无账本）"
+        return report
+    try:
+        with open(ledger_path, encoding="utf-8") as f:
+            ledger = json.load(f)
+    except json.JSONDecodeError as e:
+        report["note"] = f"{raw_vod_dir}/manifest.json 损坏：{e}"
+        report["ok"] = False
+        return report
+    if not isinstance(ledger, dict):
+        report["note"] = f"{raw_vod_dir}/manifest.json 结构异常"
+        report["ok"] = False
+        return report
+
+    report["present"] = True
+    report["raw_vod_entries"] = len(ledger)
+
+    dep_keys = set(deps_manifest.keys())
+    vod_keys = set(ledger.keys())
+
+    # 1) key 对称
+    report["missing_in_raw_vod"] = sorted(dep_keys - vod_keys)
+    report["missing_in_deps"] = sorted(vod_keys - dep_keys)
+
+    # 2)+3) 逐项比对共有 key
+    for k in sorted(dep_keys & vod_keys):
+        d = deps_manifest[k]
+        v = ledger[k]
+        if not isinstance(d, dict) or not isinstance(v, dict):
+            continue
+        d_url = d.get("url", "")
+        v_url = v.get("url", "")
+        if d_url and v_url and d_url != v_url:
+            report["url_mismatch"].append({"key": k, "deps_url": d_url, "raw_vod_url": v_url})
+        d_local = (d.get("local") or "").replace("\\", "/")
+        v_path = (v.get("path") or "").replace("\\", "/")
+        expected = f"deps/{v_path}" if v_path else ""
+        if v_path and d_local and d_local != expected:
+            report["path_mismatch"].append(
+                {"key": k, "deps_local": d_local, "expected_from_raw_vod": expected})
+
+    problems = (len(report["missing_in_raw_vod"]) + len(report["missing_in_deps"])
+                + len(report["url_mismatch"]) + len(report["path_mismatch"]))
+    report["ok"] = problems == 0
+    report["problems"] = problems
+    return report
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", default="tvbox.json")
@@ -156,6 +235,27 @@ def main() -> int:
     jar_findings, jar_rewrites = jar_suffix_audit(files, repo, refs)
     print(f"[audit] 后缀与内容不匹配：{len(jar_findings)} 个"
           f"（其中被产物引用 {len(jar_rewrites)} 个，可按建议改写后缀）")
+
+    # 5) deps/manifest.json 与 raw-vod 账本一致性校验
+    deps_manifest = {}
+    manifest_path = os.path.join(dep_dir, "manifest.json")
+    try:
+        with open(manifest_path, encoding="utf-8") as f:
+            deps_manifest = json.load(f)
+    except (OSError, json.JSONDecodeError) as e:
+        print(f"[audit] 读取 deps/manifest.json 失败：{e}")
+    consistency = check_raw_vod_consistency(deps_manifest, "raw-vod", repo)
+    cons_out = os.path.join(repo, "state", "dep_consistency_report.json")
+    os.makedirs(os.path.dirname(cons_out), exist_ok=True)
+    with open(cons_out, "w", encoding="utf-8") as f:
+        json.dump(consistency, f, ensure_ascii=False, indent=1)
+    if consistency["present"]:
+        print(f"[audit] raw-vod 一致性：problems={consistency.get('problems', 0)}"
+              f"（缺key {len(consistency['missing_in_raw_vod'])}，URL不一致 {len(consistency['url_mismatch'])}，"
+              f"路径不镜像 {len(consistency['path_mismatch'])}）")
+    else:
+        print(f"[audit] raw-vod 一致性：{consistency.get('note', '跳过')}")
+    print(f"[audit] 一致性报告 -> state/dep_consistency_report.json")
 
     doc = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
