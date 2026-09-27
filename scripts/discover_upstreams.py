@@ -534,6 +534,126 @@ def discover_gitee(max_repos):
     return set(list(repos)[:max_repos])
 
 
+# ---------------- 第 5.1 路：Gitee / GitCode 原生搜索 API ----------------
+# 上一路（discover_gitee）是曲线方案：从 GitHub 配置里挖 gitee.com 链接。
+# 这一路直接调 Gitee OpenAPI v5 / GitCode OpenAPI 做仓库搜索：
+#   Gitee:   https://gitee.com/api/v5/search/repositories?q=tvbox&sort=updated
+#   GitCode: https://api.gitcode.com/api/v5/search/repositories?q=tvbox
+# 匿名即可用（Gitee 60 次/小时、GitCode 限额更宽），失败按 2^n 秒指数退避重试最多 3 次。
+# 结果按 (platform, full_name) 去重后加入候选池，与 GitHub 搜索结果合并。
+GITEE_SEARCH_QUERIES = ["tvbox", "tvbox 配置", "catvod", "影视仓", "tvbox config"]
+GITCODE_SEARCH_QUERIES = ["tvbox", "catvod"]
+
+
+def _http_get_json_retry(url, timeout=15, retries=3):
+    """带指数退避的 JSON GET：失败等 2^n 秒后重试，最多 retries 次。
+
+    Gitee/GitCode 匿名配额有限，遇到限流/网络抖动时短暂退避即可恢复，
+    不要一失败就把整路丢掉。
+    """
+    delay = 1
+    last_err = None
+    for attempt in range(1, retries + 1):
+        try:
+            req = urllib.request.Request(url, headers={**UA, "Accept": "application/json"})
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                if r.status == 200:
+                    return json.loads(r.read().decode("utf-8", "replace"))
+                last_err = f"HTTP {r.status}"
+        except Exception as e:  # noqa: BLE001
+            last_err = f"{type(e).__name__}: {e}"
+        if attempt < retries:
+            time.sleep(delay)
+            delay *= 2
+    print(f"    [重试耗尽] {url[:60]} → {last_err}", flush=True)
+    return None
+
+
+def discover_gitee_gitcode_search(max_repos):
+    """第 5.1 路：Gitee / GitCode 原生仓库搜索（匿名、带退避重试）。
+
+    返回 {(platform, full_name)}：platform ∈ {"gitee", "gitcode"}，
+    full_name 形如 "owner/repo"（不带平台前缀）。
+    """
+    found = set()
+    # Gitee v5 仓库搜索
+    for q in GITEE_SEARCH_QUERIES:
+        url = ("https://gitee.com/api/v5/search/repositories?"
+               + urllib.parse.urlencode({"q": q, "sort": "updated", "per_page": 20}))
+        items = _http_get_json_retry(url)
+        if not isinstance(items, list):
+            print(f"  [Gitee搜索] {q[:30]} → 无结果/受限", flush=True)
+            continue
+        n = 0
+        for it in items:
+            fn = it.get("full_name")
+            if fn and "/" in fn:
+                found.add(("gitee", fn))
+                n += 1
+        print(f"  [Gitee搜索] {q[:30]} → {n} 仓", flush=True)
+        time.sleep(2)
+    # GitCode v5 仓库搜索
+    for q in GITCODE_SEARCH_QUERIES:
+        url = ("https://api.gitcode.com/api/v5/search/repositories?"
+               + urllib.parse.urlencode({"q": q, "per_page": 20}))
+        items = _http_get_json_retry(url)
+        if not isinstance(items, list):
+            print(f"  [GitCode搜索] {q[:30]} → 无结果/受限", flush=True)
+            continue
+        n = 0
+        for it in items:
+            fn = it.get("full_name") or (it.get("path_with_namespace") or "").split(":", 1)[-1]
+            if fn and "/" in fn:
+                found.add(("gitcode", fn))
+                n += 1
+        print(f"  [GitCode搜索] {q[:30]} → {n} 仓", flush=True)
+        time.sleep(2)
+    print(f"  [Gitee/GitCode搜索] 合计 {len(found)} 个新仓", flush=True)
+    return set(list(found)[:max_repos])
+
+
+def gitcode_api(path, params=None):
+    """GitCode OpenAPI v5 薄封装（无 token 走匿名配额）。"""
+    url = "https://api.gitcode.com/api/v5" + path
+    if params:
+        url += "?" + urllib.parse.urlencode(params)
+    try:
+        st, raw = http_get(url, 20, 0, {"Accept": "application/json"})
+        return json.loads(raw.decode("utf-8", "replace")) if st == 200 else None
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def gitcode_raw_url(full_name, branch, path):
+    return (f"https://raw.gitcode.com/{full_name}/raw/"
+            f"{urllib.parse.quote(branch, safe='')}/{urllib.parse.quote(path, safe='/')}")
+
+
+def gitcode_files_of(full_name):
+    """列出 GitCode 仓库里值得探测的配置文件（与 gitee_files_of 同构）。"""
+    info = gitcode_api(f"/repos/{full_name}")
+    if not info:
+        return []
+    branch = info.get("default_branch") or "master"
+    tree = gitcode_api(f"/repos/{full_name}/git/trees/{branch}", {"recursive": "1"})
+    if not tree:
+        return []
+    out = []
+    for it in tree.get("tree", []):
+        p = it.get("path") or ""
+        if it.get("type") != "blob":
+            continue
+        if not p.lower().endswith((".json", ".m3u", ".txt")):
+            continue
+        if (it.get("size") or 0) < 500 or (it.get("size") or 0) > 12 * 1024 * 1024:
+            continue
+        if re.search(r"(node_modules|package-lock|tsconfig|\.min\.)", p, re.I):
+            continue
+        out.append(p)
+    out.sort(key=lambda p: (0 if re.search(r"(tvbox|box|jsm|js|config|api)", p, re.I) else 1, len(p)))
+    return [(full_name, branch, p) for p in out[:8]]
+
+
 # ---------------- 第 6 路：搜索引擎 + 文章页（博客 / CSDN / 微信公众号）----------------
 BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -680,6 +800,21 @@ def main() -> int:
             for files in ex.map(gitee_files_of, fresh_g[: args.max_repos]):
                 for fn, br, p in files:
                     repo_urls.add(gitee_raw_url(fn, br, p))
+
+    # 第 5.1 路：Gitee / GitCode 原生搜索（匿名 API，带退避重试）
+    if not args.no_gitee:
+        plat_repos = discover_gitee_gitcode_search(args.max_repos)
+        gitee_hits = [fn for plat, fn in plat_repos if plat == "gitee" and fn not in known_repos]
+        gitcode_hits = [fn for plat, fn in plat_repos if plat == "gitcode" and fn not in known_repos]
+        print(f"[discover] Gitee搜索待展开 {len(gitee_hits)} / GitCode搜索待展开 {len(gitcode_hits)}",
+              flush=True)
+        with cf.ThreadPoolExecutor(8) as ex:
+            for files in ex.map(gitee_files_of, gitee_hits[: args.max_repos]):
+                for fn, br, p in files:
+                    repo_urls.add(gitee_raw_url(fn, br, p))
+            for files in ex.map(gitcode_files_of, gitcode_hits[: args.max_repos]):
+                for fn, br, p in files:
+                    repo_urls.add(gitcode_raw_url(fn, br, p))
 
     fresh_repos = [r for r in repos if r and r not in known_repos]
     print(f"[discover] 待展开仓库 {len(fresh_repos)} 个", flush=True)
