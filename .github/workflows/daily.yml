@@ -13,12 +13,26 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: daily-fetch
   cancel-in-progress: false
 
 jobs:
+  windows-path-check:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Windows 兼容性检查
+        run: python scripts/windows_path_check.py
+
   fetch-merge:
     runs-on: ubuntu-latest
     timeout-minutes: 150  # 2026-09-25: 90min 曾被 fetch_merge 实测超时掐死（改为实测预算内收敛，此值仅兜底）
