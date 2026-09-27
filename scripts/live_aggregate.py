@@ -17,7 +17,7 @@ import os
 import re
 import time
 import urllib.parse
-from collections import OrderedDict
+from collections import Counter, OrderedDict
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from urllib.parse import urlparse
 
@@ -133,6 +133,32 @@ LUNBO_DROP_KW = ("歌手",)
 # 轮播组只剩零星存活房间。含 B站一起看（tvbox.json B站直播）；mgtv（歌手直播）除外，
 # 用户 2026-09-27 指令歌手不入轮播组。
 PLATFORM_LUNBO_SIDS = ("huya", "douyu", "yy", "bili")
+
+# 2026-09-27 mursor 房间评估处理（合并剔除逻辑核查报告·遗留优化点②）：
+# 86c9e921 把四平台房间源整源判归轮播后，「其他」组仍残留 4 行 mursor.ottiptv.cc
+# 房间（风云剧场 /mcp/ ×3 线路 + 漫画解说 /yy/ ×1）。mursor.ottiptv.cc 是 ottiptv
+# 房间族的另一中继宿主，按 URL 形态分两类处理：
+#   · /yy/<数字房间号> = YY 平台房间中继（与 sub.ottiptv.cc 的 yy 房间同性质）→
+#     判归「轮播」（下方 _is_lunbo_room_url）；
+#   · /mcp/ 与 /migu/ 路径承载风云剧场、CETV 等正常电视频道——风云剧场按设计口径
+#     本就归「其他」（见文件头注释「CCTV 付费/专业频道」），CETV 归「央视」，
+#     均维持既有归类不动；因此【不采用】核查报告建议的整 host 判归（*.ottiptv.cc），
+#     那会把 CETV-2/CETV-4 误迁进轮播组（回归事故面）。
+# 判定只在 norm_channel 落「其他」时兜底改判，不覆盖按名命中的显式分类。
+LUNBO_ROOM_URL_HOST = "mursor.ottiptv.cc"
+LUNBO_ROOM_URL_PATH_PREFIX = "/yy/"
+
+
+def _is_lunbo_room_url(u):
+    """mursor.ottiptv.cc 的 YY 房间中继 URL（/yy/<数字房间号>）→ 判为平台轮播房间。"""
+    if not u:
+        return False
+    try:
+        p = urlparse(u)
+    except Exception:  # noqa: BLE001
+        return False
+    return ((p.hostname or "").lower() == LUNBO_ROOM_URL_HOST
+            and p.path.startswith(LUNBO_ROOM_URL_PATH_PREFIX))
 
 # 2026-09-26 用户实证：虎牙/YY 影视轮播房间以剧名/演员名/片名直接命名（如「三国演义」
 # 「狂飙」「周润发」），旧逻辑只认「轮播/一起看/歌手」关键词，这些全部落「其他」；其中
@@ -719,6 +745,11 @@ def _merge_channel_rows(cmap, rows, sid):
         # 置于 LUNBO_DROP_KW 之前：这些源里名称含「歌手」的房间同样剔除。
         if sid in PLATFORM_LUNBO_SIDS:
             cls = "轮播"
+        # 2026-09-27 mursor 房间评估（核查报告遗留优化点②）：mursor.ottiptv.cc/yy/<房间号>
+        # 是 YY 平台房间中继，norm_channel 落「其他」时兜底判归轮播；仅兜底改判，
+        # 不覆盖按名命中的显式分类（CETV/风云剧场等同宿主频道不受影响）。
+        if cls == "其他" and _is_lunbo_room_url(u):
+            cls = "轮播"
         # 2026-09-27 用户指令「轮播组把歌手那些去掉」：轮播组剔除名称含「歌手」的
         # 节目轮播/花絮房间（《歌手2026》整季等），不入任何分组输出。
         if cls == "轮播" and any(kw in std for kw in LUNBO_DROP_KW):
@@ -1013,6 +1044,48 @@ def _alive_rank(u, status):
     return 0 if status.get(u) in (200, 206) else 1
 
 
+# 长尾裁剪审计产物（2026-09-27 核查报告遗留优化点①）：相对路径与 _load_url_status
+# 同口径（CWD=仓库根）。_LONGTAIL_LOG_SIG 为模块级内容签名，txt/m3u 两次构建输入
+# 相同，按签名去重防止同一裁剪集刷两遍日志。
+_LONGTAIL_REPORT_PATH = os.path.join("state", "live_aggregate_prune_report.json")
+_LONGTAIL_LOG_SIG = {"sig": None}
+
+
+def _log_longtail_prune(pruned):
+    """其他组长尾裁剪审计日志：此前 _build_groups 对「未验证且去重线路 <
+    LIVE_OTHER_MIN_LINES」的频道静默 continue——2026-09-26 之前的轮播房间事故
+    （2408 个被误归房间整批丢弃）只能靠离线重演还原去向。现在每次裁剪输出结构化
+    计数：裁剪组名、规则命中数、被裁频道清单（总数 + 抽样频道名）、来源分布；
+    并落盘 state/live_aggregate_prune_report.json。仅加观测，不改变分组行为。"""
+    total = len(pruned)
+    sig = (total, tuple(n for n, _d, _s in pruned[:50]))
+    if sig == _LONGTAIL_LOG_SIG["sig"]:
+        return
+    _LONGTAIL_LOG_SIG["sig"] = sig
+    src_counter = Counter()
+    for _n, _d, sids in pruned:
+        for s in sids:
+            src_counter[s] += 1
+    src_str = ",".join("%s×%d" % (s, c) for s, c in src_counter.most_common()) or "-"
+    samples = " | ".join(n for n, _d, _s in pruned[:20]) or "-"
+    print("[longtail-prune] 组=其他 规则=未验证且去重线路<%d 剔除频道 %d 个 "
+          "| 来源分布: %s | 抽样: %s"
+          % (LIVE_OTHER_MIN_LINES, total, src_str, samples), flush=True)
+    try:
+        os.makedirs("state", exist_ok=True)
+        with open(_LONGTAIL_REPORT_PATH, "w", encoding="utf-8") as f:
+            json.dump({
+                "updated": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"),
+                "rule": "其他组未验证频道且去重线路数<%d" % LIVE_OTHER_MIN_LINES,
+                "pruned_total": total,
+                "by_source": dict(src_counter),
+                "samples": [{"name": n, "n_distinct_lines": d, "sources": sids}
+                            for n, d, sids in pruned[:50]],
+            }, f, ensure_ascii=False, indent=1)
+    except OSError as e:
+        print("[longtail-prune] 报告落盘失败（不影响分组输出）: %s" % e, flush=True)
+
+
 def _build_groups(cmap, verified, extra_keep=6):
     """分组构建（write_verified_txt / write_verified_m3u 共用，第十三批下沉）：
     1) 显示名用 ent['name']（聚合键为归一化去重键后，避免输出去重键当频道名）；
@@ -1020,6 +1093,7 @@ def _build_groups(cmap, verified, extra_keep=6):
     3) 其他组长尾裁剪（2026-09-23 分类重构）：未验证且去重线路数 < LIVE_OTHER_MIN_LINES
        的频道不入主列表——实测数据 18196 条网络长尾中 17473 条为单去重线路未验证频道，
        全量保留会淹没多线路可用频道；电台豁免（量小且为功能性内容）；
+       2026-09-27 起裁剪去向输出审计日志并落盘（_log_longtail_prune）；
     4) 港台组经 hk_clean_sort 清洗排序（黑名单剔除/白名单收视习惯排序/台湾次级）；
     5) RTHK 官方静态源兜底：港台频道实测未通过或缺失时追加官方源（不删除任何已验证线路）；
     6) 2026-09-24 不限上限：verified 频道保留已实测线路（按速度序），其后补回未实测的剩余
@@ -1028,6 +1102,7 @@ def _build_groups(cmap, verified, extra_keep=6):
     # 存活(200/206)置顶、原相对顺序不变（稳定排序）；已实测频道的速度序保持不动。
     _status = _load_url_status()
     groups = OrderedDict()
+    pruned = []  # 长尾裁剪去向记录 (频道名, 去重线路数, 来源 sid 列表)——审计日志用
     for key, ent in cmap.items():
         name = ent.get("name") or key
         # 2026-09-27 质检修复·输出层防御（MyCamTV 混入 live_precise.txt L186 实证）：
@@ -1047,13 +1122,20 @@ def _build_groups(cmap, verified, extra_keep=6):
         else:
             n_distinct = len({u for _s, u in ent["lines"]})
             if ent["class"] == "其他" and n_distinct < LIVE_OTHER_MIN_LINES:
-                continue  # 其他组长尾裁剪：单线路未验证频道不进主列表
+                # 其他组长尾裁剪：单线路未验证频道不进主列表。
+                # 2026-09-27 起裁剪去向记录进 pruned 并由 _log_longtail_prune
+                # 输出计数日志（此前该分支静默丢弃，无任何日志可查）。
+                pruned.append((name, n_distinct,
+                               sorted({s for s, _u in ent["lines"]})))
+                continue
             _ls = [u for _sid, u in ent["lines"]]
             _ls.sort(key=lambda _u: _alive_rank(_u, _status))
             lines = cap_lines(_ls, extra_keep)
         groups.setdefault(gk, OrderedDict())
         if lines:
             groups[gk][name] = lines
+    # 长尾裁剪审计日志（2026-09-27）：组构建完毕后统一输出本次裁剪去向
+    _log_longtail_prune(pruned)
     if "港台" in groups:
         groups["港台"] = hk_clean_sort(groups["港台"])
         # RTHK 官方静态源兜底（第六批 P1）：实测未通过/缺失的港台频道补官方源
