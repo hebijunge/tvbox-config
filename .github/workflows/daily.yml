@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "0 19 * * *"
   workflow_dispatch:
+  # 2026-09-27 临时：push 触发一次全量聚合，迁移 deps 引用路径后移除
+  push:
+    branches: [main]
+    paths: [.github/workflows/daily.yml]
 
 permissions:
   contents: write
