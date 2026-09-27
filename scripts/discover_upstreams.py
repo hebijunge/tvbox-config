@@ -416,6 +416,95 @@ def discover_lineage(known_repos, max_repos):
     return set(list(repos)[:max_repos])
 
 
+# ---------------- 第 4.5 路：Fork 网络挖掘 ----------------
+# 高星上游的 fork 网络里常藏活跃复刻（作者改名/迁移/二次开发）。
+# 控制 API 调用量：只对 star>=100 的上游做 fork 挖掘，最多 20 个；
+# 筛选 30 天内有 push（pushed_at）且 star>5 的活跃 fork。
+# 结果缓存到 state/fork_cache.json，避免重复 API 调用。
+FORK_CACHE_PATH = "state/fork_cache.json"
+FORK_ACTIVE_DAYS = 30
+FORK_MIN_STARS = 5
+FORK_UPSTREAM_MIN_STARS = 100
+FORK_MAX_UPSTREAMS = 20
+
+
+def _load_fork_cache():
+    if os.path.isfile(FORK_CACHE_PATH):
+        try:
+            with open(FORK_CACHE_PATH, encoding="utf-8") as f:
+                return json.load(f)
+        except (OSError, ValueError):
+            pass
+    return {}
+
+
+def _save_fork_cache(cache):
+    try:
+        os.makedirs(os.path.dirname(FORK_CACHE_PATH), exist_ok=True)
+        with open(FORK_CACHE_PATH, "w", encoding="utf-8") as f:
+            json.dump(cache, f, ensure_ascii=False, indent=1)
+    except OSError as e:
+        print(f"  [Fork挖掘] 缓存写入失败：{e}", flush=True)
+
+
+def discover_forks(known_repos, max_upstreams=FORK_MAX_UPSTREAMS,
+                  min_upstream_stars=FORK_UPSTREAM_MIN_STARS):
+    """挖掘已知高星上游的活跃 fork 网络，返回新发现的 fork full_name 集合。"""
+    cache = _load_fork_cache()
+    # 1) 选出 star>=阈值的已知上游（最多 max_upstreams 个）
+    heavy = []
+    for full in sorted(known_repos):
+        if "/" not in full:
+            continue
+        info = gh_api(f"/repos/{full}")
+        if not info:
+            continue
+        stars = info.get("stargazers_count") or 0
+        if stars >= min_upstream_stars:
+            heavy.append((full, stars))
+        time.sleep(0.4)
+    heavy.sort(key=lambda x: -x[1])
+    heavy = heavy[:max_upstreams]
+    print(f"  [Fork挖掘] 待挖上游 {len(heavy)} 个（star>={min_upstream_stars}）", flush=True)
+
+    cutoff = time.time() - FORK_ACTIVE_DAYS * 86400
+    forks = set()
+    changed = False
+    for full, stars in heavy:
+        if full in cache:
+            for fn in cache[full].get("forks", []):
+                forks.add(fn)
+            continue
+        doc = gh_api(f"/repos/{full}/forks", {"sort": "stargazers", "per_page": 30})
+        if not doc or not isinstance(doc, list):
+            cache[full] = {"discovered_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                           "upstream_stars": stars, "forks": []}
+            changed = True
+            continue
+        active = []
+        for it in doc:
+            fn = it.get("full_name")
+            if not fn:
+                continue
+            try:
+                pt = time.mktime(time.strptime((it.get("pushed_at") or "")[:10], "%Y-%m-%d"))
+            except ValueError:
+                continue
+            if (it.get("stargazers_count") or 0) > FORK_MIN_STARS and pt > cutoff:
+                forks.add(fn)
+                active.append(fn)
+        cache[full] = {"discovered_at": time.strftime("%Y-%m-%d %H:%M:%S"),
+                        "upstream_stars": stars, "forks": active}
+        changed = True
+        print(f"  [Fork挖掘] {full} ({stars}★) → 活跃 fork {len(active)} 个", flush=True)
+        time.sleep(1)
+    if changed:
+        _save_fork_cache(cache)
+    fresh = {fn for fn in forks if fn not in known_repos}
+    print(f"  [Fork挖掘] 合计 {len(forks)} 个活跃 fork，其中 {len(fresh)} 个为新仓", flush=True)
+    return fresh
+
+
 # ---------------- 第 5 路：Gitee ----------------
 # 国内大量 TVBox 配置托管在 Gitee（GitHub 常连不上，很多作者首选 Gitee），
 # 此前四路全部走 GitHub，等于漏掉整个国内盘。Gitee OpenAPI(v5) 匿名即可用。
@@ -757,6 +846,7 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=80, help="候选池上限")
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
+    ap.add_argument("--no-forks", action="store_true", help="跳过第 4.5 路 Fork 网络挖掘")
     ap.add_argument("--no-gitee", action="store_true", help="跳过第 5 路 Gitee 搜索")
     ap.add_argument("--no-web", action="store_true", help="跳过第 6 路搜索引擎+文章页")
     ap.add_argument("--max-pages", type=int, default=20, help="第 6 路最多抓取的文章页数")
@@ -778,6 +868,8 @@ def main() -> int:
     repos |= discover_repo_search(args.max_repos)
     if not args.no_lineage:
         repos |= discover_lineage(known_repos, args.max_repos)
+    if not args.no_forks:
+        repos |= discover_forks(known_repos)
     repo_urls = discover_seeds()
     # 第 2.5 路（2026-09-21 点播+容错线）：zhuiju 机器可读清单 + QingNing 结构化分节
     repo_urls |= discover_zhuiju()
