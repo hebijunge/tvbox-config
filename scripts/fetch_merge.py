@@ -1606,7 +1606,10 @@ def is_file_ref(v: str):
         if "127.0.0.1" in host or "localhost" in host:
             return None
         path = base.split("?")[0].lower()
-        if path.endswith((".js", ".jar", ".zip", ".php")):
+        # 静态文件后缀：可下载入库。动态 API 端点（/api.php/provide/vod、/v1.vod 等）
+        # 不以这些后缀结尾，天然不会被误收。
+        if path.endswith((".js", ".jar", ".zip", ".php", ".json", ".py",
+                           ".css", ".txt", ".m3u", ".m3u8", ".xml", ".html")):
             return ("abs", base)
     return None
 

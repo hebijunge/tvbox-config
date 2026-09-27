@@ -166,6 +166,11 @@ def normalize(name: str, *, strip_quality: bool = True, strip_brand: bool = True
     # f) 繁→简
     if c["t2s"]:
         s = "".join(c["t2s"].get(ch, ch) for ch in s)
+    # f2) 尾部「台/频道/套」后缀剥离（守卫「卫视/电台」不剥；与旧 dedup_key fallback 一致）
+    #     仅在剥离后仍有剩余字符时才剥，避免把「台/频道」单独作为键剥空。
+    m = re.search(r"(卫视|电台|频道|台|套)$", s)
+    if m and len(s) > len(m.group(1)) and m.group(1) not in ("卫视", "电台"):
+        s = s[: -len(m.group(1))]
     # g) lowercase
     return s.lower()
 

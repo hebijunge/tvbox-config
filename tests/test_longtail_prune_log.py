@@ -147,7 +147,7 @@ class MursorRoomTests(_PruneLogTestBase):
 
     def test_non_mursor_yy_host_unaffected(self):
         cmap = self._merge([("某某台", "https://sub.ottiptv.cc/yy/123")])
-        # dedup_key 会剥「台」后缀，聚合键为「某某」
+        # classify 归一化后聚合键为「某某」（canonical 显示名保留「某某台」）
         self.assertEqual(cmap["某某"]["class"], "其他")
 
     def test_is_lunbo_room_url_edges(self):

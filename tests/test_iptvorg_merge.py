@@ -80,13 +80,12 @@ class IptvorgMergeTests(unittest.TestCase):
         cmap = _base_cmap()
         n = la.merge_iptvorg_promoted(cmap, self.repo)
         self.assertEqual(n, 2)
-        # CCTV-1 并进既有聚合键（繁简/后缀归一同键），显示名保留首次出现
+        # CCTV-1 并进既有聚合键（繁简/后缀归一同键），显示名走标准名 canonical
         k = la.dedup_key("CCTV-1")
         self.assertIn("iptvorg", [s for s, _u in cmap[k]["lines"]])
-        self.assertEqual(cmap[k]["name"], "CCTV-1")
-        # 翡翠台新增频道
-        kj = la.dedup_key("翡翠台")
-        self.assertIn(kj, cmap)
+        self.assertEqual(cmap[k]["name"], "CCTV-1 综合")
+        # 翡翠台 classify 归一化 key 为 tvb翡翠
+        self.assertIn("tvb翡翠", cmap)
         # 同一 URL 二次汇入不重复记行
         n2 = la.merge_iptvorg_promoted(cmap, self.repo)
         self.assertEqual(n2, 0)
