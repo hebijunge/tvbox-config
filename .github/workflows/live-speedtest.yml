@@ -128,6 +128,13 @@ jobs:
           assert meta.get("channels", 0) > 0, "channels==0 元数据对 fetch_merge 无消费价值"
           PY
 
+      - name: 快照成人兜底清洗（繁简归一，门禁前置）
+        # 2026-09-27 修复（run 36270538085 实证）：B 站房间繁体 JAV 标题
+        # 「義母亂倫…」绕过 ingest 简体词表漏进快照 key，门禁 exit 2 阻断提交。
+        # 本步按 to_simp(名) 再判 adult 的口径清洗快照/分组产物（只删不增），
+        # adult_leak_check 门禁仍是一票否决权威，漏网新形态照拦。
+        run: python scripts/live_speedtest_scrub.py
+
       - name: adult 零泄漏门禁（提交前硬闸）
         run: |
           # 2026-09-27 质检修复：MyCamTV 曾经测速工作流写入 live_precise.txt 而无门禁。
@@ -153,6 +160,22 @@ jobs:
             # shard 写进提交信息便于回溯（哪个 shard 在何时跑过）
             SD="${{ steps.shard.outputs.value }}"
             git commit -m "chore(speedtest): live shard $SD $(date -u +%Y-%m-%dT%H:%M)"
-            git pull --rebase origin main || true
-            git push
+            # 2026-09-27 修复（run 36253591691 实证）：并发写手（live-validate/prune
+            # 同改 state/live_checks.json）令 rebase 冲突，旧写法 `|| true` 吞掉
+            # rebase 失败后 push 在 detached HEAD 上 exit 128 整 run 红灯。
+            # 改为：-X theirs 自动取远端版本重放（产物类冲突文件下次 run 会重新
+            # 生成，无语义损失）；仍冲突则 abort 放弃本次提交（exit 0），下次
+            # cron 续跑重测；push 失败重试一次后同样放行告警。
+            if ! git pull --rebase -X theirs origin main; then
+              git rebase --abort 2>/dev/null || true
+              echo "::warning::rebase 冲突无法自动解决，放弃本次提交（下次 cron 续跑）"
+              exit 0
+            fi
+            if ! git push; then
+              sleep 8
+              if ! git push; then
+                echo "::warning::push 重试仍失败，放弃本次提交（下次 cron 续跑）"
+                exit 0
+              fi
+            fi
           fi
