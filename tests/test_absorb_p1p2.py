@@ -15,8 +15,10 @@ import fetch_merge as fm
 import live_aggregate as la
 
 
-def _resp(status, body=b""):
-    # fetch_merge.http_get 返回 (status, bytes, elapsed_ms)
+def _resp(status, body=b"", return_headers=False):
+    # fetch_merge.http_get 返回 (status, bytes, elapsed_ms)；return_headers=True 时4元组
+    if return_headers:
+        return status, body, 0, {}
     return status, body, 0
 
 
@@ -29,11 +31,11 @@ class TestFetchRaw(unittest.TestCase):
         fm.http_get = self.orig
 
     def _patch(self, fail_urls):
-        def fake(url, timeout, max_bytes=0, rng=None, ua=None, xrw=None):
+        def fake(url, timeout, max_bytes=0, rng=None, ua=None, xrw=None, **kwargs):
             self.calls.append((url, ua, xrw))
             if url in fail_urls:
                 raise IOError("boom %s" % url)
-            return _resp(200, b"data")
+            return _resp(200, b"data", return_headers=kwargs.get("return_headers", False))
         fm.http_get = fake
 
     def test_primary_success_no_ua_retry(self):
@@ -61,11 +63,11 @@ class TestFetchRaw(unittest.TestCase):
     def test_mirror_success_after_primary_fail(self):
         mirror = "http://m.example/x.json"
         # 主 URL 用满轮换后仍失败，mirror 首组 UA 成功 → 共 3+1 次调用
-        def fake(url, timeout, max_bytes=0, rng=None, ua=None, xrw=None):
+        def fake(url, timeout, max_bytes=0, rng=None, ua=None, xrw=None, **kwargs):
             self.calls.append((url, ua))
             if url == "http://a.example/x.json":
                 raise IOError("down")
-            return _resp(200, b"m")
+            return _resp(200, b"m", return_headers=kwargs.get("return_headers", False))
         fm.http_get = fake
         raw, ch, ok_url = fm.fetch_raw("http://a.example/x.json", mirrors=[mirror])
         self.assertEqual(raw, b"m")
