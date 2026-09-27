@@ -6,6 +6,10 @@ on:
   schedule:
     - cron: "0 19 * * *"
   workflow_dispatch:
+  # 临时：push触发验证CI，验证后移除
+  push:
+    branches: [main]
+    paths: [.github/workflows/daily.yml]
 
 permissions:
   contents: write
