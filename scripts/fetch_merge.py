@@ -1471,10 +1471,11 @@ def clean_parses(parses: list, *, do_probe: bool = True, probe_timeout: float = 
 # ==================== 依赖收集（jar / js / json 库文件） ====================
 DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
-DEP_TIMEOUT = 15
+DEP_TIMEOUT = 8
+DEP_TOTAL_BUDGET = 15  # 单依赖全链路(直连+镜像)总预算秒，防死URL拖慢整轮
 DEP_MAX_BYTES = 8 * 1024 * 1024
 # 任务3：总并发提到 16，同时按域名限速（默认同域最多 4 并发，避免 raw.githubusercontent.com 限流）
-DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "16"))
+DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "32"))
 DEP_DOMAIN_CONCURRENCY = int(os.environ.get("DEP_DOMAIN_CONCURRENCY", "4"))
 _DEP_DOMAIN_LOCK = threading.Lock()
 _DEP_DOMAIN_SEMAPHORES = {}
@@ -1589,7 +1590,7 @@ def dep_download(url: str):
     for i, u in enumerate(attempts):
         # P1-3：失败类型分级重试
         _retries = 0
-        _max_retry = 2  # 5xx 重试 2 次
+        _max_retry = 0  # 不重试，快速失败
         while _retries <= _max_retry:
             try:
                 status, data, _ = http_get(u, DEP_TIMEOUT, DEP_MAX_BYTES)
@@ -1880,9 +1881,9 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                     _res[0] = (None, f"{type(_e).__name__}: {str(_e)[:100]}")
             _t = threading.Thread(target=_do, daemon=True)
             _t.start()
-            _t.join(timeout=DEP_TIMEOUT + 10)  # 总超时25s，覆盖DNS+连接+读取+重试
+            _t.join(timeout=DEP_TOTAL_BUDGET)  # 总超时25s，覆盖DNS+连接+读取+重试
             if _t.is_alive():
-                return None, f"download hang (DNS?) after {DEP_TIMEOUT+10}s"
+                return None, f"download hang (DNS?) after {DEP_TOTAL_BUDGET}s"
             return _res[0]
         finally:
             sem.release()
