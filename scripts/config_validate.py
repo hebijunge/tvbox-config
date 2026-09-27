@@ -313,6 +313,50 @@ def validate_file(path, fix, all_issues, broken_refs):
     return len(sites), len(file_issues), len(file_broken)
 
 
+# P0-4 产出后校验：产物文件大小上限（硬错误阻断，软错误告警）
+# tvbox≤500KB / vod≤400KB / live≤200KB / deps 整目录≤200MB
+SIZE_LIMITS = {
+    "tvbox.json": (500 * 1024, "hard"),
+    "vod.json": (400 * 1024, "soft"),
+    "short.json": (400 * 1024, "soft"),
+    "live.json": (200 * 1024, "soft"),
+}
+
+
+def _dir_size(path: str) -> int:
+    total = 0
+    for root, _, names in os.walk(path):
+        for n in names:
+            try:
+                total += os.path.getsize(os.path.join(root, n))
+            except OSError:
+                pass
+    return total
+
+
+def _check_file_sizes():
+    """P0-4：校验产物文件大小。返回 (hard_errors, soft_warnings)。"""
+    hard, soft = [], []
+    for fp, (limit, level) in SIZE_LIMITS.items():
+        if not os.path.isfile(fp):
+            continue
+        sz = os.path.getsize(fp)
+        if sz > limit:
+            entry = {"file": fp, "size_kb": round(sz / 1024, 1),
+                     "limit_kb": round(limit / 1024, 1)}
+            (hard if level == "hard" else soft).append(entry)
+            print(f"  [{'HARD' if level=='hard' else 'warn'}] {fp} = {sz/1024:.0f}KB"
+                  f" > 上限 {limit/1024:.0f}KB", flush=True)
+    # deps/ 目录总体积
+    if os.path.isdir("deps"):
+        dsz = _dir_size("deps")
+        if dsz > 200 * 1024 * 1024:
+            soft.append({"dir": "deps/", "size_mb": round(dsz / 1024 / 1024, 1),
+                         "limit_mb": 200})
+            print(f"  [warn] deps/ = {dsz/1024/1024:.0f}MB > 上限 200MB", flush=True)
+    return hard, soft
+
+
 def main():
     ap = argparse.ArgumentParser(description="配置产物质量校验")
     ap.add_argument("--fix", action="store_true")
@@ -399,8 +443,16 @@ def main():
           f"broken_refs={total_broken} pass_rate={pass_rate}% ref_fail={ref_fail_rate}%")
     for k, v in sorted(issue_kinds.items(), key=lambda x: -x[1]):
         print(f"  - {k}: {v}")
+    # P0-4：产出后文件大小校验
+    size_hard, size_soft = _check_file_sizes()
+    quality["size_hard_errors"] = size_hard
+    quality["size_soft_warnings"] = size_soft
+
     if ref_fail_rate > 5.0:
         print(f"[config_validate] 引用失效率 {ref_fail_rate}% > 5%，标记失败")
+        return 1
+    if size_hard:
+        print(f"[config_validate] 硬错误 {len(size_hard)} 个（产物超大小上限），exit 1")
         return 1
     return 0
 

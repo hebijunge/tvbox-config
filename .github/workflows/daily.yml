@@ -47,6 +47,20 @@ jobs:
         with:
           python-version: "3.11"
 
+      # P0-1 CI 构建加速：缓存 deps/ lib/ js/（jar/js 下载是 CI 主要网络耗时）。
+      # key 锁定 manifest 哈希——上游依赖清单变了才 cache-miss 重下；未变直接命中。
+      # restore-keys 允许部分命中（同 runner 前缀），命中率优先。
+      - name: 缓存 deps/lib/js（P0-1：manifest 变了才重下）
+        uses: actions/cache@v4
+        with:
+          path: |
+            deps/
+            lib/
+            js/
+          key: ${{ runner.os }}-deps-${{ hashFiles('deps/json/manifest.json') }}
+          restore-keys: |
+            ${{ runner.os }}-deps-
+
       - name: 安装 pypinyin（频道拼音排序依赖，缺失时退回字典序）
         run: pip install pypinyin
 
@@ -54,14 +68,26 @@ jobs:
         run: python -m unittest discover -s tests -v
 
       - name: 镜像复测并动态重排 GH_MIRRORS（实测延迟/吞吐，首位=运行时前缀；失败回退默认顺序）
+        # P1-1 网络错误自动重试 1 次（max_attempts=2）；语法错误已被上方单元测试挡住，此处只兜网络抖动
         continue-on-error: true
-        run: python scripts/mirror_probe.py
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 2
+          command: python scripts/mirror_probe.py
 
-      - name: 接口实测（L1-L3 + type3 连通性）—— 为去重与排序提供实测数据
-        # 基于上一轮产物跑：探针需要 tvbox.json，而本轮合并又需要探针结论，一轮延迟自洽即可
+      - name: 接口实测 HTTP（L1-L3 连通性）—— 网络抖动自动重试 1 次（P1-1）
+        # 基于上一轮产物跑：探针需要 tvbox.json，而本轮合并又需要探针结论，一轮延迟自洽即可。
+        continue-on-error: true
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 25
+          max_attempts: 2
+          command: python scripts/probe_sites.py --only http --concurrency 24
+
+      - name: 接口实测（spider/js/去重）—— 为去重与排序提供实测数据
         continue-on-error: true
         run: |
-          python scripts/probe_sites.py --only http --concurrency 24 || true
           python scripts/probe_spiders.py --concurrency 24 || true
           python scripts/probe_js.py --concurrency 20 || true
           python scripts/dedup_mirrors.py || true
@@ -98,22 +124,28 @@ jobs:
       - name: 拉取上游并合并生成配置（含快照/黑白名单/分类测速/checks/空产物守卫）
         id: fetch_merge
         env:
-          CONCURRENCY: "24"
+          # P0-1 CI 加速：上游拉取并发 24→40（同域名信号量已在 fetch_merge 内兜底，不被 WAF 封）
+          CONCURRENCY: "40"
           # canary 上游已按「独有站点数 unique>=3」自动收编（不是按 score），
           # 且失效由自动黑名单兜底，故开启并入。要停用改回 "0" 即可。
           EXTRA_UPSTREAMS: "1"
           # deps 落库路径已修复（dep_local_path 剥离镜像前缀），全量迁移已完成，恢复增量模式
           FORCE_FULL_RUN: "0"
-        run: |
-          python scripts/fetch_merge.py
-          rc=$?
-          echo "rc=$rc" >> "$GITHUB_OUTPUT"
-          if [ "$rc" -eq 2 ]; then
-            echo "guard=true" >> "$GITHUB_OUTPUT"
-            echo "::warning::空产物守卫触发：本轮聚合产物异常，跳过提交与 Release，保留上次缓存"
-            exit 0
-          fi
-          exit $rc
+        # P1-1 网络错误自动重试 1 次（max_attempts=2）；守卫 rc=2 时 exit 0 不重试，语法错误已被单元测试挡住
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 140
+          max_attempts: 2
+          command: |
+            python scripts/fetch_merge.py
+            rc=$?
+            echo "rc=$rc" >> "$GITHUB_OUTPUT"
+            if [ "$rc" -eq 2 ]; then
+              echo "guard=true" >> "$GITHUB_OUTPUT"
+              echo "::warning::空产物守卫触发：本轮聚合产物异常，跳过提交与 Release，保留上次缓存"
+              exit 0
+            fi
+            exit $rc
 
       - name: 依赖审计（只报告，不删除）
         continue-on-error: true
@@ -140,6 +172,11 @@ jobs:
         continue-on-error: true
         run: python scripts/health_report.py || true
 
+      - name: 生成变更日志（P1-7/P0升：diff sites/lives，写 exports/changelog.json+.md）
+        # 脚本现成未接 CI；首次运行只建 state/last_tvbox.json 基线、不出 diff，故 || true 容忍
+        continue-on-error: true
+        run: python scripts/gen_changelog.py || true
+
       - name: 生成本地接口包（离线自洽 zip，点播/直播/短剧+全部依赖）
         # 本地包随 Release 发布；成人配置不进本地包（fetch_merge 不再写 .workbuddy 留档，
         # pack_local 默认找不到留档自动跳过 → Release 附件 zip 不含 adult，通路隔离）
@@ -153,8 +190,11 @@ jobs:
         # 见 state/adult_leak_report.json。
         run: python scripts/adult_leak_check.py
 
-      - name: 配置质量代理质检
-        run: python scripts/config_validate.py || true
+      - name: 配置质量代理质检（P0-4 分级阻断：硬错误 exit 1 阻断，软错误只告警）
+        # 去掉原 `|| true`：硬错误（JSON 解析失败 / 依赖硬缺失 ref_fail>5% / adult 泄漏）exit 1 阻断发布；
+        # 软错误（字段缺失 / 名称不规范 / 体积超标）config_validate 本身不 exit 1，仅打印 warning 继续。
+        # adult 泄漏由上方 adult_leak_check.py 独立硬闸（exit 2）兜底；体积分级 _check_file_sizes 由 Agent B 在脚本内实现。
+        run: python scripts/config_validate.py
 
       - name: 提交并推送（有变更时；守卫触发则仅落守卫日报）
         if: steps.fetch_merge.outputs.guard != 'true'
@@ -168,7 +208,9 @@ jobs:
           # raw 落库差异审计（原始输入 vs 发布产物），报告随 state/ 提交（2026-09-27 落库改造）
           python scripts/raw_audit.py || true
           python scripts/snapshot_rotate.py || true
-          git add tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json README.md \
+          # P2-3 方案B（取消 list.json）：从 git add / Release 附件 / Pages 白名单三处移除；
+          # fetch_merge.py L4470 注释由 Agent A 负责（本侧不动产出脚本）。公告过渡期 README 已标注。
+          git add tvbox.json vod.json live.json short.json adult.json status.json checks.json README.md \
                   raw/ raw-vod/ \
                   index.html lives/ state/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
           # pack_report.json 仅在 pack_local 成功时存在，防缺失阻断提交
@@ -182,6 +224,11 @@ jobs:
             # 产物发布语义 = 本 job 重算结果为准，冲突取本侧（-X theirs 指正在重放的 daily 提交）。
             git pull --rebase -X theirs origin main
             git push
+            # P1-4 版本 tag：每日打 vYYYY-MM-DD-b<run_number>，latest 仍作稳定入口每日覆盖。
+            # run_number 作 build 序号，全局递增唯一；回滚据此 tag（见 rollback.yml）。旧 tag 由 release_cleanup 30 天滚动清理。
+            PUSH_TAG="v$(date -u +%F)-b${GITHUB_RUN_NUMBER}"
+            git tag "$PUSH_TAG" || true
+            git push origin "$PUSH_TAG" || true
           fi
 
       - name: 守卫日报（空产物守卫触发时只提交守卫记录，产物保留上次缓存）
@@ -204,7 +251,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           FILES=""
-          for f in tvbox.json vod.json live.json short.json list.json status.json checks.json \
+          for f in tvbox.json vod.json live.json short.json status.json checks.json \
                    stores/duocang.json stores/cms.json stores/app.json stores/pan.json stores/csp.json stores/pan_ck.json \
                    lives/live.txt lives/live_cctv.txt lives/live_weishi.txt \
                    lives/live_gangtai.txt lives/live_other.txt \
@@ -226,10 +273,33 @@ jobs:
           # P1-2 卫生修复：白名单外陈旧资产清理（_proxy.json / 历史日期名 zip 等）。
           # adult.json 不在本白名单（「不声明」通路）；release_cleanup 永不清理名单仅作兜底。
           python scripts/release_cleanup.py \
-            --keep tvbox.json,vod.json,live.json,short.json,list.json,status.json,checks.json,tvbox-latest.zip || true
+            --keep tvbox.json,vod.json,live.json,short.json,status.json,checks.json,tvbox-latest.zip \
+            --retention-days 30 --keep-releases 10 || true
           # snapshot 止血（2026-09-25 P1 收口）：snapshot-archive 归档库 14 天滚动清理
           # （历史日快照归档 Release；独立于 latest 白名单，不受 release_cleanup 影响）。
           python scripts/snapshot_rotate.py --prune-release || true
+          # P2-1 Release 历史：按当日 tag 额外归档一份产物（latest 仍作稳定入口每日 --clobber 覆盖）。
+          # 旧 tag Release 由 release_cleanup --keep-releases 10 滚动保留最近 10 个。
+          ARCHIVE_TAG="v$(date -u +%F)-b${GITHUB_RUN_NUMBER}"
+          if [ -n "$FILES" ] && ! gh release view "$ARCHIVE_TAG" -R "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$ARCHIVE_TAG" $FILES -R "$GITHUB_REPOSITORY" \
+              --title "$ARCHIVE_TAG" --notes "自动归档快照 $ARCHIVE_TAG（latest 为稳定入口，本 tag 用于历史回滚）" || true
+          fi
+
+      - name: CDN 配置预热（P1-3：curl -sI 各 CDN/tvbox.json，消除冷启动）
+        if: steps.fetch_merge.outputs.guard != 'true'
+        run: |
+          RAW="https://raw.githubusercontent.com/${GITHUB_REPOSITORY}/main"
+          echo "预热各 CDN 的 tvbox.json（HEAD 探活，不下载正文；失败仅告警不阻断）："
+          for url in \
+            "$RAW/tvbox.json" \
+            "https://ghproxy.net/$RAW/tvbox.json" \
+            "https://cdn.jsdelivr.net/gh/${GITHUB_REPOSITORY}@main/tvbox.json" \
+            "https://${GITHUB_REPOSITORY_OWNER}.github.io/tvbox-config/tvbox.json"; do
+            printf '  %-90s -> ' "$url"
+            curl -sI --max-time 15 -o /dev/null -w 'HTTP %{http_code}  %{time_total}s\n' "$url" \
+              || echo "预热失败(忽略)"
+          done
 
       - name: 失败聚合报告
         if: always()
@@ -250,3 +320,37 @@ jobs:
             git pull --rebase origin main || true
             git push || true
           fi
+
+      - name: 配置可用性抽样监控（P1-5：抽 10% sites 测 L1，并发 64 超时 3 秒）
+        # 产出 state/avail_report.json（可用率/抽样数/失败明细）；ci_metrics_alert 接阈值 <90% 飞书告警。
+        # CI runner 出网可能被 WAF 误拦，故 continue-on-error，不阻断发布。
+        if: steps.fetch_merge.outputs.guard != 'true'
+        continue-on-error: true
+        run: python scripts/avail_monitor.py --sample-ratio 0.10 --concurrency 64 --timeout 3 || true
+
+      - name: 采集性能监控仪表盘（C8：读 checks.json + upstream_latency/failures，输出 HTML）
+        continue-on-error: true
+        run: python scripts/gen_collect_dashboard.py || true
+
+      - name: CI 失败飞书通知（P0-4：失败时推送 webhook，含失败步骤与日志链接）
+        # 现有 feishu_patrol_bridge.py 为巡检回写桥接（需 --inputs，无 webhook 发送能力），
+        # 故此处直接 curl 飞书自定义机器人 webhook；FEISHU_WEBHOOK 用 secret 占位，不写真实 token。
+        if: failure()
+        env:
+          FEISHU_WEBHOOK: ${{ secrets.FEISHU_WEBHOOK }}
+          JOB_STATUS: ${{ job.status }}
+        run: |
+          if [ -z "$FEISHU_WEBHOOK" ]; then
+            echo "::warning::未配置 FEISHU_WEBHOOK secret，跳过飞书失败通知"
+            exit 0
+          fi
+          MSG="🚨 TVBox 配置 CI 失败通知
+          仓库: ${GITHUB_REPOSITORY}
+          分支: ${GITHUB_REF_NAME}   触发: ${GITHUB_ACTOR}
+          状态: ${JOB_STATUS}
+          日志: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          # 多行文本转成 JSON 安全串（去掉 json.dumps 外层引号）
+          MSG_JSON=$(printf '%s' "$MSG" | python3 -c 'import json,sys;print(json.dumps(sys.stdin.read())[1:-1])')
+          curl -s -X POST "$FEISHU_WEBHOOK" -H "Content-Type: application/json" \
+            -d "{\"msg_type\":\"text\",\"content\":{\"text\":\"${MSG_JSON}\"}}" \
+            || echo "::warning::飞书通知推送失败（忽略）"

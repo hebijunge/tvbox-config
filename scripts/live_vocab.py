@@ -459,7 +459,21 @@ def classify(name: str, url: str = "", source_marker: Optional[str] = None) -> d
     if canon:
         debug["matched_by"] = "cctv"
         canon_fmt = _format_cctv_canon(canon)
-        return {"group": "cctv", "key": normalize(canon), "canonical": canon_fmt, "debug": debug}
+        # P2-4：CCTV-5/6/13/14 从 cctv 大组拆出作为子组标签（group 仍归 cctv，加 sub_group）
+        sub = None
+        cl = str(canon).lower().replace("-", "").replace(" ", "")
+        if cl.startswith("cctv5"):
+            sub = "sports"
+        elif cl.startswith("cctv6"):
+            sub = "movie"
+        elif cl.startswith("cctv13"):
+            sub = "news"
+        elif cl.startswith("cctv14"):
+            sub = "kids"
+        out = {"group": "cctv", "key": normalize(canon), "canonical": canon_fmt, "debug": debug}
+        if sub:
+            out["sub_group"] = sub
+        return out
     # 6) gangtai
     canon = _gangtai_match(name) or _gangtai_match(norm_name)
     if canon:

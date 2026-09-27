@@ -33,6 +33,7 @@ import os
 import re
 import ssl
 import sys
+import threading
 import time
 import urllib.error
 import urllib.parse
@@ -46,6 +47,28 @@ L2_TIMEOUT = 10
 L3_TIMEOUT = 10
 MAX_JSON = 512 * 1024
 MAX_TS = 4096
+
+# ---- V4 并发拉满 + 同域信号量（参考 fetch_merge.py L1479 模式）----
+# 默认总并发 24→48；同域并发封顶 PROBE_DOMAIN_CONCURRENCY（默认 6），
+# raw.githubusercontent.com 等热门 CDN 单独限到 PROBE_GH_CONCURRENCY（默认 8），
+# 避免单域名被我们自己打限流。
+PROBE_CONCURRENCY_DEFAULT = int(os.environ.get("PROBE_CONCURRENCY", "48"))
+PROBE_DOMAIN_CONCURRENCY = int(os.environ.get("PROBE_DOMAIN_CONCURRENCY", "6"))
+PROBE_GH_CONCURRENCY = int(os.environ.get("PROBE_GH_CONCURRENCY", "8"))
+_DOMAIN_LOCK = threading.Lock()
+_DOMAIN_SEMAPHORES = {}
+
+
+def _domain_semaphore(url: str) -> threading.Semaphore:
+    """按 URL host 的信号量：同域并发封顶。GitHub 系域名单独限额。"""
+    host = (urllib.parse.urlparse(url).netloc or "default").lower()
+    cap = PROBE_GH_CONCURRENCY if "github" in host else PROBE_DOMAIN_CONCURRENCY
+    with _DOMAIN_LOCK:
+        sem = _DOMAIN_SEMAPHORES.get(host)
+        if sem is None:
+            sem = threading.Semaphore(cap)
+            _DOMAIN_SEMAPHORES[host] = sem
+        return sem
 
 # ---- 探针结果缓存跳过（P1）----
 # 上次实测 healthy（L1/L2/L3）且延迟 < CACHE_MAX_LATENCY_MS 且在 CACHE_TTL_HOURS 小时内
@@ -180,7 +203,7 @@ def parse_any(raw):
     return parse_xml(raw)
 
 
-def probe_l1(api):
+def probe_l1(api, timeout=L1_TIMEOUT):
     """L1：接口是否有真实片库。
 
     失败分类很重要，用于避免误杀：
@@ -192,7 +215,7 @@ def probe_l1(api):
     for q in ("ac=list", "ac=videolist"):
         url = join_api(api, q)
         try:
-            st, raw, ms, _ = http_get(url, L1_TIMEOUT, MAX_JSON)
+            st, raw, ms, _ = http_get(url, timeout, MAX_JSON)
         except urllib.error.HTTPError as e:
             last = {"ok": False, "cls": "http", "reason": f"HTTP {e.code}", "url": url}
             continue
@@ -224,7 +247,7 @@ def probe_l1(api):
     return last
 
 
-def probe_l2(api, keywords):
+def probe_l2(api, keywords, timeout=L2_TIMEOUT):
     """L2：热词搜索是否命中。多种参数变体轮试，记录失败细节。"""
     best = {"ok": False, "hits": 0, "kw": None, "ms": None, "tried": [], "env": 0}
     for kw in keywords:
@@ -232,7 +255,7 @@ def probe_l2(api, keywords):
         for variant in (f"wd={q}", f"ac=detail&wd={q}", f"ac=list&wd={q}"):
             url = join_api(api, variant)
             try:
-                st, raw, ms, _ = http_get(url, L2_TIMEOUT, MAX_JSON)
+                st, raw, ms, _ = http_get(url, timeout, MAX_JSON)
             except urllib.error.HTTPError as e:
                 best["tried"].append(f"{variant.split('&')[0]}→HTTP {e.code}")
                 continue
@@ -282,14 +305,14 @@ def pick_m3u8(vod):
     return None, None
 
 
-def probe_l3(api, vod_id):
+def probe_l3(api, vod_id, timeout=L3_TIMEOUT):
     """L3：能否取到可播的播放地址（取首片验证）。
 
     接受 m3u8（响应含 #EXTM3U）与 video/* 直链；两者都算「可取链」。
     """
     url = join_api(api, f"ac=detail&ids={urllib.parse.quote(str(vod_id))}")
     try:
-        st, raw, ms, _ = http_get(url, L3_TIMEOUT, MAX_JSON)
+        st, raw, ms, _ = http_get(url, timeout, MAX_JSON)
     except urllib.error.HTTPError as e:
         return {"ok": False, "reason": f"detail HTTP {e.code}"}
     except (urllib.error.URLError, OSError, ValueError) as e:
@@ -304,7 +327,7 @@ def probe_l3(api, vod_id):
         return {"ok": False, "reason": "无播放地址"}
 
     try:
-        st2, body, ms2, ctype = http_get(play, L3_TIMEOUT, MAX_TS, {"Range": "bytes=0-2047"})
+        st2, body, ms2, ctype = http_get(play, timeout, MAX_TS, {"Range": "bytes=0-2047"})
     except urllib.error.HTTPError as e:
         return {"ok": False, "play_url": play[:140], "reason": f"播放 HTTP {e.code}"}
     except (urllib.error.URLError, OSError, ValueError) as e:
@@ -321,39 +344,57 @@ def probe_l3(api, vod_id):
     return {"ok": False, "play_url": play[:140], "reason": f"非可播(HTTP {st2}, {ctype or '无 CT'})"}
 
 
-def probe_http_site(site, keywords, deep=True):
-    """对单个 HTTP 型站点跑 L1→L2→L3。"""
+def probe_http_site(site, keywords, deep=True, prev_l1_ms=None):
+    """对单个 HTTP 型站点跑 L1→L2→L3。
+
+    prev_l1_ms: 上轮 L1 实测毫秒数（V8 智能调度）。>5000ms 视为慢源，
+    本轮 L1/L2/L3 超时统一缩到 SLOW_SOURCE_TIMEOUT，避免慢源长期霸占并发槽。
+    """
     api = site.get("api")
     r = {"key": site.get("key"), "name": site.get("name"), "api": api, "kind": "http"}
-    l1 = probe_l1(api)
-    r["l1"] = l1
-    if not l1.get("ok"):
-        # 连接层失败只说明本机到该域名的链路不通，不能判定站点不可用
-        r["level"] = "L?" if l1.get("cls") == "env" else "L0"
+    # V4 同域信号量：submit 进来的任务在执行时才按域名封顶，避免单域打爆
+    sem = _domain_semaphore(api or "")
+    with sem:
+        # V8 慢源超时缩减：上轮 >5s 的源本轮把 L1/L2/L3 超时压到 3s
+        slow = isinstance(prev_l1_ms, (int, float)) and prev_l1_ms > 5000
+        l1_timeout = SLOW_SOURCE_TIMEOUT if slow else L1_TIMEOUT
+        l2_timeout = SLOW_SOURCE_TIMEOUT if slow else L2_TIMEOUT
+        l3_timeout = SLOW_SOURCE_TIMEOUT if slow else L3_TIMEOUT
+        l1 = probe_l1(api, l1_timeout)
+        r["l1"] = l1
+        if slow:
+            r["slow_source"] = True
+        if not l1.get("ok"):
+            # 连接层失败只说明本机到该域名的链路不通，不能判定站点不可用
+            r["level"] = "L?" if l1.get("cls") == "env" else "L0"
+            return r
+        r["level"] = "L1"
+        if not deep:
+            return r
+        l2 = probe_l2(api, keywords, l2_timeout)
+        r["l2"] = l2
+        if l2.get("ok"):
+            r["level"] = "L2"
+        vod_id = l2.get("vod_id")
+        if vod_id is None:
+            # 搜索失败或未命中时，用 L1 列表里的第一条 id 兜底试 L3（判断是搜索不可用还是接口整体不可用）
+            try:
+                st, raw, _, _ = http_get(join_api(api, "ac=list"), l1_timeout, MAX_JSON)
+                lst, _ = parse_any(raw)
+                if lst and isinstance(lst[0], dict):
+                    vod_id = lst[0].get("vod_id")
+            except (urllib.error.URLError, OSError, ValueError):
+                pass
+        if vod_id is not None:
+            l3 = probe_l3(api, vod_id, l3_timeout)
+            r["l3"] = l3
+            if l3.get("ok"):
+                r["level"] = "L3"
         return r
-    r["level"] = "L1"
-    if not deep:
-        return r
-    l2 = probe_l2(api, keywords)
-    r["l2"] = l2
-    if l2.get("ok"):
-        r["level"] = "L2"
-    vod_id = l2.get("vod_id")
-    if vod_id is None:
-        # 搜索失败或未命中时，用 L1 列表里的第一条 id 兜底试 L3（判断是搜索不可用还是接口整体不可用）
-        try:
-            st, raw, _, _ = http_get(join_api(api, "ac=list"), L1_TIMEOUT, MAX_JSON)
-            lst, _ = parse_any(raw)
-            if lst and isinstance(lst[0], dict):
-                vod_id = lst[0].get("vod_id")
-        except (urllib.error.URLError, OSError, ValueError):
-            pass
-    if vod_id is not None:
-        l3 = probe_l3(api, vod_id)
-        r["l3"] = l3
-        if l3.get("ok"):
-            r["level"] = "L3"
-    return r
+
+
+# V8 慢源（上轮 >5s）本轮用的紧缩超时（秒）
+SLOW_SOURCE_TIMEOUT = 3
 
 
 def static_check(site, repo_dir, manifest):
@@ -391,6 +432,95 @@ def static_check(site, repo_dir, manifest):
     r["kind"] = "other"
     r["level"] = "S?"
     return r
+
+
+# ---------------- 3.5-2 无广告排序维度：广告启发式粗判 ----------------
+# 页面特征/弹窗域名启发式。只做粗筛写 ad_warn，不做精细判定（精细判定交给客户端）。
+# 命中任一信号即标记 ad_warn=True。
+_AD_PAGE_MARKS = (
+    "弹窗", "点击下载", "立即下载", "长按保存", "关注公众号", "加群",
+    "点击观看", "跳转浏览器", "下载APP", "下载app", "高速下载",
+)
+_AD_DOMAIN_MARKS = (
+    "ad.", "ads.", "pop.", "push.", "redirect.", "jump.",
+)
+
+
+def detect_ad_heuristic(l1_result: dict) -> bool:
+    """3.5-2：根据 L1 抓回的首屏片名/样本粗判是否带广告弹窗。
+
+    启发式：当前 probe_l1 只保留了 names/sample，不保留正文 HTML；
+    这里用「样本片名里混入下载/弹窗关键词」做弱信号（多数干净片库片名不会带这些词）。
+    强信号（弹窗域名）在 fetch_merge 主流程抓取阶段已能拿到，此处只做兜底。
+    """
+    if not isinstance(l1_result, dict):
+        return False
+    text = " ".join(str(x) for x in l1_result.get("names") or [])
+    text += " " + str(l1_result.get("sample") or "")
+    return any(mark in text for mark in _AD_PAGE_MARKS)
+
+
+# ---------------- V11 源突变检测：每轮存指纹，与历史均值对比 ----------------
+ANOMALY_BASELINE_PATH = os.path.join("state", "anomaly_baseline.json")
+
+
+def _fingerprint(l1: dict) -> dict:
+    """从 L1 结果提取内容指纹：分类数 / 影片数 / 首屏片名集合。"""
+    if not isinstance(l1, dict) or not l1.get("ok"):
+        return {}
+    names = {str(n) for n in (l1.get("names") or []) if n}
+    return {
+        "classes": len(l1.get("classes") or []),
+        "total": l1.get("total") or len(names),
+        "names": sorted(names)[:20],
+    }
+
+
+def detect_source_anomaly(results: list, repo: str) -> list:
+    """V11：每轮指纹与历史均值对比，分类数/影片数变化超 ±50% 标记异常。
+
+    与 C5 共用 state/anomaly_baseline.json。只标记不剔除。
+    返回被标记的 key 列表。
+    """
+    bp_path = os.path.join(repo, ANOMALY_BASELINE_PATH)
+    baseline = {}
+    try:
+        with open(bp_path, encoding="utf-8") as f:
+            baseline = json.load(f).get("snapshots") or {}
+    except (OSError, json.JSONDecodeError):
+        baseline = {}
+    flagged = []
+    new_snap = {}
+    for r in results:
+        if r.get("kind") != "http":
+            continue
+        key = r.get("key")
+        fp = _fingerprint(r.get("l1") or {})
+        if not fp:
+            continue
+        new_snap[key] = fp
+        old = baseline.get(key)
+        if not old:
+            continue
+        # 影片数/分类数任一变化超 ±50% 即标记
+        for field in ("classes", "total"):
+            ov, nv = old.get(field), fp.get(field)
+            if isinstance(ov, (int, float)) and isinstance(nv, (int, float)) and ov > 0:
+                ratio = (nv - ov) / ov
+                if abs(ratio) > 0.5:
+                    r["anomaly"] = f"{field}_shift_{ratio:+.0%}"
+                    flagged.append(key)
+                    break
+    # 写回新基线（只保留最近 1 轮，避免无限膨胀）
+    try:
+        os.makedirs(os.path.dirname(bp_path), exist_ok=True)
+        with open(bp_path, "w", encoding="utf-8") as f:
+            json.dump({"snapshots": new_snap,
+                       "updated_at": time.strftime("%Y-%m-%d %H:%M:%S")},
+                      f, ensure_ascii=False, indent=1)
+    except OSError:
+        pass
+    return flagged
 
 
 def load_probe_cache(out_path: str) -> dict:
@@ -435,6 +565,60 @@ def cache_hit(result: dict, file_generated_at: str) -> bool:
     return True
 
 
+def _health_score(prev: dict) -> float:
+    """V8 健康分：越健康越靠前排队。L3=1.0 L2=0.8 L1=0.6 L?=0.3 其余=0。"""
+    return {"L3": 1.0, "L2": 0.8, "L1": 0.6, "L?": 0.3}.get((prev or {}).get("level"), 0.0)
+
+
+def _should_test_this_round(prev: dict, round_idx: int) -> bool:
+    """V7 增量验活分档：按上轮健康分三档降频。
+
+      前20%（L3/L2 健康源）每轮都测；
+      中60%（L1/L?）隔轮测（round_idx 偶数）；
+      后20%（L0/失败 streak 高）三轮测一次。
+    无历史记录的新源一律每轮测（必须先建立基线）。
+    """
+    if not prev:
+        return True
+    lvl = prev.get("level")
+    streak = int(prev.get("fail_streak", 0) or 0)
+    if lvl in ("L3", "L2"):
+        return True                       # 头部健康源：每轮
+    if lvl in ("L1", "L?"):
+        return round_idx % 2 == 0         # 中部：隔轮
+    # 尾部（L0/S0/失败 streak≥2）：三轮一次
+    return round_idx % 3 == 0
+
+
+def _dedup_by_api_ext(to_test: list, prev_cache: dict):
+    """V3 同 API 端点去重：按 (api, ext) 分组，只 submit 代表任务，
+    结果广播给同组其余站点（同接口不同 key 的站，实测结论完全一致）。
+
+    返回 (representatives, broadcast_map)：
+      representatives  实际要 submit 的站点列表（每组第一个）
+      broadcast_map    {代表api_ext_key: [同组其余站点]}
+    """
+    groups = {}
+    order = []
+    for s in to_test:
+        api = s.get("api") or ""
+        ext = s.get("ext") or ""
+        if isinstance(ext, dict):
+            ext = json.dumps(ext, ensure_ascii=False, sort_keys=True)
+        key = (api, str(ext))
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(s)
+    reps, broadcast = [], {}
+    for key in order:
+        members = groups[key]
+        reps.append(members[0])
+        if len(members) > 1:
+            broadcast[id(members[0])] = members[1:]
+    return reps, broadcast
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="tvbox.json", help="合并产物配置")
@@ -442,7 +626,7 @@ def main() -> int:
     ap.add_argument("--repo", default=".", help="仓库根（用于静态检查）")
     ap.add_argument("--only", default="all", choices=["all", "http", "js", "csp"])
     ap.add_argument("--limit", type=int, default=0, help="每类最多测多少个")
-    ap.add_argument("--concurrency", type=int, default=24)
+    ap.add_argument("--concurrency", type=int, default=PROBE_CONCURRENCY_DEFAULT)
     ap.add_argument("--keywords", default=",".join(KEYWORDS))
     ap.add_argument("--shallow", action="store_true", help="只跑 L1，不跑 L2/L3")
     ap.add_argument("--force", action="store_true",
@@ -500,23 +684,55 @@ def main() -> int:
         prev_cache = load_probe_cache(out_path)
 
     cached_count = 0
+    cache_hit_rate = 0.0
     if args.only in ("all", "http"):
+        # V10：缓存命中率统计（分子/分母）
+        cache_denom = len(http_sites)
         to_test, reused = [], []
+        # V7 增量验活分档：用本轮 round_idx（按天递增）决定中部/尾部源是否跳过
+        round_idx = 0
+        if prev_generated_at:
+            try:
+                round_idx = int(time.mktime(time.strptime(prev_generated_at, "%Y-%m-%d %H:%M:%S")) / 86400)
+            except ValueError:
+                round_idx = 0
         for s in http_sites:
+            prev = prev_cache.get(s.get("api"))
             if args.force:
                 to_test.append(s)
                 continue
-            prev = prev_cache.get(s.get("api"))
             if prev is not None and cache_hit(prev, prev_generated_at):
+                reused.append((s, prev))
+            elif prev is not None and not _should_test_this_round(prev, round_idx):
+                # V7：本轮不该测的档（中部隔轮/尾部三轮），沿用上轮结论算复用
                 reused.append((s, prev))
             else:
                 to_test.append(s)
         cached_count = len(reused)
-        print(f"[probe] L1-L3 实测 {len(to_test)} 个（并发 {args.concurrency}，热词 {keywords}）"
-              f"，缓存复用 {cached_count} 个{'（--force 全量）' if args.force else ''}...", flush=True)
+        cache_hit_rate = round(100 * cached_count / max(cache_denom, 1), 1)
+
+        # V3：同 (api, ext) 分组，只 submit 代表任务，结果广播同组其余站点
+        reps, broadcast = _dedup_by_api_ext(to_test)
+        dedup_saved = len(to_test) - len(reps)
+
+        # V8：提交前按 (健康分 desc, 历史 ms asc) 排序——健康的快源先测，慢源压后
+        def _submit_order(s):
+            prev = prev_cache.get(s.get("api")) or {}
+            hs = _health_score(prev)
+            ms = ((prev.get("l1") or {}).get("ms") if isinstance(prev, dict) else None) or 99999
+            return (-hs, ms)
+        reps.sort(key=_submit_order)
+
+        print(f"[probe] L1-L3 实测代表 {len(reps)} 个（并发 {args.concurrency}，热词 {keywords}）"
+              f"，V3 分组省去 {dedup_saved} 个重复任务，缓存/分档复用 {cached_count} 个"
+              f"（命中率 {cache_hit_rate}%）{'（--force 全量）' if args.force else ''}...", flush=True)
         t0 = time.time()
         with cf.ThreadPoolExecutor(args.concurrency) as ex:
-            futs = {ex.submit(probe_http_site, s, keywords, not args.shallow): s for s in to_test}
+            futs = {}
+            for s in reps:
+                prev = prev_cache.get(s.get("api")) or {}
+                prev_ms = (prev.get("l1") or {}).get("ms")
+                futs[ex.submit(probe_http_site, s, keywords, not args.shallow, prev_ms)] = s
             done = 0
             for fut in cf.as_completed(futs):
                 try:
@@ -525,19 +741,31 @@ def main() -> int:
                     s = futs[fut]
                     r = {"key": s.get("key"), "name": s.get("name"), "api": s.get("api"),
                          "kind": "http", "level": "L0", "error": f"{type(e).__name__}: {e}"[:120]}
-                # 记录实测时间与失败连 streak（失败 streak>0 的源下一轮必重测）
                 r["tested_at"] = now
                 prev = prev_cache.get(r.get("api")) or {}
                 prev_streak = int(prev.get("fail_streak", 0) or 0)
                 r["fail_streak"] = 0 if r["level"] in HEALTHY_LEVELS else prev_streak + 1
+                if detect_ad_heuristic(r.get("l1") or {}):
+                    r["ad_warn"] = True
                 results.append(r)
+                for sib in broadcast.get(id(futs[fut]), []):
+                    br = dict(r)
+                    br["key"] = sib.get("key")
+                    br["name"] = sib.get("name")
+                    br["broadcast_from"] = r.get("key")
+                    results.append(br)
                 done += 1
                 if done % 25 == 0:
-                    print(f"  ... {done}/{len(to_test)} ({time.time()-t0:.0f}s)", flush=True)
+                    print(f"  ... {done}/{len(reps)} ({time.time()-t0:.0f}s)", flush=True)
         for s, prev in reused:
             r = dict(prev)
             r["cached"] = True
             results.append(r)
+
+    # V11：源突变检测（只标记，不剔除）
+    anomaly_keys = detect_source_anomaly(results, repo)
+    if anomaly_keys:
+        print(f"[probe] V11 源突变标记 {len(anomaly_keys)} 个源（分类数/影片数环比 ±50%）", flush=True)
 
     if args.only in ("all", "js", "csp"):
         for s in other_sites:
@@ -553,6 +781,8 @@ def main() -> int:
         "sites_total": len(sites),
         "http_tested": len(http_res),
         "http_cached": cached_count,
+        "cache_hit_rate": cache_hit_rate,
+        "anomaly_flagged": len(anomaly_keys),
         "levels": dict(sorted(by_level.items())),
         "http_levels": {lv: sum(1 for r in http_res if r["level"] == lv) for lv in ("L3", "L2", "L1", "L0", "L?")},
         "static_levels": {lv: sum(1 for r in results if r["level"] == lv and r.get("kind") != "http")
@@ -564,7 +794,7 @@ def main() -> int:
         json.dump(out, f, ensure_ascii=False, indent=1)
 
     print(f"[probe] 完成：{summary['http_levels']}（http 型四级分布） 静态：{summary['static_levels']}"
-          f" 缓存跳过：{cached_count}")
+          f" 缓存跳过：{cached_count}（命中率 {cache_hit_rate}%）")
     print(f"[probe] 产物 -> {args.out}")
     return 0
 

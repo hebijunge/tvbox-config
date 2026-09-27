@@ -60,10 +60,13 @@ STALE_DAYS = int(os.environ.get("PROBE_STALE_DAYS", "7"))
 #                  + w4*richness + w5*freshness + w6*group_confidence
 # 各维全部归一化到 [0,1]，权重可经环境变量 RANK_WEIGHTS 调整（无需改代码）。
 # 默认权重（docs/ranking-scoring.md 7.2）：可用性优先，其次稳定性/速度/丰富度。
-DIM_ORDER = ("avail", "latency", "stability", "richness", "freshness", "group")
+# V1 三维质量评分框架（内容≈avail+richness 40% / 速度≈latency 30% / 稳定≈stability 30%）：
+# 现有六维已细分覆盖；画质/干净度维度先落 cleanliness 占位，待 CI 实测信号补齐后再加画质。
+DIM_ORDER = ("avail", "latency", "stability", "richness", "freshness", "group", "cleanliness")
+# 3.5-2：cleanliness 权重 0.05 从 freshness 挪来；ad_warn=True 的源该维取 0。
 DEFAULT_WEIGHTS = {
     "avail": 0.30, "latency": 0.15, "stability": 0.20,
-    "richness": 0.15, "freshness": 0.10, "group": 0.10,
+    "richness": 0.15, "freshness": 0.05, "group": 0.10, "cleanliness": 0.05,
 }
 
 
@@ -120,7 +123,7 @@ def _text_of(site: dict) -> str:
     return f"{site.get('name') or ''} {site.get('key') or ''} {site.get('api') or ''} {ext_str}".lower()
 
 
-CATEGORY_ORDER = ["电影", "剧", "综艺", "动漫", "纪录片", "体育", "少儿", "综合"]
+CATEGORY_ORDER = ["电影", "剧", "综艺", "动漫", "纪录片", "体育", "少儿", "4K", "综合"]
 # 这些类型本身即独立通道，不再与品类复合（短剧/成人有独立产物，其他保持兜底）
 SPECIAL_TYPES = {"短剧", "成人", "其他"}
 
@@ -136,15 +139,18 @@ def load_category_vocab(repo: str) -> dict:
 
 
 def category_of(site: dict, vocab: dict) -> str:
-    """从站点 name/ext 提取内容品类（电影/剧/综艺/...），未命中归「综合」。"""
+    """从站点 name/ext 提取内容品类（电影/剧/综艺/.../4K），未命中归「综合」。"""
     if not isinstance(site, dict):
         return "综合"
+    # P0-2：4K 附加标签优先——带 4K/蓝光标签的站独立成块
+    if is_uhd(site):
+        return "4K"
     name = site.get("name") or ""
     ext = site.get("ext")
     ext_str = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if isinstance(ext, dict) else "")
     text = f"{name} {ext_str}".lower()
     for cat in CATEGORY_ORDER:
-        if cat == "综合":
+        if cat in ("综合", "4K"):
             continue
         kws = vocab.get(cat) or []
         if any(kw and kw.lower() in text for kw in kws):
@@ -153,7 +159,19 @@ def category_of(site: dict, vocab: dict) -> str:
 
 
 def type_of(site: dict) -> str:
-    """把一个站点归入「类型」分组（采集站/直连点播/蜘蛛源/本地JS/网盘/短剧/成人/其他）。"""
+    """把一个站点归入「类型」分组（采集站/直连点播/蜘蛛源/本地JS/网盘/短剧/成人/其他）。
+
+    规则优先级（P0-2 文档化）：
+      1. 4K 附加标签：name/ext 含 4K/蓝光/杜比/HDR 等画质标签（独立于内容品类，
+         不改变下面的通道归属，只在 category_of 里归到「4K」品类块）
+      2. 短剧关键词
+      3. 成人关键词
+      4. 网盘正则
+      5. type 0/1 → CMS 接口判采集站 vs 直连点播
+      6. csp_ 前缀 → 蜘蛛源
+      7. ./ 前缀 → 本地JS
+      8. 其余 → 其他
+    """
     api = site.get("api") if isinstance(site.get("api"), str) else ""
     text = _text_of(site)
     if any(kw.lower() in text for kw in SHORT_KEYWORDS):
@@ -169,6 +187,18 @@ def type_of(site: dict) -> str:
     if api.startswith("./"):
         return "本地JS"
     return "其他"
+
+
+# P0-2：4K 附加标签关键词（与 category_of 配合，命中后归「4K」品类块）
+UHD_KEYWORDS = ("4k", "8k", "蓝光", "blu", "杜比", "dolby", "hdr", "超高清", "uhd")
+
+
+def is_uhd(site: dict) -> bool:
+    """P0-2：站点是否带 4K/蓝光等附加画质标签。"""
+    if not isinstance(site, dict):
+        return False
+    text = _text_of(site)
+    return any(k in text for k in UHD_KEYWORDS)
 
 
 def group_of(site: dict, vocab: dict = None, legacy_group: bool = False) -> str:
@@ -191,6 +221,22 @@ def group_sort_key(group: str):
     ti = GROUP_ORDER.index(typ) if typ in GROUP_ORDER else len(GROUP_ORDER)
     ci = CATEGORY_ORDER.index(cat) if cat in CATEGORY_ORDER else len(CATEGORY_ORDER)
     return (ti, ci)
+
+
+# P1-4：CMS 采集站仓内再细分二级块
+# 标准 api.php 接口（maccms 标准 provide/vod） vs app 型接口（app/聚合/短链）
+# 二级排序键：标准 api.php=0（块内靠前），app 型=1（靠后）
+_APP_API_RE = re.compile(r"/app|/api\.php/app|聚合|app接口|appapi", re.I)
+
+
+def _cms_subtype(site: dict) -> int:
+    """P1-4：CMS 采集站内部分二级。0=标准 api.php，1=app 型接口。"""
+    if not isinstance(site, dict):
+        return 1
+    api = site.get("api") if isinstance(site.get("api"), str) else ""
+    if _APP_API_RE.search(api):
+        return 1
+    return 0
 
 
 def search_verdict(site: dict, probe: dict, js_probe: dict = None, csp_probe: dict = None,
@@ -262,6 +308,52 @@ def fresh_check_ms(probe: dict) -> int:
     except (ValueError, TypeError):
         return 0
     return ms
+
+
+# ---------------- P1-3 EMA 稳定排序：速度历史平滑 + 排名抖动抑制 ----------------
+# state/speed_ema.json：{key: {"ms": <ema_ms>, "n": <采样次数>}}
+# 新 = 旧*0.7 + 新*0.3；新源前 3 次用算术平均（先攒基线，避免单次抖动带偏）。
+EMA_PATH = os.path.join("state", "speed_ema.json")
+EMA_ALPHA = 0.3
+EMA_WARMUP = 3
+
+
+def _load_ema(repo: str) -> dict:
+    """读 state/speed_ema.json；缺失/损坏返回 {}。"""
+    fp = os.path.join(repo, EMA_PATH)
+    try:
+        with open(fp, encoding="utf-8") as f:
+            doc = json.load(f)
+        return doc if isinstance(doc, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def _save_ema(repo: str, ema: dict):
+    """写回 state/speed_ema.json。失败静默（不阻断排序）。"""
+    try:
+        os.makedirs(os.path.join(repo, "state"), exist_ok=True)
+        with open(os.path.join(repo, EMA_PATH), "w", encoding="utf-8") as f:
+            json.dump(ema, f, ensure_ascii=False, indent=1)
+    except OSError:
+        pass
+
+
+def _ema_update(ema_entry: dict, new_ms: float) -> float:
+    """对单次实测 ms 做 EMA 平滑。新源前 3 次算术平均，之后 0.7/0.3 指数平滑。"""
+    n = int(ema_entry.get("n", 0))
+    old = ema_entry.get("ms")
+    if not isinstance(old, (int, float)) or old <= 0:
+        ema_entry["ms"] = new_ms
+        ema_entry["n"] = 1
+        return new_ms
+    if n < EMA_WARMUP:
+        # 暖机期：算术平均攒基线
+        ema_entry["ms"] = (old * n + new_ms) / (n + 1)
+    else:
+        ema_entry["ms"] = old * (1 - EMA_ALPHA) + new_ms * EMA_ALPHA
+    ema_entry["n"] = n + 1
+    return ema_entry["ms"]
 
 
 def speed_of(key, probe_map: dict, spider_map: dict, js_map: dict = None, csp_map: dict = None,
@@ -517,6 +609,8 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
 
     # ---- 加权综合分排序：组块外排，组内按综合分（docs/ranking-scoring.md）----
     weights = parse_weights()
+    # P1-3：加载速度 EMA 历史，对本轮实测 ms 做平滑后再归一
+    ema_map = _load_ema(".")
     raw = []
     known_lats, known_hits = [], []
     for s in enriched:
@@ -525,6 +619,10 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
             continue
         key = s.get("key")
         lat, _ = speed_of(key, pmap, smap, jmap, cmap, dmap) if key else (UNKNOWN_LATENCY, "")
+        # P1-3：EMA 平滑（仅对实测到速度的源；UNKNOWN_LATENCY 不动）
+        if key and lat < UNKNOWN_LATENCY:
+            e = ema_map.setdefault(key, {})
+            lat = int(round(_ema_update(e, float(lat))))
         ar = avail_rank(s, pmap, smap, jmap, cmap, dmap)
         hits = richness_hits(key, pmap, dmap)
         stab = (stab_map or {}).get(key)
@@ -533,6 +631,8 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
         if hits >= 0:
             known_hits.append(hits)
         raw.append((s, (lat, ar, hits, stab, key)))
+    # P1-3：写回 EMA 历史
+    _save_ema(".", ema_map)
 
     if known_lats:
         lmin_l = math.log10(min(known_lats))
@@ -567,12 +667,16 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
         avail_inv = 1.0 - ar / 5.0
         stab_v = 0.5 if stab is None else max(0.0, min(1.0, float(stab)))
         fresh = 1.0 if fresh_check_ms(pmap.get(key) or {}) else 0.5
+        # 3.5-2：干净度——probe 标记 ad_warn 的源该维取 0，其余中性 0.5（无信号不惩罚）
+        probe_rec = pmap.get(key) or {}
+        clean_v = 0.0 if probe_rec.get("ad_warn") else 0.5
         scores[id(s)] = (weights["avail"] * avail_inv
                          + weights["latency"] * _lat_norm(lat)
                          + weights["stability"] * stab_v
                          + weights["richness"] * _rich_norm(hits)
                          + weights["freshness"] * fresh
-                         + weights["group"] * group_conf(s))
+                         + weights["group"] * group_conf(s)
+                         + weights.get("cleanliness", 0.0) * clean_v)
 
     def _key_score(s):
         if not isinstance(s, dict):
@@ -581,7 +685,9 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
         gidx = group_sort_key(group)
         sp = s.get("searchable")
         spref = 0 if sp == 1 else (1 if sp is None else 2)
-        return (gidx, -scores.get(id(s), 0.0), spref, str(s.get("name") or ""))
+        # P1-4：采集站仓内再分二级块（标准 api.php 在前，app 型在后）
+        cms_sub = _cms_subtype(s)
+        return (gidx, cms_sub, -scores.get(id(s), 0.0), spref, str(s.get("name") or ""))
 
     enriched.sort(key=_key_score)
     return enriched, stats
@@ -609,6 +715,12 @@ def print_report(sites: list, stats: Counter):
               f"| D5 {stats.get('drpy_D5', 0)} | D3+ {stats.get('drpy_D3p', 0)}")
     if stats.get("mirror_skipped"):
         print(f"同库镜像已剔除: {stats['mirror_skipped']} 个")
+    # 3.4-3：「其他」分类占比统计（未命中任何品类的源占比，词表覆盖率体检）
+    total_n = sum(seen.values())
+    other_n = seen.get("其他", 0) + sum(v for g, v in seen.items() if g and g.endswith("-其他"))
+    if total_n:
+        print(f"[3.4-3] 「其他」分类占比: {other_n}/{total_n} = {100*other_n/total_n:.1f}%"
+              f"（越高说明 category_vocab 词表覆盖率越需扩充）")
 
 
 def _load_json(repo, rel):

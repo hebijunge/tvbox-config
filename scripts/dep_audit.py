@@ -142,11 +142,17 @@ def main() -> int:
             refs.add(ref)
     print(f"[audit] 产物中引用到的 deps 路径：{len(refs)} 条")
 
+    # P2-1：未引用文件 + 7 天保留期（mtime < 7 天的新文件不进清理候选，避免误删刚拉的）
+    import time as _time
+    _now = _time.time()
     unreferenced = []
     for p, s in files:
         rel = os.path.relpath(p, repo).replace("\\", "/")
         if rel not in refs:
-            unreferenced.append({"path": rel, "bytes": s})
+            age_days = (_now - os.path.getmtime(p)) / 86400.0
+            unreferenced.append({"path": rel, "bytes": s,
+                                 "age_days": round(age_days, 1),
+                                 "gc_candidate": age_days >= 7.0})
     un_bytes = sum(u["bytes"] for u in unreferenced)
     unreferenced.sort(key=lambda u: -u["bytes"])
     print(f"[audit] 未被引用：{len(unreferenced)} 个，{un_bytes/1024/1024:.1f} MB"

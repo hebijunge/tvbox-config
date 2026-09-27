@@ -19,7 +19,6 @@ on:
       - "vod.json"
       - "live.json"
       - "short.json"
-      - "list.json"
       - "status.json"
       - "exports/**"
       - "lives/**"
@@ -55,7 +54,7 @@ jobs:
         run: |
           mkdir -p site/exports site/lives site/packs site/stores
           cp index.html site/
-          for f in tvbox.json vod.json live.json short.json list.json status.json; do
+          for f in tvbox.json vod.json live.json short.json status.json; do
             [ -f "$f" ] && cp "$f" site/ || echo "缺少 $f（跳过）"
           done
           # exports 白名单（不含 any adult 相关导出）

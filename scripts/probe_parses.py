@@ -284,6 +284,53 @@ def run_probe(parses: list, workers: int = 5) -> list:
     return results
 
 
+# V5：统一 grade 映射（对齐 drpy/csp 的 D0-D5 口径，便于 rank_sites 复用）
+_PARSE_GRADE = {
+    "ok": "D5",           # 能解析出直链 = 完全可用
+    "ad_warn": "D4",      # 可用但带广告
+    "anti_chain": "D2",   # 防盗链拦截，客户端可能可用
+    "no_playable": "D1",  # 能连通但解析不出直链
+    "unreachable": "D0",
+    "placeholder": "D?",
+}
+
+
+def grade_of(result: dict) -> str:
+    """V5：把 probe_parses 的 status 统一映射成 D0-D5 grade。"""
+    return _PARSE_GRADE.get((result or {}).get("status"), "D0")
+
+
+# V5：网盘解析 token 有效性检查（约40行）
+# 网盘解析接口（夸克/百度/阿里）常带 token 参数；token 过期时接口返回 401/403 或空。
+_PAN_TOKEN_HOSTS = ("pan.quark", "aliyundrive", "alipan", "pan.baidu", "115.com")
+
+
+def check_pan_token(parse_item: dict) -> dict:
+    """V5：检查网盘解析接口的 token 是否有效。
+
+    只对网盘类 host 生效；非网盘解析返回 {"pan": False}。
+    通过发一次轻量请求看是否返回 401/403（token 失效特征）。
+    """
+    url = (parse_item or {}).get("url", "")
+    host = ""
+    try:
+        host = urllib.parse.urlparse(url).netloc.lower()
+    except Exception:  # noqa: BLE001
+        pass
+    if not any(h in host for h in _PAN_TOKEN_HOSTS):
+        return {"pan": False}
+    # 轻量请求：拼测试视频 URL，看是否 401/403
+    probe_url = url + TEST_VIDEO_URL
+    req = urllib.request.Request(probe_url, headers=UA)
+    try:
+        with urllib.request.urlopen(req, timeout=(CONNECT_TIMEOUT, READ_TIMEOUT)) as r:
+            return {"pan": True, "token_ok": r.status == 200, "http_status": r.status}
+    except urllib.error.HTTPError as e:
+        return {"pan": True, "token_ok": e.code not in (401, 403), "http_status": e.code}
+    except Exception as e:  # noqa: BLE001
+        return {"pan": True, "token_ok": False, "error": f"{type(e).__name__}: {e}"[:80]}
+
+
 def summarize(results: list) -> dict:
     from collections import Counter
     c = Counter(r["status"] for r in results)
@@ -298,6 +345,9 @@ def summarize(results: list) -> dict:
 
 
 def write_probe_json(results: list, summary: dict):
+    # V5：统一加 grade 字段
+    for r in results:
+        r["grade"] = grade_of(r)
     os.makedirs(os.path.dirname(PROBE_OUT), exist_ok=True)
     tmp = PROBE_OUT + ".tmp"
     with open(tmp, "w", encoding="utf-8") as f:

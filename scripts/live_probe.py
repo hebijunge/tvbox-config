@@ -98,6 +98,27 @@ def http_get(url: str, timeout: int, rng: str = None, ua: str = None):
         return 0, None, None
 
 
+def _head_probe(url: str, timeout: int = 4) -> bool:
+    """V13 直播 HEAD 轻探：先 HEAD（失败回退 Range=bytes=0-0）确认连通，再全量 GET。
+    不支持 HEAD 的源（405/501）直接回退全量 GET。"""
+    req = urllib.request.Request(url, headers={"User-Agent": UA}, method="HEAD")
+    try:
+        with urllib.request.urlopen(req, timeout=timeout, context=CTX) as r:
+            if r.status in (200, 206):
+                return True
+    except urllib.error.HTTPError as e:
+        # 405/501 不支持 HEAD → 回退全量 GET（视为连通）
+        if e.code in (405, 501):
+            return True
+        # 401/403 等鉴权类错误也算连通（真实拉取时带 UA 可能过）
+        if e.code in (401, 403):
+            return True
+        return False
+    except Exception:
+        return False
+    return False
+
+
 def is_gateway_blocked(status: int, headers) -> bool:
     if status == 502 and headers:
         server = str(headers.get("Server") or "")
@@ -262,6 +283,10 @@ def probe_source(entry: dict):
         if entry.get(k):
             rec[k] = entry[k]
     status, headers, body = 0, None, None
+    # V13：先 HEAD/Range 轻探连通性，不通直接判 dead（省全量拉取）
+    if not _head_probe(url):
+        rec.update(status="dead", reason="head_probe_failed", channels=0)
+        return rec
     for ua in UA_POOL_LIVE[:max(1, UA_ROTATE_MAX)]:   # 吸收点 P1-3：源列表拉取失败换 UA 重试
         status, headers, body = http_get(url, SOURCE_TIMEOUT, ua=ua)
         if status == 200 and body:

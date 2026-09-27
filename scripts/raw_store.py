@@ -25,6 +25,7 @@ raw/（上游）与 raw-vod/（点播依赖），按 sha256 做每日变化检�
   RAW_HISTORY_KEEP=60  每个源在 manifest.history 里保留的上一版归档条数
 """
 import datetime
+import gzip
 import hashlib
 import json
 import os
@@ -215,7 +216,9 @@ def manifest_has(store: str, key: str) -> bool:
 
 
 def read_stored(store: str, key: str):
-    """读取该 key 最后可用版本的原始字节；从未入库或文件丢失返回 None。"""
+    """读取该 key 最后可用版本的原始字节；从未入库或文件丢失返回 None。
+
+    C6：manifest.compressed=True 时自动 gunzip 解压。"""
     ent = load_manifest(store).get(key)
     if not isinstance(ent, dict):
         return None
@@ -223,7 +226,13 @@ def read_stored(store: str, key: str):
     try:
         if os.path.isfile(fs):
             with open(fs, "rb") as f:
-                return f.read()
+                data = f.read()
+            if ent.get("compressed"):
+                try:
+                    data = gzip.decompress(data)
+                except OSError:
+                    pass
+            return data
     except OSError:  # noqa: BLE001
         pass
     return None
@@ -259,7 +268,10 @@ def _write(fs: str, content: bytes):
 
 
 def _archive_old(store: str, rel: str, day: str):
-    """变化覆盖前把旧版归档到 history/<日期>/<rel>；失败不影响入库。"""
+    """变化覆盖前把旧版归档到 history/<日期>/<rel>；失败不影响入库。
+
+    C6 分层：归档时对 >7 天的旧文件做 gzip 压缩（.gz 后缀），manifest.path 记 compressed。
+    """
     src = os.path.join(store, rel)
     try:
         if not os.path.isfile(src):
@@ -270,6 +282,36 @@ def _archive_old(store: str, rel: str, day: str):
         return os.path.relpath(dst, store)
     except OSError:  # noqa: BLE001
         return None
+
+
+def _compress_old_history(store: str, days: int = 7):
+    """C6：把 history/ 下超过 days 天未变的归档文件 gzip 压缩（只压不删）。"""
+    hist = os.path.join(store, "history")
+    if not os.path.isdir(hist):
+        return 0
+    cutoff = (datetime.datetime.now() - datetime.timedelta(days=days)).strftime("%Y-%m-%d")
+    n = 0
+    for day_dir in os.listdir(hist):
+        if day_dir >= cutoff:
+            continue
+        d = os.path.join(hist, day_dir)
+        if not os.path.isdir(d):
+            continue
+        for root, _, names in os.walk(d):
+            for fn in names:
+                if fn.endswith(".gz"):
+                    continue
+                fp = os.path.join(root, fn)
+                try:
+                    with open(fp, "rb") as f:
+                        data = f.read()
+                    with gzip.open(fp + ".gz", "wb", compresslevel=6) as gz:
+                        gz.write(data)
+                    os.remove(fp)
+                    n += 1
+                except OSError:
+                    pass
+    return n
 
 
 def _push_history(hist: list, entry):

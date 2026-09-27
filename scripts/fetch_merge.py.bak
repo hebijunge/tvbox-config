@@ -1471,10 +1471,10 @@ def clean_parses(parses: list, *, do_probe: bool = True, probe_timeout: float = 
 # ==================== 依赖收集（jar / js / json 库文件） ====================
 DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
-DEP_TIMEOUT = 15
+DEP_TIMEOUT = 30
 DEP_MAX_BYTES = 8 * 1024 * 1024
 # 任务3：总并发提到 16，同时按域名限速（默认同域最多 4 并发，避免 raw.githubusercontent.com 限流）
-DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "16"))
+DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "64"))
 DEP_DOMAIN_CONCURRENCY = int(os.environ.get("DEP_DOMAIN_CONCURRENCY", "4"))
 _DEP_DOMAIN_LOCK = threading.Lock()
 _DEP_DOMAIN_SEMAPHORES = {}
@@ -1489,7 +1489,7 @@ def _domain_semaphore(url: str) -> "threading.Semaphore":
         sem = _DEP_DOMAIN_SEMAPHORES.get(host)
         if sem is None:
             _is_gh = any(h in host for h in ("github.com", "githubusercontent.com", "github.io"))
-            sem = threading.Semaphore(8 if _is_gh else 4)
+            sem = threading.Semaphore(48 if _is_gh else 24)
             _DEP_DOMAIN_SEMAPHORES[host] = sem
         return sem
 # 沙箱/CI 网络受限时可跳过站点验活或强制用缓存
@@ -1871,19 +1871,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         sem = _domain_semaphore(u)
         sem.acquire()
         try:
-            # 线程级硬超时：覆盖DNS解析挂起（socket超时对DNS不生效）
-            _res = [None]
-            def _do():
-                try:
-                    _res[0] = dep_download(u)
-                except Exception as _e:
-                    _res[0] = (None, f"{type(_e).__name__}: {str(_e)[:100]}")
-            _t = threading.Thread(target=_do, daemon=True)
-            _t.start()
-            _t.join(timeout=DEP_TIMEOUT + 10)  # 总超时25s，覆盖DNS+连接+读取+重试
-            if _t.is_alive():
-                return None, f"download hang (DNS?) after {DEP_TIMEOUT+10}s"
-            return _res[0]
+            return dep_download(u)
         finally:
             sem.release()
 
@@ -2081,7 +2069,6 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         try:
             os.makedirs(os.path.dirname(fp), exist_ok=True)
             open(fp, "wb").write(content)
-            del content  # 立即释放大对象内存，防OOM
         except OSError as e:
             # 单条依赖落盘失败（典型：Windows 上 URL 拼出的目录名含非法字符）
             # 绝不能让它把整轮合并带崩 —— 记成这条失败，其它依赖照常收集。
@@ -2092,31 +2079,18 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
 
     ok_map: dict = {}
     print(f"[deps] 收集 {len(entries)} 个依赖（并发 {DEP_CONCURRENCY}）...", flush=True)
-    ex = cf.ThreadPoolExecutor(DEP_CONCURRENCY)
-    futs = {ex.submit(work, e): e for e in entries}
-    pending = set(futs.keys())
-    done_count = 0
-    while pending:
-        done_set, pending = cf.wait(pending, timeout=35, return_when=cf.FIRST_COMPLETED)
-        if not done_set:
-            # 看门狗：35s无任何完成 = 全部线程挂起（Windows下urllib connect对防火墙静默丢包可能不超时）
-            print(f"  [deps] 看门狗超时：35s无进展，{len(pending)}个下载挂起，已跳过", flush=True)
-            for fut in pending:
-                fut.cancel()
-            print(f"  [deps] 已完成 {done_count}/{len(entries)}，剩余{len(pending)}个因网络挂起跳过（不影响后续产出）", flush=True)
-            break
-        for fut in done_set:
-            done_count += 1
+    with cf.ThreadPoolExecutor(DEP_CONCURRENCY) as ex:
+        futs = {ex.submit(work, e): e for e in entries}
+        for i, fut in enumerate(cf.as_completed(futs), 1):
             try:
-                rec = fut.result(timeout=2)
+                rec = fut.result()
             except Exception as _e:
                 print(f"  [deps] worker异常（已跳过）: {type(_e).__name__}: {str(_e)[:100]}", flush=True)
                 continue
             if rec.get("ok"):
                 ok_map[rec["key"]] = rec
-            if done_count % 10 == 0:
-                print(f"  ... {done_count}/{len(entries)}", flush=True)
-    ex.shutdown(wait=False)  # 不等待挂起线程，避免with块exit时死等
+            if i % 10 == 0:
+                print(f"  ... {i}/{len(entries)}", flush=True)
 
     # ---- 2b. 规则 js 内部相对 import 递归落库（限深 1 层）----
     # cat 规则集形态：每个规则 js 顶部 `import { _ } from './lib/cat.js'`，公共库必须随规则
@@ -2150,25 +2124,16 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         if not n_imp:
             break
         print(f"  [deps] 规则 js import 第 {depth+1} 层：追加 {n_imp} 个公共库依赖...", flush=True)
-        ex2 = cf.ThreadPoolExecutor(DEP_CONCURRENCY)
-        futs2 = {ex2.submit(work, e): e for e in entries[-n_imp:]}
-        pending2 = set(futs2.keys())
-        while pending2:
-            done2, pending2 = cf.wait(pending2, timeout=35, return_when=cf.FIRST_COMPLETED)
-            if not done2:
-                print(f"  [deps] import递归看门狗：{len(pending2)}个挂起已跳过", flush=True)
-                for fut in pending2:
-                    fut.cancel()
-                break
-            for fut in done2:
+        with cf.ThreadPoolExecutor(DEP_CONCURRENCY) as ex:
+            futs2 = {ex.submit(work, e): e for e in entries[-n_imp:]}
+            for fut in cf.as_completed(futs2):
                 try:
-                    rec2 = fut.result(timeout=2)
+                    rec2 = fut.result()
                 except Exception as _e2:
                     print(f"  [deps] import递归worker异常: {type(_e2).__name__}", flush=True)
                     continue
                 if rec2.get("ok"):
                     ok_map[rec2["key"]] = rec2
-        ex2.shutdown(wait=False)
 
     # ---- 3. 失败项回退：manifest 缓存 ----
     for e in entries:
@@ -2639,8 +2604,17 @@ def http_get(url: str, timeout: int, max_bytes: int = 0, rng=None, ua: str = Non
         headers.update(extra_headers)
     req = urllib.request.Request(url, headers=headers)
     t0 = time.time()
-    with _SPLIT_OPENER.open(req, timeout=timeout) as r:
-        data = r.read(max_bytes) if max_bytes else r.read()
+    # 强制设置 socket 全局超时：urllib 的 timeout 只保证连接超时，
+    # 服务器连接成功但发数据慢时 r.read() 会无限挂死，导致线程池占满、整体超时。
+    # socket.setdefaulttimeout 对连接和读取都生效，是最稳妥的超时兜底。
+    import socket as _socket
+    _old_to = _socket.getdefaulttimeout()
+    _socket.setdefaulttimeout(timeout)
+    try:
+        with _SPLIT_OPENER.open(req, timeout=timeout) as r:
+            data = r.read(max_bytes) if max_bytes else r.read()
+    finally:
+        _socket.setdefaulttimeout(_old_to)
     _ms = int((time.time() - t0) * 1000)
     if return_headers:
         return r.status, data, _ms, dict(r.headers)
@@ -5288,9 +5262,6 @@ def main() -> int:
 
     print(f"[6/6] 输出完成：tvbox.json / vod.json / live.json / short.json / adult.json / list.json / status.json / checks.json / lives/* / stores/* @ {generated_at}",
           flush=True)
-    # 依赖收集worker线程可能因网络挂起（Windows下urllib connect对防火墙静默丢包不超时），
-    # shutdown(wait=False)后仍阻止进程退出。所有产出已落盘，强制退出确保CI不超时。
-    os._exit(0)
     return 0
 
 

@@ -1,0 +1,82 @@
+name: rollback
+# P1-6 一键回滚（2026-09-27）
+# 手动触发，输入要回滚到的版本 tag，把该 tag 的产物文件覆盖回 main，
+# 再打一个 rollback-YYYY-MM-DD-bN 标记 tag，最后重触发 pages.yml 重新部署。
+#
+# 安全边界：只覆盖「产物文件」（tvbox/vod/live/short/status/checks + lives/ stores/ exports/），
+#           不回滚 .github/workflows/ 与 scripts/ 代码——回滚是产物级，不是代码级。
+# 前置：P1-4 每日已打 vYYYY-MM-DD-bN tag；旧 tag 由 release_cleanup 保留 30 天。
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "要回滚到的版本 tag（如 v2026-09-27-b1234）"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  rollback:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 校验 tag 存在且产物完整
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          git fetch --tags --force
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::tag '$TAG' 不存在，无法回滚"
+            exit 1
+          fi
+          # 该 tag 下必须有 tvbox.json，否则回滚会把产物回没
+          if ! git cat-file -e "$TAG:tvbox.json"; then
+            echo "::error::tag '$TAG' 下无 tvbox.json，拒绝回滚"
+            exit 1
+          fi
+          echo "✓ tag $TAG 校验通过，开始回滚产物"
+
+      - name: 用该 tag 的产物覆盖 main
+        env:
+          TAG: ${{ inputs.tag }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # 只检出产物文件，不动代码/workflow/依赖脚本
+          git checkout "$TAG" -- tvbox.json vod.json live.json short.json \
+            status.json checks.json lives/ stores/ exports/ 2>/dev/null || true
+          if git diff --cached --quiet && git diff --quiet; then
+            echo "main 产物与 $TAG 一致，无需回滚"
+            exit 0
+          fi
+          git add -A -- tvbox.json vod.json live.json short.json \
+            status.json checks.json lives/ stores/ exports/ || true
+          if git diff --cached --quiet; then
+            echo "产物无差异，提交取消"
+            exit 0
+          fi
+          git commit -m "chore(rollback): 回滚产物到 $TAG（P1-6 一键回滚）"
+          git pull --rebase origin main
+          git push origin main
+          # 回滚标记 tag（release_cleanup 按 30 天保留期滚动）
+          RB_TAG="rollback-$(date -u +%F)-b${GITHUB_RUN_NUMBER}"
+          git tag "$RB_TAG"
+          git push origin "$RB_TAG"
+          echo "回滚完成：main 已对齐 $TAG，标记 tag=$RB_TAG"
+
+      - name: 重触发 Pages 部署
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # main 已更新，pages.yml 由 workflow_run(push) 自动部署；这里兜底手动触发一次
+          gh workflow run pages.yml -R "$GITHUB_REPOSITORY" \
+            && echo "已重触发 pages.yml" \
+            || echo "::warning::pages.yml 手动触发失败，可到 Actions 页手动点（main push 也会自动部署）"

@@ -454,7 +454,7 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
         ("scripts/pack_local.py",           "scripts/pack_local.py"),
     ]
     extra_in_zip = []
-    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=6) as z:
+    with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as z:
         for dirpath, _, files in os.walk(build):
             for f in files:
                 fp = os.path.join(dirpath, f)

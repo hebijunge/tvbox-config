@@ -27,6 +27,7 @@ import os
 import re
 import sys
 import time
+import urllib.parse
 
 LEVEL_RANK = {"L3": 0, "L2": 1, "L1": 2, "L?": 3, "L0": 4, "S1": 5, "S0": 6}
 
@@ -40,6 +41,53 @@ def jaccard(a: set, b: set) -> float:
     if not a or not b:
         return 0.0
     return len(a & b) / len(a | b)
+
+
+def _host_of(api: str) -> str:
+    """P1-1：从 api URL 取 host（小写）。"""
+    try:
+        return (urllib.parse.urlparse(api or "").netloc or "").lower()
+    except Exception:  # noqa: BLE001
+        return ""
+
+
+def _minhash_sig(names: set, k: int = 64) -> set:
+    """P0-1：轻量 MinHash 粗筛——从片名集合取哈希后 k 个最小签名，
+    用于在 O(N^2) 全量两两比对前快速排除明显不相关的对。
+    这里用确定性哈希（Python hash 随机化，改用 md5 取 int）。"""
+    sig = set()
+    for n in names:
+        h = int(__import__("hashlib").md5(n.encode("utf-8")).hexdigest()[:12], 16)
+        sig.add(h % (2 ** 32))
+    # 保留最小 k 个作为签名
+    return set(sorted(sig)[:k])
+
+
+def _sig_jaccard(a: set, b: set) -> float:
+    if not a or not b:
+        return 0.0
+    return len(a & b) / len(a | b)
+
+
+def functional_equiv(a: dict, b: dict, name_jaccard_thr: float = 0.5) -> bool:
+    """P1-1 功能等价去重：三维指纹 = host(api) + type + 首屏 names 重合度。
+
+    与同库去重（same_library）的区别：
+      same_library 要求片名 Jaccard≥0.8 且 total 接近（同片库换域名）；
+      functional_equiv 更宽松——只要 host 不同但 type 相同、首屏片名重合≥0.5，
+      就视为「功能等价的不同壳」（同一上游 API 的不同前端包装）。
+    证据不足（host 相同 / type 不同 / names 重合低）一律不合并。
+    """
+    if not a or not b:
+        return False
+    # host 必须不同（同 host 已经被 api+ext 二级去重覆盖）
+    if _host_of(a.get("api", "")) == _host_of(b.get("api", "")):
+        return False
+    # type 必须相同（不同类型的站不能合并）
+    if a.get("type") != b.get("type"):
+        return False
+    j = jaccard(a.get("names") or set(), b.get("names") or set())
+    return j >= name_jaccard_thr
 
 
 def same_library(a: dict, b: dict, thr: float, total_tol: float):
@@ -86,7 +134,13 @@ def main() -> int:
             "level": s.get("level"), "total": l1.get("total"),
             "ms": l1.get("ms") or 99999,
             "names": {norm(n) for n in names if norm(n)},
+            # P0-1：补读 probe 的 type 字段（原始 tvbox site.type），按 type 分桶比对
+            "type": s.get("type"),
         })
+
+    # P0-1：为每个 item 预计算 MinHash 签名（粗筛用）
+    for it in items:
+        it["_sig"] = _minhash_sig(it["names"])
 
     print(f"[dedup] 参与判定 {len(items)} 个源（需 L1 通过且片名 >= 5 条）", flush=True)
 
@@ -104,12 +158,30 @@ def main() -> int:
             parent[ry] = rx
 
     pairs = []
-    for i in range(len(items)):
-        for j in range(i + 1, len(items)):
-            ok, ev = same_library(items[i], items[j], args.threshold, args.total_tol)
-            if ok:
-                union(i, j)
-                pairs.append((items[i]["key"], items[j]["key"], ev))
+    # P0-1：按 type 分桶后桶内两两比对（不同 type 的站不可能同库，直接跳过）
+    buckets = {}
+    for i, it in enumerate(items):
+        buckets.setdefault(it.get("type"), []).append(i)
+    cmp_pairs = 0
+    for t, idxs in buckets.items():
+        for ai in range(len(idxs)):
+            for bi in range(ai + 1, len(idxs)):
+                i, j = idxs[ai], idxs[bi]
+                cmp_pairs += 1
+                # P0-1：MinHash 粗筛——签名 Jaccard 太低直接跳过精确比对
+                if _sig_jaccard(items[i]["_sig"], items[j]["_sig"]) < 0.2:
+                    continue
+                ok, ev = same_library(items[i], items[j], args.threshold, args.total_tol)
+                # P1-1：功能等价去重（host 不同 / type 同 / names 重合≥0.5）
+                if not ok and functional_equiv(items[i], items[j]):
+                    ok = True
+                    ev = {"functional_equiv": True,
+                          "host_a": _host_of(items[i].get("api", "")),
+                          "host_b": _host_of(items[j].get("api", ""))}
+                if ok:
+                    union(i, j)
+                    pairs.append((items[i]["key"], items[j]["key"], ev))
+    print(f"[dedup] 分桶比对 {cmp_pairs} 对，MinHash 粗筛后精确比对 {len(pairs)} 对合并", flush=True)
 
     groups: dict = {}
     for idx in range(len(items)):

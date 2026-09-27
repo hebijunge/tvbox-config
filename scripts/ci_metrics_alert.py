@@ -125,6 +125,35 @@ def create_issue(repo: str, body: str) -> None:
         print(f"[ci_metrics_alert] 无法调用 gh CLI: {e}", file=sys.stderr)
 
 
+def check_avail_report(report_path: str = "state/avail_report.json",
+                       repo: str = "", avail_threshold: float = 90.0) -> None:
+    """P1-5: 读 avail_monitor.py 抽样结果, 可用率 < 阈值时建 issue 告警。
+
+    文件缺失(avail_monitor 未跑/被 WAF 拦)时静默跳过, 不误报。
+    """
+    try:
+        with open(report_path, encoding="utf-8") as f:
+            rep = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        print("[ci_metrics_alert] 无 avail_report.json, 跳过可用率告警")
+        return
+    rate = rep.get("avail_rate")
+    tested = rep.get("sample_tested", 0)
+    if not tested:
+        print("[ci_metrics_alert] 本轮抽样 0 个(网络被 WAF 拦?), 跳过可用率告警")
+        return
+    print(f"[ci_metrics_alert] 抽样可用率 {rate}% (阈值 {avail_threshold}%)")
+    if rep.get("below_threshold") or (rate is not None and rate < avail_threshold):
+        body = (
+            f"[ALERT] 配置可用性告警: 抽样可用率 {rate}% < {avail_threshold}%\n\n"
+            f"- 抽样数: {tested}, 可用 {rep.get('available')}, 不可用 {rep.get('unavailable')}\n"
+            f"- 生成时间: {rep.get('generated_at')}\n\n"
+            "可能原因: 上游大面积挂掉 / CI runner 出网被 WAF 误拦(连续 3 次触发紧急构建)。"
+        )
+        print(body)
+        if repo:
+            create_issue(repo, body)
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CI 关键指标下降告警")
     parser.add_argument("--tvbox", default="tvbox.json")
@@ -157,6 +186,7 @@ def main() -> int:
     else:
         print("[ci_metrics_alert] 指标无显著下降")
 
+    check_avail_report(repo=args.repo)
     save_state(args.state, cur)
     return 0
 
