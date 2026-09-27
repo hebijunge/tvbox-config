@@ -314,9 +314,8 @@ def validate_file(path, fix, all_issues, broken_refs):
 
 
 # P0-4 产出后校验：产物文件大小上限（硬错误阻断，软错误告警）
-# tvbox≤500KB / vod≤400KB / live≤200KB / deps 整目录≤200MB
+# tvbox.json 不设上限（站点规模增长后体积自然膨胀，不再作为阻断条件）
 SIZE_LIMITS = {
-    "tvbox.json": (500 * 1024, "hard"),
     "vod.json": (400 * 1024, "soft"),
     "short.json": (400 * 1024, "soft"),
     "live.json": (200 * 1024, "soft"),
