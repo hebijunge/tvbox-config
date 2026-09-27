@@ -505,6 +505,36 @@ def discover_forks(known_repos, max_upstreams=FORK_MAX_UPSTREAMS,
     return fresh
 
 
+def discover_used_by(known_repos, max_repos=20, max_queries=20):
+    """第 4.6 路：Used-by 反向链接 —— 搜代码里引用了已知上游 raw URL 的仓库。
+
+    血统反查（第4路）找的是同 owner 的其他仓；这一路找的是「别人配置里
+    引用了我们已知上游」的仓——引用了 qist/tvbox 配置的仓库，往往也是
+    同类 TVBox 配置仓。需要 GITHUB_TOKEN。
+    """
+    if not TOKEN:
+        print("  [Used-by] 需要 GITHUB_TOKEN，跳过", flush=True)
+        return set()
+    repos = set()
+    targets = sorted(known_repos)[:max_queries]
+    for full in targets:
+        q = f'"raw.githubusercontent.com/{full}/" extension:json'
+        doc = gh_api("/search/code", {"q": q, "per_page": 30})
+        if not doc:
+            continue
+        n = 0
+        for item in doc.get("items", []):
+            fn = (item.get("repository") or {}).get("full_name")
+            if fn and fn not in known_repos:
+                repos.add(fn)
+                n += 1
+        if n:
+            print(f"  [Used-by] {full} → {n} 个引用仓", flush=True)
+        time.sleep(2)
+    print(f"  [Used-by] 合计 {len(repos)} 个引用仓", flush=True)
+    return set(list(repos)[:max_repos])
+
+
 # ---------------- 第 5 路：Gitee ----------------
 # 国内大量 TVBox 配置托管在 Gitee（GitHub 常连不上，很多作者首选 Gitee），
 # 此前四路全部走 GitHub，等于漏掉整个国内盘。Gitee OpenAPI(v5) 匿名即可用。
@@ -847,6 +877,7 @@ def main() -> int:
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
     ap.add_argument("--no-forks", action="store_true", help="跳过第 4.5 路 Fork 网络挖掘")
+    ap.add_argument("--no-used-by", action="store_true", help="跳过第 4.6 路 Used-by 反向链接")
     ap.add_argument("--no-gitee", action="store_true", help="跳过第 5 路 Gitee 搜索")
     ap.add_argument("--no-web", action="store_true", help="跳过第 6 路搜索引擎+文章页")
     ap.add_argument("--max-pages", type=int, default=20, help="第 6 路最多抓取的文章页数")
@@ -870,6 +901,8 @@ def main() -> int:
         repos |= discover_lineage(known_repos, args.max_repos)
     if not args.no_forks:
         repos |= discover_forks(known_repos)
+    if not args.no_used_by:
+        repos |= discover_used_by(known_repos, args.max_repos)
     repo_urls = discover_seeds()
     # 第 2.5 路（2026-09-21 点播+容错线）：zhuiju 机器可读清单 + QingNing 结构化分节
     repo_urls |= discover_zhuiju()
