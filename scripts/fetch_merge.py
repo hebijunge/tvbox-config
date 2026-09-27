@@ -1545,18 +1545,15 @@ def is_file_ref(v: str):
 _WIN_BAD_CHARS = re.compile(r'[<>:"|?*\x00-\x1f]')
 
 
-def _win_safe_seg(seg: str) -> str:
-    """Windows 下把路径段里的非法字符替换掉。
+def _sanitize_seg(seg: str) -> str:
+    """全平台把路径段里的非法字符替换掉（以 Windows 非法字符集为兜底标准）。
 
-    只有在 `os.name == 'nt'` 时才生效 —— **Linux/CI 行为一字不改**，产物布局保持一致。
-    为什么需要：依赖落库的本地路径是从 URL 的 path 段拼出来的，而镜像前缀 URL
+    依赖落库的本地路径是从 URL 的 path 段拼出来的。镜像前缀 URL
     （`https://gh-proxy.org/https://raw.githubusercontent.com/...`）的 path 里带 `https:`，
-    在 Windows 上 `os.makedirs` 直接抛 `WinError 123 文件名、目录名或卷标语法不正确`。
-    这类路径在 Linux 上是合法目录名（本仓库里已有 `deps/liu673cn/m/https:/raw...` 这种真实案例），
-    所以问题只在本地 Windows 复现，CI 上永远看不到。
+    含冒号的目录名在 Windows 上非法（`WinError 123`），虽然 Linux 可创建，
+    但提交到远端后任何 Windows 用户 clone 都会整体失败。因此全平台统一 sanitize，
+    保证 CI 产物路径在所有平台可创建。
     """
-    if os.name != "nt":
-        return seg
     s = _WIN_BAD_CHARS.sub("_", seg)
     # Windows 还禁止以点或空格结尾，且保留名（CON/PRN/NUL…）也要避开
     s = s.rstrip(" .")
@@ -1574,16 +1571,29 @@ def dep_local_path(origin: str, url: str) -> str:
         name = url.split("?")[0].rstrip("/").rsplit("/", 1)[-1] or ""
         if not name or len(name) > 80:
             name = hashlib.md5(url.encode()).hexdigest()[:12]
-        return f"{DEPS_DIR}/remote/{_win_safe_seg(name)}"
+        return f"{DEPS_DIR}/remote/{_sanitize_seg(name)}"
     u = urllib.parse.urlparse(url)
+    # 剥离镜像前缀：https://<镜像域名>/https://<真实URL>
+    # urlparse 后 path 以 /https:/ 或 /http:/ 开头说明是镜像前缀形式，
+    # 此时 netloc 是镜像域名，path 第一段变成 https:（带冒号，Windows 非法）。
+    # 提取内嵌真实 URL 重新解析，使 netloc 还原为真实域名（如 raw.githubusercontent.com），
+    # 后续才能正确剥离 owner/repo/branch。
+    p = u.path
+    if p.startswith("/https:/") or p.startswith("/http:/"):
+        inner = p.lstrip("/")
+        if inner.startswith("https:/") and not inner.startswith("https://"):
+            inner = "https://" + inner[len("https:/"):]
+        elif inner.startswith("http:/") and not inner.startswith("http://"):
+            inner = "http://" + inner[len("http:/"):]
+        u = urllib.parse.urlparse(inner)
     segs = u.path.lstrip("/").split("/")
     if u.netloc == "raw.githubusercontent.com" and len(segs) > 3:
         segs = segs[3:]  # 剥离 owner/repo/branch，路径与仓库已入库布局一致
-    segs = [_win_safe_seg(s) for s in segs if s not in ("", ".")]
+    segs = [_sanitize_seg(s) for s in segs if s not in ("", ".")]
     path = "/".join(segs)
     if not path:
         path = hashlib.md5(url.encode()).hexdigest()[:12]
-    return f"{DEPS_DIR}/{_win_safe_seg(origin)}/{path}"
+    return f"{DEPS_DIR}/{_sanitize_seg(origin)}/{path}"
 
 
 def load_manifest() -> dict:
