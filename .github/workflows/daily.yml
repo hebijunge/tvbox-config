@@ -139,8 +139,11 @@ jobs:
           # 附件白名单 / Pages / 导航页，也不在 README 声明——公开通路隔离见 pages.yml 与下方白名单。
           # snapshot 止血（2026-09-25 P1 收口）：git add 前先轮换——解除旧日跟踪 +
           # 强制跟踪最新一日（主干树只保留最新快照；历史日归档 Release snapshot-archive）。
+          # raw 落库差异审计（原始输入 vs 发布产物），报告随 state/ 提交（2026-09-27 落库改造）
+          python scripts/raw_audit.py || true
           python scripts/snapshot_rotate.py || true
           git add tvbox.json vod.json live.json short.json adult.json list.json status.json checks.json README.md \
+                  raw/ raw-vod/ \
                   index.html lives/ state/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
           # pack_report.json 仅在 pack_local 成功时存在，防缺失阻断提交
           [ -f packs/pack_report.json ] && git add packs/pack_report.json || true

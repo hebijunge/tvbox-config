@@ -154,6 +154,7 @@ python scripts/fetch_merge.py
 8. **快照存档（P1）**：每次运行把各上游原始文件存入 `snapshot/<日期>/`（带时间戳文件名），合并产物一并留存，可回滚与失效溯源。
 9. **三通道发布（P2）**：产物同时提交 main 分支、Releases（`latest` 标签固定指向最新）与 GitHub Pages 导航页（`https://hebijunge.github.io/tvbox-config/`，2026-09-22 起，白名单组目录）；README 由 `checks.json` 自动回写各上游可用性状态（🟢🟡🔴）。Release 白名单外陈旧资产每日由 `scripts/release_cleanup.py` 自动清理。
 10. **社区收录（P2）**：提 issue 按模板推荐上游 → 机器人自动验活 → 可用者自动开 PR 登记 `candidate_upstreams.json`，人工确认后收编。
+11. **原始源落库 + 变化检测（2026-09-27）**：上游原始文件先入库（直播/配置 → `raw/` 字节级镜像 + history 归档；点播依赖 → `raw-vod/` sha256 账本），每日哈希比对——有变化才重跑聚合，全部无变化跳过聚合沿用既有产物（`state/raw_run.json` 记台账）；**上游删除/404 绝不跟随删除本地最后可用版**，清单标 `deleted_upstream` 继续供聚合、也不会被自动停用打死。详见 `docs/RAW_STORE.md`，差异审计跑 `python3 scripts/raw_audit.py`。
 
 ## 上游清单
 

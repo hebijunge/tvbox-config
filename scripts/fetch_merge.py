@@ -38,6 +38,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))  # scripts 内互
 from config_decode import decode_config   # 吸收点 P1-1：混淆配置解码链（独立实现）
 import adult_leak_check as _adult_gate    # 门禁扫描语义单一事实源（P0-2 红线对齐）
 import live_aggregate as _la              # 词表驱动 adult 判定（is_adult / is_adult_url）
+import raw_store                          # 输入层原始源镜像（落库/每日变化检测/上游删除保护）
 
 BEIJING = timezone(timedelta(hours=8))
 UA = {"User-Agent": "okhttp/3.15", "Accept": "*/*"}
@@ -1420,6 +1421,15 @@ DEP_CONCURRENCY = int(os.environ.get("DEP_CONCURRENCY", "8"))
 SKIP_SITE_TEST = os.environ.get("SKIP_SITE_TEST", "0") == "1"
 SKIP_REFRESH = os.environ.get("SKIP_REFRESH", "0") == "1"
 
+# ---- 输入层原始源镜像（raw 落库 + 每日变化检测 + 上游删除保护，2026-09-27 落库改造）----
+# RAW_VOD_VERIFY：点播依赖的每日上游验证模式——
+#   on-change（默认）：仅当本轮有上游原始文件变化时才逐个验证当前配置引用的依赖；
+#   always：每轮全量验证；off：不主动验证（拉取失败时仍走 raw-vod 删除保护回退）。
+# 依据：上游配置不变 ⇒ 依赖集合与内容不变，可整组跳过（变化驱动重跑）。
+RAW_VOD_VERIFY = os.environ.get("RAW_VOD_VERIFY", "on-change")
+FORCE_FULL_RUN = os.environ.get("FORCE_FULL_RUN", "0") == "1"  # 置 1 忽略「无变化跳过聚合」门控
+RAW_VOD_VERIFY_ACTIVE = False   # main() 运行时置位，collect_and_rewrite_deps 据此决定是否逐依赖验证
+
 _IDNA_CACHE = {}
 
 
@@ -1765,19 +1775,76 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         kind_hint, url, origin = e
         lp = dep_local_path(origin, url)
         fp = os.path.join(lp)
-        rec = {"key": f"{origin}|{url}", "url": url, "origin": origin, "local": lp,
+        rkey = f"{origin}|{url}"
+        rec = {"key": rkey, "url": url, "origin": origin, "local": lp,
                "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": ""}
-        # isfile 而非 exists：上游 jar 路径可能与 deps 内目录同名（CI run
-        # 35771827233 实证 'deps/.../sites/码上👓多' 是目录），目录走重新下载，
-        # 落盘失败由下方 try/except 兜住，不炸整轮合并
-        if os.path.isfile(fp) and os.path.getsize(fp) > 0:
-            content = open(fp, "rb").read()
-        else:
-            content, ch = dep_download(url)
-            rec["channel"] = ch if content else str(ch)
-            if content is None:
-                rec["err"] = str(ch)
-                return rec
+        content = None
+        ch = ""
+        raw_st = None
+
+        def _vod_rel():
+            # deps/<origin>/<path> → raw-vod/<origin>/<path>（与 deps 布局一一镜像，审计可直接对比）
+            return lp[len("deps/"):] if lp.startswith("deps/") else lp
+
+        def _vod_ingest(data: bytes) -> str:
+            # 账本模式（store_bytes=False）：只记 sha256/状态，不落字节——deps/ 已
+            # 700MB+，再镜像字节会撑爆仓库；deps/ 生效文件本身就是最后可用版落盘。
+            return raw_store.ingest(raw_store.RAW_VOD_DIR, rkey, url, data, rel=_vod_rel(),
+                                    store_bytes=False)["status"]
+
+        if RAW_VOD_VERIFY_ACTIVE:
+            # ---- 每日验证模式（2026-09-27 落库改造）----
+            # 无条件拉上游 → raw-vod 账本 sha256 变化检测（变了才覆盖 deps/）；
+            # 上游删除/404 → deps/ 本地生效文件即最后可用版（管线从不删除它），
+            # 标记 deleted_upstream 继续使用，绝不跟随删除。
+            dl, dch = dep_download(url)
+            if dl is not None:
+                try:
+                    raw_st = _vod_ingest(dl)
+                except OSError as e:  # noqa: BLE001 —— 存档失败不阻断依赖收集
+                    print(f"  [raw-store] {rkey} 入库失败：{e}", flush=True)
+                content, ch = dl, dch
+                rec["channel"] = ch
+            else:
+                has = raw_store.manifest_has(raw_store.RAW_VOD_DIR, rkey)
+                if not has and os.path.isfile(fp) and os.path.getsize(fp) > 0:
+                    try:
+                        _vod_ingest(open(fp, "rb").read())   # 首次部署：用本地生效文件回填账本
+                        has = True
+                    except (OSError, ValueError):
+                        has = False
+                if has and os.path.isfile(fp) and os.path.getsize(fp) > 0:
+                    # 上游已删：deps/ 生效文件就是最后可用版，保留并标记删除
+                    raw_store.mark_deleted(raw_store.RAW_VOD_DIR, rkey, str(dch))
+                    content = open(fp, "rb").read()
+                    ch = "raw-store:上游已删，沿用 deps 最后可用版"
+                    rec["channel"] = ch
+                    raw_st = "deleted_upstream_kept"
+                # 账本与本地文件都没有 → 落到下方既有路径（重试下载），行为同旧版
+        if content is None:
+            # isfile 而非 exists：上游 jar 路径可能与 deps 内目录同名（CI run
+            # 35771827233 实证 'deps/.../sites/码上👓多' 是目录），目录走重新下载，
+            # 落盘失败由下方 try/except 兜住，不炸整轮合并
+            if os.path.isfile(fp) and os.path.getsize(fp) > 0:
+                content = open(fp, "rb").read()
+                if raw_store.ENABLED and not raw_store.manifest_has(raw_store.RAW_VOD_DIR, rkey):
+                    # 本地生效文件在、raw-vod 存档缺（首次部署回填）
+                    try:
+                        raw_st = _vod_ingest(content)
+                    except OSError as e:  # noqa: BLE001
+                        print(f"  [raw-store] {rkey} 入库失败：{e}", flush=True)
+            else:
+                content, ch = dep_download(url)
+                rec["channel"] = ch if content else str(ch)
+                if content is None:
+                    rec["err"] = str(ch)
+                    return rec
+                if raw_store.ENABLED:
+                    try:
+                        raw_st = _vod_ingest(content)
+                    except OSError as e:  # noqa: BLE001
+                        print(f"  [raw-store] {rkey} 入库失败：{e}", flush=True)
+        rec["raw_status"] = raw_st
         hint = {"jar": "jar", "zip": "jar", "js": "js", "json": "json", "php": "jar"}.get(
             url.lower().split("?")[0].rsplit(".", 1)[-1], "")
         kind = dep_classify(hint, content)
@@ -1856,6 +1923,18 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
 
     # ---- 4. 改写引用 ----
     stats = {"total": len(entries), "collected": len(ok_map), "rewritten": 0, "kept": 0, "spider": 0}
+    # raw-store 依赖侧入库结果（本轮实际收集到的依赖中各转移状态计数）
+    raw_counts = {"new": 0, "changed": 0, "changed_recovered": 0, "restored": 0,
+                  "unchanged": 0, "deleted_upstream_kept": 0}
+    for _rec in ok_map.values():
+        _rs = _rec.get("raw_status")
+        if _rs in raw_counts:
+            raw_counts[_rs] += 1
+    stats["raw_counts"] = raw_counts
+    if RAW_VOD_VERIFY_ACTIVE:
+        print(f"[deps] raw-store 验证：new {raw_counts['new']} / changed "
+              f"{raw_counts['changed'] + raw_counts['changed_recovered']} / unchanged "
+              f"{raw_counts['unchanged']} / 上游已删沿用 {raw_counts['deleted_upstream_kept']}", flush=True)
     missing = []
 
     def md5_of(local: str):
@@ -3414,23 +3493,45 @@ def main() -> int:
     def do_fetch(item):
         u, ok, _tag = item
         if not ok:
-            return u, None, "skipped", "", ""
+            return u, None, "skipped", "", "", None
         raw, info, ok_url = fetch_raw(u["url"], u.get("mirrors"))
         d_method = ""
+        raw_st = None
+        store_dir = os.path.join(raw_store.RAW_DIR, "live" if u["kind"] == "m3u" else "vod")
+        if raw_store.ENABLED:
+            # ---- 输入层原始源镜像入库（2026-09-27 落库改造）----
+            # 入库的是「下载到的原始字节」（解码前），保证 raw/ 是真正的上游原样留档。
+            if raw is None:
+                # 上游删除保护：拉取失败（404/删除/网络不可达）时，只要 raw-store 里有
+                # 该源最后成功下载的版本，就沿用之——绝不跟随上游删除本地版本，
+                # 也不把该源打成 dead（避免被自动黑名单停用而丢源）。
+                stored = raw_store.read_stored(store_dir, u["name"])
+                if stored is not None:
+                    raw_store.mark_deleted(store_dir, u["name"], info)
+                    raw = stored
+                    raw_st = "deleted_upstream_kept"
+                    info = (f"上游已删/不可达（{str(info)[:80]}），raw-store 沿用最后可用版"
+                            f"（{raw_store.today()} 标记 deleted_upstream）")
+            else:
+                try:
+                    raw_st = raw_store.ingest(store_dir, u["name"], u["url"], raw)["status"]
+                except OSError as e:  # noqa: BLE001 —— 落库失败不阻断主流程
+                    print(f"  [raw-store] {u['name']} 入库失败：{e}", flush=True)
         # 吸收点 P1-1：混淆配置解码（仅 tvbox 配置类；明文零开销直通，
         # 解码失败按候选失败处理，绝不把密文残留进下游解析/快照）。
         if raw is not None and u.get("kind") == "tvbox":
             raw, d_method = decode_config(raw)
             if raw is None:
                 info = f"decode failed: {d_method}"
-        return u, raw, info, ok_url, d_method
+        return u, raw, info, ok_url, d_method, raw_st
 
     with cf.ThreadPoolExecutor(min(8, CONCURRENCY)) as ex:
         fetched = list(ex.map(do_fetch, fetchable))
 
     snapshot_paths = []
     disabled_now_list = []
-    for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method) in zip(fetchable, fetched):
+    rawstore_changed = []   # 本轮 raw-store 判定「有变化」的上游（驱动下游重跑；canary 除外）
+    for (u, fetchable_ok, tag), (u2, raw, info, ok_url, d_method, raw_st) in zip(fetchable, fetched):
         name, kind = u["name"], u["kind"]
         state_ent = state.get(name) if isinstance(state.get(name), dict) else {}
         rec = {
@@ -3443,6 +3544,9 @@ def main() -> int:
             "last_ok_at": state_ent.get("last_ok_at", ""),
             "decode": d_method, "success_url": ok_url or "",
         }
+        rec["raw_status"] = raw_st
+        if raw_st in raw_store.RUN_TRIGGER_STATUSES and not u.get("canary"):
+            rawstore_changed.append(name)   # canary 只监控不合并，其变化不驱动重跑
         if not fetchable_ok:
             checks.append(rec)
             interfaces.append(rec)
@@ -3578,6 +3682,34 @@ def main() -> int:
     if not usable_config:
         print("所有配置类上游均不可用，中止（不产出配置）", flush=True)
         return 1
+
+    # ---- 变化驱动重跑门控（2026-09-27 落库改造）----
+    # raw-store 判定全部上游原始文件无变化（含「上游已删沿用最后可用版」——内容同样
+    # 无变化，绝不因上游删除触发下游删除）且已有已发布产物时，跳过本轮聚合：
+    # 产物继续引用上一版；探活/验活由 validate.yml 与各 probe 步骤照常承担。
+    # 上游有任一变化（new/changed/restored/changed_recovered）→ 照常全量聚合。
+    if (raw_store.ENABLED and not FORCE_FULL_RUN and not rawstore_changed
+            and os.path.exists("tvbox.json") and os.path.exists("live.json")):
+        skip_doc = {
+            "date": raw_store.today(),
+            "mode": "skipped_unchanged",
+            "note": ("全部上游原始文件无变化（raw-store sha256 比对），跳过聚合，沿用既有产物；"
+                     "上游删除沿用最后可用版不触发重跑；探活由 validate/巡检承担"),
+            "upstreams_total": len(active_upstreams),
+            "changed": [],
+        }
+        os.makedirs("state", exist_ok=True)
+        with open(os.path.join("state", "raw_run.json"), "w", encoding="utf-8") as f:
+            json.dump(skip_doc, f, ensure_ascii=False, indent=1)
+        print("[raw-store] 全部上游无变化 → 跳过聚合，沿用既有产物（详见 state/raw_run.json）", flush=True)
+        return 0
+    # 全量重跑路径：留下变化台账，供审计与追踪「哪次变化触发了重跑」
+    os.makedirs("state", exist_ok=True)
+    with open(os.path.join("state", "raw_run.json"), "w", encoding="utf-8") as f:
+        json.dump({"date": raw_store.today(), "mode": "full",
+                   "changed": rawstore_changed,
+                   "note": "本轮有上游原始文件变化（或首轮/FORCE_FULL_RUN），已执行全量聚合"},
+                  f, ensure_ascii=False, indent=1)
 
     dup_drops = secondary_dedup_sites(sites_by_key, site_origin_name, site_origin_score)
     if dup_drops:
@@ -3768,7 +3900,7 @@ def main() -> int:
     # ---- [4/6] 直播源分类测速优选 ----
     print("[4/6] 直播源分类测速优选（Guovin 上游 → 央视/卫视/港台/其他）...", flush=True)
     m3u_entries = []
-    for (u, fetchable_ok, tag), (u2, raw, info, _ok_url, _d_method) in zip(fetchable, fetched):
+    for (u, fetchable_ok, tag), (u2, raw, info, _ok_url, _d_method, _raw_st) in zip(fetchable, fetched):
         if u["kind"] != "m3u" or raw is None:
             continue
         try:
@@ -3868,6 +4000,12 @@ def main() -> int:
         print(f"    按来源上游补回 spider 的源：{osp_stats['assigned']} 个"
               f"（与全局同包 {osp_stats.get('same_as_global', 0)}、上游未声明 "
               f"{osp_stats.get('origin_no_spider', 0)}）", flush=True)
+    # raw-store 依赖每日验证开关：上游有变化（或 always）才逐依赖验证（变化驱动重跑）；
+    # 上游全无变化 ⇒ 依赖集合与内容不变，整组跳过验证、沿用 deps/ 与 raw-vod/ 缓存。
+    global RAW_VOD_VERIFY_ACTIVE
+    RAW_VOD_VERIFY_ACTIVE = (
+        raw_store.ENABLED and RAW_VOD_VERIFY != "off"
+        and (RAW_VOD_VERIFY == "always" or bool(rawstore_changed)))
     dep_stats = collect_and_rewrite_deps(tvbox, site_origin_name, spider_origin_info)
     loc_stats = localize_external_refs(tvbox)
     # 安全网：没能落库的 per-site jar 撤掉，避免留下客户端解析不了的相对路径
@@ -4145,6 +4283,15 @@ def main() -> int:
             "site_fail_limit": SITE_FAIL_LIMIT,
             "category_overrides": len(category_overrides),
             "secondary_dedup_dropped": dup_drops[:50],
+        },
+        "raw_store": {
+            "note": ("输入层原始源镜像（raw/=上游原样留档，raw-vod/=点播依赖留档）；"
+                     "upstream_deleted=上游已删但本地保留最后可用版，发布产物继续引用"),
+            "upstreams": raw_store.summarize(os.path.join(raw_store.RAW_DIR)),
+            "upstreams_changed": rawstore_changed,
+            "vod_deps": raw_store.summarize(raw_store.RAW_VOD_DIR),
+            "vod_verify_active": RAW_VOD_VERIFY_ACTIVE,
+            "vod_dep_transitions": dep_stats.get("raw_counts", {}),
         },
         "adult_clean": {
             "note": "2026-09-23 adult.json 生成逻辑优化：多信号分类 + 解析池清洗 + 上游归类",
