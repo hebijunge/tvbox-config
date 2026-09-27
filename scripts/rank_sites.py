@@ -74,9 +74,19 @@ def _text_of(site: dict) -> str:
     return f"{site.get('name') or ''} {site.get('key') or ''} {site.get('api') or ''} {ext_str}".lower()
 
 
-def group_of(site: dict) -> str:
-    """把一个站点归入分组（分类维度）。"""
+def group_of(site: dict):
+    """把一个站点归入分组（分类维度）。
+
+    多信号交叉分类（2026-09-27 P0）：
+      采集站   = type 0/1 + (api 命中 CMS_API_RE OR ext 字段含 cms 关键词)
+      蜘蛛源   = type 3 + (api 以 csp_ 开头 OR 站点带非空 jar 字段)
+      本地JS   = api 以 ./ 开头且以 .js 结尾（排除 ./jar/ 下的 spider.jar 运行时引用）
+      网盘     = ext/api/name 命中 PAN 正则（保持现状）
+    短剧/成人仍按全量文本关键词前置命中（成人词的匹配范围在 task2 收窄为 ext/api）。
+    """
     api = site.get("api") if isinstance(site.get("api"), str) else ""
+    ext = site.get("ext")
+    ext_str = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if isinstance(ext, dict) else "")
     text = _text_of(site)
     if any(kw.lower() in text for kw in SHORT_KEYWORDS):
         return "短剧"
@@ -84,12 +94,26 @@ def group_of(site: dict) -> str:
         return "成人"
     if PAN_KEY_RE.search(text) or PAN_NAME_RE.search(text) or PAN_EXT_RE.search(text):
         return "网盘"
-    if site.get("type") in (0, 1):
-        return "采集站" if CMS_API_RE.search(api) else "直连点播"
+    typ = site.get("type")
+    jar = site.get("jar")
+    has_jar = bool(jar and str(jar).strip())
+    # 采集站 / 直连点播：type 0/1
+    if typ in (0, 1):
+        if CMS_API_RE.search(api) or "cms" in ext_str.lower():
+            return "采集站"
+        return "直连点播"
+    # 本地JS：./ 相对路径且 .js 结尾（drpy 规则/运行时均为本地 JS 文件）；
+    # ./jar/ 下是 csp 运行时 jar 引用，不算本地JS。先于蜘蛛源判定——drpy 源同样
+    # 带 jar 字段（指向 drpy 运行时），不能凭 jar 误判成 csp 蜘蛛。
+    if api.startswith("./") and api.endswith(".js") and not api.startswith("./jar/"):
+        return "本地JS"
+    # 蜘蛛源：type 3 + (csp_ 协议前缀 或 非空 jar 运行时)
+    if typ in (3, "3"):
+        if api.startswith("csp_") or has_jar:
+            return "蜘蛛源"
+    # 兜底：csp_ 前缀是蜘蛛协议的强标记，即便 type 字段缺失也归蜘蛛源
     if api.startswith("csp_"):
         return "蜘蛛源"
-    if api.startswith("./"):
-        return "本地JS"
     return "其他"
 
 
