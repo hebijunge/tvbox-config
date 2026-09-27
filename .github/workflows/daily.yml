@@ -155,6 +155,9 @@ jobs:
         # 见 state/adult_leak_report.json。
         run: python scripts/adult_leak_check.py
 
+      - name: 配置质量代理质检
+        run: python scripts/config_validate.py || true
+
       - name: 提交并推送（有变更时；守卫触发则仅落守卫日报）
         if: steps.fetch_merge.outputs.guard != 'true'
         run: |
