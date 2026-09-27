@@ -90,7 +90,13 @@ def group_of(site: dict):
     text = _text_of(site)
     if any(kw.lower() in text for kw in SHORT_KEYWORDS):
         return "短剧"
-    if any(kw.lower() in text for kw in ADULT_KEYWORDS):
+    # 成人关键词只在 api/ext 中匹配，不看 name（2026-09-27 P0）：
+    # name 是给人看的展示名，常带「传媒/资源」等通用词，按名命中会把正常资源站
+    # 误划进成人组；api/ext 才是后端真实形态。安全门禁 adult_gate_scan 仍全量扫描
+    # 所有字符串（保持严格），此处仅收窄「分组」口径，两处不矛盾——漏分进成人组的
+    # 站仍会被门禁拦截重定向 adult.json。
+    adult_text = (api + " " + ext_str).lower()
+    if any(kw.lower() in adult_text for kw in ADULT_KEYWORDS):
         return "成人"
     if PAN_KEY_RE.search(text) or PAN_NAME_RE.search(text) or PAN_EXT_RE.search(text):
         return "网盘"
