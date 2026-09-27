@@ -2,10 +2,68 @@
  "entries": [
   {
    "name": "聚合·分类直播",
-   "url_raw": "lives/live_all.txt",
-   "status": "dropped",
-   "reason": "relative_path",
-   "channels": 0
+   "url_raw": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_all.txt",
+   "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_all.txt",
+   "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
+   "ua": "TVBox",
+   "channels": 8122,
+   "groups": [
+    "其他",
+    "卫视",
+    "地方-上海",
+    "地方-云南",
+    "地方-内蒙古",
+    "地方-北京",
+    "地方-吉林",
+    "地方-四川"
+   ],
+   "bytes": 639233,
+   "stream_tests": [
+    {
+     "stream": "http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226457/index.m3u8",
+     "ok": false,
+     "why": "no_response"
+    },
+    {
+     "stream": "http://tvpull.dxhmt.cn:9081/tv/11221-1.m3u8?%E5%85%B3%E6%B3%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7[%E6%99%B4%E5",
+     "ok": false,
+     "why": "http_403"
+    },
+    {
+     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
+     "ok": true,
+     "why": "ct:audio/x-mpegurl"
+    },
+    {
+     "stream": "https://live.ottiptv.cc/douyu/8883122",
+     "ok": true,
+     "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "http://139.129.231.228:50060/rtp/239.21.1.162:5002",
+     "ok": false,
+     "why": "no_response"
+    }
+   ],
+   "streams_ok": 2,
+   "status": "ok",
+   "ffprobe": [
+    {
+     "stream": "https://live.ottiptv.cc/douyu/8883122",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "aac",
+       "h264"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    }
+   ]
   }
  ]
 }
