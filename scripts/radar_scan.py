@@ -4,6 +4,23 @@
 源雷达扫描（P2，QingNing / ngo5 / dongyubin 三个导航仓作为种子）：
   每周抓取种子 README → 提取候选链接（json/m3u/txt 或 tvbox/live/iptv 关键词）→ 快速验活
   → radar/candidates.json（人工确认后收编进 fetch_merge.py 的 UPSTREAMS）。
+
+输入
+----
+  - 硬编码种子仓 README URL（导航型仓库本身不直接当上游，只用来顺藤摸瓜找真实上游）。
+
+输出
+----
+  - radar/candidates.json：每条候选含 url / 来源种子 / HTTP 状态 / 延迟 / 是否可达。
+  - 标准输出打印本轮扫描与可达摘要。
+
+关键设计决策
+------------
+  - 只做「发现 + 快速验活」，不自动收编：导航仓鱼龙混杂，自动合并会把坏源带进每日
+    产物；人工确认后再由 evaluate_candidates / canary 流程收编。
+  - 验活只判「能否 200、是否 >100B」，不做内容质量评估（质量评估是 evaluate_candidates
+    的职责），保持本脚本轻量、周级跑得动。
+  - 周级频率（非每日）：导航仓变更慢，每日扫是浪费配额；与每日 fetch 解耦。
 """
 import json
 import os
