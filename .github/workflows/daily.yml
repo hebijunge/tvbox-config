@@ -230,6 +230,10 @@ jobs:
           # （历史日快照归档 Release；独立于 latest 白名单，不受 release_cleanup 影响）。
           python scripts/snapshot_rotate.py --prune-release || true
 
+      - name: 失败聚合报告
+        if: always()
+        run: python scripts/ci_failure_aggregator.py || true
+
       - name: 关键指标下降告警
         if: steps.fetch_merge.outputs.guard != 'true'
         env:
@@ -239,7 +243,7 @@ jobs:
           python scripts/ci_metrics_alert.py || true
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add state/last_run.json || true
+          git add state/last_run.json state/ci_failures.json || true
           if ! git diff --cached --quiet; then
             git commit -m "chore: 更新 CI 指标基线" || true
             git pull --rebase origin main || true
