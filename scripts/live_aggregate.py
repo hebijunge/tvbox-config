@@ -81,6 +81,34 @@ def resolution_tier(*texts):
 _RES_GRADE = {0: "4K", 1: "1080P", 2: "720P", 3: "SD", 4: "未知"}
 
 
+LIVE_KEEP_LINES = int(os.environ.get("LIVE_KEEP_LINES", "3"))
+
+
+def _norm_url(u):
+    """URL 相似度归一键：host + 去尾斜杠的 path（剥离 query/fragment/端口差异）。"""
+    try:
+        p = urlparse(u)
+    except Exception:  # noqa: BLE001
+        return (u or "", "")
+    return (p.netloc.lower().split(":")[0], (p.path or "").rstrip("/"))
+
+
+def dedup_lines(lines, keep=LIVE_KEEP_LINES):
+    """同频道多线路按质量(已排序)合并：近似重复 URL(同 host+path)只留最好一条，
+    最终保留 keep 条（默认 3），剔除重复/低质线路。"""
+    seen = set()
+    out = []
+    for u in (lines or []):
+        key = _norm_url(u)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(u)
+        if len(out) >= keep:
+            break
+    return out
+
+
 def channel_grade(std, lines):
     """频道最佳分辨率档对应的质量等级（4K/1080P/720P/SD/未知）。"""
     best = min((resolution_tier(std, u) for u in (lines or [])), default=4)
@@ -1214,6 +1242,7 @@ def _build_groups(cmap, verified, extra_keep=6):
             _ls = [u for _sid, u in ent["lines"]]
             _ls.sort(key=lambda _u: (_alive_rank(_u, _status), resolution_tier(name, _u)))
             lines = cap_lines(_ls, extra_keep)
+        lines = dedup_lines(lines)  # 任务11：同频道按质量合并，保留最优 2-3 条
         groups.setdefault(gk, OrderedDict())
         if lines:
             groups[gk][name] = lines
