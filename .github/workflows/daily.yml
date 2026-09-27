@@ -9,7 +9,7 @@ on:
   # push触发：核心代码/测试/工作流变更时自动验证CI（验证manifest清理+live修复）
   push:
     branches: [main]
-    paths: [.github/workflows/daily.yml, scripts/fetch_merge.py, scripts/windows_path_check.py, tests/**, deps/json/manifest.json]
+    paths: [.github/workflows/daily.yml, scripts/fetch_merge.py, scripts/config_validate.py, scripts/adult_leak_check.py, scripts/windows_path_check.py, tests/**, deps/json/manifest.json]
 
 permissions:
   contents: write
