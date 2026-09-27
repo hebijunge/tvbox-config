@@ -35,6 +35,7 @@
 import argparse
 import json
 import os
+import re
 import sys
 import time
 
@@ -51,6 +52,101 @@ except ImportError:  # pragma: no cover
 
 VALID_TYPES = (0, 1, 2, 3)
 MAX_NAME_LEN = 100
+
+VOCAB_PATH = "config/name_clean_vocab.json"
+
+
+# --------------------------------------------------------------------------- #
+# 词表加载（任务2：异常值清洗 + 广告词表外置）
+# --------------------------------------------------------------------------- #
+def load_vocab():
+    """加载 name_clean_vocab.json；缺失时返回内置最小集。"""
+    default = {
+        "ad_patterns": [
+            {"re": "加[群微][群信]?", "label": "加群"},
+            {"re": "[Qq]{2}[群扣]", "label": "QQ群"},
+            {"re": "福利", "label": "福利"},
+            {"re": "微信", "label": "微信"},
+            {"re": "免费看", "label": "免费看"},
+        ],
+        "noise_chars_re": "[\\x00-\\x08\\x0b\\x0c\\x0e-\\x1f\\x7f]",
+        "traditional_to_simplified": {},
+    }
+    try:
+        with open(VOCAB_PATH, encoding="utf-8") as f:
+            v = json.load(f)
+        if isinstance(v, dict):
+            v.setdefault("ad_patterns", default["ad_patterns"])
+            v.setdefault("noise_chars_re", default["noise_chars_re"])
+            v.setdefault("traditional_to_simplified", {})
+            return v
+    except (OSError, json.JSONDecodeError):
+        pass
+    return default
+
+
+_VOCAB = load_vocab()
+_AD_RES = [(p.get("re", ""), p.get("label", "ad"))
+           for p in _VOCAB.get("ad_patterns", []) if p.get("re")]
+_NOISE_RE = (re.compile(_VOCAB.get("noise_chars_re", ""))
+             if _VOCAB.get("noise_chars_re") else None)
+_T2S = _VOCAB.get("traditional_to_simplified", {})
+
+# 全角字母数字 → 半角
+_FW_MAP = {}
+for i, ch in enumerate(_VOCAB.get("fullwidth_digits", "０１２３４５６７８９")):
+    hd = _VOCAB.get("halfwidth_digits", "0123456789")
+    _FW_MAP[ch] = hd[i] if i < len(hd) else ch
+for code in range(0xFF21, 0xFF3B):  # Ａ-Ｚ
+    _FW_MAP[chr(code)] = chr(code - 0xFEE0)
+for code in range(0xFF41, 0xFF5B):  # ａ-ｚ
+    _FW_MAP[chr(code)] = chr(code - 0xFEE0)
+
+
+def clean_name(raw_name, key=""):
+    """清洗站点名称：全角转半角 → 繁转简 → 乱码标记 → 广告后缀清洗 → 空名用 key。
+
+    返回 (cleaned_name, issues_list)。
+    """
+    issues = []
+    s = str(raw_name) if raw_name is not None else ""
+
+    # 全角转半角
+    s = "".join(_FW_MAP.get(ch, ch) for ch in s)
+    # 繁转简
+    s = "".join(_T2S.get(ch, ch) for ch in s)
+    # 乱码检测
+    if _NOISE_RE and _NOISE_RE.search(s):
+        issues.append({"kind": "garbled", "raw": raw_name, "detail": "含不可打印字符"})
+        s = _NOISE_RE.sub("", s)
+    # 广告后缀清洗
+    for pat, label in _AD_RES:
+        try:
+            new = re.sub(pat, "", s)
+            if new != s:
+                issues.append({"kind": "ad_removed", "raw": raw_name,
+                               "detail": f"命中[{label}]"})
+                s = new
+        except re.error:
+            continue
+    # 去首尾残留分隔符
+    s = s.strip(" \t\r\n-_·|：:：,，。.")
+    # 纯空白/纯符号 → 用 key 替代
+    if not re.sub(r"[\W_]+", "", s, flags=re.UNICODE):
+        if key:
+            issues.append({"kind": "empty_name", "raw": raw_name,
+                           "detail": "纯空白/纯符号，用 key 替代"})
+            s = key
+        else:
+            issues.append({"kind": "empty_name", "raw": raw_name,
+                           "detail": "空名称且无 key"})
+            s = str(raw_name) or "unknown"
+    # 长度截断
+    if len(s) > MAX_NAME_LEN:
+        issues.append({"kind": "name_too_long", "raw": raw_name,
+                       "detail": f"长度{len(s)}>{MAX_NAME_LEN}"})
+        s = s[:MAX_NAME_LEN]
+    return s, issues
 
 TARGET_FILES = [
     "tvbox.json",
@@ -126,6 +222,15 @@ def validate_site(site: dict, fix: bool, file_label: str) -> list:
                            "detail": f"name 长度 {len(str(name))} > {MAX_NAME_LEN}"})
     else:
         issues.append({"file": file_label, "key": key, "kind": "name_empty", "detail": "name 为空"})
+
+    # 名称清洗（任务2：广告后缀/乱码/繁简/全角半角）
+    cleaned, clean_issues = clean_name(str(name), str(key))
+    for ci in clean_issues:
+        ci["file"] = file_label
+        ci["key"] = key
+        issues.append(ci)
+    if fix and cleaned != str(name):
+        site["name"] = cleaned
 
     return issues
 
