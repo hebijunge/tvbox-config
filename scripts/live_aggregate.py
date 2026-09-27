@@ -58,88 +58,6 @@ FMM_EPG_URLS = ("https://live.fanmingming.cn/e.xml",       # fanmingming e.xml�
 FMM_CATCHUP = 'catchup="append" catchup-source="?playseek=${(b)yyyyMMddHHmmss}-${(e)yyyyMMddHHmmss}"'
 
 
-# ---- 任务8：同频道多线路按分辨率/码率排序（高清在前）----
-_RES_TIERS = [
-    (0, re.compile(r"4k|8k|uhd|蓝光|bluray|超高清", re.I)),
-    (1, re.compile(r"1080\s*[pi]?|fhd|全高清", re.I)),
-    (2, re.compile(r"720\s*[pi]?|(?<![0-9])hd(?![0-9])|高清", re.I)),
-    (3, re.compile(r"480|sd|标清|普清", re.I)),
-]
-
-
-def resolution_tier(*texts):
-    """从频道名/线路名/URL 中提取分辨率档位：0=4K/8K 超高清, 1=1080P/FHD,
-    2=720P/HD 高清, 3=标清, 4=未识别（排到同档末尾，再按延迟排序）。"""
-    blob = " ".join(t or "" for t in texts).lower()
-    for tier, rx in _RES_TIERS:
-        if rx.search(blob):
-            return tier
-    return 4
-
-
-# 任务10：直播源质量分级（分辨率档 + 探活成功率）
-_RES_GRADE = {0: "4K", 1: "1080P", 2: "720P", 3: "SD", 4: "未知"}
-
-
-LIVE_KEEP_LINES = int(os.environ.get("LIVE_KEEP_LINES", "3"))
-
-
-def _norm_url(u):
-    """URL 相似度归一键：host + 去尾斜杠的 path（剥离 query/fragment/端口差异）。"""
-    try:
-        p = urlparse(u)
-    except Exception:  # noqa: BLE001
-        return (u or "", "")
-    return (p.netloc.lower().split(":")[0], (p.path or "").rstrip("/"))
-
-
-def dedup_lines(lines, keep=LIVE_KEEP_LINES):
-    """同频道多线路按质量(已排序)合并：近似重复 URL(同 host+path)只留最好一条，
-    最终保留 keep 条（默认 3），剔除重复/低质线路。"""
-    seen = set()
-    out = []
-    for u in (lines or []):
-        key = _norm_url(u)
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append(u)
-        if len(out) >= keep:
-            break
-    return out
-
-
-def channel_grade(std, lines):
-    """频道最佳分辨率档对应的质量等级（4K/1080P/720P/SD/未知）。"""
-    best = min((resolution_tier(std, u) for u in (lines or [])), default=4)
-    return _RES_GRADE.get(best, "未知")
-
-
-def _write_live_quality(repo, verified, results):
-    """写 state/live_quality.json：每频道 {grade, success_rate, n_lines}。"""
-    doc = {"updated": datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S"), "channels": {}}
-    for std, lines in (verified or {}).items():
-        lst = (results or {}).get(std) or []
-        probed = [r for r in lst if r and r[2] not in ("cache",)]  # 仅本轮实测
-        if probed:
-            ok = sum(1 for r in probed if r[1])
-            sr = round(ok / len(probed), 3)
-        else:
-            sr = None  # 无本轮实测，不臆造
-        doc["channels"][std] = {
-            "grade": channel_grade(std, lines),
-            "success_rate": sr,
-            "n_lines": len(lines or []),
-        }
-    try:
-        os.makedirs(os.path.join(repo, "state"), exist_ok=True)
-        with open(os.path.join(repo, "state", "live_quality.json"), "w", encoding="utf-8") as f:
-            json.dump(doc, f, ensure_ascii=False, indent=1)
-        print("[live] 质量分级写入 state/live_quality.json（%d 频道）" % len(doc["channels"]), flush=True)
-    except OSError as e:
-        print("[live] live_quality.json 写入失败（不影响产物）: %s" % e, flush=True)
-
-
 def fmm_logo_name(std):
     """fanmingming 台标文件名（不含 .png）。第十五批适配增强（对库内 929 个 tv 台标名
     离线量化验证：真实频道名池 1374 个，核心缺口为「CCTV-1 综合」副标题形态与画质后缀）：
@@ -331,31 +249,6 @@ PROVINCE_ORDER = [p for p, _k in PROVINCE_TABLE]
 BIG_ORDER = ("央视", "春晚(季节性)", "卫视", "港台", "轮播", "直播", "其他", "地方")  # 2026-09-24 用户指令：港台/轮播/直播/其他放到地方之上；batch18：春晚(季节性)专项组紧随央视（历史春晚轮播，节假日场景）
 
 
-# ---- 任务9：频道组热门度排序外置词表 config/live_group_order.json ----
-# 热门度口径：央视 > 卫视 > 港台 > 地方 > 其他（轮播/直播夹在港台与地方之间）。
-# 文件缺失/损坏时退回下方 _FALLBACK_GROUP_ORDER，保证单测/离线可跑。
-_FALLBACK_GROUP_ORDER = ["央视", "春晚(季节性)", "卫视", "港台", "轮播", "直播", "地方", "其他"]
-_GROUP_ORDER_CACHE = None
-
-
-def _group_order():
-    """读 config/live_group_order.json 的组热门度序；失败回退内置顺序。"""
-    global _GROUP_ORDER_CACHE
-    if _GROUP_ORDER_CACHE is not None:
-        return _GROUP_ORDER_CACHE
-    try:
-        p = os.path.join(os.path.dirname(sys_path), "config", "live_group_order.json")
-        with open(p, encoding="utf-8") as f:
-            order = json.load(f).get("order")
-        if isinstance(order, list) and order:
-            _GROUP_ORDER_CACHE = list(order)
-            return _GROUP_ORDER_CACHE
-    except Exception:
-        pass
-    _GROUP_ORDER_CACHE = list(_FALLBACK_GROUP_ORDER)
-    return _GROUP_ORDER_CACHE
-
-
 def big_cat(cls):
     """内部类名 → 输出大分类名（地方-湖南 → 地方；电台折叠进 其他）。"""
     if cls and cls.startswith("地方-"):
@@ -369,8 +262,7 @@ def group_sort_key(cls):
     """类名 → 输出排序键 (大分类序, 省序)。
     用于频道类名归并优先级与逐线路实测优先级（央视最先、地方随省序、其他殿后）。"""
     bc = big_cat(cls)
-    order = _group_order()
-    bi = order.index(bc) if bc in order else len(order)
+    bi = BIG_ORDER.index(bc) if bc in BIG_ORDER else len(BIG_ORDER)
     pi = 0
     if bc == "地方":
         prov = cls[len("地方-"):]
@@ -1115,10 +1007,7 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
     for std, lst in results.items():
         # 线路按速度升序：实测通过者按探流耗时小→大排列（同一频道内首条=最快线路，
         # 播放器默认取首条、卡顿可手动切后继线路）；未通过的线路不进 verified。
-        # 同频道多线路：分辨率档(4K>1080P>720P>标清)优先，档内按探流延迟升序；
-        # 分辨率识别不出的(档=4)自然沉到档尾，再按延迟排——即「无法提取按延迟」。
-        good = sorted(((u, ms) for u, ok, _w, ms in lst if ok),
-                      key=lambda x: (resolution_tier(std, x[0]), x[1]))
+        good = sorted(((u, ms) for u, ok, _w, ms in lst if ok), key=lambda x: x[1])
         if good:
             verified[std] = cap_lines([u for u, _ms in good])
     return verified, results
@@ -1228,7 +1117,7 @@ def _build_groups(cmap, verified, extra_keep=6):
             tested = list(verified[key])           # 已实测，按速度升序
             tested_set = set(tested)
             untested = [u for _s, u in ent["lines"] if u not in tested_set]
-            untested.sort(key=lambda _u: (_alive_rank(_u, _status), resolution_tier(name, _u)))
+            untested.sort(key=lambda _u: _alive_rank(_u, _status))
             lines = tested + cap_lines(untested, 0)  # 0=无限制
         else:
             n_distinct = len({u for _s, u in ent["lines"]})
@@ -1240,9 +1129,8 @@ def _build_groups(cmap, verified, extra_keep=6):
                                sorted({s for s, _u in ent["lines"]})))
                 continue
             _ls = [u for _sid, u in ent["lines"]]
-            _ls.sort(key=lambda _u: (_alive_rank(_u, _status), resolution_tier(name, _u)))
+            _ls.sort(key=lambda _u: _alive_rank(_u, _status))
             lines = cap_lines(_ls, extra_keep)
-        lines = dedup_lines(lines)  # 任务11：同频道按质量合并，保留最优 2-3 条
         groups.setdefault(gk, OrderedDict())
         if lines:
             groups[gk][name] = lines
@@ -1278,7 +1166,7 @@ def _iter_ordered_groups(groups):
     """输出序（2026-09-23 用户目标口径）：央视 → 卫视 → 地方-省（按 PROVINCE_ORDER
     华北→东北→华东→中南→西南→西北）→ 港台 → 轮播 → 直播 → 其他。
     产出 (组名, 频道dict)。"""
-    for cat in _group_order():
+    for cat in BIG_ORDER:
         if cat == "地方":
             for prov in PROVINCE_ORDER:
                 gk = "地方-" + prov
@@ -1809,7 +1697,6 @@ def main(repo=None, out_json="live_channels.json",
     n_cache = sum(1 for _u, _ok, w, _ms in
                   (x for lst in raw.values() for x in lst) if w == "cache")
     print("line tests done in %.0fs, verified channels: %d" % (time.time() - t0, len(verified)), flush=True)
-    _write_live_quality(repo, verified, raw)
     # 2026-09-26 用户指令：不再产出整本 live_verified.txt / live_verified.m3u 大文件，
     # 产物改为 lives/groups/<组>.txt + <组>.m3u 分组文件（地方 27 省合入单文件分节）。
     gstats = write_group_txts(cmap, verified, os.path.join(repo, "lives", "groups"))

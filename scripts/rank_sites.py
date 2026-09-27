@@ -32,7 +32,7 @@ import os
 import re
 import sys
 from collections import Counter
-from datetime import datetime, timedelta
+from datetime import datetime
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -74,24 +74,22 @@ def _text_of(site: dict) -> str:
     return f"{site.get('name') or ''} {site.get('key') or ''} {site.get('api') or ''} {ext_str}".lower()
 
 
-def classify_with_conf(site: dict):
-    """把一个站点归入分组并给出分类置信度。返回 (group, confidence)。
+def group_of(site: dict):
+    """把一个站点归入分组（分类维度）。
 
     多信号交叉分类（2026-09-27 P0）：
       采集站   = type 0/1 + (api 命中 CMS_API_RE OR ext 字段含 cms 关键词)
       蜘蛛源   = type 3 + (api 以 csp_ 开头 OR 站点带非空 jar 字段)
       本地JS   = api 以 ./ 开头且以 .js 结尾（排除 ./jar/ 下的 spider.jar 运行时引用）
       网盘     = ext/api/name 命中 PAN 正则（保持现状）
-    短剧/成人仍按关键词前置命中（成人词的匹配范围在 task2 收窄为 ext/api）。
-
-    confidence: high=多信号一致；low=仅单信号匹配。低置信源在同组内排后面。
+    短剧/成人仍按全量文本关键词前置命中（成人词的匹配范围在 task2 收窄为 ext/api）。
     """
     api = site.get("api") if isinstance(site.get("api"), str) else ""
     ext = site.get("ext")
     ext_str = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if isinstance(ext, dict) else "")
     text = _text_of(site)
     if any(kw.lower() in text for kw in SHORT_KEYWORDS):
-        return "短剧", "high"
+        return "短剧"
     # 成人关键词只在 api/ext 中匹配，不看 name（2026-09-27 P0）：
     # name 是给人看的展示名，常带「传媒/资源」等通用词，按名命中会把正常资源站
     # 误划进成人组；api/ext 才是后端真实形态。安全门禁 adult_gate_scan 仍全量扫描
@@ -99,40 +97,30 @@ def classify_with_conf(site: dict):
     # 站仍会被门禁拦截重定向 adult.json。
     adult_text = (api + " " + ext_str).lower()
     if any(kw.lower() in adult_text for kw in ADULT_KEYWORDS):
-        return "成人", "high"
-    # 网盘：key/name/ext 三路正则，命中路数越多越可信
-    pan_hits = sum(1 for rx in (PAN_KEY_RE, PAN_NAME_RE, PAN_EXT_RE) if rx.search(text))
-    if pan_hits:
-        return "网盘", "high" if pan_hits >= 2 else "low"
+        return "成人"
+    if PAN_KEY_RE.search(text) or PAN_NAME_RE.search(text) or PAN_EXT_RE.search(text):
+        return "网盘"
     typ = site.get("type")
     jar = site.get("jar")
     has_jar = bool(jar and str(jar).strip())
     # 采集站 / 直连点播：type 0/1
     if typ in (0, 1):
-        sig_cms = bool(CMS_API_RE.search(api))
-        sig_ext = "cms" in ext_str.lower()
-        if sig_cms or sig_ext:
-            return "采集站", "high" if (sig_cms and sig_ext) else "low"
-        return "直连点播", "low"
+        if CMS_API_RE.search(api) or "cms" in ext_str.lower():
+            return "采集站"
+        return "直连点播"
     # 本地JS：./ 相对路径且 .js 结尾（drpy 规则/运行时均为本地 JS 文件）；
     # ./jar/ 下是 csp 运行时 jar 引用，不算本地JS。先于蜘蛛源判定——drpy 源同样
     # 带 jar 字段（指向 drpy 运行时），不能凭 jar 误判成 csp 蜘蛛。
     if api.startswith("./") and api.endswith(".js") and not api.startswith("./jar/"):
-        return "本地JS", "high" if typ in (3, "3") else "low"
+        return "本地JS"
     # 蜘蛛源：type 3 + (csp_ 协议前缀 或 非空 jar 运行时)
     if typ in (3, "3"):
-        sig_csp = api.startswith("csp_")
-        if sig_csp or has_jar:
-            return "蜘蛛源", "high" if (sig_csp and has_jar) else "low"
+        if api.startswith("csp_") or has_jar:
+            return "蜘蛛源"
     # 兜底：csp_ 前缀是蜘蛛协议的强标记，即便 type 字段缺失也归蜘蛛源
     if api.startswith("csp_"):
-        return "蜘蛛源", "low"
-    return "其他", "low"
-
-
-def group_of(site: dict) -> str:
-    """把一个站点归入分组（分类维度）。"""
-    return classify_with_conf(site)[0]
+        return "蜘蛛源"
+    return "其他"
 
 
 def search_verdict(site: dict, probe: dict, js_probe: dict = None, csp_probe: dict = None,
@@ -309,146 +297,9 @@ def avail_rank(site: dict, probe_map: dict, spider_map: dict,
     return 4                                  # 未测：中性，排在「仅连通」之后、「实测失败」之前
 
 
-def load_stability(repo: str) -> dict:
-    """从 state/tvbox.db 的 checks 表读取每源最近 7 天检测记录，算稳定性信号。
-
-    返回 {key: (success_rate, latency_std, fail_streak)}；无记录的 key 不在表里。
-    db 缺失/损坏/查询异常一律返回 {}（优雅降级，只用当前探针数据，不报错）。
-    """
-    import sqlite3  # 纯标准库，惰性导入
-    db = os.path.join(repo, "state", "tvbox.db")
-    try:
-        conn = sqlite3.connect(db)
-        conn.row_factory = sqlite3.Row
-        cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
-        agg = {}
-        for r in conn.execute(
-                "SELECT key, ok, latency_ms FROM checks WHERE checked_at >= ?", (cutoff,)):
-            a = agg.setdefault(r["key"], {"ok": 0, "n": 0, "lat": []})
-            a["n"] += 1
-            if r["ok"]:
-                a["ok"] += 1
-            if isinstance(r["latency_ms"], int) and r["latency_ms"] > 0:
-                a["lat"].append(r["latency_ms"])
-        streaks = {}
-        try:
-            for r in conn.execute("SELECT key, fail_streak FROM interfaces"):
-                streaks[r["key"]] = r["fail_streak"] or 0
-        except Exception:  # interfaces 表缺失不阻断
-            pass
-        out = {}
-        for k, a in agg.items():
-            if not a["n"]:
-                continue
-            sr = a["ok"] / a["n"]
-            lats = a["lat"]
-            if len(lats) >= 2:
-                m = sum(lats) / len(lats)
-                lstd = (sum((x - m) ** 2 for x in lats) / len(lats)) ** 0.5
-            else:
-                lstd = 0.0
-            out[k] = (sr, lstd, streaks.get(k, 0))
-        conn.close()
-        return out
-    except Exception as e:  # db 不可用：优雅降级
-        print(f"[rank] tvbox.db 不可用，跳过稳定性维度（{e}）", flush=True)
-        return {}
-
-
-def stability_bucket(stab):
-    """稳定性排序键：(档位, -success_rate, latency_std, fail_streak)。
-
-    档位 0=实测稳定（成功率高且连续失败少），1=无历史（中性，不惩罚新源），
-    2=实测不稳。档内按 成功率高 > 延迟抖动小 > 连续失败少 排。"""
-    if not stab:
-        return (1, 0.0, 0.0, 0)
-    sr, lstd, fs = stab
-    if sr >= 0.8 and fs <= 1:
-        return (0, -sr, lstd, fs)
-    return (2, -sr, lstd, fs)
-
-
-def richness_bucket(key, pmap, dmap):
-    """内容丰富度排序键：(档, -hits)。
-
-    信号 = 探针 L2 搜索命中数；drpy D3+ 沙箱搜索命中数取较大者。
-    档 0=命中多(>=20)，2=中等(5~19)，4=偏少(1~4)，1=无命中数据(中性，不惩罚)。
-    无命中数据的源中性处理。"""
-    hits = -1
-    p = pmap.get(key) if key else None
-    if p and isinstance(p.get("l2"), dict):
-        h = p["l2"].get("hits")
-        if isinstance(h, int) and h >= 0:
-            hits = h
-    dp = (dmap or {}).get(key) if key else None
-    if dp:
-        dh = dp.get("hits")
-        if isinstance(dh, int) and dh > hits:
-            hits = dh
-    if hits < 0:
-        return (1, 0)
-    if hits >= 20:
-        return (0, -hits)
-    if hits >= 5:
-        return (2, -hits)
-    return (4, -hits)
-
-
-def load_upstream_added(repo: str) -> dict:
-    """config/upstreams.json 的 {上游名: added_at(YYYY-MM-DD)}。文件缺失返回空表。"""
-    doc = _load_json(repo, "config/upstreams.json")
-    out = {}
-    for u in doc.get("upstreams") or []:
-        name = u.get("name")
-        at = u.get("added_at")
-        if name and at:
-            out[name] = str(at)[:10]
-    return out
-
-
-def is_new_source(site: dict, added_map: dict) -> bool:
-    """源加入是否 < 7 天。added_at 取不到的源一律 False（不享受加权）。"""
-    origin = site.get("_origin") or ""
-    at = added_map.get(origin)
-    if not at:
-        return False
-    try:
-        d = datetime.strptime(at[:10], "%Y-%m-%d")
-    except (ValueError, TypeError):
-        return False
-    age = (datetime.now() - d).days
-    return 0 <= age < 7
-
-
-def name_quality_bucket(name: str):
-    """名称质量排序键：(长度档, 可读性档)，越小越好。
-
-    长度档：清洗后 2~20 字最佳(0)，1 字或 21~30 字次之(1)，其余(过短/过长)(2)。
-    可读性档：含中文或英文字母为佳(0)，纯数字次之(1)，纯符号(2)。"""
-    n = (name or "").strip()
-    core = re.sub(r"[\W_]+", "", n, flags=re.UNICODE)
-    L = len(core)
-    if 2 <= L <= 20:
-        lb = 0
-    elif L == 1 or 21 <= L <= 30:
-        lb = 1
-    else:
-        lb = 2
-    has_cjk = bool(re.search(r"[\u4e00-\u9fff]", n))
-    has_eng = bool(re.search(r"[A-Za-z]", n))
-    has_digit = bool(re.search(r"[0-9]", n))
-    if has_cjk or has_eng:
-        rb = 0
-    elif has_digit:
-        rb = 1
-    else:
-        rb = 2
-    return (lb, rb)
-
-
 def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
                mirror_drops: set = None, js_doc: dict = None, csp_doc: dict = None,
-               drpy_doc: dict = None, stab_map: dict = None, added_map: dict = None):
+               drpy_doc: dict = None):
     """重排站点并回写 group / searchable。返回 (新列表, 统计)。"""
     def _map(doc):
         out = {}
@@ -482,13 +333,11 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
             stats["mirror_skipped"] += 1
             continue
         probe = pmap.get(key)
-        group, conf = classify_with_conf(s)
+        group = group_of(s)
         verdict = search_verdict(s, probe, jmap, cmap, dmap)
-
 
         s = dict(s)
         s["group"] = group
-        s["group_confidence"] = conf
         if verdict is not None:
             before = str(s.get("searchable"))
             s["searchable"] = verdict
@@ -496,9 +345,6 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
         _, lat_src = speed_of(key, pmap, smap, jmap, cmap, dmap)
         stats[f"speed:{lat_src}"] += 1
         stats[f"group:{group}"] += 1
-        stats[f"confidence:{conf}"] += 1
-        if is_new_source(s, added_map or {}):
-            stats["new_sources"] += 1
         if verdict == 1:
             stats[f"searchable_ok:{group}"] += 1
         # drpy 沙箱实测统计
@@ -521,16 +367,9 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
             # 没测到速度的，用结构/评级兜底排序（死源沉底），不让未测的源纯按名字乱排
             lat = UNKNOWN_LATENCY + (3 - struct_score(s, smap, jmap, cmap, dmap)) * 1000
         group = s.get("group") if isinstance(s, dict) else None
-        conf = s.get("group_confidence") if isinstance(s, dict) else "high"
         return (GROUP_ORDER.index(group) if group in GROUP_ORDER else len(GROUP_ORDER),
                 0 if s.get("searchable") == 1 else (1 if s.get("searchable") is None else 2),
                 avail_rank(s, pmap, smap, jmap, cmap, dmap),
-                (0 if (avail_rank(s, pmap, smap, jmap, cmap, dmap) == 4  # 未测组内新源加权
-                       and is_new_source(s, added_map or {})) else 1),
-                stability_bucket((stab_map or {}).get(key)),   # 同 avail_rank 内稳定性高者在前
-                0 if conf == "high" else 1,   # 低置信分类源同组内排后面
-                richness_bucket(key, pmap, dmap),   # 同速度档内内容丰富者在前
-                name_quality_bucket(str(s.get("name") or "") if isinstance(s, dict) else ""),
                 lat,
                 str(s.get("name") or "") if isinstance(s, dict) else "")
 
@@ -557,7 +396,6 @@ def print_report(sites: list, stats: Counter):
               f"| D5 {stats.get('drpy_D5', 0)} | D3+ {stats.get('drpy_D3p', 0)}")
     if stats.get("mirror_skipped"):
         print(f"同库镜像已剔除: {stats['mirror_skipped']} 个")
-    print(f"新源(加入<7天): {stats.get('new_sources', 0)} 个")
 
 
 def _load_json(repo, rel):
@@ -615,12 +453,7 @@ def main() -> int:
             print(f"[rank] 将剔除 {len(mirror_drops)} 个同库镜像站点（--keep-mirrors 可保留）", flush=True)
 
     sites = doc.get("sites") or []
-    stab_map = load_stability(repo)   # tvbox.db 近 7 天稳定性；db 缺失自动空表
-    if stab_map:
-        print(f"[rank] 加载稳定性记录 {len(stab_map)} 个源（近7天 checks）", flush=True)
-    added_map = load_upstream_added(repo)
-    ranked, stats = rank_sites(sites, probe_doc, spider_doc, mirror_drops, js_doc, csp_doc, drpy_doc,
-                               stab_map=stab_map, added_map=added_map)
+    ranked, stats = rank_sites(sites, probe_doc, spider_doc, mirror_drops, js_doc, csp_doc, drpy_doc)
     doc["sites"] = ranked
 
     dst = src if args.in_place else os.path.join(repo, args.out)
