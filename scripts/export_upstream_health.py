@@ -10,7 +10,7 @@
 --------
     name           上游标识
     ok             最近一次探测是否 fully 成功（bool）
-    sites_count    该上游贡献的本地依赖文件数（从 deps/manifest.json 按 origin 统计）
+    sites_count    该上游贡献的本地依赖文件数（从 deps/json/manifest.json 按 origin 统计）
     fail_streak    连续失败天数（validated.sources.decay.streak_days）
     last_seen      最近一次成功时间（last_ok_at）
     disabled       是否被自动拉黑/disabled
@@ -38,7 +38,7 @@ def load_json(path: str) -> dict:
         return {}
 
 
-def count_deps_by_origin(manifest_path: str = "deps/manifest.json") -> Dict[str, int]:
+def count_deps_by_origin(manifest_path: str = "deps/json/manifest.json") -> Dict[str, int]:
     """从 manifest.json 按 origin 统计 local 依赖文件数。"""
     data = load_json(manifest_path)
     counts: Dict[str, int] = {}

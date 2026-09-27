@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""配置产物质量校验 + 引用完整性（任务1：P0 基础）。
+"""配置产物质量校验 + 引用完整性 + 名称清洗（任务1+2合并）。
 
 校验对象
 --------
@@ -12,9 +12,11 @@
     2. type ∈ {0,1,2,3}，越界告警；--fix 时修正为最接近合法值。
     3. key 全局唯一；重复 key 自动加后缀 key_2/key_3。
     4. api 非空（type 0/1 必须有 api；type 3 允许本地路径）。
-    5. name 非空且长度 1-100。
+    5. name 非空且长度 1-100；纯空白/纯符号用 key 替代。
     6. 引用完整性：./deps/... 引用必须落盘存在；spider/jar/ext 引用缺失则置空并
        记入 state/broken_refs.json。
+    7. 名称清洗：广告后缀正则清洗、全角转半角、繁转简、乱码标记（词表见
+       config/name_clean_vocab.json）。
 
 输出
 ----
@@ -25,7 +27,7 @@
 用法
 ----
     python scripts/config_validate.py            # 只报告
-    python scripts/config_validate.py --fix      # 自动修正（key 去重、type 修正、断引用置空）
+    python scripts/config_validate.py --fix      # 自动修正
 
 退出码
 ------
@@ -39,28 +41,30 @@ import re
 import sys
 import time
 
-# 仓库根 = 本文件上两级
 REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 os.chdir(REPO)
-# 复用 pathutil 的路径规范化（与落库时一致）
 sys.path.insert(0, os.path.join(REPO, "scripts"))
 try:
     from pathutil import safe_segment
-except ImportError:  # pragma: no cover
+except ImportError:
     def safe_segment(s):
         return s.replace(":", "_")
 
 VALID_TYPES = (0, 1, 2, 3)
 MAX_NAME_LEN = 100
-
 VOCAB_PATH = "config/name_clean_vocab.json"
 
+TARGET_FILES = [
+    "tvbox.json", "vod.json", "short.json",
+    "stores/cms.json", "stores/app.json", "stores/pan.json", "stores/csp.json",
+]
+_LEGIT_TYPES = set(VALID_TYPES)
+
 
 # --------------------------------------------------------------------------- #
-# 词表加载（任务2：异常值清洗 + 广告词表外置）
+# 词表加载（任务2）
 # --------------------------------------------------------------------------- #
 def load_vocab():
-    """加载 name_clean_vocab.json；缺失时返回内置最小集。"""
     default = {
         "ad_patterns": [
             {"re": "加[群微][群信]?", "label": "加群"},
@@ -88,81 +92,51 @@ def load_vocab():
 _VOCAB = load_vocab()
 _AD_RES = [(p.get("re", ""), p.get("label", "ad"))
            for p in _VOCAB.get("ad_patterns", []) if p.get("re")]
-_NOISE_RE = (re.compile(_VOCAB.get("noise_chars_re", ""))
-             if _VOCAB.get("noise_chars_re") else None)
+_NOISE_RE = re.compile(_VOCAB.get("noise_chars_re", "")) if _VOCAB.get("noise_chars_re") else None
 _T2S = _VOCAB.get("traditional_to_simplified", {})
 
-# 全角字母数字 → 半角
 _FW_MAP = {}
 for i, ch in enumerate(_VOCAB.get("fullwidth_digits", "０１２３４５６７８９")):
     hd = _VOCAB.get("halfwidth_digits", "0123456789")
     _FW_MAP[ch] = hd[i] if i < len(hd) else ch
-for code in range(0xFF21, 0xFF3B):  # Ａ-Ｚ
+for code in range(0xFF21, 0xFF3B):
     _FW_MAP[chr(code)] = chr(code - 0xFEE0)
-for code in range(0xFF41, 0xFF5B):  # ａ-ｚ
+for code in range(0xFF41, 0xFF5B):
     _FW_MAP[chr(code)] = chr(code - 0xFEE0)
 
 
 def clean_name(raw_name, key=""):
-    """清洗站点名称：全角转半角 → 繁转简 → 乱码标记 → 广告后缀清洗 → 空名用 key。
-
-    返回 (cleaned_name, issues_list)。
-    """
+    """清洗站点名称。返回 (cleaned_name, issues_list)。"""
     issues = []
     s = str(raw_name) if raw_name is not None else ""
-
-    # 全角转半角
     s = "".join(_FW_MAP.get(ch, ch) for ch in s)
-    # 繁转简
     s = "".join(_T2S.get(ch, ch) for ch in s)
-    # 乱码检测
     if _NOISE_RE and _NOISE_RE.search(s):
         issues.append({"kind": "garbled", "raw": raw_name, "detail": "含不可打印字符"})
         s = _NOISE_RE.sub("", s)
-    # 广告后缀清洗
     for pat, label in _AD_RES:
         try:
             new = re.sub(pat, "", s)
             if new != s:
-                issues.append({"kind": "ad_removed", "raw": raw_name,
-                               "detail": f"命中[{label}]"})
+                issues.append({"kind": "ad_removed", "raw": raw_name, "detail": f"命中[{label}]"})
                 s = new
         except re.error:
             continue
-    # 去首尾残留分隔符
     s = s.strip(" \t\r\n-_·|：:：,，。.")
-    # 纯空白/纯符号 → 用 key 替代
     if not re.sub(r"[\W_]+", "", s, flags=re.UNICODE):
         if key:
-            issues.append({"kind": "empty_name", "raw": raw_name,
-                           "detail": "纯空白/纯符号，用 key 替代"})
+            issues.append({"kind": "empty_name", "raw": raw_name, "detail": "纯空白/纯符号，用 key 替代"})
             s = key
         else:
-            issues.append({"kind": "empty_name", "raw": raw_name,
-                           "detail": "空名称且无 key"})
+            issues.append({"kind": "empty_name", "raw": raw_name, "detail": "空名称且无 key"})
             s = str(raw_name) or "unknown"
-    # 长度截断
     if len(s) > MAX_NAME_LEN:
-        issues.append({"kind": "name_too_long", "raw": raw_name,
-                       "detail": f"长度{len(s)}>{MAX_NAME_LEN}"})
+        issues.append({"kind": "name_too_long", "raw": raw_name, "detail": f"长度{len(s)}>{MAX_NAME_LEN}"})
         s = s[:MAX_NAME_LEN]
     return s, issues
 
-TARGET_FILES = [
-    "tvbox.json",
-    "vod.json",
-    "short.json",
-    "stores/cms.json",
-    "stores/app.json",
-    "stores/pan.json",
-    "stores/csp.json",
-]
-
-_LEGIT_TYPES = set(VALID_TYPES)
-
 
 def nearest_valid_type(t) -> int:
-    """把越界 type 修正为最接近的合法值。"""
     try:
         ti = int(t)
     except (TypeError, ValueError):
@@ -173,12 +147,10 @@ def nearest_valid_type(t) -> int:
 
 
 def validate_site(site: dict, fix: bool, file_label: str) -> list:
-    """校验单个 site dict，返回 issues 列表。fix=True 时就地修正。"""
     issues = []
     if not isinstance(site, dict):
         issues.append({"file": file_label, "kind": "not_dict", "detail": str(site)[:80]})
         return issues
-
     key = site.get("key", "")
     name = site.get("name", "")
     api = site.get("api", "")
@@ -187,8 +159,7 @@ def validate_site(site: dict, fix: bool, file_label: str) -> list:
 
     for field in ("key", "name", "api", "type"):
         if field not in site or site.get(field) in (None, ""):
-            issues.append({"file": file_label, "key": key, "kind": f"missing_{field}",
-                           "detail": f"缺失字段 {field}"})
+            issues.append({"file": file_label, "key": key, "kind": f"missing_{field}", "detail": f"缺失字段 {field}"})
 
     if has_type:
         try:
@@ -201,20 +172,17 @@ def validate_site(site: dict, fix: bool, file_label: str) -> list:
                            "detail": f"type={t!r} 越界，修正为 {fixed}"})
             if fix:
                 site["type"] = fixed
-    else:
-        if fix:
-            site["type"] = 3
-            issues.append({"file": file_label, "key": key, "kind": "type_missing_defaulted",
-                           "detail": "缺失 type，默认 3"})
+    elif fix:
+        site["type"] = 3
+        issues.append({"file": file_label, "key": key, "kind": "type_missing_defaulted", "detail": "缺失 type，默认 3"})
 
-    effective_type = site.get("type", t)
+    et = site.get("type", t)
     try:
-        et = int(effective_type)
+        et = int(et)
     except (TypeError, ValueError):
         et = 3
     if et in (0, 1) and not api:
-        issues.append({"file": file_label, "key": key, "kind": "api_empty",
-                       "detail": f"type={et} 但 api 为空"})
+        issues.append({"file": file_label, "key": key, "kind": "api_empty", "detail": f"type={et} 但 api 为空"})
 
     if name:
         if len(str(name)) > MAX_NAME_LEN:
@@ -223,7 +191,6 @@ def validate_site(site: dict, fix: bool, file_label: str) -> list:
     else:
         issues.append({"file": file_label, "key": key, "kind": "name_empty", "detail": "name 为空"})
 
-    # 名称清洗（任务2：广告后缀/乱码/繁简/全角半角）
     cleaned, clean_issues = clean_name(str(name), str(key))
     for ci in clean_issues:
         ci["file"] = file_label
@@ -231,12 +198,10 @@ def validate_site(site: dict, fix: bool, file_label: str) -> list:
         issues.append(ci)
     if fix and cleaned != str(name):
         site["name"] = cleaned
-
     return issues
 
 
 def dedup_keys(sites: list, fix: bool) -> list:
-    """检测重复 key；fix=True 时自动加后缀。"""
     seen = {}
     dupes = []
     for s in sites:
@@ -257,7 +222,6 @@ def dedup_keys(sites: list, fix: bool) -> list:
 
 
 def _resolve_dep_path(ref: str) -> str:
-    """把 './deps/...' 引用解析为仓库内实际落盘路径（与 pathutil 落库规则一致）。"""
     p = ref
     if ";" in p:
         p = p.split(";", 1)[0]
@@ -266,29 +230,24 @@ def _resolve_dep_path(ref: str) -> str:
     return "/".join(parts)
 
 
-def _check_one_ref(ref: str, file_label: str, field: str, broken_refs: list,
-                   fix: bool, owner: dict):
-    """检查单个 ./deps/ 引用字符串是否落盘存在。"""
+def _check_one_ref(ref, file_label, field, broken_refs, fix, owner):
     rel = _resolve_dep_path(ref)
     if not os.path.exists(rel):
         broken_refs.append({"file": file_label, "field": field, "ref": ref, "resolved": rel})
         if fix and field == "jar":
             owner[field] = ""
         elif fix and field == "ext":
-            parts = ref.split("$$$")
             kept = []
-            for p in parts:
+            for p in ref.split("$$$"):
                 if p.startswith("./deps/"):
-                    pr = _resolve_dep_path(p)
-                    if os.path.exists(pr):
+                    if os.path.exists(_resolve_dep_path(p)):
                         kept.append(p)
                 else:
                     kept.append(p)
             owner[field] = "$$$".join(kept)
 
 
-def check_refs_in_obj(obj, file_label: str, broken_refs: list, fix: bool):
-    """递归检查 dict/list 中所有 ./deps/... 字符串引用。"""
+def check_refs_in_obj(obj, file_label, broken_refs, fix):
     if isinstance(obj, dict):
         for k, v in obj.items():
             if isinstance(v, str) and "./deps/" in v:
@@ -307,18 +266,14 @@ def check_refs_in_obj(obj, file_label: str, broken_refs: list, fix: bool):
             check_refs_in_obj(item, file_label, broken_refs, fix)
 
 
-def check_spider_ref(spider: str, file_label: str, broken_refs: list,
-                     fix: bool, doc: dict):
-    """检查 spider 字段引用的本地 jar 是否存在。"""
-    if not spider or not isinstance(spider, str):
+def check_spider_ref(spider, file_label, broken_refs, fix, doc):
+    if not spider or not isinstance(spider, str) or not spider.startswith("./"):
         return
-    if spider.startswith("./"):
-        rel = _resolve_dep_path(spider)
-        if not os.path.exists(rel):
-            broken_refs.append({"file": file_label, "field": "spider",
-                                "ref": spider, "resolved": rel})
-            if fix:
-                doc["spider"] = ""
+    rel = _resolve_dep_path(spider)
+    if not os.path.exists(rel):
+        broken_refs.append({"file": file_label, "field": "spider", "ref": spider, "resolved": rel})
+        if fix:
+            doc["spider"] = ""
 
 
 def load_json(path):
@@ -329,62 +284,46 @@ def load_json(path):
         return None
 
 
-def validate_file(path: str, fix: bool, all_issues: list, broken_refs: list):
-    """校验单个产物文件。返回 (sites_count, issues_count, broken_count)。"""
+def validate_file(path, fix, all_issues, broken_refs):
     if not os.path.exists(path):
         all_issues.append({"file": path, "kind": "file_missing", "detail": "文件不存在"})
         return 0, 1, 0
-
     doc = load_json(path)
     if doc is None:
         all_issues.append({"file": path, "kind": "json_parse_error", "detail": "JSON 解析失败"})
         return 0, 1, 0
-
     sites = doc.get("sites") if isinstance(doc, dict) else None
     if not isinstance(sites, list):
         return 0, 0, 0
-
-    file_issues = []
-    for site in sites:
-        file_issues.extend(validate_site(site, fix, path))
-
+    file_issues = [issue for site in sites for issue in validate_site(site, fix, path)]
     dupes = dedup_keys(sites, fix)
     for d in dupes:
         file_issues.append({"file": path, "kind": "duplicate_key", **d})
-
     file_broken = []
     check_refs_in_obj(doc, path, file_broken, fix)
     if isinstance(doc, dict):
         check_spider_ref(doc.get("spider", ""), path, file_broken, fix, doc)
-
     all_issues.extend(file_issues)
     broken_refs.extend(file_broken)
-
     if fix:
         tmp = path + ".tmp"
         with open(tmp, "w", encoding="utf-8") as f:
             json.dump(doc, f, ensure_ascii=False, indent=1)
         os.replace(tmp, path)
-
     return len(sites), len(file_issues), len(file_broken)
 
 
 def main():
     ap = argparse.ArgumentParser(description="配置产物质量校验")
-    ap.add_argument("--fix", action="store_true",
-                    help="自动修正 key 去重/type 修正/断引用置空")
+    ap.add_argument("--fix", action="store_true")
     args = ap.parse_args()
 
-    all_issues = []
-    broken_refs = []
-    total_sites = 0
-    total_issues = 0
-    total_broken = 0
+    all_issues, broken_refs = [], []
+    total_sites = total_issues = total_broken = 0
     per_file = {}
-
-    for fpath in TARGET_FILES:
-        n, ni, nb = validate_file(fpath, args.fix, all_issues, broken_refs)
-        per_file[fpath] = {"sites": n, "issues": ni, "broken_refs": nb}
+    for fp in TARGET_FILES:
+        n, ni, nb = validate_file(fp, args.fix, all_issues, broken_refs)
+        per_file[fp] = {"sites": n, "issues": ni, "broken_refs": nb}
         total_sites += n
         total_issues += ni
         total_broken += nb
@@ -395,22 +334,21 @@ def main():
         issue_kinds[k] = issue_kinds.get(k, 0) + 1
 
     field_stats = {"key": 0, "name": 0, "api": 0, "type": 0}
-    for fpath in TARGET_FILES:
-        doc = load_json(fpath)
+    for fp in TARGET_FILES:
+        doc = load_json(fp)
         if not doc or not isinstance(doc, dict):
             continue
         for s in doc.get("sites", []):
-            if not isinstance(s, dict):
-                continue
-            for f in field_stats:
-                if s.get(f) not in (None, ""):
-                    field_stats[f] += 1
+            if isinstance(s, dict):
+                for f in field_stats:
+                    if s.get(f) not in (None, ""):
+                        field_stats[f] += 1
     field_rates = {f: round(field_stats[f] / total_sites * 100, 2) if total_sites else 0.0
                    for f in field_stats}
 
     total_refs_checked = 0
-    for fpath in TARGET_FILES:
-        doc = load_json(fpath)
+    for fp in TARGET_FILES:
+        doc = load_json(fp)
         if not doc or not isinstance(doc, dict):
             continue
         for s in doc.get("sites", []):
@@ -420,8 +358,7 @@ def main():
                 v = s.get(f)
                 if isinstance(v, str) and "./deps/" in v:
                     if f == "ext" and "$$$" in v:
-                        total_refs_checked += sum(
-                            1 for p in v.split("$$$") if p.startswith("./deps/"))
+                        total_refs_checked += sum(1 for p in v.split("$$$") if p.startswith("./deps/"))
                     else:
                         total_refs_checked += 1
         sp = doc.get("spider", "")
@@ -429,57 +366,41 @@ def main():
             total_refs_checked += 1
 
     ref_fail_rate = round(total_broken / total_refs_checked * 100, 2) if total_refs_checked else 0.0
-
     prev_quality = {}
-    prev_path = "exports/config_quality.json"
-    if os.path.exists(prev_path):
+    if os.path.exists("exports/config_quality.json"):
         try:
-            with open(prev_path, encoding="utf-8") as f:
+            with open("exports/config_quality.json", encoding="utf-8") as f:
                 prev = json.load(f)
-            prev_quality = {
-                "prev_pass_rate": prev.get("pass_rate"),
-                "prev_issue_count": prev.get("issue_count"),
-                "prev_ref_fail_rate": prev.get("ref_fail_rate"),
-            }
+            prev_quality = {"prev_pass_rate": prev.get("pass_rate"),
+                            "prev_issue_count": prev.get("issue_count"),
+                            "prev_ref_fail_rate": prev.get("ref_fail_rate")}
         except (OSError, json.JSONDecodeError):
             pass
 
     pass_rate = round((total_sites - total_issues) / total_sites * 100, 2) if total_sites else 100.0
-
     quality = {
         "timestamp": time.strftime("%Y-%m-%dT%H:%M:%S+08:00"),
-        "fix_mode": args.fix,
-        "total_sites": total_sites,
-        "issue_count": total_issues,
-        "broken_ref_count": total_broken,
-        "pass_rate": pass_rate,
-        "ref_fail_rate": ref_fail_rate,
-        "ref_total_checked": total_refs_checked,
-        "issue_kinds": issue_kinds,
-        "field_completeness": field_rates,
-        "per_file": per_file,
-        "compare_prev": prev_quality,
+        "fix_mode": args.fix, "total_sites": total_sites, "issue_count": total_issues,
+        "broken_ref_count": total_broken, "pass_rate": pass_rate,
+        "ref_fail_rate": ref_fail_rate, "ref_total_checked": total_refs_checked,
+        "issue_kinds": issue_kinds, "field_completeness": field_rates,
+        "per_file": per_file, "compare_prev": prev_quality,
     }
-
     os.makedirs("exports", exist_ok=True)
     os.makedirs("state", exist_ok=True)
     with open("exports/config_quality.json", "w", encoding="utf-8") as f:
         json.dump(quality, f, ensure_ascii=False, indent=1)
     with open("state/config_issues.json", "w", encoding="utf-8") as f:
-        json.dump({"issues": all_issues, "total": len(all_issues)}, f,
-                  ensure_ascii=False, indent=1)
+        json.dump({"issues": all_issues, "total": len(all_issues)}, f, ensure_ascii=False, indent=1)
     with open("state/broken_refs.json", "w", encoding="utf-8") as f:
-        json.dump({"broken_refs": broken_refs, "total": len(broken_refs)}, f,
-                  ensure_ascii=False, indent=1)
+        json.dump({"broken_refs": broken_refs, "total": len(broken_refs)}, f, ensure_ascii=False, indent=1)
 
     print(f"[config_validate] sites={total_sites} issues={total_issues} "
           f"broken_refs={total_broken} pass_rate={pass_rate}% ref_fail={ref_fail_rate}%")
-    if issue_kinds:
-        for k, v in sorted(issue_kinds.items(), key=lambda x: -x[1]):
-            print(f"  - {k}: {v}")
-
+    for k, v in sorted(issue_kinds.items(), key=lambda x: -x[1]):
+        print(f"  - {k}: {v}")
     if ref_fail_rate > 5.0:
-        print(f"[config_validate] 引用失效率 {ref_fail_rate}% > 5%，标记失败（CI 用 || true 不阻断）")
+        print(f"[config_validate] 引用失效率 {ref_fail_rate}% > 5%，标记失败")
         return 1
     return 0
 

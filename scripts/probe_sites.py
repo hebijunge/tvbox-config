@@ -47,6 +47,13 @@ L3_TIMEOUT = 10
 MAX_JSON = 512 * 1024
 MAX_TS = 4096
 
+# ---- 探针结果缓存跳过（P1）----
+# 上次实测 healthy（L1/L2/L3）且延迟 < CACHE_MAX_LATENCY_MS 且在 CACHE_TTL_HOURS 小时内
+# 测过的源，本轮跳过实测直接复用结论；只测新增源、上次降级/超时（L0/L?）源、fail_streak>0 源。
+CACHE_TTL_HOURS = float(os.environ.get("PROBE_CACHE_HOURS", "24"))
+CACHE_MAX_LATENCY_MS = int(os.environ.get("PROBE_CACHE_MAX_MS", "2000"))
+HEALTHY_LEVELS = ("L1", "L2", "L3")
+
 # 热词：优先选长期在架、覆盖面广的剧名，命中率比随机词高
 KEYWORDS = ["庆余年", "流浪地球", "甄嬛传"]
 
@@ -386,6 +393,48 @@ def static_check(site, repo_dir, manifest):
     return r
 
 
+def load_probe_cache(out_path: str) -> dict:
+    """读上次 probe/sites_probe.json，返回 {api: result}。文件缺失/损坏返回空。"""
+    try:
+        with open(out_path, encoding="utf-8") as f:
+            doc = json.load(f)
+    except (OSError, json.JSONDecodeError):
+        return {}
+    cache = {}
+    for r in (doc.get("sites") or []):
+        api = r.get("api")
+        if isinstance(api, str) and api:
+            cache[api] = r
+    return cache
+
+
+def _age_hours(result: dict, file_generated_at: str) -> float:
+    """距上次实测的小时数。优先用单条 tested_at，缺失回退到文件 generated_at。"""
+    ts = result.get("tested_at") or file_generated_at or ""
+    for fmt in ("%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S"):
+        try:
+            dt = time.strptime(ts, fmt)
+            return (time.time() - time.mktime(dt)) / 3600.0
+        except ValueError:
+            continue
+    return 1e9  # 时间解析失败 → 视为过期，必须重测
+
+
+def cache_hit(result: dict, file_generated_at: str) -> bool:
+    """判定是否可复用上轮结论：healthy + 延迟达标 + 24h 内测过。"""
+    if result.get("level") not in HEALTHY_LEVELS:
+        return False
+    if int(result.get("fail_streak", 0) or 0) > 0:
+        return False
+    l1 = result.get("l1") or {}
+    ms = l1.get("ms")
+    if not isinstance(ms, (int, float)) or ms >= CACHE_MAX_LATENCY_MS:
+        return False
+    if _age_hours(result, file_generated_at) >= CACHE_TTL_HOURS:
+        return False
+    return True
+
+
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--input", default="tvbox.json", help="合并产物配置")
@@ -396,6 +445,8 @@ def main() -> int:
     ap.add_argument("--concurrency", type=int, default=24)
     ap.add_argument("--keywords", default=",".join(KEYWORDS))
     ap.add_argument("--shallow", action="store_true", help="只跑 L1，不跑 L2/L3")
+    ap.add_argument("--force", action="store_true",
+                    help="强制全量实测，跳过缓存复用（默认复用 24h 内 healthy 且 <2s 的上轮结论）")
     ap.add_argument("--proxy", default=os.environ.get("PROBE_PROXY", ""),
                     help="本地测试代理，如 http://127.0.0.1:7890（国内直连被阻断时使用）")
     args = ap.parse_args()
@@ -436,22 +487,57 @@ def main() -> int:
     print(f"[probe] 站点 {len(sites)}：http 型 {len(http_sites)}，静态类 {len(other_sites)}", flush=True)
     results = []
 
+    # ---- 缓存复用：24h 内 healthy 且 <2s 的源跳过实测 ----
+    out_path = os.path.join(repo, args.out)
+    prev_cache = {}
+    prev_generated_at = ""
+    if not args.force:
+        try:
+            with open(out_path, encoding="utf-8") as f:
+                prev_generated_at = (json.load(f).get("summary") or {}).get("generated_at", "")
+        except (OSError, json.JSONDecodeError):
+            prev_generated_at = ""
+        prev_cache = load_probe_cache(out_path)
+
+    cached_count = 0
     if args.only in ("all", "http"):
-        print(f"[probe] L1-L3 实测 {len(http_sites)} 个（并发 {args.concurrency}，热词 {keywords}）...", flush=True)
+        to_test, reused = [], []
+        for s in http_sites:
+            if args.force:
+                to_test.append(s)
+                continue
+            prev = prev_cache.get(s.get("api"))
+            if prev is not None and cache_hit(prev, prev_generated_at):
+                reused.append((s, prev))
+            else:
+                to_test.append(s)
+        cached_count = len(reused)
+        print(f"[probe] L1-L3 实测 {len(to_test)} 个（并发 {args.concurrency}，热词 {keywords}）"
+              f"，缓存复用 {cached_count} 个{'（--force 全量）' if args.force else ''}...", flush=True)
         t0 = time.time()
         with cf.ThreadPoolExecutor(args.concurrency) as ex:
-            futs = {ex.submit(probe_http_site, s, keywords, not args.shallow): s for s in http_sites}
+            futs = {ex.submit(probe_http_site, s, keywords, not args.shallow): s for s in to_test}
             done = 0
             for fut in cf.as_completed(futs):
                 try:
-                    results.append(fut.result())
+                    r = fut.result()
                 except Exception as e:  # noqa: BLE001
                     s = futs[fut]
-                    results.append({"key": s.get("key"), "name": s.get("name"), "api": s.get("api"),
-                                    "kind": "http", "level": "L0", "error": f"{type(e).__name__}: {e}"[:120]})
+                    r = {"key": s.get("key"), "name": s.get("name"), "api": s.get("api"),
+                         "kind": "http", "level": "L0", "error": f"{type(e).__name__}: {e}"[:120]}
+                # 记录实测时间与失败连 streak（失败 streak>0 的源下一轮必重测）
+                r["tested_at"] = now
+                prev = prev_cache.get(r.get("api")) or {}
+                prev_streak = int(prev.get("fail_streak", 0) or 0)
+                r["fail_streak"] = 0 if r["level"] in HEALTHY_LEVELS else prev_streak + 1
+                results.append(r)
                 done += 1
                 if done % 25 == 0:
-                    print(f"  ... {done}/{len(http_sites)} ({time.time()-t0:.0f}s)", flush=True)
+                    print(f"  ... {done}/{len(to_test)} ({time.time()-t0:.0f}s)", flush=True)
+        for s, prev in reused:
+            r = dict(prev)
+            r["cached"] = True
+            results.append(r)
 
     if args.only in ("all", "js", "csp"):
         for s in other_sites:
@@ -466,6 +552,7 @@ def main() -> int:
         "generated_at": now,
         "sites_total": len(sites),
         "http_tested": len(http_res),
+        "http_cached": cached_count,
         "levels": dict(sorted(by_level.items())),
         "http_levels": {lv: sum(1 for r in http_res if r["level"] == lv) for lv in ("L3", "L2", "L1", "L0", "L?")},
         "static_levels": {lv: sum(1 for r in results if r["level"] == lv and r.get("kind") != "http")
@@ -476,7 +563,8 @@ def main() -> int:
     with open(os.path.join(repo, args.out), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)
 
-    print(f"[probe] 完成：{summary['http_levels']}（http 型四级分布） 静态：{summary['static_levels']}")
+    print(f"[probe] 完成：{summary['http_levels']}（http 型四级分布） 静态：{summary['static_levels']}"
+          f" 缓存跳过：{cached_count}")
     print(f"[probe] 产物 -> {args.out}")
     return 0
 

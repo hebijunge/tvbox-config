@@ -73,6 +73,61 @@ def _host_of(url: str) -> str:
     return m.group(1).lower() if m else ""
 
 
+# ---- P0-3 数字/前缀/后缀统一 ----
+# 中文数字→阿拉伯数字（覆盖 1-99）；仅在 CCTV/频道编号语境转换，避免误伤普通中文。
+_CN_DIGIT = {"零":0,"一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9}
+
+def _cn_to_int(s: str):
+    """把中文数字串（一..九十九）转 int；不认识返回 None。"""
+    if not s:
+        return None
+    if s == "十":
+        return 10
+    if "十" in s:
+        a, _, b = s.partition("十")
+        tens = _CN_DIGIT.get(a, 1) if a else 1
+        ones = _CN_DIGIT.get(b, 0) if b else 0
+        return tens * 10 + ones
+    if s in _CN_DIGIT:
+        return _CN_DIGIT[s]
+    return None
+
+
+def _normalize_cctv_text(raw: str) -> str:
+    """P0-3 CCTV 前缀/数字/后缀归一：
+      中央电视台/中央电视台CCTV/中央台/央视 → cctv；
+      中文数字编号（央视十三套）→ cctv13；
+      尾部「频道/台/套/高清/标清/超清/4K/1080P/720P」等后缀剥离（卫视/电台守卫）。
+    返回小写紧凑串（去空白），供 _cctv_match 正则消费。"""
+    s = (raw or "").strip().lower().replace(" ", "").replace("\u3000", "")
+    # 前缀归一
+    s = re.sub(r"^中央电视台|^中央台|^央视", "cctv", s)
+    # 中文数字编号：cctv十三套/cctv十三/cctv13套 形态
+    m = re.match(r"^(cctv|中央|央视)[\s\-—–]*([零一二两三四五六七八九十]{1,3})\s*(?:套|频道|台)?\s*$", s)
+    if m:
+        n = _cn_to_int(m.group(2))
+        if n is not None:
+            return "cctv%d" % n
+    # 尾部已知 CCTV 副标题保留但后缀「频道/台」剥离（不动副标题）
+    # 例：cctv13新闻频道 → cctv13新闻；cctv1综合 → cctv1综合
+    s = re.sub(r"(频道|台|套)$", "", s)
+    return s
+
+# P0-3 放宽版 CCTV 编号正则：允许尾部跟频道副标题（综合/新闻/财经/体育...），
+# 解决「CCTV-13 新闻」「CCTV1综合」因原正则 $ 结尾漏匹配的问题。
+_CCTV_NUMBERED_RELAXED = re.compile(
+    r"^(?:cctv|央视|中央)[\s\-—–]*0?(\d{1,2})\s*(\+?)"
+    r"(?:(?:综合|财经|综艺|体育|体育赛事|电影|国防军事|电视剧|纪录|科教|戏曲|"
+    r"社会与法|新闻|少儿|音乐|农业农村|奥林匹克|中文国际|法语|西班牙语|俄语|"
+    r"阿拉伯语|英语|纪录|电视指南|风云|第一剧场|怀旧剧场|世界地理|女性|精品|"
+    r"高尔夫|网球|足球|儿童|少儿|中学生|青年|留学|游戏|彩民|老年|卫生|健康|"
+    r"早期|教育|城市|建设|汽摩|购物|女性时尚|央视|播|云|高清|标清|超清|4k|"
+    r"1080p?|720p?|hd|sd|fhd|uhd)\s*)*$"
+)
+# 通用尾部质量/格式后缀剥离（守卫卫视/电台不剥）
+_TAIL_QUALITY_RE = re.compile(r"(?:高清|标清|超清|超高清|蓝光|4k|8k|1080p?|720p?|480p?|fhd|uhd|hd|sd|hevc|h26[45])$", re.I)
+
+
 def normalize(name: str, *, strip_quality: bool = True, strip_brand: bool = True) -> str:
     """频道名归一化（用于去重键；不输出标准名，只输出「干净键」）。
 
@@ -148,27 +203,30 @@ def _is_adult_name(name: str) -> bool:
 
 
 def _cctv_match(name: str) -> Optional[str]:
-    """匹配 CCTV（含 CGTN/CETV），返回 canonical 名（如 'CCTV-1'/'CETV-2'/'CGTN'/'CGTN english'）。"""
+    """匹配 CCTV（含 CGTN/CETV），返回 canonical 名（如 'CCTV-1'/'CETV-2'/'CGTN'/'CGTN english'）。
+    P0-3：先做前缀/中文数字/尾部质量词归一，再匹配；放宽编号正则允许尾部频道副标题。"""
     c = _compiled()
     if not name:
         return None
     raw = name.strip()
-    low = raw.lower().replace(" ", "").replace("\u3000", "")
-    # 央视一套...十七套 别名表
+    # 央视一套...十七套 别名表（原始名命中直接返回）
     alias = c["cctv_alias_canonical"]
     if raw in alias:
         return alias[raw]
+    # P0-3 预处理：前缀归一 + 中文数字 + 尾部质量词剥离
+    low = _normalize_cctv_text(raw)
     cat = _load_categories()
     cctv_prefix = cat["cctv"]["prefix_keywords"]
     if not any(low.startswith(k) for k in cctv_prefix):
-        # 兜底：含 cctv/央视 子串也算
         if not any(k in low for k in cctv_prefix):
             return None
-    # 编号 CCTV
-    m = c["cctv_numbered"].match(low)
+    # 编号 CCTV（宽松正则：允许尾部副标题）
+    m = _CCTV_NUMBERED_RELAXED.match(low)
+    if not m:
+        m = c["cctv_numbered"].match(low)
     if m:
-        n_str = str(int(m.group(2)))
-        plus = m.group(3) or ""
+        n_str = str(int(m.group(1)))
+        plus = m.group(2) or ""
         # 严格任务约束：仅 1..17 归 cctv 组
         if 1 <= int(n_str) <= 17:
             return f"CCTV-{n_str}{plus}"
@@ -240,6 +298,99 @@ def _local_match(name: str, url: str) -> Optional[str]:
     return None
 
 
+# ---- P0-5 标准名格式：央视「CCTV-N 频道名」 ----
+_CCTV_CHANNEL_NAME = {
+    1: "综合", 2: "财经", 3: "综艺", 4: "中文国际", 5: "体育", 6: "电影",
+    7: "国防军事", 8: "电视剧", 9: "纪录", 10: "科教", 11: "戏曲", 12: "社会与法",
+    13: "新闻", 14: "少儿", 15: "音乐", 16: "奥林匹克", 17: "农业农村",
+}
+
+def _format_cctv_canon(canon: str) -> str:
+    """P0-5：CCTV-N → CCTV-N 频道名（如 CCTV-1 → CCTV-1 综合）。非编号 CCTV 返回原样。"""
+    m = re.match(r"^CCTV-(\d{1,2})(\+?)$", canon or "")
+    if not m:
+        return canon
+    n = int(m.group(1))
+    sub = _CCTV_CHANNEL_NAME.get(n)
+    if sub and not m.group(2):
+        return "CCTV-%d %s" % (n, sub)
+    return canon
+
+
+# ---- P0-4 扩展别名表（硬编码，常见变体 → 标准 canonical） ----
+# CCTV 1-17 常见变体；34 省级卫视；港台 TVB/凤凰/纬来/三立/民视/台视/中视/华视。
+# 命中后直接按别名表给 group+canonical，跳过后续关键词匹配（更稳，不误伤）。
+_EXTRA_ALIAS = {
+    # CCTV 变体（中央N台/央视N/CCTVN/CCTV-N）
+    "中央一台": ("cctv", "CCTV-1"), "中央二台": ("cctv", "CCTV-2"),
+    "中央三台": ("cctv", "CCTV-3"), "中央四台": ("cctv", "CCTV-4"),
+    "中央五台": ("cctv", "CCTV-5"), "中央六台": ("cctv", "CCTV-6"),
+    "中央七台": ("cctv", "CCTV-7"), "中央八台": ("cctv", "CCTV-8"),
+    "中央九台": ("cctv", "CCTV-9"), "中央十台": ("cctv", "CCTV-10"),
+    "中央十一台": ("cctv", "CCTV-11"), "中央十二台": ("cctv", "CCTV-12"),
+    "中央十三台": ("cctv", "CCTV-13"), "中央十四台": ("cctv", "CCTV-14"),
+    "中央十五台": ("cctv", "CCTV-15"), "中央十六台": ("cctv", "CCTV-16"),
+    "中央十七台": ("cctv", "CCTV-17"),
+    "中央电视台综合频道": ("cctv", "CCTV-1"),
+    "中央电视台财经频道": ("cctv", "CCTV-2"),
+    "中央电视台综艺频道": ("cctv", "CCTV-3"),
+    "中央电视台中文国际频道": ("cctv", "CCTV-4"),
+    "中央电视台体育频道": ("cctv", "CCTV-5"),
+    "中央电视台电影频道": ("cctv", "CCTV-6"),
+    "中央电视台国防军事频道": ("cctv", "CCTV-7"),
+    "中央电视台电视剧频道": ("cctv", "CCTV-8"),
+    "中央电视台纪录频道": ("cctv", "CCTV-9"),
+    "中央电视台科教频道": ("cctv", "CCTV-10"),
+    "中央电视台戏曲频道": ("cctv", "CCTV-11"),
+    "中央电视台社会与法频道": ("cctv", "CCTV-12"),
+    "中央电视台新闻频道": ("cctv", "CCTV-13"),
+    "中央电视台少儿频道": ("cctv", "CCTV-14"),
+    "中央电视台音乐频道": ("cctv", "CCTV-15"),
+    # 卫视（34 省级卫视，统一 canonical 为「XX卫视」）
+    "湖南卫视": ("local", "湖南卫视"), "浙江卫视": ("local", "浙江卫视"),
+    "东方卫视": ("local", "东方卫视"), "江苏卫视": ("local", "江苏卫视"),
+    "北京卫视": ("local", "北京卫视"), "广东卫视": ("local", "广东卫视"),
+    "山东卫视": ("local", "山东卫视"), "深圳卫视": ("local", "深圳卫视"),
+    "天津卫视": ("local", "天津卫视"), "安徽卫视": ("local", "安徽卫视"),
+    "辽宁卫视": ("local", "辽宁卫视"), "黑龙江卫视": ("local", "黑龙江卫视"),
+    "吉林卫视": ("local", "吉林卫视"), "河北卫视": ("local", "河北卫视"),
+    "河南卫视": ("local", "河南卫视"), "山西卫视": ("local", "山西卫视"),
+    "陕西卫视": ("local", "陕西卫视"), "甘肃卫视": ("local", "甘肃卫视"),
+    "青海卫视": ("local", "青海卫视"), "宁夏卫视": ("local", "宁夏卫视"),
+    "新疆卫视": ("local", "新疆卫视"), "西藏卫视": ("local", "西藏卫视"),
+    "内蒙古卫视": ("local", "内蒙古卫视"), "广西卫视": ("local", "广西卫视"),
+    "云南卫视": ("local", "云南卫视"), "贵州卫视": ("local", "贵州卫视"),
+    "海南卫视": ("local", "海南卫视"), "东南卫视": ("local", "东南卫视"),
+    "厦门卫视": ("local", "厦门卫视"), "江西卫视": ("local", "江西卫视"),
+    "湖北卫视": ("local", "湖北卫视"), "重庆卫视": ("local", "重庆卫视"),
+    "四川卫视": ("local", "四川卫视"), "旅游卫视": ("local", "海南卫视"),
+    "黄河卫视": ("local", "黄河卫视"), "兵团卫视": ("local", "兵团卫视"),
+    "卡酷少儿": ("local", "北京卫视"), "卡酷卫视": ("local", "北京卫视"),
+    # 港台 TVB/凤凰/纬来/三立/民视/台视/中视/华视
+    "TVB翡翠台": ("gangtai", "TVB翡翠台"), "TVB明珠台": ("gangtai", "TVB明珠台"),
+    "TVB新闻台": ("gangtai", "TVB新闻台"), "TVB无线新闻台": ("gangtai", "TVB新闻台"),
+    "TVB财经台": ("gangtai", "TVB财经台"), "TVB J2": ("gangtai", "TVB J2"),
+    "翡翠台": ("gangtai", "TVB翡翠台"), "明珠台": ("gangtai", "TVB明珠台"),
+    "凤凰卫视中文台": ("gangtai", "凤凰卫视中文台"),
+    "凤凰卫视资讯台": ("gangtai", "凤凰卫视资讯台"),
+    "凤凰卫视电影台": ("gangtai", "凤凰卫视电影台"),
+    "纬来体育台": ("gangtai", "纬来体育台"), "纬来戏剧台": ("gangtai", "纬来戏剧台"),
+    "纬来电影台": ("gangtai", "纬来电影台"), "纬来日本台": ("gangtai", "纬来日本台"),
+    "三立台湾台": ("gangtai", "三立台湾台"), "三立新闻台": ("gangtai", "三立新闻台"),
+    "三立都会台": ("gangtai", "三立都会台"),
+    "民视新闻台": ("gangtai", "民视新闻台"), "民视无线台": ("gangtai", "民视无线台"),
+    "台视新闻台": ("gangtai", "台视新闻台"), "台视主频": ("gangtai", "台视主频"),
+    "中视新闻台": ("gangtai", "中视新闻台"), "中视主频": ("gangtai", "中视主频"),
+    "华视新闻台": ("gangtai", "华视新闻台"), "华视主频": ("gangtai", "华视主频"),
+    "公视主频": ("gangtai", "公视主频"), "公视新闻台": ("gangtai", "公视新闻台"),
+    "TVBS新闻台": ("gangtai", "TVBS新闻台"), "TVBS欢乐台": ("gangtai", "TVBS欢乐台"),
+    "TVBS精采台": ("gangtai", "TVBS精采台"),
+    "香港开电视": ("gangtai", "香港开电视"), "HOY TV": ("gangtai", "HOY TV"),
+    "ViuTV": ("gangtai", "ViuTV"), "ViuTVsix": ("gangtai", "ViuTVsix"),
+    "港台电视31": ("gangtai", "港台电视31"), "港台电视32": ("gangtai", "港台电视32"),
+}
+
+
 def classify(name: str, url: str = "", source_marker: Optional[str] = None) -> dict:
     """分类主入口。返回 {'group', 'key', 'canonical', 'debug'}。
 
@@ -258,6 +409,14 @@ def classify(name: str, url: str = "", source_marker: Optional[str] = None) -> d
     debug = {"matched_by": None, "raw": name, "url": url}
     if not name:
         return {"group": "live", "key": "", "canonical": "", "debug": debug}
+    # P0-4 硬编码别名表优先命中（常见变体直接给 group+canonical，跳过关键词匹配）
+    _raw_strip = (name or "").strip()
+    if _raw_strip in _EXTRA_ALIAS:
+        grp, canon = _EXTRA_ALIAS[_raw_strip]
+        if grp == "cctv":
+            canon = _format_cctv_canon(canon)
+        debug["matched_by"] = "alias_table"
+        return {"group": grp, "key": normalize(canon), "canonical": canon, "debug": debug}
     # 1) source_marker
     if source_marker:
         cat = _load_categories()
@@ -290,11 +449,12 @@ def classify(name: str, url: str = "", source_marker: Optional[str] = None) -> d
     if any(k in norm_name for k in pkw):
         debug["matched_by"] = "adult_name"
         return {"group": "adult", "key": norm_name, "canonical": norm_name, "debug": debug}
-    # 5) cctv
+    # 5) cctv（P0-5：canonical 格式化为「CCTV-N 频道名」）
     canon = _cctv_match(name) or _cctv_match(norm_name)
     if canon:
         debug["matched_by"] = "cctv"
-        return {"group": "cctv", "key": normalize(canon), "canonical": canon, "debug": debug}
+        canon_fmt = _format_cctv_canon(canon)
+        return {"group": "cctv", "key": normalize(canon), "canonical": canon_fmt, "debug": debug}
     # 6) gangtai
     canon = _gangtai_match(name) or _gangtai_match(norm_name)
     if canon:

@@ -28,11 +28,12 @@
 
 import argparse
 import json
+import math
 import os
 import re
 import sys
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timedelta
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -54,6 +55,51 @@ UNKNOWN_LATENCY = 99999
 # drpy 沙箱已接入 CI 每日更新，一般不受影响。
 STALE_DAYS = int(os.environ.get("PROBE_STALE_DAYS", "7"))
 
+# ==================== 加权综合分排序（P1，docs/ranking-scoring.md） ====================
+# 综合分公式：score = w1*avail_rank_inv + w2*latency_norm + w3*stability
+#                  + w4*richness + w5*freshness + w6*group_confidence
+# 各维全部归一化到 [0,1]，权重可经环境变量 RANK_WEIGHTS 调整（无需改代码）。
+# 默认权重（docs/ranking-scoring.md 7.2）：可用性优先，其次稳定性/速度/丰富度。
+DIM_ORDER = ("avail", "latency", "stability", "richness", "freshness", "group")
+DEFAULT_WEIGHTS = {
+    "avail": 0.30, "latency": 0.15, "stability": 0.20,
+    "richness": 0.15, "freshness": 0.10, "group": 0.10,
+}
+
+
+def parse_weights(env: str = None) -> dict:
+    """解析 RANK_WEIGHTS 环境变量。
+
+    两种格式：
+      * 命名式："avail=0.30,latency=0.15,..."（按名覆盖）
+      * 顺序式："0.30,0.15,0.20,0.15,0.10,0.10"（按 DIM_ORDER 顺序）
+    缺省项用内置默认；非法输入一律回退默认（绝不因调参串让排序崩）。
+    """
+    w = dict(DEFAULT_WEIGHTS)
+    raw = (env if env is not None else os.environ.get("RANK_WEIGHTS", "")).strip()
+    if not raw:
+        return w
+    try:
+        if "=" in raw:
+            for part in raw.split(","):
+                k, _, v = part.partition("=")
+                k = k.strip().lower()
+                if k in w:
+                    w[k] = float(v)
+        else:
+            vals = [float(x) for x in raw.split(",") if x.strip()]
+            if len(vals) == len(DIM_ORDER):
+                for k, v in zip(DIM_ORDER, vals):
+                    w[k] = v
+    except (ValueError, AttributeError):
+        return dict(DEFAULT_WEIGHTS)
+    return w
+
+
+def use_legacy() -> bool:
+    """是否回退旧 tuple 排序：--legacy 标志或 RANK_LEGACY=1。"""
+    return os.environ.get("RANK_LEGACY", "") == "1"
+
 
 def stale_days(doc: dict) -> float:
     """产物距今天数。解析不出时返回 0（视为新鲜，不改变既有行为）。"""
@@ -74,53 +120,77 @@ def _text_of(site: dict) -> str:
     return f"{site.get('name') or ''} {site.get('key') or ''} {site.get('api') or ''} {ext_str}".lower()
 
 
-def group_of(site: dict):
-    """把一个站点归入分组（分类维度）。
+CATEGORY_ORDER = ["电影", "剧", "综艺", "动漫", "纪录片", "体育", "少儿", "综合"]
+# 这些类型本身即独立通道，不再与品类复合（短剧/成人有独立产物，其他保持兜底）
+SPECIAL_TYPES = {"短剧", "成人", "其他"}
 
-    多信号交叉分类（2026-09-27 P0）：
-      采集站   = type 0/1 + (api 命中 CMS_API_RE OR ext 字段含 cms 关键词)
-      蜘蛛源   = type 3 + (api 以 csp_ 开头 OR 站点带非空 jar 字段)
-      本地JS   = api 以 ./ 开头且以 .js 结尾（排除 ./jar/ 下的 spider.jar 运行时引用）
-      网盘     = ext/api/name 命中 PAN 正则（保持现状）
-    短剧/成人仍按全量文本关键词前置命中（成人词的匹配范围在 task2 收窄为 ext/api）。
-    """
-    api = site.get("api") if isinstance(site.get("api"), str) else ""
+
+def load_category_vocab(repo: str) -> dict:
+    """config/category_vocab.json：{品类: [关键词]}。缺失/损坏返回中性空表（全归综合）。"""
+    doc = _load_json(repo, "config/category_vocab.json")
+    vocab = {c: [] for c in CATEGORY_ORDER}
+    for k, v in (doc or {}).items():
+        if k in vocab and isinstance(v, list):
+            vocab[k] = [str(x) for x in v]
+    return vocab
+
+
+def category_of(site: dict, vocab: dict) -> str:
+    """从站点 name/ext 提取内容品类（电影/剧/综艺/...），未命中归「综合」。"""
+    if not isinstance(site, dict):
+        return "综合"
+    name = site.get("name") or ""
     ext = site.get("ext")
     ext_str = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if isinstance(ext, dict) else "")
+    text = f"{name} {ext_str}".lower()
+    for cat in CATEGORY_ORDER:
+        if cat == "综合":
+            continue
+        kws = vocab.get(cat) or []
+        if any(kw and kw.lower() in text for kw in kws):
+            return cat
+    return "综合"
+
+
+def type_of(site: dict) -> str:
+    """把一个站点归入「类型」分组（采集站/直连点播/蜘蛛源/本地JS/网盘/短剧/成人/其他）。"""
+    api = site.get("api") if isinstance(site.get("api"), str) else ""
     text = _text_of(site)
     if any(kw.lower() in text for kw in SHORT_KEYWORDS):
         return "短剧"
-    # 成人关键词只在 api/ext 中匹配，不看 name（2026-09-27 P0）：
-    # name 是给人看的展示名，常带「传媒/资源」等通用词，按名命中会把正常资源站
-    # 误划进成人组；api/ext 才是后端真实形态。安全门禁 adult_gate_scan 仍全量扫描
-    # 所有字符串（保持严格），此处仅收窄「分组」口径，两处不矛盾——漏分进成人组的
-    # 站仍会被门禁拦截重定向 adult.json。
-    adult_text = (api + " " + ext_str).lower()
-    if any(kw.lower() in adult_text for kw in ADULT_KEYWORDS):
+    if any(kw.lower() in text for kw in ADULT_KEYWORDS):
         return "成人"
     if PAN_KEY_RE.search(text) or PAN_NAME_RE.search(text) or PAN_EXT_RE.search(text):
         return "网盘"
-    typ = site.get("type")
-    jar = site.get("jar")
-    has_jar = bool(jar and str(jar).strip())
-    # 采集站 / 直连点播：type 0/1
-    if typ in (0, 1):
-        if CMS_API_RE.search(api) or "cms" in ext_str.lower():
-            return "采集站"
-        return "直连点播"
-    # 本地JS：./ 相对路径且 .js 结尾（drpy 规则/运行时均为本地 JS 文件）；
-    # ./jar/ 下是 csp 运行时 jar 引用，不算本地JS。先于蜘蛛源判定——drpy 源同样
-    # 带 jar 字段（指向 drpy 运行时），不能凭 jar 误判成 csp 蜘蛛。
-    if api.startswith("./") and api.endswith(".js") and not api.startswith("./jar/"):
-        return "本地JS"
-    # 蜘蛛源：type 3 + (csp_ 协议前缀 或 非空 jar 运行时)
-    if typ in (3, "3"):
-        if api.startswith("csp_") or has_jar:
-            return "蜘蛛源"
-    # 兜底：csp_ 前缀是蜘蛛协议的强标记，即便 type 字段缺失也归蜘蛛源
+    if site.get("type") in (0, 1):
+        return "采集站" if CMS_API_RE.search(api) else "直连点播"
     if api.startswith("csp_"):
         return "蜘蛛源"
+    if api.startswith("./"):
+        return "本地JS"
     return "其他"
+
+
+def group_of(site: dict, vocab: dict = None, legacy_group: bool = False) -> str:
+    """产出客户端 group 字段。
+
+    默认复合名："<品类>-<类型>"（如 电影-采集站）；短剧/成人/其他不复合。
+    legacy_group=True 时回退扁平类型名（--legacy-group 回滚）。"""
+    typ = type_of(site)
+    if legacy_group or typ in SPECIAL_TYPES:
+        return typ
+    return f"{category_of(site, vocab or {})}-{typ}"
+
+
+def group_sort_key(group: str):
+    """组块排序键 (类型序, 品类序)。扁平/特殊组品类序为 0。"""
+    if not group or "-" not in group:
+        ti = GROUP_ORDER.index(group) if group in GROUP_ORDER else len(GROUP_ORDER)
+        return (ti, 0)
+    cat, _, typ = group.partition("-")
+    ti = GROUP_ORDER.index(typ) if typ in GROUP_ORDER else len(GROUP_ORDER)
+    ci = CATEGORY_ORDER.index(cat) if cat in CATEGORY_ORDER else len(CATEGORY_ORDER)
+    return (ti, ci)
 
 
 def search_verdict(site: dict, probe: dict, js_probe: dict = None, csp_probe: dict = None,
@@ -297,10 +367,78 @@ def avail_rank(site: dict, probe_map: dict, spider_map: dict,
     return 4                                  # 未测：中性，排在「仅连通」之后、「实测失败」之前
 
 
+def load_stability(repo: str) -> dict:
+    """从 state/tvbox.db 的 checks 表读取近 7 天成功率，作为稳定性信号。
+
+    返回 {key: success_rate(0~1)}；db 缺失/损坏/为空一律返回 {}（优雅降级，
+    综合分里该维取中性 0.5，不报错不阻断）。
+    """
+    import sqlite3  # 纯标准库，惰性导入
+    db = os.path.join(repo, "state", "tvbox.db")
+    try:
+        conn = sqlite3.connect(db)
+        conn.row_factory = sqlite3.Row
+        cutoff = (datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+        agg = {}
+        for r in conn.execute(
+                "SELECT key, ok FROM checks WHERE checked_at >= ?", (cutoff,)):
+            a = agg.setdefault(r["key"], {"ok": 0, "n": 0})
+            a["n"] += 1
+            if r["ok"]:
+                a["ok"] += 1
+        conn.close()
+        return {k: (v["ok"] / v["n"] if v["n"] else 0.0) for k, v in agg.items()}
+    except Exception as e:  # db 不可用：优雅降级
+        print(f"[rank] tvbox.db 不可用，跳过稳定性维度（{e}）", flush=True)
+        return {}
+
+
+def richness_hits(key, pmap: dict, dmap: dict) -> int:
+    """内容丰富度原始信号：探针 L2 搜索命中数 / drpy D3+ 命中数取较大者。
+
+    无命中数据返回 -1（综合分里取中性 0.5，不惩罚新源）。"""
+    hits = -1
+    p = pmap.get(key) if key else None
+    if p and isinstance(p.get("l2"), dict):
+        h = p["l2"].get("hits")
+        if isinstance(h, int) and h >= 0:
+            hits = h
+    dp = (dmap or {}).get(key) if key else None
+    if dp:
+        dh = dp.get("hits")
+        if isinstance(dh, int) and dh > hits:
+            hits = dh
+    return hits
+
+
+def group_conf(site: dict) -> float:
+    """粗粒度分类置信度（0.5 低 / 1.0 高），作为综合分的 group 维。
+
+    强结构信号（csp_ 协议前缀 / 本地 .js 规则 / type0-1 命中 CMS 接口 / 多盘正则）
+    视为高置信；其余视为中性偏低。"""
+    if not isinstance(site, dict):
+        return 0.5
+    api = site.get("api") if isinstance(site.get("api"), str) else ""
+    if api.startswith("csp_"):
+        return 1.0
+    if api.startswith("./") and api.endswith(".js"):
+        return 1.0
+    if site.get("type") in (0, 1) and CMS_API_RE.search(api):
+        return 1.0
+    text = _text_of(site)
+    pan_hits = sum(1 for rx in (PAN_KEY_RE, PAN_NAME_RE, PAN_EXT_RE) if rx.search(text))
+    if pan_hits >= 2:
+        return 1.0
+    return 0.5
+
+
 def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
                mirror_drops: set = None, js_doc: dict = None, csp_doc: dict = None,
-               drpy_doc: dict = None):
-    """重排站点并回写 group / searchable。返回 (新列表, 统计)。"""
+               drpy_doc: dict = None, stab_map: dict = None, legacy: bool = False,
+               vocab: dict = None, legacy_group: bool = False):
+    """重排站点并回写 group / searchable。返回 (新列表, 统计)。
+
+    legacy=True 走旧 tuple 排序（回滚）；否则走加权综合分排序。"""
     def _map(doc):
         out = {}
         for r in (doc or {}).get("sites", []):
@@ -333,7 +471,7 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
             stats["mirror_skipped"] += 1
             continue
         probe = pmap.get(key)
-        group = group_of(s)
+        group = group_of(s, vocab, legacy_group)
         verdict = search_verdict(s, probe, jmap, cmap, dmap)
 
         s = dict(s)
@@ -360,20 +498,92 @@ def rank_sites(sites: list, probe_doc: dict, spider_doc: dict = None,
                 stats["drpy_D3p"] += 1
         enriched.append(s)
 
-    def _key(s):
+    def _key_legacy(s):
         key = s.get("key") if isinstance(s, dict) else None
         lat, _ = speed_of(key, pmap, smap, jmap, cmap, dmap) if key else (UNKNOWN_LATENCY, "")
         if lat >= UNKNOWN_LATENCY:
             # 没测到速度的，用结构/评级兜底排序（死源沉底），不让未测的源纯按名字乱排
             lat = UNKNOWN_LATENCY + (3 - struct_score(s, smap, jmap, cmap, dmap)) * 1000
         group = s.get("group") if isinstance(s, dict) else None
-        return (GROUP_ORDER.index(group) if group in GROUP_ORDER else len(GROUP_ORDER),
+        return (group_sort_key(group),
                 0 if s.get("searchable") == 1 else (1 if s.get("searchable") is None else 2),
                 avail_rank(s, pmap, smap, jmap, cmap, dmap),
                 lat,
                 str(s.get("name") or "") if isinstance(s, dict) else "")
 
-    enriched.sort(key=_key)
+    if legacy:
+        enriched.sort(key=_key_legacy)
+        return enriched, stats
+
+    # ---- 加权综合分排序：组块外排，组内按综合分（docs/ranking-scoring.md）----
+    weights = parse_weights()
+    raw = []
+    known_lats, known_hits = [], []
+    for s in enriched:
+        if not isinstance(s, dict):
+            raw.append((s, None))
+            continue
+        key = s.get("key")
+        lat, _ = speed_of(key, pmap, smap, jmap, cmap, dmap) if key else (UNKNOWN_LATENCY, "")
+        ar = avail_rank(s, pmap, smap, jmap, cmap, dmap)
+        hits = richness_hits(key, pmap, dmap)
+        stab = (stab_map or {}).get(key)
+        if lat < UNKNOWN_LATENCY:
+            known_lats.append(lat)
+        if hits >= 0:
+            known_hits.append(hits)
+        raw.append((s, (lat, ar, hits, stab, key)))
+
+    if known_lats:
+        lmin_l = math.log10(min(known_lats))
+        lmax_l = math.log10(max(known_lats))
+        lspan = (lmax_l - lmin_l) or 1.0
+    else:
+        lmin_l = None
+        lspan = 1.0
+    maxh = max(known_hits) if known_hits else 0
+
+    def _lat_norm(ms):
+        if lmin_l is None:
+            return 0.5
+        if ms >= UNKNOWN_LATENCY:
+            return 0.0
+        v = (math.log10(ms) - lmin_l) / lspan
+        return max(0.0, min(1.0, 1.0 - v))
+
+    def _rich_norm(h):
+        if h < 0:
+            return 0.5
+        if maxh <= 0:
+            return 0.5
+        return min(1.0, math.log10(h + 1) / math.log10(maxh + 1))
+
+    scores = {}
+    for s, sig in raw:
+        if sig is None:
+            scores[id(s)] = -1e9
+            continue
+        lat, ar, hits, stab, key = sig
+        avail_inv = 1.0 - ar / 5.0
+        stab_v = 0.5 if stab is None else max(0.0, min(1.0, float(stab)))
+        fresh = 1.0 if fresh_check_ms(pmap.get(key) or {}) else 0.5
+        scores[id(s)] = (weights["avail"] * avail_inv
+                         + weights["latency"] * _lat_norm(lat)
+                         + weights["stability"] * stab_v
+                         + weights["richness"] * _rich_norm(hits)
+                         + weights["freshness"] * fresh
+                         + weights["group"] * group_conf(s))
+
+    def _key_score(s):
+        if not isinstance(s, dict):
+            return (len(GROUP_ORDER), 2, 1e9, "")
+        group = s.get("group")
+        gidx = group_sort_key(group)
+        sp = s.get("searchable")
+        spref = 0 if sp == 1 else (1 if sp is None else 2)
+        return (gidx, -scores.get(id(s), 0.0), spref, str(s.get("name") or ""))
+
+    enriched.sort(key=_key_score)
     return enriched, stats
 
 
@@ -382,12 +592,15 @@ def print_report(sites: list, stats: Counter):
     seen = Counter()
     for s in sites:
         seen[s.get("group")] += 1
-    for g in GROUP_ORDER:
+    order = []
+    for s2 in sites:
+        g2 = s2.get("group") if isinstance(s2, dict) else None
+        if g2 and g2 not in order:
+            order.append(g2)
+    for g in order:
         n = seen.get(g)
-        if not n:
-            continue
         ok = stats.get(f"searchable_ok:{g}", 0)
-        print(f"  {g:8} {n:6d} 个 | 实测可搜 {ok:5d} 个")
+        print(f"  {g:14} {n:6d} 个 | 实测可搜 {ok:5d} 个")
     speed = {k.split(":", 1)[1]: v for k, v in stats.items() if k.startswith("speed:")}
     print("速度数据来源:", speed)
     print("searchable 修正:", {k.split(":", 1)[1]: v for k, v in stats.items() if k.startswith("searchable:")})
@@ -421,6 +634,8 @@ def main() -> int:
     ap.add_argument("--keep-mirrors", action="store_true", help="保留同库镜像站点（默认剔除）")
     ap.add_argument("--out", default="tvbox.ranked.json")
     ap.add_argument("--in-place", action="store_true", help="直接改写 --input")
+    ap.add_argument("--legacy", action="store_true", help="回退旧 tuple 排序（默认加权综合分）")
+    ap.add_argument("--legacy-group", action="store_true", help="回退扁平类型 group（默认品类-类型复合名）")
     ap.add_argument("--repo", default=".")
     args = ap.parse_args()
 
@@ -453,7 +668,19 @@ def main() -> int:
             print(f"[rank] 将剔除 {len(mirror_drops)} 个同库镜像站点（--keep-mirrors 可保留）", flush=True)
 
     sites = doc.get("sites") or []
-    ranked, stats = rank_sites(sites, probe_doc, spider_doc, mirror_drops, js_doc, csp_doc, drpy_doc)
+    legacy = args.legacy or use_legacy()
+    legacy_group = args.legacy_group or os.environ.get("LEGACY_GROUP", "") == "1"
+    vocab = load_category_vocab(repo)
+    stab_map = load_stability(repo) if not legacy else {}
+    if stab_map:
+        print(f"[rank] 加载稳定性记录 {len(stab_map)} 个源（近7天 checks）", flush=True)
+    if legacy:
+        print("[rank] 使用旧 tuple 排序（--legacy / RANK_LEGACY=1）", flush=True)
+    else:
+        print(f"[rank] 加权综合分排序，权重={parse_weights()}", flush=True)
+    print(f"[rank] group 模式: {'扁平类型' if legacy_group else '品类-类型复合'}", flush=True)
+    ranked, stats = rank_sites(sites, probe_doc, spider_doc, mirror_drops, js_doc, csp_doc, drpy_doc,
+                               stab_map=stab_map, legacy=legacy, vocab=vocab, legacy_group=legacy_group)
     doc["sites"] = ranked
 
     dst = src if args.in_place else os.path.join(repo, args.out)

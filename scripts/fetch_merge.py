@@ -1678,7 +1678,7 @@ def _global_spider_url(tvbox: dict, spider_origin: dict):
 
     两种来源都要能处理：
       1) 本次合并刚选定的值 —— 形如 `./jar/spider.jar`，用 spider_origin 的 base 拼；
-      2) 上一轮产出里已被落库改写的值 —— 形如 `./deps/qist/jsm/jar/spider.jar`，
+      2) 上一轮产出里已被落库改写的值 —— 形如 `./deps/jar/spider_8955438d.jar`，
          这时不能再拿上游 base 去拼（会拼出不存在的路径），而应从 `deps/<上游>/` 反推上游。
     """
     sp = tvbox.get("spider")
@@ -1787,7 +1787,7 @@ def prune_unlocalized_jars(tvbox: dict) -> dict:
 def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict):
     """收集 tvbox 配置中的 jar/js/json 依赖到 deps/ 并把引用改写为仓库相对路径。
     site_origin: key -> origin 名；spider_origin: (origin 名, base url)
-    返回统计 dict；同时更新 deps/manifest.json。"""
+    返回统计 dict；同时更新 deps/json/manifest.json。"""
     import urllib.parse
 
     manifest = load_manifest()
@@ -3574,9 +3574,9 @@ def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
         ck_endpoints.append(rec)
     with open(os.path.join(STORES_DIR, "pan_ck.json"), "w", encoding="utf-8") as f:
         json.dump({
-            "note": "网盘 CK 填写指引：CK/账密统一填本仓库 deps/qist/js/lib/token.json（字段见各站点 ck_field）；"
+            "note": "网盘 CK 填写指引：CK/账密统一填本仓库 deps/json/token.json（字段见各站点 ck_field）；"
                     "该文件非空时 daily 保留现值不回源覆盖",
-            "token_file": "./deps/qist/js/lib/token.json",
+            "token_file": "./deps/json/token.json",
             "endpoints": ck_endpoints,
         }, f, ensure_ascii=False, indent=1)
 
@@ -4232,6 +4232,17 @@ def main() -> int:
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    # 解析质量排序（P0）：依据 probe/parses_probe.json 按质量分重排——
+    # 响应速度 > 格式规范(JSON) > 无广告 > 稳定性；失效排最后、广告排倒数第二。
+    # 无探活数据（首次运行）保持原序；任何异常不阻断每日构建。
+    try:
+        import parse_quality
+        _ranked = parse_quality.rank_parses(parses)
+        if _ranked is not parses:
+            parses = _ranked
+            tvbox["parses"] = parses
+    except Exception as _eq:
+        print(f"    [parse_quality] 排序未生效（保持原序）：{_eq}", flush=True)
     # 门禁同口径终扫（顶层字符串字段）：spider/wallpaper 等非容器字段命中即剔除
     #（正常值为本地 jar 相对路径或壁纸图 URL，不可能命中词表；命中即上游注入）。
     for _gk in list(tvbox.keys()):
@@ -4274,15 +4285,6 @@ def main() -> int:
         pass
     tvbox["version"] = f"{today_str}-b{build_no}"
     tvbox["updated_at"] = now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
-    # 任务3：写出前做站点名称清洗+重名处理（try/except 包裹，不阻断主流程）
-    try:
-        from normalize_names import normalize_sites
-        _norm_report = normalize_sites(tvbox.get("sites", []), in_place=True)
-        print(f"    [normalize_names] cleaned={_norm_report['cleaned_count']} "
-              f"tagged={len(_norm_report['renamed_with_tag'])} "
-              f"dup_removed={len(_norm_report['duplicates_removed'])}", flush=True)
-    except Exception as _e:
-        print(f"    [normalize_names] 跳过（{_e}）", flush=True)
     with open("tvbox.json", "w", encoding="utf-8") as f:
         json.dump(tvbox, f, ensure_ascii=False, indent=1)
     # 任务9：紧凑版（无空格无换行），内容与可读版完全一致

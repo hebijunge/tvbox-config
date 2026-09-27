@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """Windows 兼容性检查（CI job: windows-path-check）。
 
-遍历 ``deps/manifest.json`` 中所有 local 落库路径，逐条调用
+遍历 ``deps/json/manifest.json`` 中所有 local 落库路径，逐条调用
 ``pathutil.is_windows_safe()`` 验证：
 
 - 不含 Windows 非法字符 ``<>:"|?*`` 及控制字符；
@@ -14,7 +14,7 @@
 
 用法
 ----
-    python scripts/windows_path_check.py [--manifest deps/manifest.json]
+    python scripts/windows_path_check.py [--manifest deps/json/manifest.json]
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ import pathutil  # noqa: E402
 
 
 def load_manifest(path: str) -> dict:
-    """加载 deps/manifest.json，失败时返回空 dict。"""
+    """加载 deps/json/manifest.json，失败时返回空 dict。"""
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
@@ -70,8 +70,8 @@ def main() -> int:
     parser = argparse.ArgumentParser(description="Windows 路径兼容性检查")
     parser.add_argument(
         "--manifest",
-        default="deps/manifest.json",
-        help="manifest.json 路径（默认 deps/manifest.json）",
+        default="deps/json/manifest.json",
+        help="manifest.json 路径（默认 deps/json/manifest.json）",
     )
     args = parser.parse_args()
 

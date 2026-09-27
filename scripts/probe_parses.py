@@ -54,6 +54,7 @@ REPO_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TVBOX_PATH = os.path.join(REPO_ROOT, "tvbox.json")
 PROBE_OUT = os.path.join(REPO_ROOT, "probe", "parses_probe.json")
 DUP_OUT = os.path.join(REPO_ROOT, "state", "parse_duplicates.json")
+AD_VOCAB_PATH = os.path.join(REPO_ROOT, "config", "ad_parse_vocab.json")
 
 # 公开测试视频页（腾讯视频公开播放页）。解析接口本质是「传入视频页 URL → 返回直链」。
 # 可用 env PARSE_TEST_URL 覆盖。
@@ -99,7 +100,6 @@ def normalize_parse_url(url: str) -> str:
     - scheme 不敏感（http/https 归一为 https）
     - host 小写
     - 去末尾斜杠
-    - 去掉尾部的 url=/v=/id= 占位参数前缀差异？保留 query 结构，仅做上述归一。
     """
     if not isinstance(url, str) or not url:
         return ""
@@ -135,8 +135,6 @@ def _is_probeable(p: dict) -> bool:
 def _build_probe_url(p: dict) -> str:
     """把测试视频 URL 拼到解析接口 URL 后（TVBox 实际行为：url 字段即前缀）。"""
     base = p["url"]
-    sep = "&" if ("?" in base and not base.rstrip().endswith("=")) else ""
-    # 多数 jx 接口形如 https://xxx/?url= ，直接拼接即可
     return base + TEST_VIDEO_URL
 
 
@@ -166,7 +164,6 @@ def _classify(resp: dict) -> str:
     """根据响应判定状态：ok / ad_warn / no_playable / anti_chain / unreachable。"""
     code = resp["status_code"]
     body = resp["body"]
-    err = resp["error"]
     text = ""
     if body:
         try:
@@ -189,12 +186,30 @@ def _classify(resp: dict) -> str:
     return "no_playable"
 
 
+def _load_ad_vocab() -> dict:
+    """加载 config/ad_parse_vocab.json；缺失/损坏返回空表（不判广告）。"""
+    try:
+        with open(AD_VOCAB_PATH, encoding="utf-8") as f:
+            return json.load(f)
+    except (OSError, ValueError):
+        return {}
+
+
 def _detect_ad(text: str) -> bool:
-    """粗判响应是否含广告/弹窗/诱导下载特征（详细词表见任务4 ad_parse_vocab）。"""
-    marks = ("window.open(", "location.href=", "location.replace(",
-             "打开APP", "下载APP", "立即下载", "关注公众号", "点击跳转",
-             "alert(", "confirm(")
-    return any(m in text for m in marks)
+    """粗判响应是否含广告/弹窗/诱导下载特征。词表外置 config/ad_parse_vocab.json。"""
+    if not text:
+        return False
+    vocab = _load_ad_vocab()
+    for m in vocab.get("popup_markers", []):
+        if m in text:
+            return True
+    for m in vocab.get("induce_download_keywords", []):
+        if m in text:
+            return True
+    for d in vocab.get("ad_domains", []):
+        if d in text:
+            return True
+    return False
 
 
 def probe_one(p: dict) -> dict:
@@ -222,7 +237,7 @@ def probe_one(p: dict) -> dict:
         result["ms"] = resp["ms"]
         result["error"] = resp["error"]
         status = _classify(resp)
-        # 瞬态失败（超时/5xx/连接重置）重试；unreachable 里仅重试连接层错误
+        # 瞬态失败（超时/5xx/连接重置）重试
         transient = (status == "unreachable" and resp["error"]
                      and any(k in resp["error"] for k in ("Timeout", "Reset", "5", "Temporary")))
         if status in ("ok", "no_playable", "anti_chain") or not transient:
@@ -291,6 +306,87 @@ def write_probe_json(results: list, summary: dict):
     os.replace(tmp, PROBE_OUT)
 
 
+# --------------------------------------------------------------------------- #
+# 去重：按实际 URL 合并同名不同 name 的解析
+# --------------------------------------------------------------------------- #
+def _probe_score(item: dict, results_by_url: dict) -> tuple:
+    """给一个解析接口打分（越小越优），用于同 URL 组内选保留项。
+
+    排序键：(状态等级, 响应ms, type偏好)
+      状态等级：ok/ad_warn=0（可用），no_playable/anti_chain=1，unreachable=2，placeholder=3
+    无探活数据时所有同分，按出现顺序保留第一条。
+    """
+    url = item.get("url", "")
+    r = results_by_url.get(normalize_parse_url(url))
+    if not r:
+        return (1, 999999, 0)
+    status = r.get("status", "unreachable")
+    rank = {"ok": 0, "ad_warn": 0, "no_playable": 1,
+            "anti_chain": 1, "unreachable": 2, "placeholder": 3}.get(status, 2)
+    ms = r.get("ms") or 999999
+    # type=1（JSON 解析）格式更规范，优先于 type=0（web 解析）
+    type_pref = 0 if item.get("type") == 1 else 1
+    return (rank, ms, type_pref)
+
+
+def dedup_parses(parses: list, results_by_url: dict = None) -> tuple:
+    """按规范化 URL 去重，同 URL 保留质量最高的一个。
+
+    返回 (kept, dup_record)：
+      kept       去重后的 parses 列表（保持原相对顺序）
+      dup_record 写入 state/parse_duplicates.json 的结构
+    results_by_url: {normalize_parse_url: probe_result}，可空（无探活数据时保留首项）。
+    """
+    results_by_url = results_by_url or {}
+    groups: dict = {}   # norm_url -> [indices]
+    order: list = []     # 组首次出现顺序
+    for i, p in enumerate(parses):
+        key = normalize_parse_url(p.get("url", ""))
+        if key not in groups:
+            groups[key] = []
+            order.append(key)
+        groups[key].append(i)
+
+    kept_idx = set()
+    dup_groups = []
+    removed = 0
+    for key in order:
+        idxs = groups[key]
+        if len(idxs) == 1:
+            kept_idx.add(idxs[0])
+            continue
+        # 组内选最优
+        best = min(idxs, key=lambda i: _probe_score(parses[i], results_by_url))
+        kept_idx.add(best)
+        dropped = [parses[i] for i in idxs if i != best]
+        removed += len(dropped)
+        dup_groups.append({
+            "key": key,
+            "kept": {"name": parses[best].get("name"),
+                     "url": parses[best].get("url")},
+            "dropped": [{"name": parses[i].get("name"),
+                         "url": parses[i].get("url")} for i in dropped],
+        })
+
+    kept = [parses[i] for i in range(len(parses)) if i in kept_idx]
+    dup_record = {
+        "generated_at": datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S"),
+        "total": len(parses),
+        "after_dedup": len(kept),
+        "removed_count": removed,
+        "duplicate_groups": dup_groups,
+    }
+    return kept, dup_record
+
+
+def write_duplicates(dup_record: dict):
+    os.makedirs(os.path.dirname(DUP_OUT), exist_ok=True)
+    tmp = DUP_OUT + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(dup_record, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, DUP_OUT)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description="解析接口探活")
     ap.add_argument("--tvbox", default=TVBOX_PATH, help="tvbox.json 路径")
@@ -315,6 +411,14 @@ def main(argv=None):
     write_probe_json(results, summary)
     print(f"探活完成：{json.dumps(summary['by_status'], ensure_ascii=False)}", flush=True)
     print(f"结果写入 {PROBE_OUT}", flush=True)
+
+    # 去重：按规范化 URL 合并同名不同 name 的解析，保留质量最高者
+    results_by_url = {normalize_parse_url(r.get("url", "")): r for r in results}
+    kept, dup_record = dedup_parses(parses, results_by_url)
+    write_duplicates(dup_record)
+    print(f"去重完成：{len(parses)} -> {len(kept)}（剔除 {dup_record['removed_count']} 个重复）",
+          flush=True)
+    print(f"去重记录写入 {DUP_OUT}", flush=True)
     return 0
 
 

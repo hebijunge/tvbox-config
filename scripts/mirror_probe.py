@@ -18,7 +18,7 @@
 
 测速对象：
   - 小文件 stores/duocang.json（~1KB）：TTFB 延迟（配置加载体验）；
-  - 中文件 deps/qist/jsm/jar/spider.jar（~1.9MB）：吞吐速度（依赖下载体验）；
+  - 中文件 deps/jar/spider_8955438d.jar（~1.9MB）：吞吐速度（依赖下载体验）；
     该文件 404（未来路径变更）时自动退化为纯延迟排序。
 """
 
@@ -30,7 +30,7 @@ import urllib.request
 
 RAW_BASE = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 TARGET_SMALL = RAW_BASE + "/stores/duocang.json"
-TARGET_BIG = RAW_BASE + "/deps/qist/jsm/jar/spider.jar"
+TARGET_BIG = RAW_BASE + "/deps/jar/spider_8955438d.jar"
 
 # 候选镜像（域名式前缀，支持 raw + release；顺序仅是初始值，实际以每日实测重排为准）。
 # 候选池 2026-09-19 依据两份独立实测报告合并更新：

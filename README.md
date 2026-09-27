@@ -382,7 +382,7 @@ python scripts/fetch_merge.py
 后续 `collect_and_rewrite_deps` 按 origin 落库到 `deps/<上游>/...` 并改写成仓库内路径 + md5，
 与站点自带 jar 走同一条路。与全局 spider 指向同一份包的不写（省体积）。
 比较用的是**解析后的绝对 URL**，不是字符串 —— 全局值在上一轮产出里已被改写成本地路径
-（`./deps/qist/jsm/jar/spider.jar`），字面与上游的 `./jar/spider.jar` 不同却指向同一份包。
+（`./deps/jar/spider_8955438d.jar`），字面与上游的 `./jar/spider.jar` 不同却指向同一份包。
 
 关掉：`ORIGIN_SPIDER=0`。
 

@@ -216,7 +216,7 @@ def known_urls():
     except ImportError:
         pass
     # 血统反查：从 deps manifest 里提取出处的仓库
-    for f in ("deps/manifest.json",):
+    for f in ("deps/json/manifest.json",):
         if os.path.isfile(f):
             try:
                 with open(f, encoding="utf-8") as fh:
@@ -416,125 +416,6 @@ def discover_lineage(known_repos, max_repos):
     return set(list(repos)[:max_repos])
 
 
-# ---------------- 第 4.5 路：Fork 网络挖掘 ----------------
-# 高星上游的 fork 网络里常藏活跃复刻（作者改名/迁移/二次开发）。
-# 控制 API 调用量：只对 star>=100 的上游做 fork 挖掘，最多 20 个；
-# 筛选 30 天内有 push（pushed_at）且 star>5 的活跃 fork。
-# 结果缓存到 state/fork_cache.json，避免重复 API 调用。
-FORK_CACHE_PATH = "state/fork_cache.json"
-FORK_ACTIVE_DAYS = 30
-FORK_MIN_STARS = 5
-FORK_UPSTREAM_MIN_STARS = 100
-FORK_MAX_UPSTREAMS = 20
-
-
-def _load_fork_cache():
-    if os.path.isfile(FORK_CACHE_PATH):
-        try:
-            with open(FORK_CACHE_PATH, encoding="utf-8") as f:
-                return json.load(f)
-        except (OSError, ValueError):
-            pass
-    return {}
-
-
-def _save_fork_cache(cache):
-    try:
-        os.makedirs(os.path.dirname(FORK_CACHE_PATH), exist_ok=True)
-        with open(FORK_CACHE_PATH, "w", encoding="utf-8") as f:
-            json.dump(cache, f, ensure_ascii=False, indent=1)
-    except OSError as e:
-        print(f"  [Fork挖掘] 缓存写入失败：{e}", flush=True)
-
-
-def discover_forks(known_repos, max_upstreams=FORK_MAX_UPSTREAMS,
-                  min_upstream_stars=FORK_UPSTREAM_MIN_STARS):
-    """挖掘已知高星上游的活跃 fork 网络，返回新发现的 fork full_name 集合。"""
-    cache = _load_fork_cache()
-    # 1) 选出 star>=阈值的已知上游（最多 max_upstreams 个）
-    heavy = []
-    for full in sorted(known_repos):
-        if "/" not in full:
-            continue
-        info = gh_api(f"/repos/{full}")
-        if not info:
-            continue
-        stars = info.get("stargazers_count") or 0
-        if stars >= min_upstream_stars:
-            heavy.append((full, stars))
-        time.sleep(0.4)
-    heavy.sort(key=lambda x: -x[1])
-    heavy = heavy[:max_upstreams]
-    print(f"  [Fork挖掘] 待挖上游 {len(heavy)} 个（star>={min_upstream_stars}）", flush=True)
-
-    cutoff = time.time() - FORK_ACTIVE_DAYS * 86400
-    forks = set()
-    changed = False
-    for full, stars in heavy:
-        if full in cache:
-            for fn in cache[full].get("forks", []):
-                forks.add(fn)
-            continue
-        doc = gh_api(f"/repos/{full}/forks", {"sort": "stargazers", "per_page": 30})
-        if not doc or not isinstance(doc, list):
-            cache[full] = {"discovered_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                           "upstream_stars": stars, "forks": []}
-            changed = True
-            continue
-        active = []
-        for it in doc:
-            fn = it.get("full_name")
-            if not fn:
-                continue
-            try:
-                pt = time.mktime(time.strptime((it.get("pushed_at") or "")[:10], "%Y-%m-%d"))
-            except ValueError:
-                continue
-            if (it.get("stargazers_count") or 0) > FORK_MIN_STARS and pt > cutoff:
-                forks.add(fn)
-                active.append(fn)
-        cache[full] = {"discovered_at": time.strftime("%Y-%m-%d %H:%M:%S"),
-                        "upstream_stars": stars, "forks": active}
-        changed = True
-        print(f"  [Fork挖掘] {full} ({stars}★) → 活跃 fork {len(active)} 个", flush=True)
-        time.sleep(1)
-    if changed:
-        _save_fork_cache(cache)
-    fresh = {fn for fn in forks if fn not in known_repos}
-    print(f"  [Fork挖掘] 合计 {len(forks)} 个活跃 fork，其中 {len(fresh)} 个为新仓", flush=True)
-    return fresh
-
-
-def discover_used_by(known_repos, max_repos=20, max_queries=20):
-    """第 4.6 路：Used-by 反向链接 —— 搜代码里引用了已知上游 raw URL 的仓库。
-
-    血统反查（第4路）找的是同 owner 的其他仓；这一路找的是「别人配置里
-    引用了我们已知上游」的仓——引用了 qist/tvbox 配置的仓库，往往也是
-    同类 TVBox 配置仓。需要 GITHUB_TOKEN。
-    """
-    if not TOKEN:
-        print("  [Used-by] 需要 GITHUB_TOKEN，跳过", flush=True)
-        return set()
-    repos = set()
-    targets = sorted(known_repos)[:max_queries]
-    for full in targets:
-        q = f'"raw.githubusercontent.com/{full}/" extension:json'
-        doc = gh_api("/search/code", {"q": q, "per_page": 30})
-        if not doc:
-            continue
-        n = 0
-        for item in doc.get("items", []):
-            fn = (item.get("repository") or {}).get("full_name")
-            if fn and fn not in known_repos:
-                repos.add(fn)
-                n += 1
-        if n:
-            print(f"  [Used-by] {full} → {n} 个引用仓", flush=True)
-        time.sleep(2)
-    print(f"  [Used-by] 合计 {len(repos)} 个引用仓", flush=True)
-    return set(list(repos)[:max_repos])
-
-
 # ---------------- 第 5 路：Gitee ----------------
 # 国内大量 TVBox 配置托管在 Gitee（GitHub 常连不上，很多作者首选 Gitee），
 # 此前四路全部走 GitHub，等于漏掉整个国内盘。Gitee OpenAPI(v5) 匿名即可用。
@@ -653,126 +534,6 @@ def discover_gitee(max_repos):
     return set(list(repos)[:max_repos])
 
 
-# ---------------- 第 5.1 路：Gitee / GitCode 原生搜索 API ----------------
-# 上一路（discover_gitee）是曲线方案：从 GitHub 配置里挖 gitee.com 链接。
-# 这一路直接调 Gitee OpenAPI v5 / GitCode OpenAPI 做仓库搜索：
-#   Gitee:   https://gitee.com/api/v5/search/repositories?q=tvbox&sort=updated
-#   GitCode: https://api.gitcode.com/api/v5/search/repositories?q=tvbox
-# 匿名即可用（Gitee 60 次/小时、GitCode 限额更宽），失败按 2^n 秒指数退避重试最多 3 次。
-# 结果按 (platform, full_name) 去重后加入候选池，与 GitHub 搜索结果合并。
-GITEE_SEARCH_QUERIES = ["tvbox", "tvbox 配置", "catvod", "影视仓", "tvbox config"]
-GITCODE_SEARCH_QUERIES = ["tvbox", "catvod"]
-
-
-def _http_get_json_retry(url, timeout=15, retries=3):
-    """带指数退避的 JSON GET：失败等 2^n 秒后重试，最多 retries 次。
-
-    Gitee/GitCode 匿名配额有限，遇到限流/网络抖动时短暂退避即可恢复，
-    不要一失败就把整路丢掉。
-    """
-    delay = 1
-    last_err = None
-    for attempt in range(1, retries + 1):
-        try:
-            req = urllib.request.Request(url, headers={**UA, "Accept": "application/json"})
-            with urllib.request.urlopen(req, timeout=timeout) as r:
-                if r.status == 200:
-                    return json.loads(r.read().decode("utf-8", "replace"))
-                last_err = f"HTTP {r.status}"
-        except Exception as e:  # noqa: BLE001
-            last_err = f"{type(e).__name__}: {e}"
-        if attempt < retries:
-            time.sleep(delay)
-            delay *= 2
-    print(f"    [重试耗尽] {url[:60]} → {last_err}", flush=True)
-    return None
-
-
-def discover_gitee_gitcode_search(max_repos):
-    """第 5.1 路：Gitee / GitCode 原生仓库搜索（匿名、带退避重试）。
-
-    返回 {(platform, full_name)}：platform ∈ {"gitee", "gitcode"}，
-    full_name 形如 "owner/repo"（不带平台前缀）。
-    """
-    found = set()
-    # Gitee v5 仓库搜索
-    for q in GITEE_SEARCH_QUERIES:
-        url = ("https://gitee.com/api/v5/search/repositories?"
-               + urllib.parse.urlencode({"q": q, "sort": "updated", "per_page": 20}))
-        items = _http_get_json_retry(url)
-        if not isinstance(items, list):
-            print(f"  [Gitee搜索] {q[:30]} → 无结果/受限", flush=True)
-            continue
-        n = 0
-        for it in items:
-            fn = it.get("full_name")
-            if fn and "/" in fn:
-                found.add(("gitee", fn))
-                n += 1
-        print(f"  [Gitee搜索] {q[:30]} → {n} 仓", flush=True)
-        time.sleep(2)
-    # GitCode v5 仓库搜索
-    for q in GITCODE_SEARCH_QUERIES:
-        url = ("https://api.gitcode.com/api/v5/search/repositories?"
-               + urllib.parse.urlencode({"q": q, "per_page": 20}))
-        items = _http_get_json_retry(url)
-        if not isinstance(items, list):
-            print(f"  [GitCode搜索] {q[:30]} → 无结果/受限", flush=True)
-            continue
-        n = 0
-        for it in items:
-            fn = it.get("full_name") or (it.get("path_with_namespace") or "").split(":", 1)[-1]
-            if fn and "/" in fn:
-                found.add(("gitcode", fn))
-                n += 1
-        print(f"  [GitCode搜索] {q[:30]} → {n} 仓", flush=True)
-        time.sleep(2)
-    print(f"  [Gitee/GitCode搜索] 合计 {len(found)} 个新仓", flush=True)
-    return set(list(found)[:max_repos])
-
-
-def gitcode_api(path, params=None):
-    """GitCode OpenAPI v5 薄封装（无 token 走匿名配额）。"""
-    url = "https://api.gitcode.com/api/v5" + path
-    if params:
-        url += "?" + urllib.parse.urlencode(params)
-    try:
-        st, raw = http_get(url, 20, 0, {"Accept": "application/json"})
-        return json.loads(raw.decode("utf-8", "replace")) if st == 200 else None
-    except Exception:  # noqa: BLE001
-        return None
-
-
-def gitcode_raw_url(full_name, branch, path):
-    return (f"https://raw.gitcode.com/{full_name}/raw/"
-            f"{urllib.parse.quote(branch, safe='')}/{urllib.parse.quote(path, safe='/')}")
-
-
-def gitcode_files_of(full_name):
-    """列出 GitCode 仓库里值得探测的配置文件（与 gitee_files_of 同构）。"""
-    info = gitcode_api(f"/repos/{full_name}")
-    if not info:
-        return []
-    branch = info.get("default_branch") or "master"
-    tree = gitcode_api(f"/repos/{full_name}/git/trees/{branch}", {"recursive": "1"})
-    if not tree:
-        return []
-    out = []
-    for it in tree.get("tree", []):
-        p = it.get("path") or ""
-        if it.get("type") != "blob":
-            continue
-        if not p.lower().endswith((".json", ".m3u", ".txt")):
-            continue
-        if (it.get("size") or 0) < 500 or (it.get("size") or 0) > 12 * 1024 * 1024:
-            continue
-        if re.search(r"(node_modules|package-lock|tsconfig|\.min\.)", p, re.I):
-            continue
-        out.append(p)
-    out.sort(key=lambda p: (0 if re.search(r"(tvbox|box|jsm|js|config|api)", p, re.I) else 1, len(p)))
-    return [(full_name, branch, p) for p in out[:8]]
-
-
 # ---------------- 第 6 路：搜索引擎 + 文章页（博客 / CSDN / 微信公众号）----------------
 BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
               "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
@@ -876,8 +637,6 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=80, help="候选池上限")
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
-    ap.add_argument("--no-forks", action="store_true", help="跳过第 4.5 路 Fork 网络挖掘")
-    ap.add_argument("--no-used-by", action="store_true", help="跳过第 4.6 路 Used-by 反向链接")
     ap.add_argument("--no-gitee", action="store_true", help="跳过第 5 路 Gitee 搜索")
     ap.add_argument("--no-web", action="store_true", help="跳过第 6 路搜索引擎+文章页")
     ap.add_argument("--max-pages", type=int, default=20, help="第 6 路最多抓取的文章页数")
@@ -899,10 +658,6 @@ def main() -> int:
     repos |= discover_repo_search(args.max_repos)
     if not args.no_lineage:
         repos |= discover_lineage(known_repos, args.max_repos)
-    if not args.no_forks:
-        repos |= discover_forks(known_repos)
-    if not args.no_used_by:
-        repos |= discover_used_by(known_repos, args.max_repos)
     repo_urls = discover_seeds()
     # 第 2.5 路（2026-09-21 点播+容错线）：zhuiju 机器可读清单 + QingNing 结构化分节
     repo_urls |= discover_zhuiju()
@@ -925,21 +680,6 @@ def main() -> int:
             for files in ex.map(gitee_files_of, fresh_g[: args.max_repos]):
                 for fn, br, p in files:
                     repo_urls.add(gitee_raw_url(fn, br, p))
-
-    # 第 5.1 路：Gitee / GitCode 原生搜索（匿名 API，带退避重试）
-    if not args.no_gitee:
-        plat_repos = discover_gitee_gitcode_search(args.max_repos)
-        gitee_hits = [fn for plat, fn in plat_repos if plat == "gitee" and fn not in known_repos]
-        gitcode_hits = [fn for plat, fn in plat_repos if plat == "gitcode" and fn not in known_repos]
-        print(f"[discover] Gitee搜索待展开 {len(gitee_hits)} / GitCode搜索待展开 {len(gitcode_hits)}",
-              flush=True)
-        with cf.ThreadPoolExecutor(8) as ex:
-            for files in ex.map(gitee_files_of, gitee_hits[: args.max_repos]):
-                for fn, br, p in files:
-                    repo_urls.add(gitee_raw_url(fn, br, p))
-            for files in ex.map(gitcode_files_of, gitcode_hits[: args.max_repos]):
-                for fn, br, p in files:
-                    repo_urls.add(gitcode_raw_url(fn, br, p))
 
     fresh_repos = [r for r in repos if r and r not in known_repos]
     print(f"[discover] 待展开仓库 {len(fresh_repos)} 个", flush=True)

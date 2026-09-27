@@ -465,9 +465,16 @@ def to_simp(s):
 
 
 def dedup_key(std):
-    """频道名去重键：繁归简 → 去空白转小写 → 去尾部括号标注（如“(官方)”）→
-    别名表 → 后缀剥离（频道/台，守卫卫视/电台）。
-    仅用于 build_channel_map 聚合键，显示名保留首次出现的原名（ent['name']）。"""
+    """[DEPRECATED P0-2] 频道名去重键——委托 live_vocab.normalize()。
+    全链路归一化入口统一为 live_vocab.normalize()/classify()，本函数仅作向后兼容
+    包装（RTHK 兜底/存量调用点）；旧别名表/后缀剥离作 fallback。"""
+    try:
+        import live_vocab as _vc
+        k = _vc.normalize(std or "")
+        if k:
+            return k
+    except Exception:
+        pass
     k = to_simp(std or "")
     k = re.sub(r"[\s　]+", "", k).lower()
     k = re.sub(r"[（(][^()（）]*[)）]$", "", k)
@@ -475,7 +482,6 @@ def dedup_key(std):
         return ALIAS_MAP[k]
     m = re.search(r"(卫视|电台|频道|台)$", k)
     if m and len(k) > len(m.group(1)):
-        # 守卫：卫视/电台是完整词不剥离；频道/台 仅在剥离后仍非空时剥
         if m.group(1) not in ("卫视", "电台"):
             k = k[: -len(m.group(1))]
     if k in ALIAS_MAP:
@@ -763,10 +769,20 @@ def _merge_channel_rows(cmap, rows, sid):
         # 2026-09-26：URL 自证频道与归属名冲突拒收（rthk33 混进 CCTV-1、cctv5p 混进 CCTV-5）
         if _name_url_conflict(std, u):
             continue
-        # 2026-09-21 直播线融合：聚合键用归一化去重键（繁简/别名/后缀），
-        # 显示名保留首次出现的 std，避免「翡翠台/翡翠/Tvb翡翠」裂成三个频道
-        key = dedup_key(std)
-        ent = cmap.setdefault(key, {"name": std, "class": cls, "lines": [],
+        # P0-2 统一归一化入口：聚合键走 live_vocab.classify()['key']（词表驱动，
+        # 含繁简/别名/数字/前后后缀归一），显示名走 classify()['canonical']（标准名）；
+        # vocab 未命中时回退 dedup_key(std)/std，保证不回归。
+        vkey, vcanon = "", ""
+        try:
+            import live_vocab as _vc
+            _vr = _vc.classify(name, u)
+            vkey = _vr.get("key") or ""
+            vcanon = _vr.get("canonical") or ""
+        except Exception:
+            pass
+        key = vkey or dedup_key(std)
+        disp = vcanon or std
+        ent = cmap.setdefault(key, {"name": disp, "class": cls, "lines": [],
                                     "_seen": set()})
         if group_sort_key(cls) < group_sort_key(ent["class"]):
             ent["class"] = cls
@@ -927,8 +943,14 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
         if not shard_select(std, shard):
             n_shard_skip += 1
             continue
-        lines = sorted(ent["lines"], key=lambda x: (SOURCE_PRIORITY.index(x[0])
-                        if x[0] in SOURCE_PRIORITY else 99))
+        # P0-1 修复来源优先级覆盖速度：测活前已知探活存活优先→高清→来源 tiebreak；
+        # 实测后输出严格按「延迟升序, 来源优先级」排（见下方 good 排序）。
+        _pre_status = _load_url_status()
+        lines = sorted(ent["lines"], key=lambda x: (
+            _alive_rank(x[1], _pre_status),
+            resolution_tier(ent.get("name") or std, x[1]),
+            SOURCE_PRIORITY.index(x[0]) if x[0] in SOURCE_PRIORITY else 99,
+        ))
         seen, uniq = set(), []
         for sid, u in lines:
             if u not in seen:
@@ -970,14 +992,14 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
                     ok, ts, ms = hit
                     ttl = PROGRESS_TTL_OK_S if ok else PROGRESS_TTL_FAIL_S
                     if time.time() - ts < ttl:
-                        results.setdefault(std, []).append((u, ok, "cache", ms))
+                        results.setdefault(std, []).append((u, ok, "cache", ms, None))
                         n_cached[0] += 1
                         n[0] += 1
                         continue
                 # 单源硬超时：该源累计探流耗时超限，本轮剩余线路不再提交（下轮重试）
                 if sid in sid_skipped or sid_elapsed.get(sid, 0.0) > SOURCE_HARD_TIMEOUT_S:
                     sid_skipped.add(sid)
-                    results.setdefault(std, []).append((u, False, "source-timeout", 0.0))
+                    results.setdefault(std, []).append((u, False, "source-timeout", 0.0, sid))
                     continue
                 futs[ex.submit(_probe_timed, u)] = (std, u, sid)
             if time.time() - t0 > budget_s:
@@ -991,7 +1013,7 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
             std, u, sid = futs[fut]
             ok, why, ms = fut.result()
             sid_elapsed[sid] = sid_elapsed.get(sid, 0.0) + ms
-            results.setdefault(std, []).append((u, ok, why, ms))
+            results.setdefault(std, []).append((u, ok, why, ms, sid))
             if why != "source-timeout":
                 prog_rows.append({"k": _pkey(std, u), "ok": ok, "ms": ms, "why": why})
             n[0] += 1
@@ -1007,9 +1029,12 @@ def test_channel_lines(cmap, max_test=MAX_LINES_PER_CH,
     for std, lst in results.items():
         # 线路按速度升序：实测通过者按探流耗时小→大排列（同一频道内首条=最快线路，
         # 播放器默认取首条、卡顿可手动切后继线路）；未通过的线路不进 verified。
-        good = sorted(((u, ms) for u, ok, _w, ms in lst if ok), key=lambda x: x[1])
+        # P0-1 核心：线路级 key=(延迟升序, 来源优先级)，速度永远优先于来源。
+        good = sorted(((u, ms, sid) for u, ok, _w, ms, sid in lst if ok),
+                      key=lambda x: (x[1], SOURCE_PRIORITY.index(x[2])
+                                     if x[2] in SOURCE_PRIORITY else 99))
         if good:
-            verified[std] = cap_lines([u for u, _ms in good])
+            verified[std] = cap_lines([u for u, _ms, _sid in good])
     return verified, results
 
 

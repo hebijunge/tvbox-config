@@ -1,36 +1,41 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-09-27T03:47:29
+生成时间：2026-09-26T22:20:11
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 3855 | 125 | 650 | 1249 | 1831 |
-| 直播 | 344 | 0 | 0 | 344 | 0 |
+| 点播 | 4048 | 118 | 638 | 1523 | 1769 |
+| 直播 | 338 | 0 | 0 | 338 | 0 |
 
-较上轮变化：新增 387｜掉线 4｜恢复 1｜移除 580（点播）；新增 8｜掉线 0｜恢复 0｜移除 2（直播）
+较上轮变化：新增 669｜掉线 2｜恢复 8｜移除 201（点播）；新增 8｜掉线 0｜恢复 0｜移除 2（直播）
 
 ## 点播掉线（前 10）
 
-- 次元城（degraded → dead）
-- 💖喵喵动漫（degraded → dead）
-- 《好帅🎦短剧》（degraded → dead）
-- 🧸好帅┃短剧（degraded → dead）
+- 🐷八天┃[APP]（degraded → dead）
+- 猫爪｜APP（degraded → dead）
 
 ## 点播恢复（前 10）
 
-- 💖分享魅影（dead → degraded）
+- 影视 • 建安（dead → degraded）
+- 💢口袋影视(XB)（dead → degraded）
+- 网盘 | 盤搜天意（dead → degraded）
+- 🙀乌猫┃影视（dead → degraded）
+- 🥝金曼┃影视（dead → degraded）
+- 💫┃碟迷┃XB（dead → degraded）
+- 🆖短剧┃TV（dead → degraded）
+- 🛸碟迷┃影视（dead → degraded）
 
 ## 点播新增（前 10）
 
-- ♥155(直连)（unknown）
-- 海豚资源（unknown）
-- 💕jkun(直连)（unknown）
-- 155（unknown）
-- 影视 • 索尼[直连]（unknown）
-- 🍀光速HTTP（unknown）
-- 影视 • 极速[直连]（unknown）
-- ♻️量子（unknown）
-- 樱花资源（unknown）
-- [322ms|我的] U酷资源（unknown）
+- 49(采集)（unknown）
+- 七七｜采集（unknown）
+- 九零｜采集（unknown）
+- 快云(采集)（unknown）
+- 快帆(采集)（unknown）
+- 快看(采集)（unknown）
+- 暴风(采集)（unknown）
+- 资源｜采集（unknown）
+- ️无限｜采集（unknown）
+- 无尽资源（unknown）
