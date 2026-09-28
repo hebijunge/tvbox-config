@@ -3440,7 +3440,54 @@ def sha12(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()[:12]
 
 
+def _is_local_ref(url) -> bool:
+    """url 是否为仓内本地镜像路径（./deps/... 相对路径），而非真实外部 URL。"""
+    return isinstance(url, str) and (url.startswith("./") or url.startswith("../"))
+
+
+# 状态优先级（越小越好），供同名去重时挑「最优状态」。
+_STATUS_RANK = {"ok": 0, "probe": 1, "mirror": 1, "degraded": 2,
+                "dead": 3, "disabled": 4, "blacklisted": 5}
+
+
+def dedupe_check_records(records: list) -> list:
+    """按上游名去重：把同名「本地镜像 + 真实 URL」双条目合并成一条。
+
+    背景：外部配置本地化后，部分上游在清单里有两条（一条 ./deps/external/ 本地镜像
+    + 一条真实外部 URL）。本地镜像读本地文件恒 ok，会掩盖真实 URL 的失效，使
+    checks.json / README 表里同一上游出现两行互相矛盾的状态。
+
+    规则（每个 name 留一条）：
+      1) 真实外部 URL 优先于本地镜像（即便本地状态更好，也要诚实展示真实 URL）；
+      2) 同类（都真实 / 都本地）取最优状态（ok > degraded > dead ...）；
+      3) 状态相同取 last_ok_at 更新者。
+    保持 name 首次出现顺序，幂等。"""
+    by_name = {}
+    for r in records:
+        n = r.get("name", "")
+        cur = by_name.get(n)
+        if cur is None:
+            by_name[n] = r
+            continue
+        cur_local = _is_local_ref(cur.get("url", ""))
+        new_local = _is_local_ref(r.get("url", ""))
+        if cur_local and not new_local:
+            by_name[n] = r          # new 是真实 URL，替换本地
+            continue
+        if new_local and not cur_local:
+            continue               # cur 是真实 URL，保留 cur
+        cr = _STATUS_RANK.get(cur.get("status", ""), 99)
+        nr = _STATUS_RANK.get(r.get("status", ""), 99)
+        if nr < cr:
+            by_name[n] = r
+        elif nr == cr:
+            if (r.get("last_ok_at", "") or "") >= (cur.get("last_ok_at", "") or ""):
+                by_name[n] = r
+    return list(by_name.values())
+
+
 def write_checks(records: list, generated_at: str) -> dict:
+    records = dedupe_check_records(records)
     order = {"ok": 0, "degraded": 1, "dead": 2, "disabled": 3, "blacklisted": 4}
     recs = sorted(records, key=lambda r: order.get(r.get("status"), 5))
     doc = {
@@ -3468,6 +3515,7 @@ STATUS_CN = {"ok": "可用", "degraded": "降级", "dead": "失效", "disabled":
 
 def update_readme_availability(records: list) -> bool:
     """README 内 availability:start/end 锚点间回写可用性表（laoma2053 模式）。"""
+    records = dedupe_check_records(records)
     try:
         with open(README_FILE, "r", encoding="utf-8") as f:
             content = f.read()
@@ -4870,6 +4918,31 @@ def main() -> int:
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    # 广告拦截基线注入（P0 体验）：上游配置普遍不带 ad/tihuan，播放器端无拦截配置时
+    # 播放页广告切片/顶部跑马灯会直接漏进交付产物。本仓自维护 rules/ad_block.json
+    # （广告域+统计追踪域单一词表，可审计），上游带了则尊重上游（合并去重），没带用基线。
+    try:
+        _ad_rule = json.load(open("rules/ad_block.json", encoding="utf-8"))
+        _ad_base = [str(x) for x in (_ad_rule.get("ad") or []) if str(x).strip()]
+        _th_base = [str(x) for x in (_ad_rule.get("tihuan") or []) if str(x).strip()]
+
+        def _merge_ad_list(cur, base):
+            cur = cur if isinstance(cur, (list, str)) else []
+            if isinstance(cur, str):
+                cur = [x.strip() for x in re.split(r"[,;\s]+", cur) if x.strip()]
+            out, seen = [], set()
+            for x in list(cur) + list(base):
+                if x and x not in seen:
+                    seen.add(x)
+                    out.append(x)
+            return out
+
+        tvbox["ad"] = _merge_ad_list(tvbox.get("ad"), _ad_base)
+        tvbox["tihuan"] = _merge_ad_list(tvbox.get("tihuan"), _th_base)
+        print(f"    [ad_block] ad={len(tvbox['ad'])} 条 / tihuan={len(tvbox['tihuan'])} 条"
+              f"（基线 rules/ad_block.json + 上游并集）", flush=True)
+    except Exception as _ae:  # noqa: BLE001
+        print(f"    [ad_block] 注入未生效（不阻断）：{_ae}", flush=True)
     # 解析质量排序（P0）：依据 probe/parses_probe.json 按质量分重排——
     # 响应速度 > 格式规范(JSON) > 无广告 > 稳定性；失效排最后、广告排倒数第二。
     # 无探活数据（首次运行）保持原序；任何异常不阻断每日构建。

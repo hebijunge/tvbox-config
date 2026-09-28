@@ -255,6 +255,14 @@ def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
     at = checked_at or now()
     health = classify(level, ok)
     pri = probe_priority(probe)
+    # P1 判级修正（2026-09-28）：浅探针（spider 连通性 pri≤1 / js 分类页 pri=2）
+    # 在「没有等级字段 + 连通性失败」时，classify 会落到 dead。
+    # 但浅探针只能证明「目标可达性」，连不上 ≠ 源已死（站可能只是换域名/防盗链/
+    # 本机网络波动，或被真机五关才判得准）——把无深证据的浅失败降级为 unknown，
+    # 避免 1252 个从未被深探针覆盖的 type-3 源被误钉死而挡在 healthy/usable 之外。
+    # 深探针（sites L0 / csp C0 / drpy D0）带显式 level，health 已是 dead，不在此列。
+    if health == "dead" and pri < 3 and not level and ok is False:
+        health = "unknown"
     conn.execute("""
         INSERT INTO checks (key, checked_at, ok, status_code, latency_ms, level, reason, probe)
         VALUES (?,?,?,?,?,?,?,?)

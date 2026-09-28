@@ -41,6 +41,18 @@ GROUPS = {
 }
 
 
+def _group_core(g: str) -> str:
+    """站点 group 形如「综合-蜘蛛源」「4K-网盘」「短剧」（rank_sites 写「前缀-类别」）。
+
+    取「-」后的核心类别便于分桶；裸类别（无「综合-」/「4K-」前缀）原样返回。
+    旧实现直接拿裸组名（采集站/蜘蛛源…）与完整 group 比对，前缀导致永远匹配落空，
+    四个分类文件被导出成 0 站点空壳——此处修正。"""
+    for p in ("综合-", "4K-"):
+        if g.startswith(p):
+            return g[len(p):]
+    return g
+
+
 def log(msg):
     print(f"[export {datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
@@ -132,7 +144,7 @@ def main() -> int:
     dump("usable.json", usable)
 
     for name, gset in GROUPS.items():
-        dump(f"{name}.json", [e for e in usable if e.get("group") in gset])
+        dump(f"{name}.json", [e for e in usable if _group_core(e.get("group")) in gset])
 
     # 直播单独导：lives 不在 sites 里，单独成一份（带上游健康来源）
     lives = doc.get("lives") or []

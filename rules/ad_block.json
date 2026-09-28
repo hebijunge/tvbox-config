@@ -1,0 +1,37 @@
+{
+  "comment": "播放/页面广告拦截基线（TVBox ad + tihuan 字段单一词表）。fetch_merge 组装 tvbox.json 时注入：上游没带则用本基线，上游带了则保留上游。维护原则：只收「广告域/统计追踪域」，不收内容宿主（raw.githubusercontent.com、googleapis.com 等会被 TVBox 当内容拉取的域名绝不能进 ad，否则误杀配置拉取）。",
+  "updated_at": "2026-09-28",
+  "sources": [
+    "上游 proxy 池并集（feimao/fun/x 同源的 17 广告域，去 raw.githubusercontent 后保留 16）",
+    "上游 tihuan 池（cnzz.com 等统计域）"
+  ],
+  "ad": [
+    "googlevideo.com",
+    "cdn.v82u1l.com",
+    "cdn.iz8qkg.com",
+    "cdn.kin6c1.com",
+    "c.biggggg.com",
+    "c.olddddd.com",
+    "haiwaikan.com",
+    "www.histar.tv",
+    "uhibo.com",
+    "boku.co",
+    "boku.cc",
+    "nivod.tv",
+    "ulivetv.net",
+    "188766.xyz",
+    "4gtv.tv",
+    "iill.top",
+    "cnzz.com",
+    "baidu.com",
+    "baidu.net",
+    "pos.baidu.com",
+    "cpro.baidu.com",
+    "tongji.baidu.com",
+    "analytics.google.com",
+    "googlesyndication.com"
+  ],
+  "tihuan": [
+    "cnzz.com"
+  ]
+}

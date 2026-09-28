@@ -45,6 +45,7 @@ STAGES = [
     ("5 候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
     ("6 拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
      {"EXTRA_UPSTREAMS": "1", "CONCURRENCY": "24"}),
+    ("6b 依赖完整性闸门", ["scripts/dep_repair.py", "--workers", "8"], True, {}),
     ("7a 入库(接口/直播/检测/依赖)", ["scripts/store.py", "--ingest-sites", "tvbox.json",
                                     "--ingest-lives", "tvbox.json", "--probe-lives",
                                     "--ingest-probes", "probe/sites_probe.json",
