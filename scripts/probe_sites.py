@@ -53,6 +53,9 @@ MAX_TS = 4096
 # raw.githubusercontent.com 等热门 CDN 单独限到 PROBE_GH_CONCURRENCY（默认 8），
 # 避免单域名被我们自己打限流。
 PROBE_CONCURRENCY_DEFAULT = int(os.environ.get("PROBE_CONCURRENCY", "48"))
+# P0-2 验活配额：>0 时每轮最多实测 N 个代表任务，优先覆盖无历史结论的 unknown 源，
+# 按天轮转窗口；0=不限量（现行为）。
+PROBE_QUOTA_DEFAULT = int(os.environ.get("PROBE_QUOTA", "0"))
 PROBE_DOMAIN_CONCURRENCY = int(os.environ.get("PROBE_DOMAIN_CONCURRENCY", "6"))
 PROBE_GH_CONCURRENCY = int(os.environ.get("PROBE_GH_CONCURRENCY", "8"))
 _DOMAIN_LOCK = threading.Lock()
@@ -627,6 +630,8 @@ def main() -> int:
     ap.add_argument("--only", default="all", choices=["all", "http", "js", "csp"])
     ap.add_argument("--limit", type=int, default=0, help="每类最多测多少个")
     ap.add_argument("--concurrency", type=int, default=PROBE_CONCURRENCY_DEFAULT)
+    ap.add_argument("--quota", type=int, default=PROBE_QUOTA_DEFAULT,
+                    help="每轮最多实测代表数（0=不限量）；超限时优先 unknown 源并按天轮转")
     ap.add_argument("--keywords", default=",".join(KEYWORDS))
     ap.add_argument("--shallow", action="store_true", help="只跑 L1，不跑 L2/L3")
     ap.add_argument("--force", action="store_true",
@@ -722,6 +727,37 @@ def main() -> int:
             ms = ((prev.get("l1") or {}).get("ms") if isinstance(prev, dict) else None) or 99999
             return (-hs, ms)
         reps.sort(key=_submit_order)
+
+        # P0-2 配额轮转：限时优先补 unknown——无历史源的站按天偏移轮转窗口，
+        # 保证 ceil(unknown/配额) 轮内全覆盖；被跳过的有档站沿用上轮结论，
+        # 无档站记 L? 占位（skipped_by_quota），下一轮继续轮转。
+        if args.quota > 0 and len(reps) > args.quota:
+            never = [s for s in reps if not prev_cache.get(s.get("api"))]
+            known = [s for s in reps if prev_cache.get(s.get("api"))]
+            off = round_idx % max(len(never), 1)
+            rot = never[off:] + never[:off]
+            picked = rot[:args.quota]
+            picked_ids = {id(s) for s in picked}
+            picked += [s for s in known if id(s) not in picked_ids][:args.quota - len(picked)]
+            picked_ids = {id(s) for s in picked}
+            skipped_no_prev = 0
+            for s in reps:
+                if id(s) in picked_ids:
+                    continue
+                prev = prev_cache.get(s.get("api"))
+                if prev is not None:
+                    reused.append((s, prev))
+                else:
+                    skipped_no_prev += 1
+                    results.append({"key": s.get("key"), "name": s.get("name"), "api": s.get("api"),
+                                    "kind": "http", "level": "L?", "skipped_by_quota": True,
+                                    "tested_at": now})
+            print(f"[probe] PROBE_QUOTA={args.quota}：本轮实测 {len(picked)} 代表"
+                  f"（unknown 池 {len(never)}，窗口偏移 {off}），跳过 {len(reps)-len(picked)}"
+                  f"（其中无历史 {skipped_no_prev}）", flush=True)
+            reps = picked
+            cached_count = len(reused)
+            cache_hit_rate = round(100 * cached_count / max(cache_denom, 1), 1)
 
         print(f"[probe] L1-L3 实测代表 {len(reps)} 个（并发 {args.concurrency}，热词 {keywords}）"
               f"，V3 分组省去 {dedup_saved} 个重复任务，缓存/分档复用 {cached_count} 个"

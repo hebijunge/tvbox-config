@@ -2,30 +2,50 @@
 # P0-2 本地预检查（push 前自动运行）
 # 用法：一次性启用  git config core.hooksPath .githooks
 # 紧急逃逸：        git push --no-verify
-# 三道关卡：
-#   1) py_compile 所有 scripts/*.py —— 语法错误直接阻断（不劳 CI 跑 90 分钟才发现）
-#   2) windows_path_check.py       —— Windows 非法路径阻断（CI windows-path-check job 同款）
-#   3) 快速冒烟 --site-limit 5      —— 软告警，不阻断（本地网络/依赖缺失时 CI 兜底）
+# 四道关卡：
+#   1) py_compile 所有 scripts/*.py —— 语法错误直接阻断
+#   2) windows_path_check.py       —— Windows 非法路径阻断
+#   3) unittest 全量测试           —— 阻断（py_compile 抓不住 import 期运行时错误，
+#      如 fetch_merge 的 3.10+ 语法在旧解释器上直接 TypeError）
+#   4) 快速冒烟 --site-limit 5     —— 软告警，不阻断（本地网络/依赖缺失时 CI 兜底）
 set -e
 
 cd "$(git rev-parse --show-toplevel)" || exit 1
 
-echo "[pre-push] 1/3 编译检查 scripts/*.py ..."
-python -m py_compile scripts/*.py || {
+# 仓内代码依赖 Python 3.10+（str|None 注解等在 import 期即求值），选一个够新的解释器
+PY=""
+for c in "py -3.12" "py -3.11" "py -3" python3 python; do
+  if $c -c 'import sys; sys.exit(0 if sys.version_info >= (3, 10) else 1)' 2>/dev/null; then
+    PY=$c
+    break
+  fi
+done
+if [ -z "$PY" ]; then
+  echo "[pre-push] FAIL: 找不到 Python 3.10+ 解释器（本仓代码在 3.8 上 import 即崩），已阻断 push"
+  exit 1
+fi
+echo "[pre-push] 使用解释器: $PY"
+
+echo "[pre-push] 1/4 编译检查 scripts/*.py ..."
+$PY -m py_compile scripts/*.py || {
   echo "[pre-push] FAIL: 存在 Python 语法错误，已阻断 push"
   exit 1
 }
 
-echo "[pre-push] 2/3 Windows 路径兼容性检查 ..."
-python scripts/windows_path_check.py || {
+echo "[pre-push] 2/4 Windows 路径兼容性检查 ..."
+$PY scripts/windows_path_check.py || {
   echo "[pre-push] FAIL: Windows 路径不兼容，已阻断 push"
   exit 1
 }
 
-echo "[pre-push] 3/3 快速冒烟（--site-limit 5，软告警不阻断）..."
-if command -v python >/dev/null 2>&1; then
-  python scripts/fetch_merge.py --site-limit 5 || \
-    echo "[pre-push] WARN: 快速冒烟未通过（不阻断 push，远端 CI 会兜底；如属网络抖动可忽略）"
-fi
+echo "[pre-push] 3/4 单元测试（unittest discover，阻断）..."
+$PY -m unittest discover -s tests -p "test_*.py" || {
+  echo "[pre-push] FAIL: 测试未通过，已阻断 push"
+  exit 1
+}
+
+echo "[pre-push] 4/4 快速冒烟（--site-limit 5，软告警不阻断）..."
+$PY scripts/fetch_merge.py --site-limit 5 || \
+  echo "[pre-push] WARN: 快速冒烟未通过（不阻断 push，远端 CI 会兜底；如属网络抖动可忽略）"
 
 echo "[pre-push] OK：本地预检查通过"

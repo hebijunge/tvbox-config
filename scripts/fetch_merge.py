@@ -21,6 +21,12 @@ TVBox 配置每日拉取合并脚本 v2（stdlib only，无第三方依赖）
   P2 一上游一适配器（HerbertHe/iptv-sources 模式）
   P2 域名替换层（hl128k/tvbox 思路）
 """
+import sys
+
+if sys.version_info < (3, 10):
+    sys.exit("[fetch_merge] 需要 Python 3.10+（当前 %s）：模块使用了 `str | None` 等"
+             " 3.10+ 语法，旧解释器会在 import 期直接崩溃" % sys.version.split()[0])
+
 import hashlib
 import json
 import os
@@ -529,6 +535,9 @@ EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
 # PUBLISH_ADULT=1（完整公开模式）：成人站点同时进 tvbox.json / vod.json；
 #   需要打进本地 zip 时给 pack_local.py 传 --adult adult.json。
 PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
+# 环④ 死引用剥离闸门：主配置（tvbox/vod/stores/short/adult）写产物前，
+# 本地 ./deps 引用缺失的站点直接剔除；MAIN_DROP_DEAD_REFS=0 回到旧"仅记录不剔除"行为。
+MAIN_DROP_DEAD_REFS = os.environ.get("MAIN_DROP_DEAD_REFS", "1") == "1"
 
 
 
@@ -5312,6 +5321,19 @@ def main() -> int:
                   f"（补测 {len(_fv_recheck)} + 缓存 {_fv_cache_hits}；失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
     except Exception as _e:  # noqa: BLE001
         print(f"    [P1-2] 终验异常（不阻断）：{_e}", flush=True)
+    # 环④ P0 死引用剥离闸门：主产物（tvbox/vod → 后续 stores/short/adult）写文件前，
+    # 剔除本地 ./deps 引用缺失的站点并登记 local_ref_audit；死引用站点进配置只会让用户
+    # 导入后大面积播坏（2026-09-28 五环评估：重下载修复成功率仅 2%，剥离为唯一有效动作）。
+    local_ref_audit: dict = {}
+    if MAIN_DROP_DEAD_REFS:
+        tvbox["sites"] = filter_local_ref_sites(tvbox.get("sites") or [], os.getcwd(), "tvbox.json", local_ref_audit)
+        vod["sites"] = filter_local_ref_sites(vod.get("sites") or [], os.getcwd(), "vod.json", local_ref_audit)
+    else:
+        _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, os.getcwd())}
+                      for s in (vod.get("sites") or []) if _missing_local_refs(s, os.getcwd())]
+        if _vod_drops:
+            local_ref_audit["vod.json(仅记录)"] = _vod_drops
+            print(f"    [local-ref] 审计发现 {len(_vod_drops)} 个死引用站点（MAIN_DROP_DEAD_REFS=0 仅记录不剔除）", flush=True)
     # 环⑤ P2：主配置带健康标注（从 DB 读 P1 修正后的权威结论，TVBox 忽略 _ 字段）。
     # 放在 P0-3 剥离前打标，白名单保留 _health/_checked_at/_latency_ms，其余 _ 字段照剥。
     try:
@@ -5428,14 +5450,8 @@ def main() -> int:
     else:
         # 不声明模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
         adult_sites = adult_excluded_sites
-    # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
-    # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
-    local_ref_audit: dict = {}
-    _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, repo_dir)}
-                  for s in (vod.get("sites") or []) if _missing_local_refs(s, repo_dir)]
-    if _vod_drops:
-        local_ref_audit["vod.json(仅记录)"] = _vod_drops
-        print(f"    [local-ref] vod.json: 审计发现 {len(_vod_drops)} 个死引用站点（仅记录不剔除）", flush=True)
+    # P0 防回归：主配置死引用已在产物写入前的剥离闸门处理（见 local_ref_audit 上方注释）；
+    # 这里对分类产物再核验一次（正常应为零剔除，兜住分类衍生出的独立配置）。
     short_sites = filter_local_ref_sites(short_sites, repo_dir, "short.json", local_ref_audit)
     adult_sites = filter_local_ref_sites(adult_sites, repo_dir, "adult.json", local_ref_audit)
     short_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
@@ -5634,7 +5650,7 @@ def main() -> int:
         "lives_by_category": live_stats,
         "stores": stores_summary,
         "local_ref_audit": {
-            "note": "写入前核验站点 ./ 本地依赖；short/adult 死引用站点已剔除，vod 仅记录",
+            "note": "写入前核验站点 ./ 本地依赖；主配置(tvbox/vod)与分类产物死引用站点均已剔除（MAIN_DROP_DEAD_REFS=0 时主配置仅记录）",
             "dropped": local_ref_audit,
         },
         "products": {"note": "产物 sha256 指纹（前 12 位）与字节数", "items": products},
