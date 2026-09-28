@@ -6,11 +6,12 @@ name: live-pool-prune
 # speedtest 仅测速排序不剔除。
 
 on:
-  workflow_run:
-    workflows: ["daily-fetch"]
-    types: [completed]
-  schedule:
-    - cron: "0 21 * * 0"
+  # 已暂停（用户要求）：取消 daily-fetch 结束后自动触发 + 每周日定时补扫
+  # workflow_run:
+  #   workflows: ["daily-fetch"]
+  #   types: [completed]
+  # schedule:
+  #   - cron: "0 21 * * 0"
   workflow_dispatch:
 
 permissions:
