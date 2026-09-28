@@ -1471,6 +1471,13 @@ def clean_parses(parses: list, *, do_probe: bool = True, probe_timeout: float = 
 # ==================== 依赖收集（jar / js / json 库文件） ====================
 DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
+# deps 失败退避账本（2026-09-28）：死域/挂起链接不再每轮重建清单反复 25s 死撞。
+# 上轮 2564 条挂起全是 gitcode.net/yydsys.top 等死域，每轮白花 ~28min。
+# 失败按 2^fail_count 天指数退避（上限 14 天），累计 30 天标死不再试；
+# 下载成功即清账本；DEP_FORCE_RETRY=1 强制全量重试。
+DEP_BACKOFF_FILE = os.environ.get("DEP_BACKOFF_FILE", os.path.join("state", "dep_fail_backoff.json"))
+DEP_BACKOFF_MAX_DAYS = 14
+DEP_BACKOFF_DEAD_DAYS = 30
 DEP_TIMEOUT = 8
 DEP_TOTAL_BUDGET = 15  # 单依赖全链路(直连+镜像)总预算秒，防死URL拖慢整轮
 DEP_MAX_BYTES = 8 * 1024 * 1024
@@ -1529,6 +1536,26 @@ def _idna_host(host: str) -> str:
     return out
 
 
+def _split_gh_prefix(url: str):
+    """剥离 GitHub 代理前缀（ghproxy.net/、ghp.ci/、ghfast.top/…）归一成内层裸 URL。
+
+    返回 (inner_url, had_prefix)。层层剥离（应对「前缀套前缀」的脏配置），
+    以 GH_MIRRORS 已知前缀 + 常见老镜像名判定停止。"""
+    known = [m.rstrip("/") for m in GH_MIRRORS]
+    known.append("https://ghproxy.com")  # 老镜像名（不在当前链里也见过）
+    inner = url
+    changed = True
+    while changed:
+        changed = False
+        for pre in known:
+            p = pre.rstrip("/")
+            if inner.startswith(p + "/"):
+                inner = inner[len(p) + 1:]
+                changed = True
+                break
+    return inner, url != inner
+
+
 def dep_lenient_json(text: str) -> bool:
     if text.startswith("\ufeff"):
         text = text[1:]
@@ -1571,7 +1598,13 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
 
 
 def dep_download(url: str):
-    """原 URL → ghproxy 镜像列表轮换兜底。返回 (bytes, channel) 或 (None, err)。"""
+    """原 URL → gh 镜像链轮换兜底。返回 (bytes, channel) 或 (None, err)。
+
+    2026-09-28 代理前缀归一化：上游配置里很多 github 链接已经挂了镜像前缀
+    （ghp.ci / ghfast.top / ghproxy.net 等）。旧实现只查 "ghproxy" 字面量，
+    其余前缀的链接会被再叠一层镜像（双前缀低成功率，失败还要多耗 2 次 25s）。
+    现在统一剥前缀归一成裸 github URL，再按 mirror_probe 实测择优序套当前最优镜像链：
+    已挂前缀 → 直接用最优前缀替换（避免"老前缀+双前缀"）；裸链接 → 直连优先、失败走镜像链。"""
     import urllib.parse
     # 非 ASCII 域名（如中文域名）punycode 化：urllib 发请求头走 latin-1，unicode host 必挂 UnicodeEncodeError
     p = urllib.parse.urlsplit(url)
@@ -1579,9 +1612,15 @@ def dep_download(url: str):
         host = _idna_host(p.hostname)
         netloc = f"{host}:{p.port}" if p.port else host
         url = urllib.parse.urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment))
-    attempts = [url]
-    if "github" in url and "ghproxy" not in url:
-        attempts.extend(m + url for m in GH_MIRRORS[:2])  # 最多2个镜像，避免死URL耗时5min+
+    _inner, _had_prefix = _split_gh_prefix(url)
+    attempts = [_inner]
+    if "github" in _inner.lower():
+        if _had_prefix:
+            # 已挂前缀：用当前镜像链择优序替换前缀（首位=mirror_probe 实测最快），不双叠
+            attempts.extend(m + _inner for m in GH_MIRRORS[:2])
+        elif "ghproxy" not in _inner:
+            # 裸 github 链接：直连优先（能直连就不走代理），失败走镜像链（最多2个镜像，避免死URL耗时5min+）
+            attempts.extend(m + _inner for m in GH_MIRRORS[:2])
     attempts = [
         urllib.parse.quote(u, safe="%/:=&?~#+!$,;'@()*[]|") if not u.isascii() else u
         for u in attempts
@@ -1722,6 +1761,75 @@ def load_manifest() -> dict:
             return json.load(f)
     except Exception:
         return {}
+
+
+def dep_backoff_load() -> dict:
+    """deps 失败退避账本：{rkey: {fail_count, next_retry_at, dead, last_error}}。"""
+    try:
+        with open(DEP_BACKOFF_FILE, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def dep_backoff_save(d: dict) -> None:
+    """账本批量落盘（原子 replace，防并发读写冲突）。"""
+    tmp = DEP_BACKOFF_FILE + ".tmp"
+    os.makedirs(os.path.dirname(DEP_BACKOFF_FILE) or ".", exist_ok=True)
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, DEP_BACKOFF_FILE)
+
+
+def dep_backoff_skip_in(d: dict, rkey: str, now_naive: datetime) -> bool:
+    """纯 dict 判定：退避窗口内/已标死 → 跳过。DEP_FORCE_RETRY=1 不跳过。
+    累计失败天数（now - first_fail_at）达 30 天 → 视同永久死域跳过（读端动态复查，
+    不依赖写入时刻的 dead 字段——老账本条目也能自动转死）。"""
+    if os.environ.get("DEP_FORCE_RETRY") == "1":
+        return False
+    ent = d.get(rkey)
+    if not ent:
+        return False
+    if ent.get("dead"):
+        return True
+    try:
+        span = (now_naive - datetime.strptime(ent.get("first_fail_at") or "", "%Y-%m-%d %H:%M:%S")).days
+    except ValueError:
+        span = 0
+    if span >= DEP_BACKOFF_DEAD_DAYS:
+        return True
+    nra = ent.get("next_retry_at")
+    if not nra:
+        return False
+    try:
+        return datetime.strptime(nra, "%Y-%m-%d %H:%M:%S") > now_naive
+    except (ValueError, TypeError):
+        return False
+
+
+def dep_backoff_record_fail(d: dict, rkey: str, err: str, now_naive: datetime):
+    """失败记账本（in-place 改 dict）：next_retry_at = now + 2^fc 天（上限 14）；累计 30 天标死。"""
+    ent = d.get(rkey) or {"fail_count": 0,
+                          "first_fail_at": now_naive.strftime("%Y-%m-%d %H:%M:%S")}
+    fc = int(ent.get("fail_count", 0)) + 1
+    try:
+        span = (now_naive - datetime.strptime(ent.get("first_fail_at") or "", "%Y-%m-%d %H:%M:%S")).days
+    except ValueError:
+        span = 0
+    ent.update({"fail_count": fc,
+                "last_fail_at": now_naive.strftime("%Y-%m-%d %H:%M:%S"),
+                "last_error": str(err)[:160],
+                "next_retry_at": (now_naive + timedelta(days=min(2 ** fc, DEP_BACKOFF_MAX_DAYS))).strftime("%Y-%m-%d %H:%M:%S"),
+                "dead": span >= DEP_BACKOFF_DEAD_DAYS})
+    d[rkey] = ent
+
+
+def dep_backoff_clear(d: dict, rkey: str) -> bool:
+    """下载成功 → 清账本条目。返回是否真的删了。"""
+    if d.pop(rkey, None) is not None:
+        return True
+    return False
 
 
 def _spider_canon(ref, origin: str):
@@ -1866,6 +1974,11 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     import urllib.parse
 
     manifest = load_manifest()
+    # deps 失败退避账本（2026-09-28）：一次加载、全轮共享；死域链接 2^N 天退避，
+    # 退避窗口内不再 25s 死撞（上轮 2564 条挂起白花 ~28min 的根因修复）。
+    backoff = dep_backoff_load()
+    _backoff_dirty: set = set()
+    _now_naive = datetime.now()
     now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00")
 
     def _dep_download_throttled(u):
@@ -1968,6 +2081,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         # 这是CI超时的根因修复：RAW_VOD_VERIFY_ACTIVE时不再强制全量重下，
         # 已缓存且内容未变的依赖直接复用，仅新依赖/内容变化的依赖才下载。
         _cache_hit = False
+        _backoff_skip = False
         if os.path.isfile(fp) and os.path.getsize(fp) > 0:
             try:
                 _local_md5 = hashlib.md5(open(fp, "rb").read()).hexdigest()
@@ -1979,6 +2093,21 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 ch = "md5-cache-hit"
                 rec["channel"] = ch
                 _cache_hit = True
+        else:
+            _prev = {}
+        # === 失败退避短路（2026-09-28）：死域链接 2^N 天退避窗口内不再 25s 死撞 ===
+        # 本地有生效文件 → 沿用最后可用版（与 raw-store「上游已删沿用」同语义）；
+        # 本地也没有 → 直接跳过，下游保留原 URL 引用，不阻断整轮合并。
+        if not _cache_hit and dep_backoff_skip_in(backoff, rkey, _now_naive):
+            _backoff_skip = True
+            if os.path.isfile(fp) and os.path.getsize(fp) > 0:
+                content = open(fp, "rb").read()
+                rec["channel"] = "backoff: 上游暂不可用，沿用 deps 最后可用版"
+                print(f"  [deps] 退避沿用 {rkey}（{backoff.get(rkey, {}).get('last_error', '')[:40]}）",
+                      flush=True)
+            else:
+                rec["channel"] = "backoff-skip（无本地文件，保留原 URL 引用）"
+                return rec
 
         def _vod_rel():
             # deps/<origin>/<path> → raw-vod/<origin>/<path>（与 deps 布局一一镜像，审计可直接对比）
@@ -1990,7 +2119,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             return raw_store.ingest(raw_store.RAW_VOD_DIR, rkey, url, data, rel=_vod_rel(),
                                     store_bytes=False)["status"]
 
-        if not _cache_hit and RAW_VOD_VERIFY_ACTIVE:
+        if not _cache_hit and not _backoff_skip and RAW_VOD_VERIFY_ACTIVE:
             # ---- 每日验证模式（2026-09-27 落库改造）----
             # 无条件拉上游 → raw-vod 账本 sha256 变化检测（变了才覆盖 deps/）；
             # 上游删除/404 → deps/ 本地生效文件即最后可用版（管线从不删除它），
@@ -2092,6 +2221,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         return rec
 
     ok_map: dict = {}
+    _fail_recs: list = []
     print(f"[deps] 收集 {len(entries)} 个依赖（并发 {DEP_CONCURRENCY}）...", flush=True)
     ex = cf.ThreadPoolExecutor(DEP_CONCURRENCY)
     futs = {ex.submit(work, e): e for e in entries}
@@ -2104,7 +2234,13 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             print(f"  [deps] 看门狗超时：35s无进展，{len(pending)}个下载挂起，已跳过", flush=True)
             for fut in pending:
                 fut.cancel()
-            print(f"  [deps] 已完成 {done_count}/{len(entries)}，剩余{len(pending)}个因网络挂起跳过（不影响后续产出）", flush=True)
+            # 挂起未完成的条目全部计入退避账本（下轮 2^N 天退避，不再死撞）
+            for fut in pending:
+                e = futs[fut]
+                _rkey = f"{e[2]}|{e[1]}"
+                dep_backoff_record_fail(backoff, _rkey, "download hang (看门狗超时)", _now_naive)
+                _backoff_dirty.add(_rkey)
+            print(f"  [deps] 已完成 {done_count}/{len(entries)}，剩余{len(pending)}个因网络挂起跳过并计入退避账本（不影响后续产出）", flush=True)
             break
         for fut in done_set:
             done_count += 1
@@ -2115,9 +2251,22 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 continue
             if rec.get("ok"):
                 ok_map[rec["key"]] = rec
+                dep_backoff_clear(backoff, rec["key"])   # 成功 → 清退避（链接复活不再退避）
+                _backoff_dirty.add(rec["key"])
+            elif rec.get("err") or not rec.get("ok"):
+                # 失败（下载挂/404/内容不符/落盘失败）→ 记退避账本，下轮 2^N 天窗口内跳过
+                if not str(rec.get("channel", "")).startswith("backoff"):
+                    dep_backoff_record_fail(backoff, rec["key"], rec.get("err") or rec.get("last_error") or "dep collect failed", _now_naive)
+                    _backoff_dirty.add(rec["key"])
+                    _fail_recs.append(rec)
             if done_count % 10 == 0:
                 print(f"  ... {done_count}/{len(entries)}", flush=True)
     ex.shutdown(wait=False)  # 不等待挂起线程，避免with块exit时死等
+    # 退避账本批量落盘（成功已清 / 失败已记），供下轮 work() 短路死域链接
+    if _backoff_dirty:
+        dep_backoff_save(backoff)
+        print(f"  [deps] 退避账本更新：{len(backoff)} 条（成功 {len(ok_map)} 已清 / 失败 {len(_fail_recs)} 已记）"
+              f" → {DEP_BACKOFF_FILE}", flush=True)
 
     # ---- 2b. 规则 js 内部相对 import 递归落库（限深 1 层）----
     # cat 规则集形态：每个规则 js 顶部 `import { _ } from './lib/cat.js'`，公共库必须随规则
