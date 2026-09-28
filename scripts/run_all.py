@@ -53,8 +53,9 @@ STAGES = [
                                     "probe/csp_probe.json", "probe/drpy_probe.json",
                                     "--prune", "--stats"], True, {}),
     ("7b 导出清单", ["scripts/export_healthy.py"], True, {}),
-    ("7c 健康日报", ["scripts/health_report.py"], True, {}),
-    ("7d 依赖审计", ["scripts/dep_audit.py"], True, {}),
+    ("7c 直播死源剔除(P1-4 只剔404)", ["scripts/live_dead_prune.py", "--workers", "8"], True, {}),
+    ("7d 健康日报", ["scripts/health_report.py"], True, {}),
+    ("7e 依赖审计", ["scripts/dep_audit.py"], True, {}),
     ("8 采集入口可达性探测", ["scripts/probe_sources.py", "--concurrency", "20"], True, {}),
     ("9 本地接口包(离线zip)", ["scripts/pack_local.py"], True, {}),
 ]

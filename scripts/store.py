@@ -474,29 +474,50 @@ def ingest_lives(conn, path: str) -> int:
 
 
 def _http_get(url: str, timeout: int = 12):
-    """轻量拉取（直播源实测用），raw 直连不通时走镜像兜底。"""
+    """轻量拉取（直播源实测用），raw 直连不通时走镜像兜底。
+
+    返回 (ok, st, raw)：
+      st 为 int 4xx/5xx → 服务器**明确拒绝**（确定性信号，可用于判死）；
+      st 为 None        → 连接/超时/SSL/网络**环境性失败**（不能据此判死，
+                          沙箱连不上 ≠ 源死了）。
+    """
     import urllib.request
+    from urllib.error import HTTPError
     hdr = {"User-Agent": "tvbox-config-live-probe", "Accept": "*/*"}
-    try:
-        req = urllib.request.Request(url, headers=hdr)
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return True, r.status, r.read(400_000)
-    except Exception as e:
-        if "raw.githubusercontent.com" in url:
-            try:
-                req2 = urllib.request.Request("https://ghproxy.net/" + url, headers=hdr)
-                with urllib.request.urlopen(req2, timeout=timeout) as r:
-                    return True, r.status, r.read(400_000)
-            except Exception as e2:
-                return False, None, str(e2)[:100]
-        return False, None, str(e)[:100]
+
+    def _try(u: str):
+        try:
+            req = urllib.request.Request(u, headers=hdr)
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                return True, r.status, r.read(400_000)
+        except HTTPError as e:
+            return False, e.code, None          # 服务器明确响应码（404/403/5xx）
+        except Exception as e:
+            return False, None, str(e)[:100]   # 连接/超时/SSL = 环境性
+
+    res = _try(url)
+    if res[0] or "raw.githubusercontent.com" not in url:
+        return res
+    # 裸 raw 国内常被墙/10054：按镜像链兜底（gh.acmsz.top 实测最快，ghproxy.net 兜底）。
+    # 任一镜像拿到「明确 HTTP 码」即停（404 是真死证据，不必再试后面的镜像）。
+    last = res
+    for m in ("https://gh.acmsz.top/", "https://ghproxy.net/"):
+        r2 = _try(m + url)
+        last = r2
+        if r2[0] or isinstance(r2[1], int):
+            return r2
+    return last
 
 
 def probe_lives(conn, timeout: int = 12, workers: int = 8) -> dict:
     """直播源连通性实测：拉一次源地址，看是否返回可用频道列表。
 
     直播此前完全没有健康数据（127 条全是 unknown），日报看不到它们的变化。
-    判定：有 >=10 个频道 → healthy；1~9 个 → degraded；拉不到 → dead。
+    判定（按证据强度分级，防「环境连不上」误判死）：
+      >=10 频道 → healthy；1~9 → degraded；
+      HTTP 404/410（路径真没了，确定性证据）→ dead；
+      其他 HTTP 码（403/5xx）/ 连接失败/超时/SSL（环境性，用户挂代理可能正常）
+        → unknown「没验到不妄下结论」，下轮再验。
     """
     from concurrent.futures import ThreadPoolExecutor
     rows = conn.execute("SELECT key, name, url FROM lives").fetchall()
@@ -511,7 +532,12 @@ def probe_lives(conn, timeout: int = 12, workers: int = 8) -> dict:
         ok, st, raw = _http_get(url, timeout)
         ms = int((time.time() - t0) * 1000)
         if not ok or not raw:
-            return r["key"], "dead", ms, 0, (st and f"HTTP {st}") or "拉取失败"
+            if isinstance(st, int) and st in (404, 410):
+                # 服务器明确说路径没了——唯一可信的「死」证据
+                return r["key"], "dead", ms, 0, f"HTTP {st}"
+            # 连接失败/超时/403/5xx：环境性或临时性，不判死
+            why = f"HTTP {st}" if isinstance(st, int) else "拉取失败(连接/超时)"
+            return r["key"], "unknown", ms, 0, why
         text = raw.decode("utf-8", "replace")
         n = text.count("#EXTINF")
         if n >= 10:
