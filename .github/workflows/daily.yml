@@ -223,6 +223,7 @@ jobs:
             # 2026-09-26 长跑 job 与并行 prune 工作流高频提交 lives/ 同批文件，
             # rebase 冲突导致发布连续失败（run 36246598641：could not apply ec6bb69）。
             # 产物发布语义 = 本 job 重算结果为准，冲突取本侧（-X theirs 指正在重放的 daily 提交）。
+            git checkout -- . && git clean -fd
             git pull --rebase -X theirs origin main
             git push
             # P1-4 版本 tag：每日打 vYYYY-MM-DD-b<run_number>，latest 仍作稳定入口每日覆盖。
