@@ -104,6 +104,9 @@ def main() -> int:
             _pss.write_step_file(sid, "SKIP", 0.0, cmd=" ".join(cmd))
             continue
         env = dict(os.environ)
+        # Windows 中文环境子进程 stdout 默认 cp936，站点名含 emoji/♥ 会 UnicodeEncodeError
+        # 崩掉探针（CI Linux UTF-8 不复现）；统一强制 UTF-8 输出，与日志文件编码一致。
+        env["PYTHONIOENCODING"] = "utf-8"
         env.update({k: v for k, v in extra_env.items() if v})
         log(f, f"---- {name} 开始: {' '.join(cmd)}")
         t0 = time.time()

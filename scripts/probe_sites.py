@@ -593,7 +593,7 @@ def _should_test_this_round(prev: dict, round_idx: int) -> bool:
     return round_idx % 3 == 0
 
 
-def _dedup_by_api_ext(to_test: list, prev_cache: dict):
+def _dedup_by_api_ext(to_test: list):
     """V3 同 API 端点去重：按 (api, ext) 分组，只 submit 代表任务，
     结果广播给同组其余站点（同接口不同 key 的站，实测结论完全一致）。
 

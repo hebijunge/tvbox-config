@@ -26,6 +26,11 @@ import sys
 if sys.version_info < (3, 10):
     sys.exit("[fetch_merge] 需要 Python 3.10+（当前 %s）：模块使用了 `str | None` 等"
              " 3.10+ 语法，旧解释器会在 import 期直接崩溃" % sys.version.split()[0])
+try:  # Windows cp936 控制台下站点名含 emoji 会 UnicodeEncodeError 崩掉打印
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:  # noqa: BLE001
+    pass
 
 import hashlib
 import json
@@ -85,12 +90,15 @@ MAX_BODY = 4096             # 验活最多读取字节数
 # 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住；输出侧 GHPROXY 维持首位
 #（09-19 实测双优），后续新引用引用前建议按当日实测选择镜像。jsdelivr 主域在沙箱网关 400，
 # 引用 jsdelivr 应显式用 fastly.jsdelivr.net 子域（extra_upstreams jyoketsu 条目已按此规范化）。
+# 2026-09-29 所有者指令复测（1.86MB spider.jar，本机网络）：gh.acmsz.top 0.82MB/s 最快、
+# gh-proxy.com 0.60MB/s、gh.zwy.one 0.61MB/s，直连 raw 19.5s 断连 —— acmsz 置首为主镜像，原列表留作轮换。
 GH_MIRRORS = [m.strip() for m in os.environ.get(
     "GH_MIRRORS",
-    "https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,https://v6.gh-proxy.org/,"
-    "https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,https://raw.ihtw.moe/,https://ghp.ci/"
+    "https://gh.acmsz.top/,https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
+    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,"
+    "https://raw.ihtw.moe/,https://ghp.ci/"
 ).split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh-proxy.com/"
+GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.acmsz.top/"
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
@@ -5321,18 +5329,19 @@ def main() -> int:
                   f"（补测 {len(_fv_recheck)} + 缓存 {_fv_cache_hits}；失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
     except Exception as _e:  # noqa: BLE001
         print(f"    [P1-2] 终验异常（不阻断）：{_e}", flush=True)
-    # 环④ P0 死引用剥离闸门：主产物（tvbox/vod → 后续 stores/short/adult）写文件前，
-    # 剔除本地 ./deps 引用缺失的站点并登记 local_ref_audit；死引用站点进配置只会让用户
-    # 导入后大面积播坏（2026-09-28 五环评估：重下载修复成功率仅 2%，剥离为唯一有效动作）。
+    # 环④ P0 死引用剥离闸门：主产物写文件前，剔除本地 ./deps 引用缺失的站点并登记
+    # local_ref_audit；死引用站点进配置只会让用户导入后大面积播坏（2026-09-28 五环
+    # 评估：重下载修复成功率仅 2%，剥离为唯一有效动作）。vod 在下方由 tvbox 派生，
+    # 剔除一次即同步作用于 tvbox.json / vod.json / stores / short / adult 全部产物。
     local_ref_audit: dict = {}
+    _tv_sites = tvbox.get("sites") or []
     if MAIN_DROP_DEAD_REFS:
-        tvbox["sites"] = filter_local_ref_sites(tvbox.get("sites") or [], os.getcwd(), "tvbox.json", local_ref_audit)
-        vod["sites"] = filter_local_ref_sites(vod.get("sites") or [], os.getcwd(), "vod.json", local_ref_audit)
+        tvbox["sites"] = filter_local_ref_sites(_tv_sites, os.getcwd(), "tvbox.json", local_ref_audit)
     else:
         _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, os.getcwd())}
-                      for s in (vod.get("sites") or []) if _missing_local_refs(s, os.getcwd())]
+                      for s in _tv_sites if _missing_local_refs(s, os.getcwd())]
         if _vod_drops:
-            local_ref_audit["vod.json(仅记录)"] = _vod_drops
+            local_ref_audit["tvbox.json(仅记录)"] = _vod_drops
             print(f"    [local-ref] 审计发现 {len(_vod_drops)} 个死引用站点（MAIN_DROP_DEAD_REFS=0 仅记录不剔除）", flush=True)
     # 环⑤ P2：主配置带健康标注（从 DB 读 P1 修正后的权威结论，TVBox 忽略 _ 字段）。
     # 放在 P0-3 剥离前打标，白名单保留 _health/_checked_at/_latency_ms，其余 _ 字段照剥。
