@@ -5,15 +5,64 @@
 读 state/dep_audit.json 的 unreferenced_top，筛出 age_days>=7 且 gc_candidate=True
 的文件，输出可清理清单。**绝不删除任何文件**——实际删除由 cleanup_deps.py 负责。
 
+另负责 deps/manifest.json 账本瘦身（--prune-manifest）：ref_count=0 且本地文件
+已不存在的孤儿记录只增不减会让账本无界膨胀，清理它们不影响任何产物
+（死域重试由 state/dep_fail_backoff.json 退避账本独立管理）。
+
 用法
 ----
     python scripts/dep_gc.py                  # dry-run：只打印候选
     python scripts/dep_gc.py --json out.json   # 写候选清单
+    python scripts/dep_gc.py --prune-manifest              # 账本孤儿记录 dry-run
+    python scripts/dep_gc.py --prune-manifest --apply      # 实际剪除（自动备份）
 """
 import argparse
 import json
 import os
 import sys
+import time
+
+
+def prune_manifest(args) -> int:
+    """剪除 manifest 中 ref_count=0 且本地文件缺失、且超过闲置天数的孤儿记录。"""
+    if not os.path.isfile(args.manifest):
+        print(f"[dep_gc] 找不到 {args.manifest}", file=sys.stderr)
+        return 1
+    with open(args.manifest, encoding="utf-8") as f:
+        manifest = json.load(f)
+    now = time.time()
+    orphans = []
+    for key, rec in manifest.items():
+        if not isinstance(rec, dict):
+            continue
+        if int(rec.get("ref_count", 0) or 0) > 0:
+            continue
+        if os.path.isfile(rec.get("local", "")):
+            continue
+        upd = (rec.get("updated_at") or "")[:10]
+        try:
+            idle_days = (now - time.mktime(time.strptime(upd, "%Y-%m-%d"))) / 86400.0
+        except ValueError:
+            idle_days = 9999
+        if idle_days >= args.min_idle_days:
+            orphans.append({"key": key, "local": rec.get("local"),
+                            "idle_days": round(idle_days, 1)})
+    print(f"[dep_gc] manifest {len(manifest)} 条，孤儿记录（ref=0+文件缺失+闲置>="
+          f"{args.min_idle_days}天）{len(orphans)} 条")
+    for o in orphans[:5]:
+        print(f"   {o['idle_days']:7.1f}d  {o['key'][:90]}")
+    if not args.apply:
+        print("[dep_gc] dry-run：未写回（--apply 生效）")
+        return 0
+    drop = {o["key"] for o in orphans}
+    pruned = {k: v for k, v in manifest.items() if k not in drop}
+    backup = args.manifest + ".pre_gc"
+    with open(backup, "w", encoding="utf-8") as f:
+        json.dump(manifest, f, ensure_ascii=False, indent=1)
+    with open(args.manifest, "w", encoding="utf-8") as f:
+        json.dump(pruned, f, ensure_ascii=False, indent=1)
+    print(f"[dep_gc] 已剪除 {len(drop)} 条 -> {args.manifest}（备份 {backup}）")
+    return 0
 
 
 def main() -> int:
@@ -21,7 +70,15 @@ def main() -> int:
     ap.add_argument("--audit", default="state/dep_audit.json")
     ap.add_argument("--out", default="state/dep_gc_candidates.json")
     ap.add_argument("--min-age-days", type=float, default=7.0)
+    ap.add_argument("--prune-manifest", action="store_true",
+                    help="清理 deps/manifest.json 孤儿账本记录（默认 dry-run）")
+    ap.add_argument("--manifest", default=os.path.join("deps", "manifest.json"))
+    ap.add_argument("--min-idle-days", type=float, default=3.0)
+    ap.add_argument("--apply", action="store_true", help="配合 --prune-manifest 实际写回")
     args = ap.parse_args()
+
+    if args.prune_manifest:
+        return prune_manifest(args)
 
     if not os.path.isfile(args.audit):
         print(f"[dep_gc] 找不到 {args.audit}，先跑 scripts/dep_audit.py", file=sys.stderr)

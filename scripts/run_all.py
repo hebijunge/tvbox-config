@@ -31,31 +31,36 @@ from datetime import datetime
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, ".."))
+sys.path.insert(0, HERE)
+import pipeline_step_stats as _pss  # 分步成果文件生成器（每步跑完落盘 state/pipeline_steps/）
 PY = sys.executable or "python"
 
 STAGES = [
-    ("1 镜像测速择优", ["scripts/mirror_probe.py"], True, {}),
-    ("2a 探针: HTTP L1-L3", ["scripts/probe_sites.py", "--only", "http", "--concurrency", "20"], True, {}),
-    ("2b 探针: type3 连通性", ["scripts/probe_spiders.py", "--concurrency", "20"], True, {}),
-    ("2c 探针: JS 分类页", ["scripts/probe_js.py", "--concurrency", "20"], True, {}),
-    ("2d 同库镜像去重", ["scripts/dedup_mirrors.py"], True, {}),
-    ("3 drpy 沙箱五关", ["scripts/drpy_probe.py", "--workers", "5"], True, {}),
-    ("4 全网发现(六路)", ["scripts/discover_upstreams.py", "--max-repos", "15", "--pages", "2"], True,
+    # (stage_id, 展示名, [cmd...], continue_on_fail, extra_env)
+    ("1", "镜像测速择优", ["scripts/mirror_probe.py"], True, {}),
+    ("2a", "探针: HTTP L1-L3", ["scripts/probe_sites.py", "--only", "http", "--concurrency", "20"], True, {}),
+    ("2b", "探针: type3 连通性", ["scripts/probe_spiders.py", "--concurrency", "20"], True, {}),
+    ("2c", "探针: JS 分类页", ["scripts/probe_js.py", "--concurrency", "20"], True, {}),
+    ("2d", "同库镜像去重", ["scripts/dedup_mirrors.py"], True, {}),
+    ("3", "drpy 沙箱五关", ["scripts/drpy_probe.py", "--workers", "5"], True, {}),
+    ("4", "全网发现(六路)", ["scripts/discover_upstreams.py", "--max-repos", "15", "--pages", "2"], True,
      {"GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN", "")}),
-    ("5 候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
-    ("6 拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
+    ("5", "候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
+    ("6", "拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
      {"EXTRA_UPSTREAMS": "1", "CONCURRENCY": "24"}),
-    ("7a 入库(接口/直播/检测/依赖)", ["scripts/store.py", "--ingest-sites", "tvbox.json",
+    ("6b", "依赖完整性闸门", ["scripts/dep_repair.py", "--workers", "8"], True, {}),
+    ("7a", "入库(接口/直播/检测/依赖)", ["scripts/store.py", "--ingest-sites", "tvbox.json",
                                     "--ingest-lives", "tvbox.json", "--probe-lives",
                                     "--ingest-probes", "probe/sites_probe.json",
                                     "probe/spider_probe.json", "probe/js_probe.json",
                                     "probe/csp_probe.json", "probe/drpy_probe.json",
                                     "--prune", "--stats"], True, {}),
-    ("7b 导出清单", ["scripts/export_healthy.py"], True, {}),
-    ("7c 健康日报", ["scripts/health_report.py"], True, {}),
-    ("7d 依赖审计", ["scripts/dep_audit.py"], True, {}),
-    ("8 采集入口可达性探测", ["scripts/probe_sources.py", "--concurrency", "20"], True, {}),
-    ("9 本地接口包(离线zip)", ["scripts/pack_local.py"], True, {}),
+    ("7b", "导出清单", ["scripts/export_healthy.py"], True, {}),
+    ("7c", "直播死源剔除(P1-4 只剔404)", ["scripts/live_dead_prune.py", "--workers", "8"], True, {}),
+    ("7d", "健康日报", ["scripts/health_report.py"], True, {}),
+    ("7e", "依赖审计", ["scripts/dep_audit.py"], True, {}),
+    ("8", "采集入口可达性探测", ["scripts/probe_sources.py", "--concurrency", "20"], True, {}),
+    ("9", "本地接口包(离线zip)", ["scripts/pack_local.py"], True, {}),
 ]
 
 
@@ -81,22 +86,27 @@ def main() -> int:
     log(f, f"全链路开始，日志 -> {os.path.relpath(log_path, REPO)}")
 
     results = []
-    for name, cmd, cont, extra_env in STAGES:
+    for sid, name, cmd, cont, extra_env in STAGES:
         # --from N：从指定序号的阶段开始（前面的阶段产物视为新鲜，直接复用）。
-        # 阶段名形如 "2a 探针..."，序号要取前导数字（int("2a") 会抛 ValueError 导致失效）
-        m = re.match(r"\d+", name)
+        # sid 形如 "2a"，序号取前导数字（int("2a") 会抛 ValueError 导致失效）
+        m = re.match(r"\d+", sid)
         if m and int(m.group()) < int(args.from_stage):
             log(f, f"---- 跳过 {name}（--from {args.from_stage}）")
             continue
-        if args.skip_drpy and name.startswith("3 "):
+        if args.skip_drpy and sid == "3":
             log(f, f"---- 跳过 {name}")
-            results.append((name, "SKIP", 0))
+            results.append((name, "SKIP", 0, sid))
+            _pss.write_step_file(sid, "SKIP", 0.0, cmd=" ".join(cmd))
             continue
-        if args.skip_probes and name.startswith("2"):
+        if args.skip_probes and sid.startswith("2"):
             log(f, f"---- 跳过 {name}")
-            results.append((name, "SKIP", 0))
+            results.append((name, "SKIP", 0, sid))
+            _pss.write_step_file(sid, "SKIP", 0.0, cmd=" ".join(cmd))
             continue
         env = dict(os.environ)
+        # Windows 中文环境子进程 stdout 默认 cp936，站点名含 emoji/♥ 会 UnicodeEncodeError
+        # 崩掉探针（CI Linux UTF-8 不复现）；统一强制 UTF-8 输出，与日志文件编码一致。
+        env["PYTHONIOENCODING"] = "utf-8"
         env.update({k: v for k, v in extra_env.items() if v})
         log(f, f"---- {name} 开始: {' '.join(cmd)}")
         t0 = time.time()
@@ -111,18 +121,26 @@ def main() -> int:
         # 关键：一条关键阶段失败就停（与 daily.yml 的"合并必须成功"一致）
         status = "OK" if ok else ("CONT" if cont else "FAIL")
         log(f, f"---- {name} 结束: {status}  耗时 {el:.0f}s  ({note})")
-        results.append((name, status, el))
+        # 每步跑完立即落盘成果文件（state/pipeline_steps/step_<sid>.json）
+        _pss.write_step_file(sid, status, el, cmd=" ".join(cmd))
+        results.append((name, status, el, sid))
         if not ok and not cont:
             log(f, "关键阶段失败，中止后续流程")
             break
 
+    # 全链路汇总 + 生成总报告（json + 人读版 md）
     log(f, "==== 全链路汇总 ====")
-    total = sum(el for _, _, el in results)
-    for name, status, el in results:
+    total = sum(el for _, _, el, _ in results)
+    for name, status, el, _sid in results:
         log(f, f"  [{status:4}] {name:26} {el:6.0f}s")
     log(f, f"总耗时 {total:.0f}s；日志 -> {os.path.relpath(log_path, REPO)}")
+    try:
+        jp, mp = _pss.write_pipeline_report()
+        log(f, f"分步成果文件 -> state/pipeline_steps/ ；总报告 -> {os.path.relpath(jp, REPO)} / {os.path.relpath(mp, REPO)}")
+    except Exception as e:  # noqa: BLE001
+        log(f, f"生成总报告失败（不影响主流程）: {e}")
     f.close()
-    bad = [n for n, s, _ in results if s == "FAIL"]
+    bad = [n for n, s, _el, _sid in results if s == "FAIL"]
     return 1 if bad else 0
 
 

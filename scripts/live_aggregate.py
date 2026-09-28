@@ -34,6 +34,22 @@ def cap_lines(lines, n=CAP):
     return list(lines) if n <= 0 else list(lines)[:n]
 
 
+import re as _re
+_RES_TIER_RE = _re.compile(r"(?<!\d)(2160|1080|720|480)(?![0-9])(p|P)?\b", _re.IGNORECASE)
+
+def resolution_tier(name_or_url: str, url: str = "") -> int:
+    """线路清晰度档：0 未知 / 1 标清(480p) / 2 高清(720p) / 3 全高清(1080p) / 4 4K(2160p)。
+    频道名或 URL 任一处带分辨率标记即取最高档，用于线路排序 tiebreak
+    （同探活状态时高清优先）。2026-09-28 补回：重建仓库(66c8b8a)合并时丢失
+    本函数，调用处 NameError 导致每轮 live_aggregation 崩溃、P0-3 测速快照复用
+    全部回退为全量重测（实测每轮白花 ~30min），此处恢复。"""
+    s = f"{name_or_url or ''} {url or ''}"
+    tiers = []
+    for m in _RES_TIER_RE.finditer(s):
+        tiers.append({"2160": 4, "1080": 3, "720": 2, "480": 1}[m.group(1)])
+    return max(tiers) if tiers else 0
+
+
 # ---- 第十三批吸收实施（batch11 P1-1 / batch12 建议落地）：fanmingming/live 台标引用层 ----
 # 只做引用（URL 拼接），不镜像资产——fanmingming/live 为 GPL-3.0（28k+★，生态事实标准，
 # zhi35/kilvn/hehonghui 等 m3u 均引用其台标/EPG），镜像分发有许可与时效双重问题。

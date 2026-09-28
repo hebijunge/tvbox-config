@@ -37,6 +37,21 @@ def log(msg):
     print(f"[health {datetime.now().strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
+def _fp(v: dict):
+    """站点身份指纹：api 优先（同库换 key/换域名后 api 往往不变），ext 前缀兜底。
+
+    2026-09-28 P1-5 修复：早期以 key 为身份，同库镜像换 key（ikun→ikun-3）、
+    上游把测速标记塞进 name（[590ms|5] iKun资源）会刷出一堆假 new/gone。
+    指纹取内容源 api，换 key 不报警；无 api 的源（csp 爬虫）退到 ext 前 80 字符。
+    """
+    api = str(v.get("api") or "").strip()
+    if api:
+        return "api:" + api
+    ext = v.get("ext")
+    ext = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False) if ext else "")
+    return ("ext:" + str(ext)[:80]) if ext else ""
+
+
 def load_current(db_path):
     """从 DB 读当前健康状态：点播(key) + 直播(url)。"""
     vod, live = {}, {}
@@ -45,8 +60,9 @@ def load_current(db_path):
         return vod, live
     conn = sqlite3.connect(db_path)
     conn.row_factory = sqlite3.Row
-    for r in conn.execute("SELECT key, name, health, latency_ms, level FROM interfaces"):
-        vod[r["key"]] = {"name": r["name"], "health": r["health"] or "unknown",
+    for r in conn.execute("SELECT key, name, api, ext, health, latency_ms, level FROM interfaces"):
+        vod[r["key"]] = {"name": r["name"], "api": r["api"], "ext": r["ext"],
+                         "health": r["health"] or "unknown",
                          "latency_ms": r["latency_ms"], "level": r["level"]}
     for r in conn.execute("SELECT key, name, health FROM lives"):
         live[r["key"]] = {"name": r["name"], "health": r["health"] or "unknown"}
@@ -54,9 +70,52 @@ def load_current(db_path):
     return vod, live
 
 
-def diff(cur: dict, prev: dict):
-    """与上次快照对比，返回变化明细。"""
+def diff(cur: dict, prev: dict, kind: str = "vod"):
+    """与上次快照对比，返回 (new, gone, down, recovered)。
+
+    身份口径（P1-5）：点播源以 _fp(api) 指纹为主身份、key 为兜底——
+      * 新增：指纹与 key 都不在快照里（兼容旧快照无 api 字段：按 key 兜底不误报）；
+      * 移除：快照条目既没按指纹也没按 key 出现在当前；
+      * 掉线/恢复：指纹或 key 命中旧条目后比较健康状态，同库换 key 不再误报。
+    直播条目 key 即 url（天然稳定），指纹与 key 口径一致，同一逻辑复用。
+    """
     new, gone, down, recovered = [], [], [], []
+    if kind == "vod":
+        # 指纹从两侧内容现算（_fp：api 优先，ext 兜底），不依赖快照是否存过 fp 字段——
+        # 旧快照（无 api）指纹为空，自动退回 key 兜底逻辑，平滑过渡一轮。
+        prev_by_fp = {}
+        for k, v in prev.items():
+            f = _fp(v)
+            if f and f not in prev_by_fp:
+                prev_by_fp[f] = v
+        cur_fps = {}
+        for k, v in cur.items():
+            f = _fp(v)
+            if f and f not in cur_fps:
+                cur_fps[f] = k
+        for k, v in cur.items():
+            f = _fp(v)
+            pv = prev_by_fp.get(f) if f else None
+            if pv is None and k in prev:
+                pv = prev[k]
+            if pv is None:
+                new.append({"key": k, "name": v.get("name"), "health": v["health"]})
+                continue
+            old_h = (pv or {}).get("health", "unknown")
+            new_h = v["health"]
+            if old_h in GOOD and new_h == "dead":
+                down.append({"key": k, "name": v.get("name"), "from": old_h, "to": new_h})
+            elif old_h == "dead" and new_h in GOOD:
+                recovered.append({"key": k, "name": v.get("name"), "from": old_h, "to": new_h})
+        for k, v in prev.items():
+            f = _fp(v)
+            fp_kept = bool(f) and f in cur_fps
+            key_kept = k in cur
+            if not fp_kept and not key_kept:
+                gone.append({"key": k, "name": (v or {}).get("name")})
+        return new, gone, down, recovered
+
+    # 直播：key 即 url，直接按 key 对比（原口径）
     for k, v in cur.items():
         if k not in prev:
             new.append({"key": k, "name": v.get("name"), "health": v["health"]})
@@ -157,8 +216,8 @@ def main() -> int:
     prev_v = (prev or {}).get("vod", {}) if isinstance(prev, dict) else {}
     prev_l = (prev or {}).get("live", {}) if isinstance(prev, dict) else {}
 
-    n_new, n_gone, n_down, n_rec = diff(vod, prev_v)
-    l_new, l_gone, l_down, l_rec = diff(live, prev_l)
+    n_new, n_gone, n_down, n_rec = diff(vod, prev_v, "vod")
+    l_new, l_gone, l_down, l_rec = diff(live, prev_l, "live")
 
     report = {
         "generated_at": datetime.now().isoformat(timespec="seconds"),
@@ -186,10 +245,12 @@ def main() -> int:
     summary_path = os.path.join(repo, "exports", "SUMMARY.md")
     write_summary_md(report, summary_path)
 
-    # 更新快照（下次对比的基线）
+    # 更新快照（下次对比的基线）。
+    # P1-5：点播条目带 fp（api 指纹）作为下轮对比的主身份；旧快照无 fp 时 diff 按 key 兜底。
     os.makedirs(os.path.dirname(snap_path) or ".", exist_ok=True)
+    snap_vod = {k: {**v, "fp": _fp(v)} for k, v in vod.items()}
     json.dump({"generated_at": report["generated_at"],
-               "vod": vod, "live": live},
+               "vod": snap_vod, "live": live},
               open(snap_path, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
     print("\n==== 健康日报 ====")

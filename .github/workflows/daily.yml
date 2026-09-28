@@ -151,18 +151,41 @@ jobs:
         continue-on-error: true
         run: python scripts/dep_audit.py || true
 
-      - name: 入库（接口 / 检测历史 / 依赖关系）
+      - name: 依赖完整性闸门（缺失重下 + 账本回写 + 修复报告）
+        # 环④ P0：fetch_merge 产出的 tvbox.json 引用的 deps/ 文件若磁盘缺失，
+        # 按 manifest 账本反推 URL 重下补齐（幂等：已落盘且 md5 匹配则跳过）；
+        # 补不下的写入 state/dep_repair_report.json 供下游降级参考。
+        # 下轮合并会重新本地化无账本的缺失，故这里只补有账本的部分，不阻断主链。
+        continue-on-error: true
+        run: python scripts/dep_repair.py --workers 8 || true
+
+      - name: 依赖账本瘦身（manifest 孤儿记录剪除）
+        # 环④ P1：dep_repair 之后，ref_count=0 且本地文件缺失、闲置>=3天的记录
+        # 已无任何消费方（死域退避另有 state/dep_fail_backoff.json），不清会无界膨胀。
+        continue-on-error: true
+        run: python scripts/dep_gc.py --prune-manifest --apply || true
+
+      - name: 入库（接口 / 检测历史 / 依赖关系 / 直播源级验活）
         # DB 不入库（二进制会让仓库膨胀），健康快照以 exports/health_index.json 文本留档：
         # 每天 diff 能直接看出哪些源从 healthy 掉成 dead，比二进制友好。
+        # --probe-lives：源级连通实测（P1-4 修正判级：连接失败/超时 → unknown 不判死，
+        #   仅 404/410 确定性路径失效 → dead；CI 海外网络对国内线路天然超时，
+        #   unknown 化后由 live_dead_prune 只剔「明确 404」的源，不误杀环境性失败）。
         continue-on-error: true
         run: |
           python scripts/store.py --ingest-sites tvbox.json --ingest-lives tvbox.json \
             --ingest-probes probe/sites_probe.json probe/spider_probe.json probe/js_probe.json \
                             probe/csp_probe.json probe/drpy_probe.json \
-            --ingest-upstreams status.json --prune --stats || true
+            --ingest-upstreams status.json --prune --probe-lives --stats || true
 
       - name: 导出接口清单
         run: python scripts/export_healthy.py || true
+
+      - name: 直播死源剔除（P1-4：只剔 404 确定性死源，回写 tvbox/exports）
+        # 读 DB lives 判级（store --probe-lives 产出），仅 HTTP 404/410 确定性证据才剔；
+        # 连接失败/超时（unknown）一律保留。gh 镜像源剥前缀走镜像链复测，复活回写 healthy。
+        continue-on-error: true
+        run: python scripts/live_dead_prune.py --workers 8 || true
 
       - name: 导出上游健康状态
         run: python scripts/export_upstream_health.py || true

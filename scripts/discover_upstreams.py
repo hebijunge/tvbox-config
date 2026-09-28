@@ -509,25 +509,34 @@ def discover_gitee(max_repos):
         if not doc:
             print(f"  [Gitee挖取] {q[:44]} → 无结果/受限", flush=True)
             continue
-        pulled = 0
-        for item in doc.get("items", []):
-            repo = item.get("repository") or {}
-            fn, path = repo.get("full_name"), item.get("path")
-            if not (fn and path):
-                continue
+        items = [it for it in doc.get("items", [])
+                 if (it.get("repository") or {}).get("full_name") and it.get("path")]
+
+        def hunt(it):
+            repo = it.get("repository") or {}
+            fn, path = repo.get("full_name"), it.get("path")
             try:
                 _, body = http_get(raw_url(fn, repo.get("default_branch") or "master", path),
                                    12, 200_000)
-                pulled += 1
-                text = body.decode("utf-8", "replace")
-                for m in re.finditer(r"gitee\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)", text):
-                    name = m.group(1).rstrip(".")
-                    # 排除明显不是仓库的截断（如 .../raw/master.json 这类被误抓的路径段）
-                    if name.lower().endswith((".json", ".js", ".m3u", ".txt", ".png", ".jpg")):
-                        continue
-                    repos.add(name)
-            except Exception:
-                continue
+            except Exception:  # noqa: BLE001  单文件拉取失败不打断整轮挖取
+                return False, set()
+            names = set()
+            text = body.decode("utf-8", "replace")
+            for m in re.finditer(r"gitee\.com/([A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+)", text):
+                name = m.group(1).rstrip(".")
+                # 排除明显不是仓库的截断（如 .../raw/master.json 这类被误抓的路径段）
+                if name.lower().endswith((".json", ".js", ".m3u", ".txt", ".png", ".jpg")):
+                    continue
+                names.add(name)
+            return True, names
+
+        # 串行 30 文件 × 12s 超时是第 5 路的主要耗时，改 8 并发
+        pulled = 0
+        with cf.ThreadPoolExecutor(8) as ex:
+            for ok, names in ex.map(hunt, items):
+                if ok:
+                    pulled += 1
+                repos |= names
         print(f"  [Gitee挖取] {q[:44]} → 扫 {pulled} 个文件", flush=True)
         time.sleep(2)
     print(f"  [Gitee] 从 GitHub 配置中挖到 {len(repos)} 个 Gitee 仓库全名", flush=True)
@@ -596,7 +605,7 @@ def discover_web(max_pages=20):
         return []
 
     urls = set()
-    with cf.ThreadPoolExecutor(3) as ex:
+    with cf.ThreadPoolExecutor(8) as ex:
         for links in ex.map(grab, pages):
             for l in links:
                 l = l.rstrip(".,;")

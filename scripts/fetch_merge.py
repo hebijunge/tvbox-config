@@ -21,6 +21,17 @@ TVBox 配置每日拉取合并脚本 v2（stdlib only，无第三方依赖）
   P2 一上游一适配器（HerbertHe/iptv-sources 模式）
   P2 域名替换层（hl128k/tvbox 思路）
 """
+import sys
+
+if sys.version_info < (3, 10):
+    sys.exit("[fetch_merge] 需要 Python 3.10+（当前 %s）：模块使用了 `str | None` 等"
+             " 3.10+ 语法，旧解释器会在 import 期直接崩溃" % sys.version.split()[0])
+try:  # Windows cp936 控制台下站点名含 emoji 会 UnicodeEncodeError 崩掉打印
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:  # noqa: BLE001
+    pass
+
 import hashlib
 import json
 import os
@@ -79,12 +90,15 @@ MAX_BODY = 4096             # 验活最多读取字节数
 # 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住；输出侧 GHPROXY 维持首位
 #（09-19 实测双优），后续新引用引用前建议按当日实测选择镜像。jsdelivr 主域在沙箱网关 400，
 # 引用 jsdelivr 应显式用 fastly.jsdelivr.net 子域（extra_upstreams jyoketsu 条目已按此规范化）。
+# 2026-09-29 所有者指令复测（1.86MB spider.jar，本机网络）：gh.acmsz.top 0.82MB/s 最快、
+# gh-proxy.com 0.60MB/s、gh.zwy.one 0.61MB/s，直连 raw 19.5s 断连 —— acmsz 置首为主镜像，原列表留作轮换。
 GH_MIRRORS = [m.strip() for m in os.environ.get(
     "GH_MIRRORS",
-    "https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,https://v6.gh-proxy.org/,"
-    "https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,https://raw.ihtw.moe/,https://ghp.ci/"
+    "https://gh.acmsz.top/,https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
+    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,"
+    "https://raw.ihtw.moe/,https://ghp.ci/"
 ).split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh-proxy.com/"
+GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.acmsz.top/"
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
@@ -529,6 +543,9 @@ EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
 # PUBLISH_ADULT=1（完整公开模式）：成人站点同时进 tvbox.json / vod.json；
 #   需要打进本地 zip 时给 pack_local.py 传 --adult adult.json。
 PUBLISH_ADULT = os.environ.get("PUBLISH_ADULT", "0") == "1"
+# 环④ 死引用剥离闸门：主配置（tvbox/vod/stores/short/adult）写产物前，
+# 本地 ./deps 引用缺失的站点直接剔除；MAIN_DROP_DEAD_REFS=0 回到旧"仅记录不剔除"行为。
+MAIN_DROP_DEAD_REFS = os.environ.get("MAIN_DROP_DEAD_REFS", "1") == "1"
 
 
 
@@ -1471,6 +1488,13 @@ def clean_parses(parses: list, *, do_probe: bool = True, probe_timeout: float = 
 # ==================== 依赖收集（jar / js / json 库文件） ====================
 DEPS_DIR = "deps"
 MANIFEST_PATH = os.path.join(DEPS_DIR, "manifest.json")
+# deps 失败退避账本（2026-09-28）：死域/挂起链接不再每轮重建清单反复 25s 死撞。
+# 上轮 2564 条挂起全是 gitcode.net/yydsys.top 等死域，每轮白花 ~28min。
+# 失败按 2^fail_count 天指数退避（上限 14 天），累计 30 天标死不再试；
+# 下载成功即清账本；DEP_FORCE_RETRY=1 强制全量重试。
+DEP_BACKOFF_FILE = os.environ.get("DEP_BACKOFF_FILE", os.path.join("state", "dep_fail_backoff.json"))
+DEP_BACKOFF_MAX_DAYS = 14
+DEP_BACKOFF_DEAD_DAYS = 30
 DEP_TIMEOUT = 8
 DEP_TOTAL_BUDGET = 15  # 单依赖全链路(直连+镜像)总预算秒，防死URL拖慢整轮
 DEP_MAX_BYTES = 8 * 1024 * 1024
@@ -1529,6 +1553,26 @@ def _idna_host(host: str) -> str:
     return out
 
 
+def _split_gh_prefix(url: str):
+    """剥离 GitHub 代理前缀（ghproxy.net/、ghp.ci/、ghfast.top/…）归一成内层裸 URL。
+
+    返回 (inner_url, had_prefix)。层层剥离（应对「前缀套前缀」的脏配置），
+    以 GH_MIRRORS 已知前缀 + 常见老镜像名判定停止。"""
+    known = [m.rstrip("/") for m in GH_MIRRORS]
+    known.append("https://ghproxy.com")  # 老镜像名（不在当前链里也见过）
+    inner = url
+    changed = True
+    while changed:
+        changed = False
+        for pre in known:
+            p = pre.rstrip("/")
+            if inner.startswith(p + "/"):
+                inner = inner[len(p) + 1:]
+                changed = True
+                break
+    return inner, url != inner
+
+
 def dep_lenient_json(text: str) -> bool:
     if text.startswith("\ufeff"):
         text = text[1:]
@@ -1571,7 +1615,13 @@ def dep_classify(kind_hint: str, content: bytes) -> str:
 
 
 def dep_download(url: str):
-    """原 URL → ghproxy 镜像列表轮换兜底。返回 (bytes, channel) 或 (None, err)。"""
+    """原 URL → gh 镜像链轮换兜底。返回 (bytes, channel) 或 (None, err)。
+
+    2026-09-28 代理前缀归一化：上游配置里很多 github 链接已经挂了镜像前缀
+    （ghp.ci / ghfast.top / ghproxy.net 等）。旧实现只查 "ghproxy" 字面量，
+    其余前缀的链接会被再叠一层镜像（双前缀低成功率，失败还要多耗 2 次 25s）。
+    现在统一剥前缀归一成裸 github URL，再按 mirror_probe 实测择优序套当前最优镜像链：
+    已挂前缀 → 直接用最优前缀替换（避免"老前缀+双前缀"）；裸链接 → 直连优先、失败走镜像链。"""
     import urllib.parse
     # 非 ASCII 域名（如中文域名）punycode 化：urllib 发请求头走 latin-1，unicode host 必挂 UnicodeEncodeError
     p = urllib.parse.urlsplit(url)
@@ -1579,9 +1629,15 @@ def dep_download(url: str):
         host = _idna_host(p.hostname)
         netloc = f"{host}:{p.port}" if p.port else host
         url = urllib.parse.urlunsplit((p.scheme, netloc, p.path, p.query, p.fragment))
-    attempts = [url]
-    if "github" in url and "ghproxy" not in url:
-        attempts.extend(m + url for m in GH_MIRRORS[:2])  # 最多2个镜像，避免死URL耗时5min+
+    _inner, _had_prefix = _split_gh_prefix(url)
+    attempts = [_inner]
+    if "github" in _inner.lower():
+        if _had_prefix:
+            # 已挂前缀：用当前镜像链择优序替换前缀（首位=mirror_probe 实测最快），不双叠
+            attempts.extend(m + _inner for m in GH_MIRRORS[:2])
+        elif "ghproxy" not in _inner:
+            # 裸 github 链接：直连优先（能直连就不走代理），失败走镜像链（最多2个镜像，避免死URL耗时5min+）
+            attempts.extend(m + _inner for m in GH_MIRRORS[:2])
     attempts = [
         urllib.parse.quote(u, safe="%/:=&?~#+!$,;'@()*[]|") if not u.isascii() else u
         for u in attempts
@@ -1722,6 +1778,75 @@ def load_manifest() -> dict:
             return json.load(f)
     except Exception:
         return {}
+
+
+def dep_backoff_load() -> dict:
+    """deps 失败退避账本：{rkey: {fail_count, next_retry_at, dead, last_error}}。"""
+    try:
+        with open(DEP_BACKOFF_FILE, encoding="utf-8") as f:
+            d = json.load(f)
+        return d if isinstance(d, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def dep_backoff_save(d: dict) -> None:
+    """账本批量落盘（原子 replace，防并发读写冲突）。"""
+    tmp = DEP_BACKOFF_FILE + ".tmp"
+    os.makedirs(os.path.dirname(DEP_BACKOFF_FILE) or ".", exist_ok=True)
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump(d, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, DEP_BACKOFF_FILE)
+
+
+def dep_backoff_skip_in(d: dict, rkey: str, now_naive: datetime) -> bool:
+    """纯 dict 判定：退避窗口内/已标死 → 跳过。DEP_FORCE_RETRY=1 不跳过。
+    累计失败天数（now - first_fail_at）达 30 天 → 视同永久死域跳过（读端动态复查，
+    不依赖写入时刻的 dead 字段——老账本条目也能自动转死）。"""
+    if os.environ.get("DEP_FORCE_RETRY") == "1":
+        return False
+    ent = d.get(rkey)
+    if not ent:
+        return False
+    if ent.get("dead"):
+        return True
+    try:
+        span = (now_naive - datetime.strptime(ent.get("first_fail_at") or "", "%Y-%m-%d %H:%M:%S")).days
+    except ValueError:
+        span = 0
+    if span >= DEP_BACKOFF_DEAD_DAYS:
+        return True
+    nra = ent.get("next_retry_at")
+    if not nra:
+        return False
+    try:
+        return datetime.strptime(nra, "%Y-%m-%d %H:%M:%S") > now_naive
+    except (ValueError, TypeError):
+        return False
+
+
+def dep_backoff_record_fail(d: dict, rkey: str, err: str, now_naive: datetime):
+    """失败记账本（in-place 改 dict）：next_retry_at = now + 2^fc 天（上限 14）；累计 30 天标死。"""
+    ent = d.get(rkey) or {"fail_count": 0,
+                          "first_fail_at": now_naive.strftime("%Y-%m-%d %H:%M:%S")}
+    fc = int(ent.get("fail_count", 0)) + 1
+    try:
+        span = (now_naive - datetime.strptime(ent.get("first_fail_at") or "", "%Y-%m-%d %H:%M:%S")).days
+    except ValueError:
+        span = 0
+    ent.update({"fail_count": fc,
+                "last_fail_at": now_naive.strftime("%Y-%m-%d %H:%M:%S"),
+                "last_error": str(err)[:160],
+                "next_retry_at": (now_naive + timedelta(days=min(2 ** fc, DEP_BACKOFF_MAX_DAYS))).strftime("%Y-%m-%d %H:%M:%S"),
+                "dead": span >= DEP_BACKOFF_DEAD_DAYS})
+    d[rkey] = ent
+
+
+def dep_backoff_clear(d: dict, rkey: str) -> bool:
+    """下载成功 → 清账本条目。返回是否真的删了。"""
+    if d.pop(rkey, None) is not None:
+        return True
+    return False
 
 
 def _spider_canon(ref, origin: str):
@@ -1866,6 +1991,11 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     import urllib.parse
 
     manifest = load_manifest()
+    # deps 失败退避账本（2026-09-28）：一次加载、全轮共享；死域链接 2^N 天退避，
+    # 退避窗口内不再 25s 死撞（上轮 2564 条挂起白花 ~28min 的根因修复）。
+    backoff = dep_backoff_load()
+    _backoff_dirty: set = set()
+    _now_naive = datetime.now()
     now = datetime.now(BEIJING).strftime("%Y-%m-%d %H:%M:%S +08:00")
 
     def _dep_download_throttled(u):
@@ -1968,6 +2098,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         # 这是CI超时的根因修复：RAW_VOD_VERIFY_ACTIVE时不再强制全量重下，
         # 已缓存且内容未变的依赖直接复用，仅新依赖/内容变化的依赖才下载。
         _cache_hit = False
+        _backoff_skip = False
         if os.path.isfile(fp) and os.path.getsize(fp) > 0:
             try:
                 _local_md5 = hashlib.md5(open(fp, "rb").read()).hexdigest()
@@ -1979,6 +2110,21 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 ch = "md5-cache-hit"
                 rec["channel"] = ch
                 _cache_hit = True
+        else:
+            _prev = {}
+        # === 失败退避短路（2026-09-28）：死域链接 2^N 天退避窗口内不再 25s 死撞 ===
+        # 本地有生效文件 → 沿用最后可用版（与 raw-store「上游已删沿用」同语义）；
+        # 本地也没有 → 直接跳过，下游保留原 URL 引用，不阻断整轮合并。
+        if not _cache_hit and dep_backoff_skip_in(backoff, rkey, _now_naive):
+            _backoff_skip = True
+            if os.path.isfile(fp) and os.path.getsize(fp) > 0:
+                content = open(fp, "rb").read()
+                rec["channel"] = "backoff: 上游暂不可用，沿用 deps 最后可用版"
+                print(f"  [deps] 退避沿用 {rkey}（{backoff.get(rkey, {}).get('last_error', '')[:40]}）",
+                      flush=True)
+            else:
+                rec["channel"] = "backoff-skip（无本地文件，保留原 URL 引用）"
+                return rec
 
         def _vod_rel():
             # deps/<origin>/<path> → raw-vod/<origin>/<path>（与 deps 布局一一镜像，审计可直接对比）
@@ -1990,7 +2136,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             return raw_store.ingest(raw_store.RAW_VOD_DIR, rkey, url, data, rel=_vod_rel(),
                                     store_bytes=False)["status"]
 
-        if not _cache_hit and RAW_VOD_VERIFY_ACTIVE:
+        if not _cache_hit and not _backoff_skip and RAW_VOD_VERIFY_ACTIVE:
             # ---- 每日验证模式（2026-09-27 落库改造）----
             # 无条件拉上游 → raw-vod 账本 sha256 变化检测（变了才覆盖 deps/）；
             # 上游删除/404 → deps/ 本地生效文件即最后可用版（管线从不删除它），
@@ -2092,6 +2238,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         return rec
 
     ok_map: dict = {}
+    _fail_recs: list = []
     print(f"[deps] 收集 {len(entries)} 个依赖（并发 {DEP_CONCURRENCY}）...", flush=True)
     ex = cf.ThreadPoolExecutor(DEP_CONCURRENCY)
     futs = {ex.submit(work, e): e for e in entries}
@@ -2104,7 +2251,13 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
             print(f"  [deps] 看门狗超时：35s无进展，{len(pending)}个下载挂起，已跳过", flush=True)
             for fut in pending:
                 fut.cancel()
-            print(f"  [deps] 已完成 {done_count}/{len(entries)}，剩余{len(pending)}个因网络挂起跳过（不影响后续产出）", flush=True)
+            # 挂起未完成的条目全部计入退避账本（下轮 2^N 天退避，不再死撞）
+            for fut in pending:
+                e = futs[fut]
+                _rkey = f"{e[2]}|{e[1]}"
+                dep_backoff_record_fail(backoff, _rkey, "download hang (看门狗超时)", _now_naive)
+                _backoff_dirty.add(_rkey)
+            print(f"  [deps] 已完成 {done_count}/{len(entries)}，剩余{len(pending)}个因网络挂起跳过并计入退避账本（不影响后续产出）", flush=True)
             break
         for fut in done_set:
             done_count += 1
@@ -2115,9 +2268,22 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 continue
             if rec.get("ok"):
                 ok_map[rec["key"]] = rec
+                dep_backoff_clear(backoff, rec["key"])   # 成功 → 清退避（链接复活不再退避）
+                _backoff_dirty.add(rec["key"])
+            elif rec.get("err") or not rec.get("ok"):
+                # 失败（下载挂/404/内容不符/落盘失败）→ 记退避账本，下轮 2^N 天窗口内跳过
+                if not str(rec.get("channel", "")).startswith("backoff"):
+                    dep_backoff_record_fail(backoff, rec["key"], rec.get("err") or rec.get("last_error") or "dep collect failed", _now_naive)
+                    _backoff_dirty.add(rec["key"])
+                    _fail_recs.append(rec)
             if done_count % 10 == 0:
                 print(f"  ... {done_count}/{len(entries)}", flush=True)
     ex.shutdown(wait=False)  # 不等待挂起线程，避免with块exit时死等
+    # 退避账本批量落盘（成功已清 / 失败已记），供下轮 work() 短路死域链接
+    if _backoff_dirty:
+        dep_backoff_save(backoff)
+        print(f"  [deps] 退避账本更新：{len(backoff)} 条（成功 {len(ok_map)} 已清 / 失败 {len(_fail_recs)} 已记）"
+              f" → {DEP_BACKOFF_FILE}", flush=True)
 
     # ---- 2b. 规则 js 内部相对 import 递归落库（限深 1 层）----
     # cat 规则集形态：每个规则 js 顶部 `import { _ } from './lib/cat.js'`，公共库必须随规则
@@ -3440,7 +3606,54 @@ def sha12(b: bytes) -> str:
     return hashlib.sha256(b).hexdigest()[:12]
 
 
+def _is_local_ref(url) -> bool:
+    """url 是否为仓内本地镜像路径（./deps/... 相对路径），而非真实外部 URL。"""
+    return isinstance(url, str) and (url.startswith("./") or url.startswith("../"))
+
+
+# 状态优先级（越小越好），供同名去重时挑「最优状态」。
+_STATUS_RANK = {"ok": 0, "probe": 1, "mirror": 1, "degraded": 2,
+                "dead": 3, "disabled": 4, "blacklisted": 5}
+
+
+def dedupe_check_records(records: list) -> list:
+    """按上游名去重：把同名「本地镜像 + 真实 URL」双条目合并成一条。
+
+    背景：外部配置本地化后，部分上游在清单里有两条（一条 ./deps/external/ 本地镜像
+    + 一条真实外部 URL）。本地镜像读本地文件恒 ok，会掩盖真实 URL 的失效，使
+    checks.json / README 表里同一上游出现两行互相矛盾的状态。
+
+    规则（每个 name 留一条）：
+      1) 真实外部 URL 优先于本地镜像（即便本地状态更好，也要诚实展示真实 URL）；
+      2) 同类（都真实 / 都本地）取最优状态（ok > degraded > dead ...）；
+      3) 状态相同取 last_ok_at 更新者。
+    保持 name 首次出现顺序，幂等。"""
+    by_name = {}
+    for r in records:
+        n = r.get("name", "")
+        cur = by_name.get(n)
+        if cur is None:
+            by_name[n] = r
+            continue
+        cur_local = _is_local_ref(cur.get("url", ""))
+        new_local = _is_local_ref(r.get("url", ""))
+        if cur_local and not new_local:
+            by_name[n] = r          # new 是真实 URL，替换本地
+            continue
+        if new_local and not cur_local:
+            continue               # cur 是真实 URL，保留 cur
+        cr = _STATUS_RANK.get(cur.get("status", ""), 99)
+        nr = _STATUS_RANK.get(r.get("status", ""), 99)
+        if nr < cr:
+            by_name[n] = r
+        elif nr == cr:
+            if (r.get("last_ok_at", "") or "") >= (cur.get("last_ok_at", "") or ""):
+                by_name[n] = r
+    return list(by_name.values())
+
+
 def write_checks(records: list, generated_at: str) -> dict:
+    records = dedupe_check_records(records)
     order = {"ok": 0, "degraded": 1, "dead": 2, "disabled": 3, "blacklisted": 4}
     recs = sorted(records, key=lambda r: order.get(r.get("status"), 5))
     doc = {
@@ -3468,6 +3681,7 @@ STATUS_CN = {"ok": "可用", "degraded": "降级", "dead": "失效", "disabled":
 
 def update_readme_availability(records: list) -> bool:
     """README 内 availability:start/end 锚点间回写可用性表（laoma2053 模式）。"""
+    records = dedupe_check_records(records)
     try:
         with open(README_FILE, "r", encoding="utf-8") as f:
             content = f.read()
@@ -3529,6 +3743,44 @@ def site_fingerprint(s: dict) -> str:
     else:
         ext_s = ""
     return hashlib.sha1(f"{api}\n{ext_s}".encode("utf-8")).hexdigest()[:16]
+
+
+# ---- 站点链接验活缓存（2026-09-28）：链接没变就不重复重测 ----
+# 上游仓库照常每轮拉取（拉取阶段不受本缓存影响）；只有「已合并产物的直连站点链接」
+# 验活结论按 api+ext 指纹缓存——指纹未变 且 上次通过 且 未超 TTL 时复用结论跳过重测。
+# 失败结论不入缓存（下轮照常重测，O3 连续失败剔除与自动回捞语义不变）；
+# 指纹变更/新站点/TTL 过期 → 重新实测。TTL 默认 14 天：直连接口长期存活率很高，
+# 但站点会悄悄挂，隔两周强制复测一次兜底。
+FV_CACHE_FILE = os.environ.get("FV_CACHE_FILE", "state/fv_cache.json")
+FV_CACHE_TTL_DAYS = int(os.environ.get("FV_CACHE_TTL_DAYS", "14"))
+
+
+def load_fv_cache() -> dict:
+    """读站点链接验活缓存：{fingerprint: {"ok": True, "ms": int, "ts": epoch, "key": ...}}。"""
+    try:
+        with open(FV_CACHE_FILE, encoding="utf-8") as f:
+            d = json.load(f)
+        return d.get("fvs", {}) if isinstance(d, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def save_fv_cache(cache: dict) -> None:
+    os.makedirs(os.path.dirname(FV_CACHE_FILE) or ".", exist_ok=True)
+    tmp = FV_CACHE_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"generated_at": datetime.now(BEIJING).isoformat(timespec="seconds"),
+                   "ttl_days": FV_CACHE_TTL_DAYS, "fvs": cache},
+                  f, ensure_ascii=False, indent=1)
+    os.replace(tmp, FV_CACHE_FILE)
+
+
+def fv_cache_hit(cache: dict, fp: str) -> bool:
+    """指纹命中：上次通过 且 未超 TTL。"""
+    c = cache.get(fp)
+    if not (isinstance(c, dict) and c.get("ok")):
+        return False
+    return time.time() - float(c.get("ts", 0)) < FV_CACHE_TTL_DAYS * 86400
 
 
 def secondary_dedup_sites(sites_by_key: dict, site_origin_name: dict, site_origin_score: dict) -> list:
@@ -3874,16 +4126,67 @@ def csp_searchable_filter(sites: list, repo_dir: str) -> tuple:
     return kept, dropped, stats
 
 
+# 环⑤ P2：主产物健康标注保留字段。_strip_internal_fields 默认剥光所有 _ 前缀字段，
+# 这三个从 DB 读出的健康结论对订阅用户是增值信息（TVBox 客户端忽略未知字段），单独白名单保留。
+_HEALTH_KEEP = {"_health", "_checked_at", "_latency_ms"}
+
+
 def _strip_internal_fields(doc):
-    """P0-3 辅助字段剥离：递归删除以 _ 开头的内部字段（_origin/_health/_latency_ms/
-    _level/_checked_at/_probe_* 等实测标记）。TVBox 客户端虽自动忽略未知字段，剥离可减小
-    体积并避免泄漏内部状态。注意：必须在排序完成后、序列化前调用（adult 排序依赖 _origin）。"""
+    """P0-3 辅助字段剥离：递归删除以 _ 开头的内部字段（_origin/_probe_* 等实测标记）。
+    TVBox 客户端虽自动忽略未知字段，剥离可减小体积并避免泄漏内部状态。
+    例外：_HEALTH_KEEP 白名单字段（环⑤ P2 主配置健康标注）保留。
+    注意：必须在排序完成后、序列化前调用（adult 排序依赖 _origin）。"""
     if isinstance(doc, dict):
         return {k: _strip_internal_fields(v) for k, v in doc.items()
-                if not (isinstance(k, str) and k.startswith("_"))}
+                if not (isinstance(k, str) and k.startswith("_") and k not in _HEALTH_KEEP)}
     if isinstance(doc, list):
         return [_strip_internal_fields(v) for v in doc]
     return doc
+
+
+def attach_site_health(tvbox: dict, repo_dir: str) -> int:
+    """环⑤ P2：给主产物 sites 打健康标注（_health/_checked_at/_latency_ms）。
+
+    现状痛点（五环评估报告环⑤）：主配置 3724 站 0 个带 _health，可用性信息只活在
+    exports/ 分层里，主配置读者拿不到「哪些真能用」。TVBox 忽略未知字段，标注安全。
+    数据源 state/tvbox.db interfaces 表（P1 判级修正后的权威结论）。
+    DB 不可读/无记录时降级为 unknown，绝不阻断构建。"""
+    import sqlite3
+    db = os.path.join(repo_dir, "state", "tvbox.db")
+    sites = tvbox.get("sites") or []
+    dist: dict = {}
+    if not os.path.isfile(db):
+        for s in sites:
+            if isinstance(s, dict):
+                s["_health"] = "unknown"
+        return 0
+    try:
+        conn = sqlite3.connect(db)
+        conn.row_factory = sqlite3.Row
+        hm = {r["key"]: r for r in conn.execute(
+            "SELECT key, health, latency_ms, last_check_at FROM interfaces")}
+        conn.close()
+    except Exception as e:  # noqa: BLE001
+        print(f"    [P2] DB 健康读取失败（全部标 unknown，不阻断）：{e}", flush=True)
+        for s in sites:
+            if isinstance(s, dict):
+                s["_health"] = "unknown"
+        return 0
+    hit = 0
+    for s in sites:
+        if not isinstance(s, dict):
+            continue
+        r = hm.get(s.get("key"))
+        h = (r["health"] if r is not None else None) or "unknown"
+        s["_health"] = h
+        s["_checked_at"] = r["last_check_at"] if r is not None else None
+        s["_latency_ms"] = r["latency_ms"] if r is not None else None
+        if r is not None:
+            hit += 1
+        dist[h] = dist.get(h, 0) + 1
+    print(f"    [P2] 主配置 {len(sites)} 站健康标注（DB 命中 {hit}，"
+          f"分布 {dict(sorted(dist.items()))}）", flush=True)
+    return hit
 
 
 def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
@@ -4684,6 +4987,22 @@ def main() -> int:
     limit = int(os.environ.get("SITE_LIMIT", "0"))
     if limit > 0:
         to_test = to_test[:limit]
+    # 站点链接指纹缓存（2026-09-28）：仓库/上游配置照拉不受影响；直连站点链接若
+    # api+ext 指纹未变 且 上次验活通过 且 未超 TTL，复用结论跳过重测（失败站不入
+    # 缓存，下轮照常重测，O3 回捞语义不变）。
+    fv_cache = load_fv_cache()
+    _fv_hits: list = []
+    if fv_cache:
+        _fv_retest: list = []
+        for s in to_test:
+            if fv_cache_hit(fv_cache, site_fingerprint(s)):
+                _fv_hits.append(s)
+            else:
+                _fv_retest.append(s)
+        to_test = _fv_retest
+    if _fv_hits:
+        print(f"[3/6] 站点链接缓存：{len(_fv_hits)} 个未变且 TTL 内通过的链接复用结论"
+              f"（TTL {FV_CACHE_TTL_DAYS} 天），{len(to_test)} 个需实测", flush=True)
     print(f"[3/6] 站点验活：{len(to_test)}/{len(sites)} 个直连站点，并发 {CONCURRENCY} ...", flush=True)
     t0 = time.time()
     # V8：预加载历史 check_ms（sites_probe.json），供慢源超时缩短与排序使用
@@ -4701,6 +5020,9 @@ def main() -> int:
     to_test = sorted(to_test, key=lambda s: (-_health_score.get(s.get("key"), 0),
                                               _hist_ms_by_key.get(s.get("key"), 10**9)))
     verdict: dict = {}  # key -> (ok, ms)：ok=验活通过，ms=取到有效内容耗时（最后一轮）
+    # 缓存命中的站回填结论（复用上次通过时的 ms），不参与实测
+    for s in _fv_hits:
+        verdict[s["key"]] = (True, int(fv_cache[site_fingerprint(s)].get("ms", 0)))
     with cf.ThreadPoolExecutor(CONCURRENCY) as ex:
         futs = {ex.submit(check_site, s): s for s in to_test}
         done = 0
@@ -4713,6 +5035,30 @@ def main() -> int:
             done += 1
             if done % 100 == 0:
                 print(f"  ... {done}/{len(to_test)} ({time.time()-t0:.0f}s)", flush=True)
+    # 回写站点链接验活缓存：实测通过的按指纹入缓存；实测失败的删旧条目（下轮重测）
+    _fv_new_ts = time.time()
+    _fv_mutated = False
+    for s in to_test:
+        fp = site_fingerprint(s)
+        ok, ms = verdict.get(s.get("key")) or (False, 0)
+        if ok:
+            fv_cache[fp] = {"ok": True, "ms": int(ms or 0), "ts": _fv_new_ts,
+                            "key": s.get("key"), "api": str(s.get("api"))[:160]}
+            _fv_mutated = True
+        elif fp in fv_cache:
+            del fv_cache[fp]
+            _fv_mutated = True
+    # 剪掉已不在本轮产物里的指纹（站被去重/剔除后不留僵尸缓存）
+    _live_fps = {site_fingerprint(s) for s in (to_test + _fv_hits)}
+    if _live_fps and len(fv_cache) > len(_live_fps) + 20:  # 有可观增量才剪
+        _drop = [fp for fp in fv_cache if fp not in _live_fps]
+        if _drop:
+            for fp in _drop:
+                del fv_cache[fp]
+            _fv_mutated = True
+    if _fv_mutated:
+        save_fv_cache(fv_cache)
+        print(f"    [fv_cache] 站点链接验活缓存更新：{len(fv_cache)} 条（state/fv_cache.json）", flush=True)
 
     removed = []
     kept_sites = []
@@ -4870,6 +5216,31 @@ def main() -> int:
     tvbox["sites"] = kept_sites
     tvbox["lives"] = lives
     tvbox["parses"] = parses
+    # 广告拦截基线注入（P0 体验）：上游配置普遍不带 ad/tihuan，播放器端无拦截配置时
+    # 播放页广告切片/顶部跑马灯会直接漏进交付产物。本仓自维护 rules/ad_block.json
+    # （广告域+统计追踪域单一词表，可审计），上游带了则尊重上游（合并去重），没带用基线。
+    try:
+        _ad_rule = json.load(open("rules/ad_block.json", encoding="utf-8"))
+        _ad_base = [str(x) for x in (_ad_rule.get("ad") or []) if str(x).strip()]
+        _th_base = [str(x) for x in (_ad_rule.get("tihuan") or []) if str(x).strip()]
+
+        def _merge_ad_list(cur, base):
+            cur = cur if isinstance(cur, (list, str)) else []
+            if isinstance(cur, str):
+                cur = [x.strip() for x in re.split(r"[,;\s]+", cur) if x.strip()]
+            out, seen = [], set()
+            for x in list(cur) + list(base):
+                if x and x not in seen:
+                    seen.add(x)
+                    out.append(x)
+            return out
+
+        tvbox["ad"] = _merge_ad_list(tvbox.get("ad"), _ad_base)
+        tvbox["tihuan"] = _merge_ad_list(tvbox.get("tihuan"), _th_base)
+        print(f"    [ad_block] ad={len(tvbox['ad'])} 条 / tihuan={len(tvbox['tihuan'])} 条"
+              f"（基线 rules/ad_block.json + 上游并集）", flush=True)
+    except Exception as _ae:  # noqa: BLE001
+        print(f"    [ad_block] 注入未生效（不阻断）：{_ae}", flush=True)
     # 解析质量排序（P0）：依据 probe/parses_probe.json 按质量分重排——
     # 响应速度 > 格式规范(JSON) > 无广告 > 稳定性；失效排最后、广告排倒数第二。
     # 无探活数据（首次运行）保持原序；任何异常不阻断每日构建。
@@ -4924,13 +5295,22 @@ def main() -> int:
     tvbox["version"] = f"{today_str}-b{build_no}"
     tvbox["updated_at"] = now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
     # P1-2：产出前终验（复用 check_site/http_get 只测 L1；失败只标记不剔除）
-    _final_verification: dict = {"tested": 0, "passed": 0, "failed_keys": []}
+    _final_verification: dict = {"tested": 0, "passed": 0, "failed_keys": [], "cache_hits": 0}
     try:
         _fv_targets = [s for s in (tvbox.get("sites") or [])
                        if s.get("type") in (0, 1) and isinstance(s.get("api"), str)
                        and s["api"].startswith("http")]
         if _fv_targets and not SKIP_SITE_TEST:
-            print(f"    [P1-2] 产出前终验：抽样 {len(_fv_targets)} 站 L1 连通性（并发64/超时3s）...", flush=True)
+            # 站点链接缓存：[3/6] 验活刚写过的指纹未变直接复用结论，终验只补测漏网的。
+            # 注意：本处只读缓存不写回——P1-2 是宽松 L1 判据（200+有体），写回会污染
+            # [3/6] 严格验活（正文形态/分片下钻）用的结论口径。
+            _fv_cache2 = load_fv_cache()
+            _fv_recheck = [s for s in _fv_targets
+                           if not fv_cache_hit(_fv_cache2, site_fingerprint(s))]
+            _fv_cache_hits = len(_fv_targets) - len(_fv_recheck)
+            _final_verification["cache_hits"] = _fv_cache_hits
+            print(f"    [P1-2] 产出前终验：{_fv_cache_hits} 站命中站点链接缓存跳过 / "
+                  f"{len(_fv_recheck)} 站 L1 补测（并发64/超时3s）...", flush=True)
             def _fv_probe(s):
                 try:
                     st, body, _ms = http_get(s["api"], 3, 4096)
@@ -4938,16 +5318,37 @@ def main() -> int:
                 except Exception:
                     return s.get("key"), False
             with cf.ThreadPoolExecutor(64) as _fex:
-                for _k, _ok in _fex.map(_fv_probe, _fv_targets):
+                for _k, _ok in _fex.map(_fv_probe, _fv_recheck):
                     _final_verification["tested"] += 1
                     if _ok:
                         _final_verification["passed"] += 1
                     else:
                         _final_verification["failed_keys"].append(_k)
-            print(f"    [P1-2] 终验完成：{_final_verification['passed']}/{_final_verification['tested']} 通过"
-                  f"（失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
+            _final_verification["passed"] += _fv_cache_hits
+            print(f"    [P1-2] 终验完成：{_final_verification['passed']}/{_final_verification['tested'] + _fv_cache_hits} 通过"
+                  f"（补测 {len(_fv_recheck)} + 缓存 {_fv_cache_hits}；失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
     except Exception as _e:  # noqa: BLE001
         print(f"    [P1-2] 终验异常（不阻断）：{_e}", flush=True)
+    # 环④ P0 死引用剥离闸门：主产物写文件前，剔除本地 ./deps 引用缺失的站点并登记
+    # local_ref_audit；死引用站点进配置只会让用户导入后大面积播坏（2026-09-28 五环
+    # 评估：重下载修复成功率仅 2%，剥离为唯一有效动作）。vod 在下方由 tvbox 派生，
+    # 剔除一次即同步作用于 tvbox.json / vod.json / stores / short / adult 全部产物。
+    local_ref_audit: dict = {}
+    _tv_sites = tvbox.get("sites") or []
+    if MAIN_DROP_DEAD_REFS:
+        tvbox["sites"] = filter_local_ref_sites(_tv_sites, os.getcwd(), "tvbox.json", local_ref_audit)
+    else:
+        _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, os.getcwd())}
+                      for s in _tv_sites if _missing_local_refs(s, os.getcwd())]
+        if _vod_drops:
+            local_ref_audit["tvbox.json(仅记录)"] = _vod_drops
+            print(f"    [local-ref] 审计发现 {len(_vod_drops)} 个死引用站点（MAIN_DROP_DEAD_REFS=0 仅记录不剔除）", flush=True)
+    # 环⑤ P2：主配置带健康标注（从 DB 读 P1 修正后的权威结论，TVBox 忽略 _ 字段）。
+    # 放在 P0-3 剥离前打标，白名单保留 _health/_checked_at/_latency_ms，其余 _ 字段照剥。
+    try:
+        attach_site_health(tvbox, os.getcwd())
+    except Exception as _h:  # noqa: BLE001
+        print(f"    [P2] 健康标注异常（不阻断，sites 无 _health）：{_h}", flush=True)
     # P0-3：写主产物前剥离内部字段（_origin/_health/_latency_ms/_probe_* 等）。
     # 注意：此处 tvbox 仍保留 _origin 供后续 vod 派生/adult 排序使用；写文件用剥离副本。
     tvbox_out = _strip_internal_fields(tvbox)
@@ -5058,14 +5459,8 @@ def main() -> int:
     else:
         # 不声明模式下 vod.sites 里已经没有成人源了（前面已剔除），用当时留存的那份
         adult_sites = adult_excluded_sites
-    # P0 防回归：写入前核验站点 ./ 本地依赖真实存在。分类产物（short/adult）死引用站点剔除；
-    # vod 仅审计记录不剔除。剔除明细写入 status.json 的 local_ref_audit。
-    local_ref_audit: dict = {}
-    _vod_drops = [{"key": s.get("key"), "name": s.get("name"), "missing": _missing_local_refs(s, repo_dir)}
-                  for s in (vod.get("sites") or []) if _missing_local_refs(s, repo_dir)]
-    if _vod_drops:
-        local_ref_audit["vod.json(仅记录)"] = _vod_drops
-        print(f"    [local-ref] vod.json: 审计发现 {len(_vod_drops)} 个死引用站点（仅记录不剔除）", flush=True)
+    # P0 防回归：主配置死引用已在产物写入前的剥离闸门处理（见 local_ref_audit 上方注释）；
+    # 这里对分类产物再核验一次（正常应为零剔除，兜住分类衍生出的独立配置）。
     short_sites = filter_local_ref_sites(short_sites, repo_dir, "short.json", local_ref_audit)
     adult_sites = filter_local_ref_sites(adult_sites, repo_dir, "adult.json", local_ref_audit)
     short_doc = {k: v for k, v in vod.items() if k not in ("lives", "sites")}
@@ -5264,7 +5659,7 @@ def main() -> int:
         "lives_by_category": live_stats,
         "stores": stores_summary,
         "local_ref_audit": {
-            "note": "写入前核验站点 ./ 本地依赖；short/adult 死引用站点已剔除，vod 仅记录",
+            "note": "写入前核验站点 ./ 本地依赖；主配置(tvbox/vod)与分类产物死引用站点均已剔除（MAIN_DROP_DEAD_REFS=0 时主配置仅记录）",
             "dropped": local_ref_audit,
         },
         "products": {"note": "产物 sha256 指纹（前 12 位）与字节数", "items": products},

@@ -441,6 +441,7 @@ deps/ lib/ js/ lives/ —— 配置引用的依赖（jar 爬虫 / js 规则 / �
         ("rules/adult_keywords.json",       "rules/adult_keywords.json"),
         ("rules/adult_source_patterns.json","rules/adult_source_patterns.json"),
         ("rules/channel_norm.json",         "rules/channel_norm.json"),
+        ("rules/ad_block.json",             "rules/ad_block.json"),
         # 词表（事实源，单源）
         ("state/vocab/categories.json",     "state/vocab/categories.json"),
         # 标准化规则（事实源，单源）

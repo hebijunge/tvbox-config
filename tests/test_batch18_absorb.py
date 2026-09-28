@@ -192,7 +192,9 @@ class TestGovernance(unittest.TestCase):
         self.assertIn("https://fastly.jsdelivr.net/gh/jyoketsu/tv@main/m.json", urls)
 
     def test_gh_mirrors_intact(self):
-        self.assertEqual(len(fm.GH_MIRRORS), 9)
+        # 守护口径：列表不得被截断（>=9），2026-09-29 起 acmsz 实测最快置首
+        self.assertGreaterEqual(len(fm.GH_MIRRORS), 9)
+        self.assertEqual(fm.GH_MIRRORS[0], "https://gh.acmsz.top/")
         self.assertIn("https://gh-proxy.com/", fm.GH_MIRRORS)  # QC 软化口径：保留、按当日实测轮换
 
 
