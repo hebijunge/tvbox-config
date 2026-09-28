@@ -3579,6 +3579,44 @@ def site_fingerprint(s: dict) -> str:
     return hashlib.sha1(f"{api}\n{ext_s}".encode("utf-8")).hexdigest()[:16]
 
 
+# ---- 站点链接验活缓存（2026-09-28）：链接没变就不重复重测 ----
+# 上游仓库照常每轮拉取（拉取阶段不受本缓存影响）；只有「已合并产物的直连站点链接」
+# 验活结论按 api+ext 指纹缓存——指纹未变 且 上次通过 且 未超 TTL 时复用结论跳过重测。
+# 失败结论不入缓存（下轮照常重测，O3 连续失败剔除与自动回捞语义不变）；
+# 指纹变更/新站点/TTL 过期 → 重新实测。TTL 默认 14 天：直连接口长期存活率很高，
+# 但站点会悄悄挂，隔两周强制复测一次兜底。
+FV_CACHE_FILE = os.environ.get("FV_CACHE_FILE", "state/fv_cache.json")
+FV_CACHE_TTL_DAYS = int(os.environ.get("FV_CACHE_TTL_DAYS", "14"))
+
+
+def load_fv_cache() -> dict:
+    """读站点链接验活缓存：{fingerprint: {"ok": True, "ms": int, "ts": epoch, "key": ...}}。"""
+    try:
+        with open(FV_CACHE_FILE, encoding="utf-8") as f:
+            d = json.load(f)
+        return d.get("fvs", {}) if isinstance(d, dict) else {}
+    except (OSError, json.JSONDecodeError):
+        return {}
+
+
+def save_fv_cache(cache: dict) -> None:
+    os.makedirs(os.path.dirname(FV_CACHE_FILE) or ".", exist_ok=True)
+    tmp = FV_CACHE_FILE + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"generated_at": datetime.now(BEIJING).isoformat(timespec="seconds"),
+                   "ttl_days": FV_CACHE_TTL_DAYS, "fvs": cache},
+                  f, ensure_ascii=False, indent=1)
+    os.replace(tmp, FV_CACHE_FILE)
+
+
+def fv_cache_hit(cache: dict, fp: str) -> bool:
+    """指纹命中：上次通过 且 未超 TTL。"""
+    c = cache.get(fp)
+    if not (isinstance(c, dict) and c.get("ok")):
+        return False
+    return time.time() - float(c.get("ts", 0)) < FV_CACHE_TTL_DAYS * 86400
+
+
 def secondary_dedup_sites(sites_by_key: dict, site_origin_name: dict, site_origin_score: dict) -> list:
     """O4 二级去重：api+ext 指纹相同的站点只留一份，保留来源健康分高者（同分保留先收录者）。
     返回剔除明细列表。"""
@@ -4783,6 +4821,22 @@ def main() -> int:
     limit = int(os.environ.get("SITE_LIMIT", "0"))
     if limit > 0:
         to_test = to_test[:limit]
+    # 站点链接指纹缓存（2026-09-28）：仓库/上游配置照拉不受影响；直连站点链接若
+    # api+ext 指纹未变 且 上次验活通过 且 未超 TTL，复用结论跳过重测（失败站不入
+    # 缓存，下轮照常重测，O3 回捞语义不变）。
+    fv_cache = load_fv_cache()
+    _fv_hits: list = []
+    if fv_cache:
+        _fv_retest: list = []
+        for s in to_test:
+            if fv_cache_hit(fv_cache, site_fingerprint(s)):
+                _fv_hits.append(s)
+            else:
+                _fv_retest.append(s)
+        to_test = _fv_retest
+    if _fv_hits:
+        print(f"[3/6] 站点链接缓存：{len(_fv_hits)} 个未变且 TTL 内通过的链接复用结论"
+              f"（TTL {FV_CACHE_TTL_DAYS} 天），{len(to_test)} 个需实测", flush=True)
     print(f"[3/6] 站点验活：{len(to_test)}/{len(sites)} 个直连站点，并发 {CONCURRENCY} ...", flush=True)
     t0 = time.time()
     # V8：预加载历史 check_ms（sites_probe.json），供慢源超时缩短与排序使用
@@ -4800,6 +4854,9 @@ def main() -> int:
     to_test = sorted(to_test, key=lambda s: (-_health_score.get(s.get("key"), 0),
                                               _hist_ms_by_key.get(s.get("key"), 10**9)))
     verdict: dict = {}  # key -> (ok, ms)：ok=验活通过，ms=取到有效内容耗时（最后一轮）
+    # 缓存命中的站回填结论（复用上次通过时的 ms），不参与实测
+    for s in _fv_hits:
+        verdict[s["key"]] = (True, int(fv_cache[site_fingerprint(s)].get("ms", 0)))
     with cf.ThreadPoolExecutor(CONCURRENCY) as ex:
         futs = {ex.submit(check_site, s): s for s in to_test}
         done = 0
@@ -4812,6 +4869,30 @@ def main() -> int:
             done += 1
             if done % 100 == 0:
                 print(f"  ... {done}/{len(to_test)} ({time.time()-t0:.0f}s)", flush=True)
+    # 回写站点链接验活缓存：实测通过的按指纹入缓存；实测失败的删旧条目（下轮重测）
+    _fv_new_ts = time.time()
+    _fv_mutated = False
+    for s in to_test:
+        fp = site_fingerprint(s)
+        ok, ms = verdict.get(s.get("key")) or (False, 0)
+        if ok:
+            fv_cache[fp] = {"ok": True, "ms": int(ms or 0), "ts": _fv_new_ts,
+                            "key": s.get("key"), "api": str(s.get("api"))[:160]}
+            _fv_mutated = True
+        elif fp in fv_cache:
+            del fv_cache[fp]
+            _fv_mutated = True
+    # 剪掉已不在本轮产物里的指纹（站被去重/剔除后不留僵尸缓存）
+    _live_fps = {site_fingerprint(s) for s in (to_test + _fv_hits)}
+    if _live_fps and len(fv_cache) > len(_live_fps) + 20:  # 有可观增量才剪
+        _drop = [fp for fp in fv_cache if fp not in _live_fps]
+        if _drop:
+            for fp in _drop:
+                del fv_cache[fp]
+            _fv_mutated = True
+    if _fv_mutated:
+        save_fv_cache(fv_cache)
+        print(f"    [fv_cache] 站点链接验活缓存更新：{len(fv_cache)} 条（state/fv_cache.json）", flush=True)
 
     removed = []
     kept_sites = []
@@ -5048,13 +5129,22 @@ def main() -> int:
     tvbox["version"] = f"{today_str}-b{build_no}"
     tvbox["updated_at"] = now.strftime("%Y-%m-%dT%H:%M:%S+08:00")
     # P1-2：产出前终验（复用 check_site/http_get 只测 L1；失败只标记不剔除）
-    _final_verification: dict = {"tested": 0, "passed": 0, "failed_keys": []}
+    _final_verification: dict = {"tested": 0, "passed": 0, "failed_keys": [], "cache_hits": 0}
     try:
         _fv_targets = [s for s in (tvbox.get("sites") or [])
                        if s.get("type") in (0, 1) and isinstance(s.get("api"), str)
                        and s["api"].startswith("http")]
         if _fv_targets and not SKIP_SITE_TEST:
-            print(f"    [P1-2] 产出前终验：抽样 {len(_fv_targets)} 站 L1 连通性（并发64/超时3s）...", flush=True)
+            # 站点链接缓存：[3/6] 验活刚写过的指纹未变直接复用结论，终验只补测漏网的。
+            # 注意：本处只读缓存不写回——P1-2 是宽松 L1 判据（200+有体），写回会污染
+            # [3/6] 严格验活（正文形态/分片下钻）用的结论口径。
+            _fv_cache2 = load_fv_cache()
+            _fv_recheck = [s for s in _fv_targets
+                           if not fv_cache_hit(_fv_cache2, site_fingerprint(s))]
+            _fv_cache_hits = len(_fv_targets) - len(_fv_recheck)
+            _final_verification["cache_hits"] = _fv_cache_hits
+            print(f"    [P1-2] 产出前终验：{_fv_cache_hits} 站命中站点链接缓存跳过 / "
+                  f"{len(_fv_recheck)} 站 L1 补测（并发64/超时3s）...", flush=True)
             def _fv_probe(s):
                 try:
                     st, body, _ms = http_get(s["api"], 3, 4096)
@@ -5062,14 +5152,15 @@ def main() -> int:
                 except Exception:
                     return s.get("key"), False
             with cf.ThreadPoolExecutor(64) as _fex:
-                for _k, _ok in _fex.map(_fv_probe, _fv_targets):
+                for _k, _ok in _fex.map(_fv_probe, _fv_recheck):
                     _final_verification["tested"] += 1
                     if _ok:
                         _final_verification["passed"] += 1
                     else:
                         _final_verification["failed_keys"].append(_k)
-            print(f"    [P1-2] 终验完成：{_final_verification['passed']}/{_final_verification['tested']} 通过"
-                  f"（失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
+            _final_verification["passed"] += _fv_cache_hits
+            print(f"    [P1-2] 终验完成：{_final_verification['passed']}/{_final_verification['tested'] + _fv_cache_hits} 通过"
+                  f"（补测 {len(_fv_recheck)} + 缓存 {_fv_cache_hits}；失败 {len(_final_verification['failed_keys'])} 站只标记不剔除）", flush=True)
     except Exception as _e:  # noqa: BLE001
         print(f"    [P1-2] 终验异常（不阻断）：{_e}", flush=True)
     # 环⑤ P2：主配置带健康标注（从 DB 读 P1 修正后的权威结论，TVBox 忽略 _ 字段）。
