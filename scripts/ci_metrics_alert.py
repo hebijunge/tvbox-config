@@ -154,12 +154,68 @@ def check_avail_report(report_path: str = "state/avail_report.json",
         if repo:
             create_issue(repo, body)
 
+def check_unknown_ratio(db_path: str = "state/tvbox.db",
+                       repo: str = "",
+                       unknown_threshold: float = 40.0,
+                       last_alerted: bool = False) -> bool:
+    """环② P1：unknown 占比超过阈值时告警——防止「没测过的源静默进配置」。
+
+    读 DB interfaces 表统计各健康度占比（P1 判级修正后的权威结论）。DB 缺失/无记录
+    时静默跳过，不误报。unknown 占比是绝对值（非环比），超阈值即建 issue 提醒补测。
+    去重：last_alerted=True（上轮已建 issue）且本轮仍超阈值 → 只打印不重复建单。
+    返回：本轮是否触发了告警（供调用方回写 last_alerted 标记）。
+    """
+    import sqlite3
+    if not os.path.isfile(db_path):
+        print(f"[ci_metrics_alert] 无 {db_path}, 跳过 unknown 占比告警")
+        return False
+    try:
+        conn = sqlite3.connect(db_path)
+        total, rows = conn.execute("SELECT COUNT(*) FROM interfaces").fetchone()[0], \
+            conn.execute(
+                "SELECT health, COUNT(*) FROM interfaces GROUP BY health").fetchall()
+        conn.close()
+    except Exception as e:  # noqa: BLE001
+        print(f"[ci_metrics_alert] DB 读取失败, 跳过 unknown 告警: {e}")
+        return False
+    if not total:
+        print("[ci_metrics_alert] interfaces 空, 跳过 unknown 占比告警")
+        return False
+    dist = {h: n for h, n in rows}
+    unknown = dist.get("unknown", 0)
+    ratio = unknown / total * 100
+    print(f"[ci_metrics_alert] 健康分布 {dist} | unknown {unknown}/{total}={ratio:.1f}% "
+          f"(阈值 {unknown_threshold}%)")
+    # 去重：上轮已告警且本轮仍超阈值 → 只打印不重复建 issue（持续超阈值降为每日提醒级）
+    if ratio >= unknown_threshold:
+        if last_alerted:
+            print(f"[ci_metrics_alert] unknown 占比连续超阈值(上轮已建 issue), 本轮不重复建单, 仅打印")
+            return True
+        body = (
+            f"[CI-ALERT] unknown 占比过高: {ratio:.1f}% ({unknown}/{total}) >= "
+            f"{unknown_threshold}%\n\n"
+            f"- 健康分布: {dist}\n"
+            f"- 含义: 这些源未经实测就进了配置, 可用性未知。\n"
+            f"- 处置: 跑真机 csp 补测刷新 probe/csp_probe.json 解除 STALE, "
+            f"或临时降低订阅门槛至 exports/usable.json 之外。\n"
+        )
+        print(body)
+        if repo:
+            create_issue(repo, body)
+        return True
+    return False
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="CI 关键指标下降告警")
     parser.add_argument("--tvbox", default="tvbox.json")
     parser.add_argument("--state", default="state/last_run.json")
     parser.add_argument("--deps-dir", default="deps")
     parser.add_argument("--threshold", type=float, default=DEFAULT_THRESHOLD)
+    parser.add_argument("--db", default="state/tvbox.db",
+                        help="健康度 DB（unknown 占比告警数据源）")
+    parser.add_argument("--unknown-threshold", type=float, default=40.0,
+                        help="unknown 占比告警阈值(百分比)")
     parser.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", ""))
     args = parser.parse_args()
 
@@ -167,6 +223,12 @@ def main() -> int:
     print(f"[ci_metrics_alert] 本轮指标: {cur}")
 
     prev = load_last(args.state)
+    _last_unknown_alerted = False
+    try:
+        with open(args.state, encoding="utf-8") as _f:
+            _last_unknown_alerted = bool(json.load(_f).get("unknown_alerted", False))
+    except (OSError, json.JSONDecodeError):
+        pass
     if prev is None:
         print("[ci_metrics_alert] 无历史基线，记录本轮为基线，不告警")
         save_state(args.state, cur)
@@ -187,6 +249,10 @@ def main() -> int:
         print("[ci_metrics_alert] 指标无显著下降")
 
     check_avail_report(repo=args.repo)
+    _unknown_alerted = check_unknown_ratio(args.db, repo=args.repo,
+                                           unknown_threshold=args.unknown_threshold,
+                                           last_alerted=_last_unknown_alerted)
+    cur["unknown_alerted"] = _unknown_alerted
     save_state(args.state, cur)
     return 0
 

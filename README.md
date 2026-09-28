@@ -79,6 +79,11 @@ https://cdn.jsdelivr.net/gh/hebijunge/tvbox-config@main/vod.json
 
 **直播配置 `live.json`**（lives 数组，汇总 lives/ 目录央视 / 卫视 / 港台 / 其他分类与各上游直播源）：
 
+> ⚠️ **两处 `live.json` 别混淆**（五环评估 P3）：
+> - **根目录 `live.json`** = **单指针**（仅 1 条 lives，type=1 指向仓内 `lives/live_all.txt` 远端聚合 txt）。TVBox 导入后按该 url 拉全量频道，**不是**把 400+ 条源平铺进 lives 数组。
+> - **`exports/live.json`** = **全量直播源**（418 条 lives，逐条已频道级验活、剔除 404 死源）。要「仓内自带全量直播配置」用这份。
+> 期望平铺全量直播源的订阅者请直接订阅 `exports/live.json`，避免拿到根指针后误以为只有 1 条。
+
 ```
 https://raw.githubusercontent.com/hebijunge/tvbox-config/main/live.json
 ```
