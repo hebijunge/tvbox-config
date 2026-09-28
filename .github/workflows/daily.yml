@@ -1,4 +1,4 @@
-﻿name: daily-fetch
+name: daily-fetch
 # 每日一次：北京时间 03:00（UTC 19:00），支持手动触发
 # P2：refresh（本工作流，拉取+合并+发布）与 validate（validate.yml，独立验活）拆分——azhansy/ds-tvbox 模式
 
@@ -212,9 +212,10 @@ jobs:
           # fetch_merge.py L4470 注释由 Agent A 负责（本侧不动产出脚本）。公告过渡期 README 已标注。
           git add tvbox.json vod.json live.json short.json adult.json status.json checks.json README.md \
                   raw/ raw-vod/ \
-                  index.html lives/ state/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/ drpy-sandbox/
-          # pack_report.json 仅在 pack_local 成功时存在，防缺失阻断提交
+                  index.html lives/ state/ candidate_upstreams.json deps/ stores/ probe/ radar/ exports/
+          # pack_report.json / drpy-sandbox 仅在对应步骤成功时存在，防缺失阻断提交
           [ -f packs/pack_report.json ] && git add packs/pack_report.json || true
+          [ -d drpy-sandbox/ ] && git add drpy-sandbox/ || true
           if git diff --cached --quiet; then
             echo "本轮无变更，跳过提交"
           else
