@@ -93,23 +93,103 @@ DROP_RE = re.compile(
     r"avatars|\.png|\.jpg|\.svg|\.ico|\.webp|\.zip|\.apk|\.exe", re.I)
 
 
+_FM = None
+
+
+def _fm():
+    """惰性拿 fetch_merge（镜像链与前后缀解析复用它，避免两套事实源）。拿不到返回 None。"""
+    global _FM
+    if _FM is None:
+        try:
+            import fetch_merge
+            _FM = fetch_merge
+        except Exception:  # noqa: BLE001
+            _FM = False
+    return _FM or None
+
+
+def mirror_chain(limit=2):
+    """github 取数的镜像链：复用 fetch_merge 解析好的 GH_MIRRORS
+    （优先级 GH_MIRRORS 环境变量 > mirror_probe 每日实测落盘 > 静态默认），取前 limit 位。
+
+    为什么要改：旧实现写死 `https://ghproxy.net/` 兜底——那站不在每日实测候选池里，
+    09-19 实测仅 47KB/s。本机 290 条候选因此每条白等 12s 直连再拖慢镜像，整轮 10m40s，
+    还让 11 个高分候选（含 298 站的）因超时而「消失」。可达性判定不该被兜底镜像的速度绑架。
+    """
+    m = _fm()
+    chain = []
+    if m:
+        chain = [x if x.endswith("/") else x + "/" for x in (m.GH_MIRRORS or [])]
+    if not chain:
+        chain = ["https://gh-proxy.com/", "https://ghproxy.cxkpro.top/"]
+    return chain[:max(1, limit)]
+
+
+_ANY_PREFIX_RE = re.compile(r"^(https?://[^/]+/)(https?://.+)$", re.I)
+
+
+def _normalize_gh_url(url):
+    """还原成 (裸 github URL, 原本是否带代理前缀)。
+
+    两种形态都要处理，否则镜像重试会变成「前缀 + 前缀 + 目标」（双前缀实测成功率极低，
+    与 fetch_merge 2026-09-28 的归一化教训同一条）：
+      A `https://任意陌生代理/https://raw.githubusercontent.com/...`——候选里的前缀来自
+        各家上游配置，不在 fetch_merge 的已知清单内，所以这里按形态识别；
+      B `https://gh-proxy.com/raw.githubusercontent.com/...`（path 写法，内层没有协议），
+        交给 fetch_merge 识别后还要补回 `https://`，否则直连必然失败。
+    """
+    m = _ANY_PREFIX_RE.match(url)
+    if m and "github" in m.group(2).lower():
+        return m.group(2), True
+    fm = _fm()
+    if fm and "github" in url.lower():
+        inner, had = fm._split_gh_prefix(url)
+        if had:
+            if inner.startswith("http"):
+                return inner, True
+            return "https://" + inner.lstrip("/"), True
+    return url, False
+
+
+def _gh_attempts(url, timeout):
+    """返回 (取数尝试序列 [(目标URL, 超时秒)])。
+
+    - 非 github/raw 链接（种子站、文章页、api.github.com）：只按原 URL 试一次，不套镜像
+      —— 镜像只转发 github 资源，套上去只会多等一轮。
+    - github/raw：直连只给 DISCOVER_DIRECT_TIMEOUT（默认 3s，raw 在本机是连得上但读挂，
+      12s 太贵），失败再依次试镜像链前 2 位（各给完整 timeout）。
+      原本挂着前缀的不重试直连，直接用最优镜像链替换前缀，避免「老前缀 + 双前缀」。
+    """
+    inner, had_prefix = _normalize_gh_url(url)
+    if not ("raw.githubusercontent.com" in inner or "github.com" in inner):
+        return [(url, timeout)]
+    # 只有 raw 域是「连得上但读挂」，值得用短超时快速判死；github.com 页面/接口
+    # 慢可能是真的在生成，给完整超时，别把本来能取到的东西判成不可达。
+    fast = min(timeout, float(os.environ.get("DISCOVER_DIRECT_TIMEOUT", "3"))) \
+        if "raw.githubusercontent.com" in inner else timeout
+    chain = mirror_chain()
+    if had_prefix:
+        return [(m2 + inner, timeout) for m2 in chain]
+    return [(inner, fast)] + [(m2 + inner, timeout) for m2 in chain]
+
+
 def http_get(url, timeout=10, max_bytes=0, headers=None):
-    """拉取；raw.githubusercontent.com 直连不通时走镜像兜底。
+    """拉取；github 链接按镜像链兜底（见 _gh_attempts / mirror_chain）。
 
     实测：种子 README 与候选探测在本地/CI 都可能遇到 raw 直连失败（三路种子全挂），
     没有兜底会让第 3 路直接失效——所以这里必须带镜像回退。
     """
-    req = urllib.request.Request(url, headers={**UA, **(headers or {})})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.status, r.read(max_bytes) if max_bytes else r.read()
-    except Exception:
-        if "raw.githubusercontent.com" in url:
-            mirror = "https://ghproxy.net/" + url
-            req2 = urllib.request.Request(mirror, headers={**UA, **(headers or {})})
-            with urllib.request.urlopen(req2, timeout=timeout) as r:
+    hdrs = {**UA, **(headers or {})}
+    attempts = _gh_attempts(url, timeout)
+    last = None
+    for i, (u, t) in enumerate(attempts):
+        try:
+            req = urllib.request.Request(u, headers=hdrs)
+            with urllib.request.urlopen(req, timeout=t) as r:
                 return r.status, r.read(max_bytes) if max_bytes else r.read()
-        raise
+        except Exception as e:  # noqa: BLE001
+            last = e
+    raise last
 
 
 def gh_api(path, params=None):
@@ -157,6 +237,35 @@ def sites_of(doc):
                     if isinstance(sv, list):
                         return [x for x in sv if isinstance(x, dict)]
     return []
+
+
+def probe_window(candidates, cap, day=None):
+    """确定性的 L0 探测窗口。
+
+    旧实现是 `list(set)[:cap]`：set 的迭代顺序由 PYTHONHASHSEED 决定（每个进程洗牌），
+    于是 280 条候选每轮随机漏掉 ~40 条根本没被探测——这才是候选池隔 20 分钟只剩
+    18/80 重合的主因，而不是上游一天变脸。改法：按 URL 字典序排，超出上限时按
+    「年内第几天 × cap」轮转起点，同一天完全可复现，跨天把尾巴也轮到，不会永远饿死同一批。
+    """
+    ordered = sorted(candidates)
+    if cap <= 0 or len(ordered) <= cap:
+        return ordered
+    day = day if day is not None else int(time.strftime("%j"))
+    off = (day * cap) % len(ordered)
+    rot = ordered[off:] + ordered[:off]
+    return rot[:cap]
+
+
+def rank_results(rows):
+    """稳定排序：score 降序 → tvbox 优先 → 站点/条目数降序 → URL 字典序。
+
+    并列很常见（本轮 38 个真配置里 30+ 都是 90 分），旧实现只按 -score 排，
+    进 top80 的是哪几条取决于并发完成顺序，等于再叠一层随机。"""
+    def _key(r):
+        ev = r.get("evidence") or {}
+        size = ev.get("sites") or ev.get("entries") or 0
+        return (-r.get("score", 0), r.get("kind") != "tvbox", -size, r.get("url") or "")
+    return sorted(rows, key=_key)
 
 
 def probe_candidate(url):
@@ -709,12 +818,17 @@ def main() -> int:
     candidates = {u for u in candidates if u and u not in known}
     print(f"[discover] 候选 {len(candidates)} 条，开始 L0 探测 ...", flush=True)
 
+    probe_list = probe_window(candidates, max(args.top * 4, args.top))
+    if len(probe_list) < len(candidates):
+        print(f"[discover]   超出探测上限，按日轮转只探其中 {len(probe_list)} 条"
+              f"（原 set 顺序＝每轮随机漏 {len(candidates) - len(probe_list)} 条）", flush=True)
+
     results = []
     with cf.ThreadPoolExecutor(16) as ex:
-        for r in ex.map(probe_candidate, list(candidates)[: args.top * 3]):
+        for r in ex.map(probe_candidate, probe_list):
             if r.get("reachable"):
                 results.append(r)
-    results.sort(key=lambda r: -r["score"])
+    results = rank_results(results)
 
     good = [r for r in results if r.get("kind") == "tvbox" and r["score"] >= 70]
     canary = [r for r in results if r["score"] >= args.canary_score and r.get("kind") == "tvbox"]

@@ -363,8 +363,11 @@ python scripts/fetch_merge.py
 | 5 | Gitee | **2026-09-29 起默认关闭**（`--gitee` 显式开启）。平台搜索 API 被禁（返回空）、网页被 WAF 405 → 只能曲线：GitHub 搜「引用 gitee.com 的配置」挖仓库全名，再用 Gitee 文件树 API 展开（需 `GITHUB_TOKEN`/`GITEE_TOKEN`）。实测一整轮 16 条候选里仅 4 条是配置、净新增 20 站（0.54%），其中两个候选还是同仓孪生文件，性价比不抵耗时 |
 | 6 | 搜索引擎 + 文章页 | Bing 搜 CSDN/博客园/知乎/**微信公众号公开文章**，从正文提取接口。微信不硬爬：只访问搜索引擎已收录的公开文章页（合规） |
 
-**收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。
-`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
+**取数通道与确定性**（2026-09-29 修）：本路的 github 取数原先写死 `https://ghproxy.net/` 兜底——那站不在每日镜像实测池里、09-19 实测仅 47KB/s，本机每条候选先白等 12s 直连再拖慢镜像，整轮 **10m40s**，还让 11 个高分候选因超时而「消失」。现改为复用 `fetch_merge` 解析好的镜像链（`GH_MIRRORS` env > 每日实测落盘 > 静态默认，取前 2 位），raw 直连只给 `DISCOVER_DIRECT_TIMEOUT`（默认 3s），陌生前缀/path 写法都先归一化避免叠双前缀 → **4m27s**。
+另一半原因更隐蔽：探测列表是 `list(set)[:top*3]`，set 顺序随 `PYTHONHASHSEED` 每进程洗牌，280 条候选**每轮随机漏掉 ~40 条根本没探测**；`sort(key=-score)` 在 90 分大并列时按并发完成顺序排，进池的是哪 80 条＝抽签。改成 `probe_window()`（URL 字典序 + 超上限按日轮转，同天可复现、跨天不饿死尾巴）与 `rank_results()`（score → tvbox 优先 → 站点数 → URL）。
+实测连跑两轮（相隔 5 分钟）：候选池重合从 **18/80 → 60/80**，真配置重合 12/27 → 23/36，可达率 41%→44-50%。剩下的差异是真实来源在变（仓库搜索按 updated 排序、文章页结果不同）与网络抖动，不是我们制造的随机。
+
+**收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
 **canary 已默认开启**（`EXTRA_UPSTREAMS=1`，daily.yml），失效由自动黑名单兜底；要停用改回 `0`。
 
 **按来源上游保留 spider**（2026-09-19 起，开关 `ORIGIN_SPIDER=1` 默认开）：
