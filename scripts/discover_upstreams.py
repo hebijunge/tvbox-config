@@ -42,6 +42,31 @@ GH_ACCEPT = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2
 # L0 探测的读取上限：只读前这么多字节就够判形态。dedup_by_content 依赖它判断
 # 「内容是否被完整读到」，所以上限与截断标记必须同源，不能各写各的字面量。
 PROBE_MAX_BYTES = 300_000
+# 增量索引里一个仓能免检多久：超过这个天数没在搜索结果里再出现就丢掉这条缓存
+INDEX_TTL_DAYS = 45
+# 探失败的条目多久重试一次。1 天太急（35% 的即时失败会天天重烧探测预算），
+# 太久又等于把一次网络抖动判成永久死源——7 天是这两头的折中
+FAIL_RETRY_DAYS = 7
+
+# 文件树里「值得探测」的筛子（GitHub 与 Gitee 两路共用一份，避免两边漂移）
+CONFIG_EXT = (".json", ".m3u", ".txt")
+CONFIG_SKIP_RE = re.compile(
+    r"node_modules|package[-_]lock|package\.json|composer\.json|bower\.json|tsconfig|"
+    r"\.min\.|\.github/|labels?\.json|dependabot|coverage|\.vscode/", re.I)
+# 「像配置」的文件名优先。注意单词边界：旧写法 `(tvbox|box|jsm|js|config|api)` 里的 `js`
+# 会命中每个 `*.json` 中的 "json" 子串——所有文件都拿到 0 优先级，排序直接退化成「按长度排」，
+# 真正叫 js.json / tvbox.json 的反而不占先。加了边界后 `js` 只在独立成词时才算。
+CONFIG_PREFER_RE = re.compile(
+    r"(?:^|[^a-z])(tvbox|catvod|cattv|jsm|xbq|box|config|api|js|py|tv|ok)(?:$|[^a-z])", re.I)
+
+
+def keep_config_blob(path, size):
+    """这个 blob 值不值得拿去 L0 探测：后缀、大小、明显是工程文件名的都筛掉。"""
+    if not (path or "").lower().endswith(CONFIG_EXT):
+        return False
+    if size < 500 or size > 12 * 1024 * 1024:
+        return False
+    return not CONFIG_SKIP_RE.search(path)
 
 
 def _load_token() -> str:
@@ -709,17 +734,10 @@ def gitee_files_of(full_name):
     out = []
     for it in tree.get("tree", []):
         p = it.get("path") or ""
-        if it.get("type") != "blob":
-            continue
-        if not p.lower().endswith((".json", ".m3u", ".txt")):
-            continue
-        if (it.get("size") or 0) < 500 or (it.get("size") or 0) > 12 * 1024 * 1024:
-            continue
-        if re.search(r"(node_modules|package-lock|tsconfig|\.min\.)", p, re.I):
+        if it.get("type") != "blob" or not keep_config_blob(p, it.get("size") or 0):
             continue
         out.append(p)
-    out.sort(key=lambda p: (0 if re.search(r"(tvbox|box|jsm|js|config|api)", p, re.I) else 1, len(p)))
-    return [(full_name, branch, p) for p in out[:8]]
+    return [(full_name, branch, p) for p in pick_config_paths(out)]
 
 
 def discover_gitee():
@@ -851,53 +869,202 @@ def discover_web(max_pages=20):
 
 
 def json_files_of(full_name):
-    """列出一个仓库里值得探测的配置类文件。
+    """列出一个仓库里值得探测的配置类文件（无缓存的裸调用；主流程走 expand_repos）。"""
+    meta = repo_meta(full_name)
+    if not meta:
+        return []
+    branch, _pushed = meta
+    blobs = tree_blobs(full_name, branch)
+    return [(full_name, branch, p) for p in pick_config_paths(blobs)]
 
-    默认分支必须解析出来用在 URL 里（`/main/x.json`）：`/git/trees/HEAD` 也能列树、raw 侧
-    `HEAD` 也是合法 ref（实测与 `/main/` 同一份内容），但生成的 URL 形态一变就再也对不上
-    `known_urls()` 里按完整 URL 记录的历史上游，等于把已知源当新候选重收一遍——省一次
-    API 调用不值这个代价，所以这里保留两次调用。
+
+def repo_meta(full_name):
+    """1 次 API 拿 (默认分支, pushed_at)——增量判断只看这两个值。
+
+    pushed_at 是「任意分支推过」的超集，宁可多列一次树也不会漏掉内容变化。
     """
     info = gh_api(f"/repos/{full_name}")
     if not info:
-        return []
-    branch = info.get("default_branch") or "main"
+        return None
+    return (info.get("default_branch") or "main", info.get("pushed_at") or "")
+
+
+def tree_blobs(full_name, branch):
+    """{path: blob_sha}。blob sha 变了内容才算变，仓库被 push 过不代表配置文件变。"""
     tree = gh_api(f"/repos/{full_name}/git/trees/{branch}", {"recursive": "1"})
     if not tree:
-        return []
+        return {}
     if tree.get("truncated"):
-        # recursive 树条目数超上限时 GitHub 会截断，必须留痕：不然会误判「这仓只有这些文件」
         print(f"  [树截断] {full_name} 的 git tree 被 API 截断，文件清单不完整", flush=True)
-    out = []
+    out = {}
     for it in tree.get("tree", []):
         p = it.get("path") or ""
-        if it.get("type") != "blob":
+        if it.get("type") != "blob" or not keep_config_blob(p, it.get("size") or 0):
             continue
-        if not p.lower().endswith((".json", ".m3u", ".txt")):
+        out[p] = it.get("sha") or ""
+    return out
+
+
+def pick_config_paths(blobs, limit=8):
+    """按「像不像配置」排序取前 limit 个路径（GitHub / Gitee 两路同一份判据）。"""
+    paths = sorted(blobs, key=lambda p: (0 if CONFIG_PREFER_RE.search(p) else 1, len(p)))
+    return paths[:limit]
+
+
+ROW_FIELDS = ("reachable", "kind", "score", "evidence", "bytes", "sha256", "sha_partial", "error")
+
+
+def load_repo_index(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            doc = json.load(f)
+        repos = doc.get("repos") if isinstance(doc, dict) else None
+        return repos if isinstance(repos, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_repo_index(repos, path, ttl_days=INDEX_TTL_DAYS, now=None):
+    """落盘：只留 `seen` 在 ttl_days 之内的仓。
+
+    为什么要过期：搜索路里冒过一次头、之后再没出现的仓，留着它的缓存只会让索引无界增长，
+    而它早就不该占一个免探名额。内容没变的凭据是 pushed_at + blob sha，两者都由 GitHub 返回，
+    索引本身不需要长期留尸体。
+    """
+    now = now if now is not None else int(time.time())
+    cutoff = now - ttl_days * 86400
+    keep, dropped = {}, 0
+    for fn, rec in repos.items():
+        if not rec.get("branch") or (rec.get("seen") or 0) < cutoff:
+            dropped += 1
             continue
-        if (it.get("size") or 0) < 500 or (it.get("size") or 0) > 12 * 1024 * 1024:
+        keep[fn] = rec
+    os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
+    tmp = path + ".tmp"
+    with open(tmp, "w", encoding="utf-8") as f:
+        json.dump({"version": 1, "repos": keep}, f, ensure_ascii=False, indent=1)
+    os.replace(tmp, path)
+    if dropped:
+        print(f"[discover] 增量索引清理 {dropped} 个仓（无分支信息或超过 {ttl_days} 天没再遇到）", flush=True)
+    return len(keep)
+
+
+def expand_repos(repos, index, workers=8, now=None):
+    """展开仓库 → (候选 URL, 可复用结论 {url: row}, 免探集合, 新索引, 统计)。
+
+    为什么必须增量：全展开 977 个仓 ≈ 2329 条候选，L0 吞吐实测 1.45 条/秒 → 单探测就 27 分钟，
+    加上列树 12.5 分钟，一轮 40 分钟起步——正因付不起才一直只展开 15 个仓（还抽得随机）。
+    而配置内容其实变得很慢：样本 60 个仓里近 24h 有 push 的只有 27%。于是两层免检：
+    `pushed_at` 没变的仓不列树（省一半 API），blob sha 没变的文件不重探（省掉绝大部分网络）。
+
+    失败结论按 `FAIL_RETRY_DAYS` 退避，不是"永不缓存"：可达性是网络状态，永久缓存抖动等于把
+    一个源判死；但一天 35% 的探测失败率若全部即时重探，缓存就永远攒不起来（实测第一版就是这样，
+    第二轮"文件复用 0 个"）。折中是失败条目 N 天后重试一次，期间既不探也不进池。
+    """
+    cached, skip, candidates = {}, set(), set()
+    stats = {"repos": 0, "hit": 0, "relisted": 0, "reused_files": 0,
+             "fresh_files": 0, "skipped_fail": 0, "api": 0}
+    # 从上一轮的索引起步：本轮没抽到的仓要留着（否则缓存永远攒不起来，每天重新全量探一遍）
+    new_index = {fn: dict(rec) for fn, rec in index.items()}
+    now = now if now is not None else int(time.time())
+
+    def one(fn):
+        prev = index.get(fn) or {}
+        meta = repo_meta(fn)
+        if not meta:
+            return fn, None, None
+        branch, pushed = meta
+        if prev.get("branch") == branch and prev.get("pushed_at") == pushed:
+            return fn, (branch, pushed, prev, True), None
+        blobs = tree_blobs(fn, branch)
+        return fn, (branch, pushed, prev, False), blobs
+
+    with cf.ThreadPoolExecutor(workers) as ex:
+        for fn, head, blobs in ex.map(one, repos):
+            stats["repos"] += 1
+            stats["api"] += 1 if blobs is None else 2
+            if not head:
+                # 这仓本轮没拿到 meta（API 404/限流/抖动）：把旧缓存原样留着。
+                # 丢了它，下一轮就得整仓重列重探——一次配额抖动会放大成一轮全量重跑
+                if index.get(fn):
+                    new_index[fn] = index[fn]
+                continue
+            branch, pushed, prev, reused_tree = head
+            files = prev.get("files") or {}
+            if reused_tree:
+                # 树没变：文件清单直接来自缓存，一个 blob 都不用重新列
+                wanted = {p: (files.get(p) or {}).get("sha") for p in pick_config_paths(files)}
+                stats["hit"] += 1
+            else:
+                wanted = {p: blobs[p] for p in pick_config_paths(blobs)}
+                stats["relisted"] += 1
+            entry = {"branch": branch, "pushed_at": pushed, "seen": now, "files": {}}
+            for path, blob_sha in wanted.items():
+                url = raw_url(fn, branch, path)
+                candidates.add(url)
+                old = files.get(path) or {}
+                row = old.get("row") or {}
+                if blob_sha and old.get("sha") == blob_sha and row:
+                    if row.get("reachable"):
+                        cached[url] = dict(row, url=url)
+                        stats["reused_files"] += 1
+                        entry["files"][path] = old
+                        continue
+                    if now - (old.get("at") or 0) < FAIL_RETRY_DAYS * 86400:
+                        skip.add(url)          # 退避期内：不重探，也不进池
+                        stats["skipped_fail"] += 1
+                        entry["files"][path] = old
+                        continue
+                entry["files"][path] = {"sha": blob_sha, "row": None, "at": now}
+                stats["fresh_files"] += 1
+            new_index[fn] = entry
+    return candidates, cached, skip, new_index, stats
+
+
+def merge_probe_rows(index, results, now=None):
+    """把本轮的 L0 结论写回索引（按 url 反查 repo/path），成功失败都记。
+
+    失败的 row 也存下来（带时间戳），由 expand_repos 按 FAIL_RETRY_DAYS 退避重试；
+    blob sha 原样保留，不能被回写冲掉——它是"内容没变"的唯一凭据。
+    """
+    now = now if now is not None else int(time.time())
+    where = {}
+    for fn, rec in index.items():
+        for path in rec.get("files") or {}:
+            where[raw_url(fn, rec.get("branch") or "main", path)] = (fn, path)
+    put = 0
+    for r in results:
+        loc = where.get(r.get("url"))
+        if not loc:
             continue
-        if re.search(r"(node_modules|package-lock|tsconfig|\.min\.)", p, re.I):
-            continue
-        out.append(p)
-    if tree.get("truncated"):
-        # recursive 树超 10 万条目会被 GitHub 截断，这里必须留痕：否则会误判「这仓只有这些文件」
-        print(f"  [树截断] {full_name} 的 git tree 被 API 截断，文件清单不完整", flush=True)
-    out.sort(key=lambda p: (0 if re.search(r"(tvbox|box|jsm|js|config|api)", p, re.I) else 1, len(p)))
-    return [(full_name, "HEAD", p) for p in out[:8]]
+        fn, path = loc
+        row = {k: r.get(k) for k in ROW_FIELDS if r.get(k) is not None}
+        slot = index[fn]["files"].get(path) or {}
+        index[fn]["files"][path] = {"sha": slot.get("sha") or "", "row": row, "at": now}
+        put += 1
+    return put
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--max-repos", type=int, default=20,
-                    help="本轮展开多少个新仓的文件树（按日轮转抽样，跨天覆盖其余；"
-                         "收集阶段不再随机砍，所以这个数就是真正的召回闸门）")
+    ap.add_argument("--max-repos", type=int, default=0,
+                    help="本轮展开多少个新仓（0＝全部，默认）。配合 state/repo_index.json 的"
+                         "增量缓存才敢开全量：没缓存全展开一轮要 40 分钟，有缓存后未变动的仓"
+                         "不列树、内容没改的文件不重探，一轮只付增量。>0 时按日轮转抽样")
+    ap.add_argument("--repo-index", default="state/repo_index.json",
+                    help="仓库增量索引（pushed_at + blob sha + 已得的 L0 结论）")
+    ap.add_argument("--no-repo-cache", action="store_true",
+                    help="忽略增量索引，全部重列重探（首轮建索引或怀疑索引脏了时用）")
+    ap.add_argument("--workers", type=int, default=int(os.environ.get("DISCOVER_WORKERS", "32")),
+                    help="L0 探测并发数（实测 16→32 吞吐 0.85→1.63 条/秒，近线性）")
     ap.add_argument("--top", type=int, default=400,
                     help="候选池写入上限（默认高于探测窗口＝不额外丢弃已探到的可达结果；"
                          "旧值 80 会把 reachable 108-128 条里的 28-48 条挡在池外，"
                          "阶段 3 因此根本没机会收编它们）")
-    ap.add_argument("--probe-cap", type=int, default=320,
-                    help="L0 探测窗口上限（超出部分按日轮转，避免每轮随机漏探）")
+    ap.add_argument("--probe-cap", type=int, default=0,
+                    help="L0 探测窗口上限（0＝不限，默认）。有了增量索引后一轮要探的只是"
+                         "新出现/内容变过的文件，不再需要上限；>0 时超出部分按日轮转，"
+                         "用于临时压时间或调试")
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
     ap.add_argument("--gitee", action="store_true",
@@ -945,33 +1112,42 @@ def main() -> int:
                 for fn, br, p in files:
                     repo_urls.add(gitee_raw_url(fn, br, p))
 
-    fresh_repos = [r for r in repos if r and r not in known_repos]
-    expand_repos = select_repos(fresh_repos, args.max_repos)
-    print(f"[discover] 待展开仓库 {len(fresh_repos)} 个，本轮按日轮转展开 {len(expand_repos)} 个："
-          f" {', '.join(expand_repos[:6])}{' …' if len(expand_repos) > 6 else ''}", flush=True)
+    fresh_repos = sorted(r for r in repos if r and r not in known_repos)
+    pick_list = select_repos(fresh_repos, args.max_repos)
+    index = {} if args.no_repo_cache else load_repo_index(args.repo_index)
+    how = f"全部展开 {len(pick_list)} 个" if not args.max_repos else f"按日轮转展开 {len(pick_list)} 个"
+    print(f"[discover] 待展开仓库 {len(fresh_repos)} 个，{how}（增量索引里已有 {len(index)} 个仓）", flush=True)
+    repo_cands, cached_rows, skip_rows, index, ex_stats = expand_repos(pick_list, index)
+    print(f"[discover] 仓库展开：树未变 {ex_stats['hit']}/{ex_stats['repos']} 仓，"
+          f"结论复用 {ex_stats['reused_files']} 个 / 需实探 {ex_stats['fresh_files']} 个 / "
+          f"失败退避 {ex_stats['skipped_fail']} 个，API {ex_stats['api']} 次", flush=True)
 
-    candidates = set(repo_urls)
-    with cf.ThreadPoolExecutor(8) as ex:
-        for files in ex.map(json_files_of, expand_repos):
-            for fn, br, p in files:
-                candidates.add(raw_url(fn, br, p))
+    candidates = {u for u in (set(repo_urls) | repo_cands) if u and u not in known}
+    # 已有结论的（复用＋退避中）都不占探测预算：前者重探只会得到同一个答案，
+    # 后者刚试过连不上，要等到 FAIL_RETRY_DAYS 再给一次机会
+    to_probe = {u for u in candidates if u not in cached_rows and u not in skip_rows}
+    print(f"[discover] 候选 {len(candidates)} 条，免探 {len(candidates) - len(to_probe)} 条"
+          f"（复用 {len(cached_rows)} / 退避 {len(skip_rows)}），实探 {len(to_probe)} 条 ...", flush=True)
 
-    candidates = {u for u in candidates if u and u not in known}
-    print(f"[discover] 候选 {len(candidates)} 条，开始 L0 探测 ...", flush=True)
-
-    probe_list = probe_window(candidates, args.probe_cap)
-    if len(probe_list) < len(candidates):
+    probe_list = probe_window(to_probe, args.probe_cap)
+    if len(probe_list) < len(to_probe):
         print(f"[discover]   超出探测上限，按日轮转只探其中 {len(probe_list)} 条"
-              f"（原 set 顺序＝每轮随机漏 {len(candidates) - len(probe_list)} 条）", flush=True)
+              f"（原 set 顺序＝每轮随机漏 {len(to_probe) - len(probe_list)} 条）", flush=True)
 
-    results, failed = [], []
-    with cf.ThreadPoolExecutor(16) as ex:
+    results, failed = [row for url, row in cached_rows.items() if url in candidates], []
+    with cf.ThreadPoolExecutor(args.workers) as ex:
         for r in ex.map(probe_candidate, probe_list):
             (results if r.get("reachable") else failed).append(r)
     unreach = unreachable_stats(failed)
     if unreach["count"]:
         top = " / ".join(f"{k} {v}" for k, v in list(unreach["by_error"].items())[:5])
         print(f"[discover] L0 探测失败 {unreach['count']} 条（构成：{top}）", flush=True)
+    # 成功与失败的结论都要回写：失败的那条记着时间戳，才是「退避期内不再重探」的依据
+    # （只写成功的话，35% 的即时失败会天天重新烧一遍探测预算，缓存等于白建）
+    fresh_rows = [r for r in results if r.get("url") not in cached_rows] + failed
+    back = merge_probe_rows(index, fresh_rows)
+    saved = save_repo_index(index, args.repo_index)
+    print(f"[discover] 增量索引：回写 {back} 条结论，{args.repo_index} 现存 {saved} 个仓", flush=True)
     results = rank_results(results)
     # reachable 记「探测可达」的真实条数，去重前——它是跨轮趋势指标（可达率），
     # 若跟着去重一起变小就成了莫名下降。被并掉的数量单列 content_dupes。
@@ -1037,8 +1213,14 @@ def main() -> int:
         "auth": "token" if TOKEN else "anonymous",
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
         "summary": {"candidates": len(candidates), "probed": len(probe_list),
+                    "cached_verdicts": len(cached_rows),
                     "reachable": reachable, "unreachable": unreach["count"],
-                    "repos_fresh": len(fresh_repos), "repos_expanded": len(expand_repos),
+                    "repos_fresh": len(fresh_repos), "repos_expanded": len(pick_list),
+                    "repos_tree_cached": ex_stats["hit"],
+                    "files_reused": ex_stats["reused_files"],
+                    "files_probed": ex_stats["fresh_files"],
+                    "files_fail_backoff": ex_stats["skipped_fail"],
+                    "gh_api": ex_stats["api"],
                     "pool_junk_dropped": junk, "pool": len(pool[: args.top]),
                     "content_dupes": len(content_dupes),
                     "tvbox_configs": len(good), "canary": len(canary),
@@ -1048,7 +1230,7 @@ def main() -> int:
         "content_dupes": content_dupes,
         # 归因用：本轮到底展开了哪些仓、探失败的条目是什么构成。缺了这两块，
         # 「池子换手」就只能靠复跑猜（详见 select_repos / unreachable_stats 的说明）
-        "expanded_repos": expand_repos,
+        "expanded_repos": pick_list,
         "unreachable": unreach,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
