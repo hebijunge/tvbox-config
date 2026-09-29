@@ -435,12 +435,19 @@ python scripts/fetch_merge.py
 无白名单、一律剥净。重排前后对照：探针有效性从 176/311（43% 的探针打在了已不在产物里的站）
 升到 172/181（5%）。
 
-**镜像测速口径**（`scripts/mirror_probe.py`）：固定池 28 个 + **公网发现增量**（GitHub API 搜
-`gh-proxy` 相关仓库读 README，以及 Bing 搜公开清单帖；本地 GitHub 直连被墙时该路静默跳过）。
-提取只认「前缀 + github/raw」的确证形态，裸域名不算。新面孔先过**内容一致性闸门**——必须把
+**镜像测速口径**（`scripts/mirror_probe.py`）：固定池 28 个 + **三路发现增量**，按证据强度排队——
+路 0 **上游实证**：本管线自己的账本（`exports/upstream_status.json` 的 `channel=mirror:<host>`
+与 `success_url`、`radar/discovered.json` 的 reachable 候选、canary 清单）里真把上游配置取回来过
+的前缀；路 1 GitHub API 搜 `gh-proxy` 相关仓库读 README；路 2 Bing 搜公开清单帖（本地 GitHub
+直连被墙时路 1 静默跳过）。
+提取只认「前缀 + github/raw」的确证形态（`h/https://raw...` 与 `h/raw.githubusercontent.com/...`
+两种写法都认，多级路径后嵌 github 链接的不算），裸域名不算。新面孔先过**内容一致性闸门**——必须把
 本项目那个 8MB jar 逐字节原样返回（sha256 相等），截断/HTML 冒充/改写内容一律拒入池；
-2026-09-29 首轮实跑：挖到 3 个，毙掉 2 个伪代理（Cloudflare worker 空壳），`api.gitproxy.dev`
-校验通过并以 2377KB/s 入池第 8 名。测速每站最多读 4MB、**总时限 12 秒**、**采 2 次取较差值**、
+2026-09-29 首轮实跑：公网挖到 3 个，毙掉 2 个伪代理（Cloudflare worker 空壳），`api.gitproxy.dev`
+校验通过以 2377KB/s 入池；上游实证 4 个新面孔里 3 个入池（`g.3344550.xyz` 2206KB/s、
+`gh-proxy.org` 1670、`ghproxy.net` 409），而账本里记着 `channel=mirror:` 成功过的
+`new.<IDN>.top` **没能原样返回目标 jar、被闸门拒**——「能取回内容但转发不忠实」正是这条路的风险，
+也说明闸门不是摆设。测速每站最多读 4MB、**总时限 12 秒**、**采 2 次取较差值**、
 **并发 3 路**，速度只算首包之后的传输段；低于 100KB/s 判慢移出池（全数被判慢时保留结果，防清空）。
 淘汰/伪代理记入 `state/mirror_dead.json` 冷却 30 天，近 3 天测过的不重复骚扰，发现结果缓存
 `state/mirror_discovered.json`（2 天）。为什么这么绕：单样本 6 路并发时轮间排名不可复现

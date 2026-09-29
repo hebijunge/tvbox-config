@@ -30,15 +30,41 @@ class TestExtract(unittest.TestCase):
     def test_only_prefix_form_counts(self):
         text = ("加速 https://gh.abcd.xyz/https://raw.githubusercontent.com/a/b/main/c.json "
                 "或 https://x.net/gh/https://github.com/a/b/releases/download/v1/f.jar "
+                "path 写法 https://gh-proxy.com/raw.githubusercontent.com/z/c/main/box "
                 "源站 https://raw.githubusercontent.com/a/b/main/c.json 不算 "
                 "短链 https://bit.ly/https://github.com/a/b 不算 "
                 "裸域名 gh.some.host 也不算")
         self.assertEqual(dict(mp.extract_prefix_hosts(text)),
-                         {"gh.abcd.xyz": 1, "x.net": 1})
+                         {"gh.abcd.xyz": 1, "x.net": 1, "gh-proxy.com": 1})
+
+    def test_multi_segment_path_is_not_a_prefix(self):
+        # 接口域名的参数里嵌了 github 地址，不是镜像前缀
+        text = "https://api.xx.com/provide/vod/at/json/https://github.com/a/b"
+        self.assertEqual(dict(mp.extract_prefix_hosts(text)), {})
 
     def test_host_of(self):
         self.assertEqual(mp._host_of("https://A.X.Com/something"), "a.x.com")
         self.assertEqual(mp._host_of(None), "")
+
+
+class TestUpstreamLedger(unittest.TestCase):
+    """路 0：管线自己拉成功过的前缀，取自上流账本。"""
+
+    def test_channel_mirror_weighted(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "upstream_status.json")
+            with open(p, "w", encoding="utf-8") as f:
+                json.dump({"interfaces": [
+                    {"channel": "mirror:gh.good.io",
+                     "success_url": "https://gh.good.io/https://raw.githubusercontent.com/a/b/m/c.json"},
+                    {"channel": "direct", "success_url": "https://some.site/api.php"},
+                ]}, f)
+            hosts = mp.upstream_proven_hosts([p])
+        self.assertEqual(hosts["gh.good.io"], 6)  # 前缀形态 1 + 成功通道加权 5
+        self.assertNotIn("some.site", hosts)
+
+    def test_missing_ledger_is_silent(self):
+        self.assertEqual(mp.upstream_proven_hosts(["不存在/的路径.json"]), {})
 
 
 class TestSelection(unittest.TestCase):
@@ -54,19 +80,31 @@ class TestSelection(unittest.TestCase):
         ]
         self.dead = {"cool.x": {"at": self.now},             # 冷却中
                      "ancient.x": {"at": self.now - 90 * 86400}}  # 冷却已过
-        self.hosts = collections.Counter({
-            "cool.x": 99, "recent.x": 5, "newface.x": 4, "ancient.x": 3,
-            "longago.x": 7, "brand.x": 2, "raw.githubusercontent.com": 88,
-            mp._host_of(mp.CANDIDATES[0]): 60})
+        self.proven = collections.Counter({"proven.x": 6, "recent.x": 5,
+                                           "raw.githubusercontent.com": 88})
+        self.web = collections.Counter({"cool.x": 99, "newface.x": 4, "ancient.x": 3,
+                                        "longago.x": 7, "brand.x": 2,
+                                        mp._host_of(mp.CANDIDATES[0]): 60})
 
-    def test_exclusions_and_rotation(self):
-        picked = [mp._host_of(p) for p, _n in
-                  mp.discover_hosts(self.fixed, self.rounds, self.dead, hosts=self.hosts)]
-        self.assertEqual(picked, ["longago.x", "ancient.x", "brand.x"])
+    def test_exclusions_rotation_and_origin(self):
+        picked = [(mp._host_of(p), o) for p, _n, o in
+                  mp.discover_hosts(self.fixed, self.rounds, self.dead,
+                                    proven=self.proven, web=self.web)]
+        # 实证路优先出队；固定池/今天测过/冷却中/源站本身都被跳过
+        self.assertEqual(picked, [("proven.x", "upstream"),
+                                  ("longago.x", "online"),
+                                  ("ancient.x", "online"),
+                                  ("brand.x", "online")])
+
+    def test_same_host_in_both_ledgers_probed_once(self):
+        both = collections.Counter({"dup.x": 3})
+        picked = mp.discover_hosts(self.fixed, [], {}, proven=both, web=both)
+        self.assertEqual([mp._host_of(p) for p, _n, _o in picked], ["dup.x"])
 
     def test_per_round_cap(self):
-        hosts = collections.Counter({"h%02d.x" % i: 100 - i for i in range(20)})
-        picked = mp.discover_hosts(self.fixed, [], {}, hosts=hosts)
+        web = collections.Counter({"h%02d.x" % i: 100 - i for i in range(20)})
+        picked = mp.discover_hosts(self.fixed, [], {}, proven=collections.Counter(),
+                                   web=web)
         self.assertEqual(len(picked), mp.NEW_PER_ROUND)
 
     def test_cache_avoids_network(self):
@@ -89,7 +127,7 @@ class TestContentGate(unittest.TestCase):
         mp.verify_prefix_content = lambda p: False
         mp.probe_small = lambda p: called.append(p) or (None, False)
         try:
-            r = mp.probe_one("https://stranger.x/", origin="discovered")
+            r = mp.probe_one("https://stranger.x/", origin="upstream")
         finally:
             mp.verify_prefix_content, mp.probe_small = orig_verify, orig_small
         self.assertTrue(r["content_bad"])

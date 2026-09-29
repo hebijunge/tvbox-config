@@ -112,14 +112,18 @@ CANDIDATES = [
 UA = {"User-Agent": "tvbox-config-mirror-probe"}
 
 # ---------------- 新镜像发现（固定池之外的增量来源） ----------------
-# 从公网挖新代理，两条路：
+# 三路挖新代理，按证据强度排序：
+#   0. 上游实证：本管线自己的账本（exports/upstream_status.json 的 channel=mirror:<host>
+#      与 success_url、radar/discovered.json 的 reachable 候选、canary 清单）里出现过且
+#      **真把上游配置取回来过**的前缀——最可信，优先排队。
 #   1. GitHub API 搜「gh-proxy / ghproxy」相关仓库，读它们的 README 与 homepage ——
 #      公共实例域名通常就写在项目首页；有 GITHUB_TOKEN 配额更高，本地无 token 也能匿名搜。
 #   2. Bing 搜「github 加速 镜像 域名 列表」等中文清单帖，抓搜索结果页正文再抽域名。
 #      与 discover_upstreams.discover_web 同一姿态：只访问搜索引擎已收录的公开页面，
 #      不登录、不碰验证页。
-# 提取只认「镜像前缀」这一确证形态（https://<host>/<可选路径>/https?://(raw.githubusercontent|github).com/...），
-# 裸域名一律不算，避免把博客站、图床、EPG 站误当镜像。
+# 提取只认「镜像前缀」这一确证形态（https://<host>/[单段路径/][https?://](raw.githubusercontent
+# |github|codeload.github).com/...，即 ghproxy 的两种写法），裸域名一律不算，多级路径后的
+# github 链接（如接口域名的 json 参数里嵌了 github 地址）也不算，避免把博客站、图床、EPG 站误当镜像。
 # 准入还有一道内容一致性闸门：新面孔必须把本项目一个 8MB jar 原样吐回来
 # （sha256 与工作区文件逐字节相等）才允许进池——镜像篡改/截断/HTML 冒充都拦得住。
 # 局限要写明白：这只证明它对「本仓路径」转发忠实；第三方上游内容是否被改，
@@ -146,9 +150,13 @@ PAGE_HOST_RE = re.compile(r"(csdn\.net|zhihu\.com|cnblogs\.com|jianshu\.com|"
                           r"weixin\.qq\.com|segmentfault\.com|36kr\.com|"
                           r"sspai\.com|v2ex\.com|githubusercontent\.com)")
 URL_RE = re.compile(r"https?://[^\s\"'<>()\[\],;]+")
+# 两种确证写法都要认：https://h/https://raw.githubusercontent.com/... 以及
+# https://h/raw.githubusercontent.com/...（gh-proxy 系的 path 形式，实测在
+# exports/upstream_status.json 里就有 https://gh-proxy.com/raw.githubusercontent.com/...）
 PREFIX_PAT = re.compile(
-    r"https?://([A-Za-z0-9][A-Za-z0-9._-]*\.[A-Za-z]{2,})/[^\s\"'<>\\)]{0,60}?https?://"
-    r"(?:raw\.githubusercontent\.com|github\.com)/")
+    r"https?://([A-Za-z0-9][A-Za-z0-9._-]*\.[A-Za-z]{2,})/"
+    r"(?:[^\s\"'<>\\)/]{0,60}/)?(?:https?://)?"
+    r"(?:raw\.githubusercontent\.com|github\.com|codeload\.github\.com)/")
 # 明显不是镜像的：被代理的源站本身与短链服务
 PREFIX_HOST_DENY = {"raw.githubusercontent.com", "bit.ly", "t.ly", "github.com",
                     "githubusercontent.com"}
@@ -284,6 +292,37 @@ def online_hosts(force=False):
     return hosts
 
 
+def _repo_path(rel):
+    return rel if os.path.isabs(rel) else os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))), rel)
+
+
+# 路 0：本管线自己拉成功过的前缀（证据最强，优先于网上推荐的）
+UPSTREAM_LEDGERS = ("exports/upstream_status.json", "radar/discovered.json",
+                    "state/extra_upstreams.json", "state/fetched_state.json")
+
+
+def upstream_proven_hosts(paths=UPSTREAM_LEDGERS):
+    """从上游账本里取「已被真实拉取验证过」的镜像前缀。
+
+    exports/upstream_status.json 记着每个上游的 channel（`mirror:<host>` 就是走了该前缀
+    拉成功）与 success_url；radar/discovered.json 记着候选的 reachable。这些前缀是把上游
+    配置真取回来过的，比帖子推荐的更可信，故加权排在公网发现之前（仍要过忠实性闸门复验）。"""
+    hosts = collections.Counter()
+    for rel in paths:
+        try:
+            with open(_repo_path(rel), encoding="utf-8", errors="ignore") as f:
+                text = f.read(8_000_000)
+        except OSError:
+            continue
+        hosts.update(extract_prefix_hosts(text))
+        for m in re.finditer(r'"channel":\s*"mirror:([^"]+)"', text):
+            h = m.group(1).strip().lower()
+            if h not in PREFIX_HOST_DENY:
+                hosts[h] += 5  # 成功通道是确证记录，加权
+    return hosts
+
+
 def _load_json(path, default):
     try:
         with open(path, encoding="utf-8") as f:
@@ -310,17 +349,23 @@ def _recent_tested(fixed_hosts, rounds, dead, now=None):
     return skip
 
 
-def discover_hosts(fixed_hosts, rounds, dead, hosts=None):
-    """返回本轮要新试的 [(https://host/ , 出现次数)]，按公网出现频次降序，最多 NEW_PER_ROUND 个。"""
-    hosts = hosts if hosts is not None else online_hosts()
+def discover_hosts(fixed_hosts, rounds, dead, proven=None, web=None):
+    """本轮要新试的镜像：[(prefix, 出现次数, origin)]，origin ∈ upstream|online。
+
+    上游实证路优先排队（管线自己拉成功过），其次公网发现；合计最多 NEW_PER_ROUND 个，
+    固定池成员、近 RECENT_TEST_DAYS 天测过的、冷却中的判死站一律跳过。"""
+    proven = proven if proven is not None else upstream_proven_hosts()
+    web = web if web is not None else online_hosts()
     skip = _recent_tested(fixed_hosts, rounds, dead)
     out = []
-    for h, n in hosts.most_common():
-        if h in skip or h in PREFIX_HOST_DENY:
-            continue
-        out.append((f"https://{h}/", n))
-        if len(out) >= NEW_PER_ROUND:
-            break
+    for origin, counter in (("upstream", proven), ("online", web)):
+        for h, n in counter.most_common():
+            if h in skip or h in PREFIX_HOST_DENY:
+                continue
+            skip.add(h)  # 同一条名单里两路都出现时不重复试
+            out.append((f"https://{h}/", n, origin))
+            if len(out) >= NEW_PER_ROUND:
+                return out
     return out
 
 
@@ -473,8 +518,8 @@ def probe_one(prefix, origin="fixed"):
     base = {"prefix": prefix, "origin": origin, "ttfb_ms": None, "KBps": 0,
             "bytes": 0, "alive": False, "fake": False, "content_bad": False,
             "truncated": False, "score_ok": False}
-    if origin == "discovered" and not verify_prefix_content(prefix):
-        base["content_bad"] = True  # 公网陌生前缀：内容不忠实直接出局，不测速不入池
+    if origin != "fixed" and not verify_prefix_content(prefix):
+        base["content_bad"] = True  # 陌生前缀（实证路/公网路）：内容不忠实直接出局
         return base
     ttfb, fake_small = probe_small(prefix)
     if fake_small:
@@ -527,11 +572,13 @@ def main():
     dead_mem = _load_json(DEAD_MEMORY, {})
     fixed_hosts = {_host_of(p) for p in CANDIDATES}
     new_hosts = discover_hosts(fixed_hosts, rounds_hist, dead_mem)
-    hits = {p: n for p, n in new_hosts}
+    hits = {p: n for p, n, _o in new_hosts}
     if new_hosts:
-        print(f"  [发现] 公网新面孔 {len(new_hosts)} 个（先验内容忠实性再测速）："
-              + " ".join(f"{_host_of(p)}×{n}" for p, n in new_hosts))
-    tasks = [(p, "fixed") for p in CANDIDATES] + [(p, "discovered") for p, _n in new_hosts]
+        by_origin = collections.Counter(o for _p, _n, o in new_hosts)
+        print("  [发现] 新面孔 %d 个（上游实证 %d / 公网 %d），先验内容忠实性再测速："
+              % (len(new_hosts), by_origin.get("upstream", 0), by_origin.get("online", 0))
+              + " ".join(f"{_host_of(p)}×{n}({o})" for p, n, o in new_hosts))
+    tasks = [(p, "fixed") for p in CANDIDATES] + [(p, o) for p, _n, o in new_hosts]
     with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
         results = list(ex.map(lambda t: probe_one(*t), tasks))
 
@@ -588,12 +635,13 @@ def main():
                      "capped": r["truncated"], "origin": r["origin"]}
                     for r in ordered],
         # 新面孔全量留档（含被淘汰的）：既给人看战果，也让下一轮跳过它们
-        "discovered": [{"prefix": r["prefix"].rstrip("/"), "hits": hits.get(r["prefix"], 0),
+        "discovered": [{"prefix": r["prefix"].rstrip("/"), "origin": r["origin"],
+                        "hits": hits.get(r["prefix"], 0),
                         "KBps": r["KBps"], "ttfb_ms": r["ttfb_ms"],
                         "alive": r["alive"], "fake": r["fake"],
                         "content_bad": r["content_bad"],
                         "in_pool": r["prefix"].rstrip("/") in pool_set}
-                       for r in results if r["origin"] == "discovered"],
+                       for r in results if r["origin"] != "fixed"],
     }
     print("== 镜像实测排名 ==")
     print(f"  吞吐口径：大文件 {TARGETS_BIG[0].rsplit('/', 1)[-1]}，"
@@ -601,7 +649,7 @@ def main():
           f"每站采 {PROBE_SAMPLES} 次取较差值，并发 {WORKERS} 路；<{MIN_KBPS}KB/s 判慢淘汰")
     for i, r in enumerate(ordered, 1):
         flag = "（按时限截断）" if r["truncated"] else ""
-        tag = " *新" if r["origin"] == "discovered" else ""
+        tag = "" if r["origin"] == "fixed" else " *%s" % r["origin"]
         print(f"  {i}. {r['prefix'].rstrip('/')}{flag}  ttfb={r['ttfb_ms']}ms  "
               f"{r['KBps']}KB/s（读 {r['bytes'] / 1048576:.1f}MB）{tag}")
     for r in slow:
@@ -614,10 +662,11 @@ def main():
         print(f"  x. {r['prefix'].rstrip('/')}  不可达")
     if summary["discovered"]:
         added = [d for d in summary["discovered"] if d["in_pool"]]
-        print(f"  [发现] 公网 {len(summary['discovered'])} 个新面孔，"
+        print(f"  [发现] 新面孔 {len(summary['discovered'])} 个，"
               f"通过忠实性+测速入池 {len(added)} 个"
               + ("：" + " ".join(f"{d['prefix'].split('//')[-1].rstrip('/')} "
-                                 f"{d['KBps']}KB/s" for d in added) if added else ""))
+                                 f"[{d['origin']}] {d['KBps']}KB/s" for d in added)
+                 if added else ""))
     # 判死记忆：本轮出局的新面孔记入冷却，DEAD_COOLDOWN_DAYS 内不再浪费测速额度
     rejected = ([r["prefix"] for r in bad_content] + [r["prefix"] for r in fake]
                 + [r["prefix"] for r in dead] + [r["prefix"] for r in slow])

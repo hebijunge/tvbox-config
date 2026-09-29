@@ -67,7 +67,7 @@ jobs:
       - name: 单元测试（config_decode / 吸收点 P1-P2 行为回归）
         run: python -m unittest discover -s tests -v
 
-      - name: 镜像复测+公网发现新镜像，动态重排 GH_MIRRORS（8MB 大文件双采样取较差值；失败回退默认顺序）
+      - name: 镜像复测+三路发现新镜像（上游实证 / GitHub 搜索 / 搜索引擎清单），动态重排 GH_MIRRORS
         # P1-1 网络错误自动重试 1 次（max_attempts=2）；语法错误已被上方单元测试挡住，此处只兜网络抖动
         continue-on-error: true
         uses: nick-fields/retry@v3
