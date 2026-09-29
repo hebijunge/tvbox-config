@@ -30,14 +30,14 @@
      "why": "http_403"
     },
     {
-     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
-     "ok": true,
-     "why": "ct:audio/x-mpegurl"
-    },
-    {
      "stream": "https://live.ottiptv.cc/douyu/8883122",
      "ok": true,
      "why": "ct:video/x-flv"
+    },
+    {
+     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
+     "ok": true,
+     "why": "ct:audio/x-mpegurl"
     },
     {
      "stream": "http://139.129.231.228:50060/rtp/239.21.1.162:5002",
@@ -49,27 +49,17 @@
    "status": "ok",
    "ffprobe": [
     {
+     "stream": "https://live.ottiptv.cc/douyu/8883122",
+     "ok": false,
+     "why": "probe_failed"
+    },
+    {
      "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
      "ok": true,
      "info": {
       "codecs": [
        "h264",
        "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1920,
-       "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://live.ottiptv.cc/douyu/8883122",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "aac",
-       "h264"
       ],
       "video": {
        "codec": "h264",
