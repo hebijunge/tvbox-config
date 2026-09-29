@@ -24,6 +24,11 @@ import os
 import sys
 from typing import List, Tuple
 
+# Windows runner 的 stdout 管道默认英文 locale（cp1252, strict），print 中文即
+# UnicodeEncodeError 崩掉本检查（2026-09-29 CI run#111 实证；旧版只写 stderr 才幸免）。
+if sys.stdout.encoding and sys.stdout.encoding.lower() not in ("utf-8", "utf8"):
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
 # 允许 scripts/ 直接运行（python scripts/windows_path_check.py）
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
