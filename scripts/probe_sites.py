@@ -90,7 +90,41 @@ SSL_CTX.check_hostname = False
 SSL_CTX.verify_mode = ssl.CERT_NONE
 
 
-def http_get(url, timeout, max_bytes=0, extra=None):
+def requestable(url):
+    """把 URL 归一成 urllib/curl 真发得出去的样子：非 ASCII 域名 punycode、非 ASCII 路径/query 百分号编码。
+
+    与 discover_upstreams._requestable 同口径——探针若不处理，含中文的活源（raw 路径/中文域名）会撞
+    UnicodeEncodeError 被记成"源不可达"，把活源写成死源（2026-09-30 实测：★看演唱会 类中文路径 raw 源）。
+    域名 punycode 优先复用 fetch_merge._idna_host（内置 idna 对部分中文域名会抛错），取不到退回内置。
+    """
+    try:
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return url
+    host = parts.hostname or ""
+    if host and not host.isascii():
+        try:
+            import fetch_merge as _fm
+            newhost = _fm._idna_host(host)
+        except Exception:  # noqa: BLE001  fetch_merge 缺失/坏域名——内置再试一次
+            try:
+                newhost = host.encode("idna").decode("ascii")
+            except (UnicodeError, ValueError):
+                return url
+        netloc = newhost if not parts.port else f"{newhost}:{parts.port}"
+        if parts.username or parts.password:
+            auth = parts.username or ""
+            if parts.password:
+                auth += f":{parts.password}"
+            netloc = f"{auth}@{netloc}"
+        parts = parts._replace(netloc=netloc)
+    out = parts.geturl()
+    if not out.isascii():
+        out = urllib.parse.quote(out, safe="%/:=&?~#+!$,;'@()*[]|")
+    return out
+
+
+def _http_get_raw(url, timeout, max_bytes=0, extra=None):
     """带 gzip 解压与宽松证书的 GET。返回 (status, body_bytes, ms, content_type)。"""
     req = urllib.request.Request(url, headers={**UA, **(extra or {})})
     t0 = time.time()
@@ -109,6 +143,11 @@ def http_get(url, timeout, max_bytes=0, extra=None):
                 pass
         ctype = (r.headers.get("Content-Type") or "").split(";")[0].strip().lower()
         return r.status, raw, int((time.time() - t0) * 1000), ctype
+
+
+def http_get(url, timeout, max_bytes=0, extra=None):
+    """统一出口：先归一 URL（中文域名 punycode / 中文路径百分号编码）再实发。"""
+    return _http_get_raw(requestable(url), timeout, max_bytes, extra)
 
 
 def load_json(raw):
@@ -151,6 +190,60 @@ def join_api(api, query):
     """把 ac/wd 等查询参数拼到 api 上（保留 api 已有查询串）。"""
     sep = "&" if "?" in api else "?"
     return f"{api}{sep}{query}"
+
+
+# ---- github raw「加代理」验活：镜像链轮询（所有者 2026-09-30 指令：口径=国内真实可达）----
+# 产物里 raw 源的 api 只钉死单个镜像前缀，该前缀国内挂掉时旧逻辑会把源误判 L0/L?，
+# 即便换链上别的镜像国内能通。失败信号是 env(链路不通)/empty(200 壳页) 时才换镜像重试；
+# http(明确错误码，如仓库 404) 不换——换镜像也是同样错误码，纯浪费探测预算。
+_GH_RAW_RE = re.compile(r"(https?://raw\.githubusercontent\.com/\S+)")
+_MIRROR_FALLBACK_DEFAULT = ("https://gh-proxy.com/", "https://ghproxy.net/",
+                            "https://gh.acmsz.top/", "https://ghfast.top/",
+                            "https://gh.halonice.com/", "https://gh-proxy.org/")
+_MIRROR_ROTATE_MAX = 4   # 除原前缀外最多再试几个镜像，控死慢源成本
+
+
+def _gh_inner(api):
+    """从 api 抽出裸 raw URL（无论是否已挂前缀）；非 github raw 返回 None。"""
+    if not api:
+        return None
+    m = _GH_RAW_RE.search(api)
+    return m.group(1) if m else None
+
+
+def _mirror_prefixes():
+    """镜像前缀候选链=state/mirror_ranking.json 当日实测序（单一事实源，与 fetch_merge 同源，
+    避免另写一份清单要两处同步改）；缺文件退回静态默认。统一补尾斜杠（裸 raw 自带 /，拼接一致）。"""
+    try:
+        with open(os.path.join("state", "mirror_ranking.json"), encoding="utf-8") as f:
+            d = json.load(f)
+        rounds = d.get("rounds") or []
+        if rounds:
+            pref = [((r.get("prefix") or "").rstrip("/")) + "/"
+                    for r in (rounds[-1].get("ranking") or []) if r.get("prefix")]
+            if pref:
+                return pref
+    except (OSError, ValueError, KeyError, TypeError):
+        pass
+    return list(_MIRROR_FALLBACK_DEFAULT)
+
+
+def _rotate_gh_mirrors(api, last_cls):
+    """raw api 的替代镜像候选 api 列表（排除 api 自身已用的前缀）。
+    仅在 last_cls∈(env,empty,unknown) 时值得轮询；http 明确错误码不换。非 raw 返回空。"""
+    if last_cls not in ("env", "empty", "unknown"):
+        return []
+    return gh_retry_candidates(api)
+
+
+def gh_retry_candidates(target):
+    """github 链接的替代镜像候选（不筛失败类型）——5b/5e 复用同一语义与链序，
+    镜像清单保持单一事实源（state/mirror_ranking.json）。"""
+    inner = _gh_inner(target)
+    if not inner:
+        return []
+    return [p + inner for p in _mirror_prefixes()
+            if p and not target.startswith(p)][: _MIRROR_ROTATE_MAX]
 
 
 def parse_xml(raw):
@@ -208,8 +301,8 @@ def parse_any(raw):
     return parse_xml(raw)
 
 
-def probe_l1(api, timeout=L1_TIMEOUT):
-    """L1：接口是否有真实片库。
+def _probe_l1_api(api, timeout=L1_TIMEOUT):
+    """L1：接口是否有真实片库（单个 api，不含镜像轮询）。
 
     失败分类很重要，用于避免误杀：
       cls=env    连接层失败（RST/超时/DNS），本机网络问题，**不能判定站点不可用**
@@ -244,12 +337,29 @@ def probe_l1(api, timeout=L1_TIMEOUT):
             return {"ok": True, "ms": ms, "count": len(lst), "total": total,
                     "format": "json" if isinstance(doc, dict) else "xml",
                     "sample": (lst[0].get("vod_name") if isinstance(lst[0], dict) else None),
-                    "classes": classes,
+                    "classes": classes, "resolved_api": api,
                     # 片名集合：供镜像站去重算数据指纹（同库换域名的站，这批名字会高度重合）
                     "names": [str(x.get("vod_name")) for x in lst[:20]
                               if isinstance(x, dict) and x.get("vod_name")]}
         last = {"ok": False, "cls": "empty", "reason": f"无有效 list；响应前 80 字节: {raw[:80]!r}", "url": url}
     return last
+
+
+def probe_l1(api, timeout=L1_TIMEOUT):
+    """L1 验活 +「raw 加代理」镜像轮询：先按 api 原样（其已挂前缀）试，
+    若为 github raw 且失败信号是可换镜像的类型(env/empty)，依次换链上其它镜像前缀，
+    任一镜像解析出真片库即算活（vod_id 判活，规避 200 返中文壳页的假活）。"""
+    res = _probe_l1_api(api, timeout)
+    if res.get("ok"):
+        return res
+    for cand in _rotate_gh_mirrors(api, res.get("cls")):
+        got = _probe_l1_api(cand, timeout)
+        if got.get("ok"):
+            got["via_mirror"] = cand[:70]
+            return got
+        if got.get("cls") in ("http", "empty"):   # 有更明确的失败证据就更新结论
+            res = got
+    return res
 
 
 def probe_l2(api, keywords, timeout=L2_TIMEOUT):
@@ -374,6 +484,12 @@ def probe_http_site(site, keywords, deep=True, prev_l1_ms=None):
             r["level"] = "L?" if l1.get("cls") == "env" else "L0"
             return r
         r["level"] = "L1"
+        # L1 经轮询换到了可达镜像 → 回填 api，L2/L3 与产物都走这条国内可达链路
+        _res = l1.pop("resolved_api", None)
+        if _res and _res != api:
+            api = _res
+            r["api"] = _res
+            r["via_mirror"] = l1.get("via_mirror") or _res[:70]
         if not deep:
             return r
         l2 = probe_l2(api, keywords, l2_timeout)

@@ -118,41 +118,18 @@ jobs:
             fi
             exit $rc
 
-      - name: 接口实测 HTTP（L1-L3 连通性）—— 网络抖动自动重试 1 次（P1-1）
-        # 2026-09-29 流程重排：探针后置于拉取合并——测的是**今天刚生成的 tvbox.json**，
-        # 当天拉当天测；新源不再等明天的轮次。老源结论走 24h 缓存 + V7 分档轮转控时。
-        continue-on-error: true
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 25
-          max_attempts: 2
-          command: python scripts/probe_sites.py --only http --concurrency 24
+      - name: 探针判定来自国内（所有者 2026-09-30 拍板：口径=国内经镜像真实可达）
+        # CI runner 在国外：国外直连 raw 全通、国内被掐的站判不出、国内 CDN 对外国 IP 的
+        # 拒绝/高延迟会误杀——"可用性"结论必须由国内出口生产（本机 run_all --from 5 跑
+        # 5a/5b/5c/5e 后提交 probe/*.json），与 csp_probe（真机生产、CI 只消费）同模式。
+        # CI 这里不再重跑 4 路探针；store --ingest-probes 吃仓内已提交的国内判定，
+        # 超 7 天由 PROBE_STALE_DAYS 时效降权自动兜底（诚实降级，不拿国外乐观数据冒充）。
+        run: echo "domestic probes only — CI skips region-sensitive verdicts"
 
-      - name: 接口实测（spider/js/去重）—— 为去重与排序提供实测数据
+      - name: 同库镜像去重（内容比对，与出口环境无关，保留在 CI）
         continue-on-error: true
         run: |
-          python scripts/probe_spiders.py --concurrency 24 || true
-          python scripts/probe_js.py --concurrency 20 || true
           python scripts/dedup_mirrors.py || true
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
-        # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
-        # 2026-09-30：drpy-sandbox 已随仓提交（9-27 重建时被 ignore 误逐，CI 一直跳过
-        # 5e、判定靠 7 天时效降权撑旧数据）；缺目录分支保留作保险丝。
-        # node_modules 不入库，靠下面的 npm i 现装。
-        continue-on-error: true
-        run: |
-          if [ ! -d drpy-sandbox ]; then
-            echo "::warning::drpy-sandbox 不在仓库中，跳过 drpy 五关实测（探针产物按 7 天时效降权）"
-            exit 0
-          fi
-          cd drpy-sandbox && npm i --no-audit --no-fund
-          cd ..
-          python scripts/drpy_probe.py --workers 5 || true
 
       - name: 依赖审计（只报告，不删除）
         continue-on-error: true

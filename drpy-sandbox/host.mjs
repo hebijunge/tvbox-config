@@ -70,6 +70,39 @@ function decodeBody(buf, charset) {
 }
 
 globalThis.req = function req(url, obj) {
+  const r = _req_impl(url, obj || {});
+  // github raw「加代理」：传输失败时换镜像链重试——判活口径=国内经任一镜像可达，
+  // 前缀序与 probe_sites 同源（state/mirror_ranking.json 当日实测）。
+  if (r.__err && /raw\.githubusercontent\.com/.test(url)) {
+    for (const cand of ghMirrorCandidates(url)) {
+      const r2 = _req_impl(cand, obj || {});
+      if (!r2.__err) return r2;
+    }
+  }
+  return r;
+};
+
+function ghMirrorCandidates(url) {
+  const m = /(https?:\/\/raw\.githubusercontent\.com\/\S+)/.exec(url || '');
+  if (!m) return [];
+  const inner = m[1];
+  let prefixes = [];
+  try {
+    const d = JSON.parse(fs.readFileSync(path.join(HERE, '..', 'state', 'mirror_ranking.json'), 'utf8'));
+    const rounds = d.rounds || [];
+    if (rounds.length) {
+      prefixes = (rounds[rounds.length - 1].ranking || [])
+        .map((r) => r.prefix).filter(Boolean)
+        .map((p) => p.replace(/\/+$/, '') + '/');
+    }
+  } catch { /* 缺文件退回静态默认 */ }
+  if (!prefixes.length) {
+    prefixes = ['https://gh-proxy.com/', 'https://ghproxy.net/', 'https://gh.acmsz.top/', 'https://ghfast.top/'];
+  }
+  return prefixes.filter((p) => !url.startsWith(p)).map((p) => p + inner).slice(0, 4);
+}
+
+function _req_impl(url, obj) {
   obj = obj || {};
   REQ_COUNT++;
   const timeoutMs = Number(obj.timeout) > 0 ? Number(obj.timeout) : 15000;
