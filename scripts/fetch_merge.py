@@ -95,7 +95,7 @@ MAX_BODY = 4096             # 验活最多读取字节数
 GH_MIRRORS = [m.strip() for m in os.environ.get(
     "GH_MIRRORS",
     "https://gh.acmsz.top/,https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
-    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://ghfast.top/,https://gh.llkk.cc/,"
+    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://gh.llkk.cc/,"
     "https://raw.ihtw.moe/,https://ghp.ci/"
 ).split(",") if m.strip()]
 GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.acmsz.top/"
@@ -4126,67 +4126,28 @@ def csp_searchable_filter(sites: list, repo_dir: str) -> tuple:
     return kept, dropped, stats
 
 
-# 环⑤ P2：主产物健康标注保留字段。_strip_internal_fields 默认剥光所有 _ 前缀字段，
-# 这三个从 DB 读出的健康结论对订阅用户是增值信息（TVBox 客户端忽略未知字段），单独白名单保留。
-_HEALTH_KEEP = {"_health", "_checked_at", "_latency_ms"}
+# 2026-09-29 决策：主产物不带健康标注。实测 _health/_checked_at/_latency_ms 三字段
+# 让 index.html 订阅入口发的 tvbox.json 从 1.29MB 涨到 1.67MB（+29%），而 TVBox 只忽略
+# 未知字段、不消费它。健康结论留在 exports/all.json（export_healthy 从 DB 现取，
+# 与产物剥离无关）和 state/tvbox.db 里，需要的人看那里。
 
 
 def _strip_internal_fields(doc):
-    """P0-3 辅助字段剥离：递归删除以 _ 开头的内部字段（_origin/_probe_* 等实测标记）。
+    """P0-3 辅助字段剥离：递归删除以 _ 开头的内部字段（_origin/_health/_probe_* 等）。
     TVBox 客户端虽自动忽略未知字段，剥离可减小体积并避免泄漏内部状态。
-    例外：_HEALTH_KEEP 白名单字段（环⑤ P2 主配置健康标注）保留。
     注意：必须在排序完成后、序列化前调用（adult 排序依赖 _origin）。"""
     if isinstance(doc, dict):
         return {k: _strip_internal_fields(v) for k, v in doc.items()
-                if not (isinstance(k, str) and k.startswith("_") and k not in _HEALTH_KEEP)}
+                if not (isinstance(k, str) and k.startswith("_"))}
     if isinstance(doc, list):
         return [_strip_internal_fields(v) for v in doc]
     return doc
 
 
-def attach_site_health(tvbox: dict, repo_dir: str) -> int:
-    """环⑤ P2：给主产物 sites 打健康标注（_health/_checked_at/_latency_ms）。
-
-    现状痛点（五环评估报告环⑤）：主配置 3724 站 0 个带 _health，可用性信息只活在
-    exports/ 分层里，主配置读者拿不到「哪些真能用」。TVBox 忽略未知字段，标注安全。
-    数据源 state/tvbox.db interfaces 表（P1 判级修正后的权威结论）。
-    DB 不可读/无记录时降级为 unknown，绝不阻断构建。"""
-    import sqlite3
-    db = os.path.join(repo_dir, "state", "tvbox.db")
-    sites = tvbox.get("sites") or []
-    dist: dict = {}
-    if not os.path.isfile(db):
-        for s in sites:
-            if isinstance(s, dict):
-                s["_health"] = "unknown"
-        return 0
-    try:
-        conn = sqlite3.connect(db)
-        conn.row_factory = sqlite3.Row
-        hm = {r["key"]: r for r in conn.execute(
-            "SELECT key, health, latency_ms, last_check_at FROM interfaces")}
-        conn.close()
-    except Exception as e:  # noqa: BLE001
-        print(f"    [P2] DB 健康读取失败（全部标 unknown，不阻断）：{e}", flush=True)
-        for s in sites:
-            if isinstance(s, dict):
-                s["_health"] = "unknown"
-        return 0
-    hit = 0
-    for s in sites:
-        if not isinstance(s, dict):
-            continue
-        r = hm.get(s.get("key"))
-        h = (r["health"] if r is not None else None) or "unknown"
-        s["_health"] = h
-        s["_checked_at"] = r["last_check_at"] if r is not None else None
-        s["_latency_ms"] = r["latency_ms"] if r is not None else None
-        if r is not None:
-            hit += 1
-        dist[h] = dist.get(h, 0) + 1
-    print(f"    [P2] 主配置 {len(sites)} 站健康标注（DB 命中 {hit}，"
-          f"分布 {dict(sorted(dist.items()))}）", flush=True)
-    return hit
+# 注（2026-09-29 流程重排）：曾在此处放"新源当天补测"过渡函数；探针已整体后置到
+# 拉取合并之后（daily.yml），当天拉当天测由流程顺序保证。
+# 同批删除的还有 attach_site_health（主产物 _health 标注）：它让 tvbox.json 体积 +29%
+# 而客户端不消费该字段，健康结论走 exports/all.json + DB。
 
 
 def build_stores(vod: dict, overrides: dict, repo_dir: str) -> dict:
@@ -5343,12 +5304,6 @@ def main() -> int:
         if _vod_drops:
             local_ref_audit["tvbox.json(仅记录)"] = _vod_drops
             print(f"    [local-ref] 审计发现 {len(_vod_drops)} 个死引用站点（MAIN_DROP_DEAD_REFS=0 仅记录不剔除）", flush=True)
-    # 环⑤ P2：主配置带健康标注（从 DB 读 P1 修正后的权威结论，TVBox 忽略 _ 字段）。
-    # 放在 P0-3 剥离前打标，白名单保留 _health/_checked_at/_latency_ms，其余 _ 字段照剥。
-    try:
-        attach_site_health(tvbox, os.getcwd())
-    except Exception as _h:  # noqa: BLE001
-        print(f"    [P2] 健康标注异常（不阻断，sites 无 _health）：{_h}", flush=True)
     # P0-3：写主产物前剥离内部字段（_origin/_health/_latency_ms/_probe_* 等）。
     # 注意：此处 tvbox 仍保留 _origin 供后续 vod 派生/adult 排序使用；写文件用剥离副本。
     tvbox_out = _strip_internal_fields(tvbox)

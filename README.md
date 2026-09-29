@@ -134,7 +134,7 @@ python scripts/fetch_merge.py
 | `lives/live_cctv.txt` 等 | 央视 / 卫视 / 港台 / 其他 分类直播（测速优选后输出） |
 | `snapshot/<日期>/` | 每日快照存档：每份上游原始文件原样留存（保留最近 14 天） |
 | `state/` | 上游健康状态 + 黑白名单（auto/manual 三层）+ 域名映射表 |
-| `radar/discovered.json` | 全网自动发现的候选上游（六路，含评分与证据） |
+| `radar/discovered.json` | 全网自动发现的候选上游（默认五路，含评分与证据） |
 | `radar/candidate_eval.json` | 候选独有度评估（unique = 相对现有库的新增站点数） |
 | `probe/*.json` | 四路实测产物（sites/spider/js/csp/drpy），CI 只读复用 |
 | `drpy-sandbox/` | drpy Node 沙箱（宿主 + 引擎），CI 每日实测本地 JS 源 |
@@ -405,7 +405,7 @@ python scripts/fetch_merge.py
 
 **同库镜像去重**（`scripts/dedup_mirrors.py`）：一级按 key、二级按 api+ext 指纹都抓不到「同一片库换域名」（如 `zuidapi.com` 与 `zuidazy.co`、`sdzyapi.com` 与 `xsd.sdzyapi.com`）。该脚本用 L1 抓到的片名集合算 Jaccard 相似度识别同源，证据不足一律不合并。实测 1222 个站点里剔除 61 个重复。
 
-**全网上游发现**（`scripts/discover_upstreams.py`）：**六路**发现 → L0 形态探测（以「能否解析出站点数组」为准，兼容裸数组/嵌套）→ 候选池落 `radar/discovered.json`：
+**全网上游发现**（`scripts/discover_upstreams.py`）：**默认五路**发现（第 5 路 Gitee 已关，`--gitee` 才开） → L0 形态探测（以「能否解析出站点数组」为准，兼容裸数组/嵌套）→ 候选池落 `radar/discovered.json`：
 
 | 路 | 渠道 | 说明 |
 |---|---|---|
@@ -413,7 +413,7 @@ python scripts/fetch_merge.py
 | 2 | GitHub 仓库搜索 | topic / 关键词 |
 | 3 | 种子 README 递归 | 能捞到**非 GitHub 公开配置站**（szyyds.cn 等），依赖镜像兜底 |
 | 4 | 血统反查 | 从已收录仓 owner 反查同作者其他仓（产出最高） |
-| 5 | Gitee | 平台搜索 API 已被禁（返回空）、网页被 WAF 405 → 曲线方案：GitHub 搜「引用 gitee.com 的配置」挖仓库全名，再用 Gitee 文件树 API 展开（需 `GITEE_TOKEN`） |
+| 5 | Gitee | **2026-09-29 起默认关闭**（`--gitee` 显式开启）。平台搜索 API 被禁（返回空）、网页被 WAF 405 → 只能曲线：GitHub 搜「引用 gitee.com 的配置」挖仓库全名，再用 Gitee 文件树 API 展开（需 `GITHUB_TOKEN`/`GITEE_TOKEN`）。实测一整轮 16 条候选里仅 4 条是配置、净新增 20 站（0.54%），其中两个候选还是同仓孪生文件，性价比不抵耗时 |
 | 6 | 搜索引擎 + 文章页 | Bing 搜 CSDN/博客园/知乎/**微信公众号公开文章**，从正文提取接口。微信不硬爬：只访问搜索引擎已收录的公开文章页（合规） |
 
 **收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。
@@ -480,7 +480,11 @@ python scripts/fetch_merge.py
 **探针权威性**：五关实测（csp/drpy）> HTTP L级 > js S级 > 连通性——浅探针的结论不能覆盖深探针，否则会出现「五关全通被判 dead」。
 
 观测配套：`health_report.py`（与快照对比，报新增/掉线/恢复/移除，产物 `exports/health_report.json`）、`dep_audit.py`（deps/ 重复与未引用分析，**只报告不删**）。
-**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 探针 → drpy 沙箱 → 六路发现 → 评估收编 → 合并 → 入库/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
+**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 五路发现 → 评估收编 → 合并 → 探针实测 → 依赖闸门 → 入库/复标/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
+探针后置到合并之后（2026-09-29 重排）是为了「当天拉当天测」：探针吃当日产物，当日结论入库后经
+`export_healthy.py` 进 `exports/`（`all.json` 带 `_health`）。**主产物不带健康标注**——实测
+`_health/_checked_at/_latency_ms` 让订阅入口的 `tvbox.json` 从 1.29MB 涨到 1.67MB（+29%），
+而 TVBox 只是忽略未知字段、并不消费它，所以 `_strip_internal_fields` 无白名单、一律剥净。
 
 ## 本地运行
 

@@ -81,7 +81,9 @@ CACHE_MAX_LATENCY_MS = int(os.environ.get("PROBE_CACHE_MAX_MS", "2000"))
 HEALTHY_LEVELS = ("L1", "L2", "L3")
 
 # 热词：优先选长期在架、覆盖面广的剧名，命中率比随机词高
-KEYWORDS = ["庆余年", "流浪地球", "甄嬛传"]
+# L2 搜索热词：前三部热剧验"有正经内容"；末位单字"大"作兜底——片库大但没有这几部
+# 热剧的站不该被误杀（所有者 2026-09-29 指令），任何正经影视库对"大"都有命中。
+KEYWORDS = ["庆余年", "流浪地球", "甄嬛传", "大"]
 
 SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
