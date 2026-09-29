@@ -52,7 +52,8 @@ GROUP_ORDER = ["采集站", "直连点播", "蜘蛛源", "本地JS", "网盘", "
 UNKNOWN_LATENCY = 99999
 # 实测产物的时效上限（天）：csp 真机靠手工产出、无法在 CI 跑，超过这个天数就不再作为
 # 排序依据——否则等于拿很久以前的结论给今天的源排位（源站天天在变）。
-# drpy 沙箱已接入 CI 每日更新，一般不受影响。
+# drpy 沙箱同属手工产物（host.mjs 未随仓提交，CI 该步骤自动跳过），受同款降权；
+# 入库侧 store.py --ingest-probes 有同口径时效闸门，双向兜住。
 STALE_DAYS = int(os.environ.get("PROBE_STALE_DAYS", "7"))
 
 # ==================== 加权综合分排序（P1，docs/ranking-scoring.md） ====================
