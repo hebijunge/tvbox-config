@@ -141,9 +141,9 @@ jobs:
 
       - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
         # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
-        # 注意（2026-09-29 取证）：drpy-sandbox/ 在 .gitignore 内且 host.mjs 未随仓
-        # 提交，CI 检出树里没有该目录——此步实际是跳过而非每日更新；drpy_probe.json
-        # 属手工产物，受 store/rank_sites 的 PROBE_STALE_DAYS=7 时效降权约束。
+        # 2026-09-30：drpy-sandbox 已随仓提交（9-27 重建时被 ignore 误逐，CI 一直跳过
+        # 5e、判定靠 7 天时效降权撑旧数据）；缺目录分支保留作保险丝。
+        # node_modules 不入库，靠下面的 npm i 现装。
         continue-on-error: true
         run: |
           if [ ! -d drpy-sandbox ]; then

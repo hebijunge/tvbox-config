@@ -142,6 +142,15 @@ def main():
     workers = int(argv[argv.index("--workers") + 1]) if "--workers" in argv else 5
     out = argv[argv.index("--out") + 1] if "--out" in argv else OUT
 
+    # fail-fast：沙箱或 node 缺失时不 spawn、不覆写既有产物（否则会拿 MODULE_NOT_FOUND
+    # 把真实的 drpy 实测结果全刷成 D0）。本地沙箱未重建属正常态，保留上一版产物。
+    if not os.path.exists(HOST):
+        print(f"[!] 沙箱缺失 {HOST}，跳过 drpy 实测，保留现有产物 {out}（不覆写）", flush=True)
+        return 0
+    if not (NODE and os.path.exists(NODE)):
+        print(f"[!] node 不可用（NODE={NODE}），跳过 drpy 实测，不覆写产物", flush=True)
+        return 0
+
     jobs = collect_jobs()
     if limit:
         jobs = jobs[:limit]
@@ -203,4 +212,9 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Windows 直跑时 stdout 默认 GBK，站点名带 emoji 会在打印处 UnicodeEncodeError 崩掉整轮
+    # （run_all/CI 子进程有 PYTHONIOENCODING=utf-8，只有单脚本直跑踩这个坑）
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    sys.exit(main())

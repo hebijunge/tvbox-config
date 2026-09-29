@@ -234,4 +234,9 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+    # Windows 直跑时 stdout 默认 GBK，站点名带 emoji 会在打印处 UnicodeEncodeError 崩掉整轮
+    # （run_all/CI 子进程有 PYTHONIOENCODING=utf-8，只有单脚本直跑踩这个坑）
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
     sys.exit(main())
