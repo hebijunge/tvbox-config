@@ -86,8 +86,9 @@ def extract_target(site, repo_dir):
     return None, "无 ext 地址"
 
 
-def probe(target, timeout):
-    """连通性探测：任何 HTTP 响应都算可达（403/404 也说明服务器在）。"""
+def _probe_once(target, timeout):
+    import probe_sites as _ps
+    target = _ps.requestable(target)   # 中文域名/路径归一，否则活源撞 UnicodeEncodeError 被误杀
     req = urllib.request.Request(target, headers=UA)
     t0 = time.time()
     try:
@@ -98,6 +99,22 @@ def probe(target, timeout):
         return {"ok": True, "http": e.code, "ms": int((time.time() - t0) * 1000)}
     except Exception as e:  # noqa: BLE001  探测边界：任何异常都算不可达
         return {"ok": False, "error": type(e).__name__, "ms": int((time.time() - t0) * 1000)}
+
+
+def probe(target, timeout):
+    """连通性探测：任何 HTTP 响应都算可达（403/404 也说明服务器在）。
+    github raw 链路不通时换镜像链重试——判活口径=国内经任一代理真实可达
+    （镜像清单与 probe_sites 同源：state/mirror_ranking.json）。"""
+    res = _probe_once(target, timeout)
+    if res["ok"]:
+        return res
+    import probe_sites as _ps
+    for cand in _ps.gh_retry_candidates(target):
+        r2 = _probe_once(cand, timeout)
+        if r2["ok"]:
+            r2["via_mirror"] = cand[:70]
+            return r2
+    return res
 
 
 def main() -> int:
