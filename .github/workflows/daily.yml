@@ -246,8 +246,16 @@ jobs:
             # 2026-09-26 长跑 job 与并行 prune 工作流高频提交 lives/ 同批文件，
             # rebase 冲突导致发布连续失败（run 36246598641：could not apply ec6bb69）。
             # 产物发布语义 = 本 job 重算结果为准，冲突取本侧（-X theirs 指正在重放的 daily 提交）。
+            # 2026-09-29 补刀（run#111）：-X theirs 对二进制（state/tvbox.db）无效，rebase 仍停。
+            # 兜底：rebase 失败则放弃重放，改为"最新 main + 本轮产物整树覆盖"（read-tree 含删除，语义完整）。
             git checkout -- . && git clean -fd
-            git pull --rebase -X theirs origin main
+            OURS=$(git rev-parse HEAD)
+            if ! git pull --rebase -X theirs origin main; then
+              git rebase --abort || true
+              git reset --hard origin/main
+              git read-tree -mu "$OURS"
+              git commit -m "chore: daily update $(date -u +%Y-%m-%d) (binary-conflict fallback)"
+            fi
             git push
             # P1-4 版本 tag：每日打 vYYYY-MM-DD-b<run_number>，latest 仍作稳定入口每日覆盖。
             # run_number 作 build 序号，全局递增唯一；回滚据此 tag（见 rollback.yml）。旧 tag 由 release_cleanup 30 天滚动清理。
