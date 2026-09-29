@@ -384,6 +384,24 @@ python scripts/fetch_merge.py
 
 关掉：`ORIGIN_SPIDER=0`。
 
+**依赖整仓兜底两路**（2026-09-29）：主路是「每文件 × 镜像轮换」，`raw` 被掐时同仓几十个文件会成片失败。
+落回顺序是 主路 → manifest 缓存 → **路 A 稀疏浅克隆** → **路 B codeload tarball**：
+
+- 路 A：`git clone --filter=blob:none --depth 1 --no-checkout` + `sparse-checkout set` + `checkout`，
+  一仓一次**只取需要的那些 blob**，走 SSH（`DEPS_GIT_TRANSPORT=ssh`，不经第三方）。
+  本机实测 `13998394872/TVBox`（248MB、269 个路径缺失）克隆 4.6s / 本地仅 98KB，
+  全量取回 10.8s 落地 256 个文件 9.5MB；接进管线后整轮兜底 **33.5s 补回 263 个依赖**，
+  manifest 里 github 依赖的本地缺失从 278 降到 15。
+- 路 B：`codeload.github.com/<o>/<r>/tar.gz/refs/heads/<ref>` 整仓包（实测本机可直连），
+  只抽白名单路径。CI 上没有用户的 SSH key，这路顶上。
+  三条护栏：仓库体积 ≤30MB（`DEPS_TARBALL_MAX_REPO_KB`，上面那个 248MB 的仓就是被它挡掉的）、
+  同仓至少 3 个文件才划算、整仓下载 ≤60MB / 60s / 整轮 300s 预算。
+- 关闭：`DEPS_GIT_BACKFILL=0` / `DEPS_TARBALL_BACKFILL=0`。
+- **安全**：两条路都拿「仓库内路径」去拼文件系统路径读字节，而上游 URL 是攻击者可控输入。
+  `_safe_rel_path` 在解析阶段就拒空段、绝对路径、NUL、以及**百分号解码后含 `..`** 的路径
+  （`%2e%2e` 也算），克隆侧与 tar 侧再各查一遍；写盘侧另有 `pathutil.safe_segment` 把 `..` 变 `_`。
+  不做这层，一条 `.../main/../../../../etc/passwd` 就能把本地任意文件读进内容再发布出去。
+
 **csp 爬虫源真机实测**：`type 3` 的 `csp_*` 源（约 700 个）必须在 Android 运行时里跑，纯 HTTP 测不了。
 做法是自建最小宿主 APK（`DexClassLoader` 加载爬虫 jar + 宿主实现 `crawler.Spider` 基类），
 在 root 真机上实跑 **首页 / 分类 / 搜索 / 详情 / 播放** 五关，评级：

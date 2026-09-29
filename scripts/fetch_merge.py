@@ -1852,6 +1852,303 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
+# ---- codeload 整仓 tarball 兜底（2026-09-29）----
+# 依赖收集是「每文件 × 镜像轮换」，同一个仓的几十个文件就是几十次握手；raw 被掐时成片
+# 失败（本地 deps 收集 878/2811 的根因之一）。实测 codeload.github.com 的整仓 tar.gz
+# 可直连（200 / 0.58s），于是一仓一次取回源码树，只抽需要的那几个文件。
+# 三条护栏：整仓体积上限（防 tar 拉爆内存/磁盘）、需要文件数阈值（少于阈值不划算）、
+# 整轮时间预算（防兜底路反过来把合并拖长）。
+DEPS_TARBALL_BACKFILL = os.environ.get("DEPS_TARBALL_BACKFILL", "1") == "1"
+DEPS_TARBALL_MIN_FILES = int(os.environ.get("DEPS_TARBALL_MIN_FILES", "3"))
+DEPS_TARBALL_MAX_REPO_KB = int(os.environ.get("DEPS_TARBALL_MAX_REPO_KB", "30000"))
+DEPS_TARBALL_MAX_BYTES = int(os.environ.get("DEPS_TARBALL_MAX_BYTES", "60000000"))
+DEPS_TARBALL_TIMEOUT = int(os.environ.get("DEPS_TARBALL_TIMEOUT", "60"))
+DEPS_TARBALL_REPOS_PER_ROUND = int(os.environ.get("DEPS_TARBALL_REPOS_PER_ROUND", "40"))
+DEPS_TARBALL_BUDGET_SEC = float(os.environ.get("DEPS_TARBALL_BUDGET_SEC", "300"))
+
+
+def _safe_rel_path(path: str) -> bool:
+    """仓库内相对路径白名单：空、绝对、含 `..` 或 NUL 的一律拒。
+
+    上游配置里的 URL 是攻击者可控输入，而两条兜底路都要拿「仓库内路径」去拼文件系统
+    路径读字节（稀疏克隆是 os.path.join(workdir, *path.split('/'))）。写盘侧
+    dep_local_path 有 safe_segment 把 `..` 变 `_` 兜底，但**读取侧没有**——不在这
+    里挡住，一条 `.../main/../../../../etc/passwd` 就能把本地任意文件读进内容再发布出去。
+    """
+    if not path or path.startswith(("/", "\\")) or "\x00" in path:
+        return False
+    segs = path.replace("\\", "/").split("/")
+    if any(seg in ("", "..") for seg in segs):
+        return False
+    # 再按解码后的形态查一遍（%2e%2e 之类）：正常的依赖路径不需要百分号编码的点，
+    # 出现就是有人在试探路径解析的边界，一律不收。
+    dec = urllib.parse.unquote(path).replace("\\", "/").split("/")
+    return not any(seg in ("", "..") for seg in dec)
+
+
+def gh_repo_ref_of(url: str):
+    """github/raw 链接 → (owner, repo, ref, 仓库内路径)；不可 tar 的形式返回 None。
+
+    认三种写法：raw.githubusercontent.com/o/r/<ref>/<path>、github.com/o/r/raw/<ref>/<path>、
+    github.com/o/r/blob/<ref>/<path>。release/download 的资产不在源码树里，一律不认；
+    镜像前缀先剥掉再判。路径不过 _safe_rel_path 的也直接拒。"""
+    inner, _had = _split_gh_prefix(url)
+    u = urllib.parse.urlparse(inner)
+    host = (u.netloc or "").lower()
+    segs = [s for s in u.path.split("/") if s]
+    if host == "raw.githubusercontent.com":
+        if len(segs) < 4:
+            return None
+        owner, repo, ref, path = segs[0], segs[1], segs[2], "/".join(segs[3:])
+    elif host in ("github.com", "www.github.com"):
+        if len(segs) >= 5 and segs[2] in ("raw", "blob"):
+            owner, repo, ref, path = segs[0], segs[1], segs[3], "/".join(segs[4:])
+        else:
+            return None
+    else:
+        return None
+    if not all((owner, repo, ref, path)) or not _safe_rel_path(path):
+        return None
+    return owner, repo, ref, path
+
+
+def gh_repo_size_kb(owner: str, repo: str):
+    """api.github.com 取仓库体积（KB）。api 本机实测可直连；取不到返回 None（未知不放行）。"""
+    try:
+        status, data, _ms = http_get(
+            f"https://api.github.com/repos/{owner}/{repo}", 8, 200_000,
+            extra_headers={"Accept": "application/vnd.github+json"})
+        if status != 200 or not data:
+            return None
+        return int((json.loads(data.decode("utf-8", "ignore")) or {}).get("size") or 0)
+    except Exception:  # noqa: BLE001 —— 兜底路的任何失败都不许影响主流程
+        return None
+
+
+def fetch_repo_tarball(owner: str, repo: str, ref: str):
+    """整仓 tar.gz：先按分支试 refs/heads，404 再按标签试 refs/tags。"""
+    for kind in ("heads", "tags"):
+        try:
+            status, data, _ms = http_get(
+                f"https://codeload.github.com/{owner}/{repo}/tar.gz/refs/{kind}/{ref}",
+                DEPS_TARBALL_TIMEOUT, DEPS_TARBALL_MAX_BYTES)
+        except Exception:  # noqa: BLE001
+            continue
+        if status == 200 and data:
+            return data
+    return None
+
+
+def tarball_take_files(tar_bytes: bytes, wanted: set):
+    """从 tar 里按「仓库内路径」白名单精确取文件 → {path: bytes}。
+
+    codeload 的 tar 顶层是 `<repo>-<sha>/`，剥首段才是仓库内路径。只读白名单内的成员、
+    落盘目标由调用方给定（不用成员名拼路径），所以没有 zip-slip 面。单文件超
+    DEP_MAX_BYTES 的与主路一样不收。"""
+    import io
+    import tarfile
+    out = {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:gz") as tf:
+            for m in tf.getmembers():
+                if not m.isfile():
+                    continue
+                parts = m.name.split("/", 1)
+                rel = parts[1] if len(parts) == 2 else m.name
+                if rel not in wanted or not _safe_rel_path(rel):
+                    continue
+                fobj = tf.extractfile(m)
+                if fobj is None:
+                    continue
+                data = fobj.read(DEP_MAX_BYTES + 1)
+                if len(data) <= DEP_MAX_BYTES:
+                    out[rel] = data
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
+def deps_tarball_pick(needs):
+    """needs=[(kind_hint, url, origin)]（主路与 manifest 缓存都没补上的）→
+    ({(origin, url): bytes}, stats)。按仓聚合、体积与阈值过滤、时间预算内尽力而为。"""
+    groups = {}
+    for kind_hint, url, origin in needs:
+        g = gh_repo_ref_of(url)
+        if not g:
+            continue
+        owner, repo, ref, path = g
+        groups.setdefault((owner, repo, ref), []).append((origin, url, path))
+    stats = {"groups": len(groups), "repos_tried": 0, "repos_ok": 0, "files": 0,
+             "below_threshold": 0, "too_big": 0, "size_unknown": 0, "failed": 0,
+             "budget_cut": 0}
+    got = {}
+    t0 = time.time()
+    # 缺得越多的仓越划算，按文件数降序
+    ordered = sorted(groups.items(), key=lambda kv: -len(kv[1]))
+    for (owner, repo, ref), items in ordered[:DEPS_TARBALL_REPOS_PER_ROUND]:
+        if len(items) < DEPS_TARBALL_MIN_FILES:
+            stats["below_threshold"] += len(items)
+            continue
+        if time.time() - t0 > DEPS_TARBALL_BUDGET_SEC:
+            stats["budget_cut"] += 1
+            break
+        kb = gh_repo_size_kb(owner, repo)
+        if kb is None:
+            stats["size_unknown"] += 1
+            continue
+        if kb > DEPS_TARBALL_MAX_REPO_KB:
+            stats["too_big"] += len(items)
+            continue
+        stats["repos_tried"] += 1
+        tar = fetch_repo_tarball(owner, repo, ref)
+        if not tar:
+            stats["failed"] += 1
+            continue
+        data = tarball_take_files(tar, {p for _o, _u, p in items})
+        if not data:
+            stats["failed"] += 1
+            continue
+        stats["repos_ok"] += 1
+        for origin, url, path in items:
+            if path in data:
+                got[(origin, url)] = data[path]
+                stats["files"] += 1
+        del tar, data
+    return got, stats
+
+
+# ---- 稀疏浅克隆兜底（2026-09-29，SSH 传输）----
+# raw 被掐时最狠的一类：同一个仓缺几十上百个依赖（实测 13998394872/TVBox 缺 269 个）。
+# 逐文件走镜像要么超时要么 404，整仓 tarball 又被体积护栏挡住（该仓 248MB）。
+# 本机实测 SSH 全通，于是按 `--filter=blob:none --depth 1 --no-checkout` + sparse-checkout
+# 只取需要的那些 blob：**269 个路径 10.8 秒、只落 256 个文件 9.5MB**，且不经任何第三方。
+DEPS_GIT_BACKFILL = os.environ.get("DEPS_GIT_BACKFILL", "1") == "1"
+DEPS_GIT_TRANSPORT = os.environ.get("DEPS_GIT_TRANSPORT", "ssh").strip().lower()
+DEPS_GIT_MIN_FILES = int(os.environ.get("DEPS_GIT_MIN_FILES", "2"))
+DEPS_GIT_BUDGET_SEC = float(os.environ.get("DEPS_GIT_BUDGET_SEC", "420"))
+DEPS_GIT_TIMEOUT = int(os.environ.get("DEPS_GIT_TIMEOUT", "120"))
+DEPS_GIT_REPOS_PER_ROUND = int(os.environ.get("DEPS_GIT_REPOS_PER_ROUND", "25"))
+_git_probe_cache: dict = {}
+
+
+def _git_run(args, timeout):
+    """跑 git，返回 CompletedProcess 或 None（超时/异常/git 缺失都算 None）。
+    GIT_TERMINAL_PROMPT=0 必须有：私有或拼错的仓库名会弹凭据交互，把 shell 卡死。"""
+    import subprocess
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_FLUSH="1")
+    try:
+        return subprocess.run(["git", *args], capture_output=True, timeout=timeout, env=env)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _git_repo_url(owner: str, repo: str) -> str:
+    if DEPS_GIT_TRANSPORT == "https":
+        return f"https://github.com/{owner}/{repo}.git"
+    return f"git@github.com:{owner}/{repo}.git"
+
+
+def gh_repo_git_reachable(owner: str, repo: str) -> bool:
+    """一次性探测该仓能否用 git 直连（SSH/HTTPS 按 DEPS_GIT_TRANSPORT）。结果按仓缓存。"""
+    key = (owner, repo)
+    if key in _git_probe_cache:
+        return _git_probe_cache[key]
+    r = _git_run(["ls-remote", "--exit-code", "-q", _git_repo_url(owner, repo), "HEAD"], 15)
+    ok = bool(r and r.returncode == 0)
+    _git_probe_cache[key] = ok
+    return ok
+
+
+def deps_git_plan(needs):
+    """needs=[(kind_hint, url, origin)] → {(owner, repo, ref): [(origin, url, path)]}，
+    只保留可 git 直取且同仓文件数达阈值的组（按文件数降序，最划算的先做）。"""
+    groups: dict = {}
+    for _kind_hint, url, origin in needs:
+        g = gh_repo_ref_of(url)
+        if not g:
+            continue
+        owner, repo, ref, path = g
+        groups.setdefault((owner, repo, ref), []).append((origin, url, path))
+    out = {k: v for k, v in groups.items() if len(v) >= DEPS_GIT_MIN_FILES}
+    return dict(sorted(out.items(), key=lambda kv: -len(kv[1])))
+
+
+def deps_git_backfill(needs):
+    """按仓稀疏浅克隆，取回 needs 里那些文件。返回 ({(origin, url): bytes}, stats)。
+
+    全程在系统临时目录里做，finally 必删；不落地到 deps/（由调用方决定写哪），
+    只读我们白名单里的路径，所以没有路径穿越面。"""
+    import shutil
+    import tempfile
+    stats = {"groups": 0, "repos_ok": 0, "repos_failed": 0, "files": 0,
+             "probed_unreachable": 0, "budget_cut": 0}
+    got: dict = {}
+    plan = deps_git_plan(needs)
+    stats["groups"] = len(plan)
+    if not plan:
+        return got, stats
+    t0 = time.time()
+    for (owner, repo, ref), items in list(plan.items())[:DEPS_GIT_REPOS_PER_ROUND]:
+        if time.time() - t0 > DEPS_GIT_BUDGET_SEC:
+            stats["budget_cut"] += 1
+            break
+        if not gh_repo_git_reachable(owner, repo):
+            stats["probed_unreachable"] += 1
+            continue
+        workdir = tempfile.mkdtemp(prefix="tvbox-dep-git-")
+        try:
+            url_git = _git_repo_url(owner, repo)
+            r = _git_run(["clone", "--filter=blob:none", "--depth", "1", "--no-checkout",
+                          "--quiet", "-b", ref, url_git, workdir], DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                # -b <ref> 失败：ref 可能是标签或已删分支 → 退回默认分支再试一次
+                shutil.rmtree(workdir, ignore_errors=True)
+                os.makedirs(workdir, exist_ok=True)
+                r = _git_run(["clone", "--filter=blob:none", "--depth", "1",
+                              "--no-checkout", "--quiet", url_git, workdir],
+                             DEPS_GIT_TIMEOUT)
+                if r is None or r.returncode != 0:
+                    stats["repos_failed"] += 1
+                    continue
+            paths = [p for _o, _u, p in items if _safe_rel_path(p)]
+            if not paths:
+                stats["repos_failed"] += 1
+                continue
+            if _git_run(["-C", workdir, "sparse-checkout", "init", "--no-cone"], 30) is None:
+                stats["repos_failed"] += 1
+                continue
+            r = _git_run(["-C", workdir, "sparse-checkout", "set"] + paths, DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                stats["repos_failed"] += 1
+                continue
+            r = _git_run(["-C", workdir, "checkout"], DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                stats["repos_failed"] += 1
+                continue
+            n = 0
+            for origin, url, path in items:
+                if not _safe_rel_path(path):
+                    continue      # 读取侧自己也要再过一遍，不依赖上游解析
+                fp = os.path.join(workdir, *path.split("/"))
+                if not os.path.isfile(fp):
+                    continue          # 上游树里没有这个路径（多为作者已删）
+                try:
+                    if os.path.getsize(fp) > DEP_MAX_BYTES:
+                        continue
+                    with open(fp, "rb") as fh:
+                        data = fh.read()
+                except OSError:
+                    continue
+                got[(origin, url)] = data
+                n += 1
+            if n:
+                stats["repos_ok"] += 1
+                stats["files"] += n
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+    return got, stats
+
+
 def load_manifest() -> dict:
     try:
         with open(MANIFEST_PATH, encoding="utf-8") as f:
@@ -2426,6 +2723,62 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 ok_map[key] = {"key": key, "url": e[1], "origin": e[2], "local": m["local"],
                                "ok": True, "kind": m["kind"], "md5": m["md5"],
                                "size": m.get("size", 0), "err": "", "channel": "manifest-cache"}
+
+    # ---- 3b. 整仓兜底：主路与 manifest 缓存都没补上的 github 文件 ----
+    # 顺序：先稀疏浅克隆（SSH，一仓一次只取需要的 blob，最准最快），
+    # 再用 codeload tarball 补剩余（≤30MB 小仓；CI 上没有 SSH key 时它顶上）。
+    _tb_got: dict = {}
+    _needs = [e for e in entries if f"{e[2]}|{e[1]}" not in ok_map]
+    if _needs and DEPS_GIT_BACKFILL:
+        _git_got, _gst = deps_git_backfill(_needs)
+        for _k, _v in _git_got.items():
+            _tb_got[_k] = (_v, "git-sparse")
+        print(f"  [deps] 稀疏克隆兜底：候选 {_gst['groups']} 组 → 成功 {_gst['repos_ok']} 仓，"
+              f"补回 {_gst['files']} 个文件（git 不可达 {_gst['probed_unreachable']} / "
+              f"失败 {_gst['repos_failed']} / 超预算停 {_gst['budget_cut']}）", flush=True)
+    if _needs and DEPS_TARBALL_BACKFILL:
+        _rest = [e for e in _needs if (e[2], e[1]) not in _tb_got]
+        _tb_raw, _tb_st = deps_tarball_pick(_rest)
+        for _k, _v in _tb_raw.items():
+            _tb_got[_k] = (_v, "codeload-tarball")
+        print(f"  [deps] codeload 整仓兜底：候选 {_tb_st['groups']} 组 → 实拉 "
+              f"{_tb_st['repos_tried']} 仓，补回 {_tb_st['files']} 个文件"
+              f"（跳过：不足阈值 {_tb_st['below_threshold']} / 仓库过大 {_tb_st['too_big']} / "
+              f"体积未知 {_tb_st['size_unknown']} / 取回失败 {_tb_st['failed']} / "
+              f"超预算停 {_tb_st['budget_cut']}）", flush=True)
+    for (origin, url), (data, channel) in _tb_got.items():
+        rkey = f"{origin}|{url}"
+        lp = dep_local_path(origin, url)
+        hint = {"jar": "jar", "zip": "jar", "js": "js", "json": "json",
+                "php": "jar"}.get(url.lower().split("?")[0].rsplit(".", 1)[-1], "")
+        kind = dep_classify(hint, data)
+        if kind == "unknown":
+            continue
+        try:
+            os.makedirs(os.path.dirname(lp), exist_ok=True)
+            with open(lp, "wb") as fh:
+                fh.write(data)
+        except OSError as ex:
+            print(f"  [deps] {channel} 落盘失败 {rkey}: {type(ex).__name__}", flush=True)
+            continue
+        raw_st = ""
+        if raw_store.ENABLED:
+            try:
+                raw_st = raw_store.ingest(
+                    raw_store.RAW_VOD_DIR, rkey, url, data,
+                    rel=lp[len("deps/"):] if lp.startswith("deps/") else lp,
+                    store_bytes=False)["status"]
+            except OSError as ex:  # noqa: BLE001
+                print(f"  [deps] {channel} {rkey} 账本写入失败：{ex}", flush=True)
+        ok_map[rkey] = {"key": rkey, "url": url, "origin": origin, "local": lp,
+                        "ok": True, "kind": kind,
+                        "md5": hashlib.md5(data).hexdigest(), "size": len(data),
+                        "err": "", "channel": channel, "raw_status": raw_st}
+        dep_backoff_clear(backoff, rkey)   # 补回来了，别再退避
+        _backoff_dirty.add(rkey)
+    if _backoff_dirty:
+        dep_backoff_save(backoff)
+
 
     # ---- 4. 改写引用 ----
     stats = {"total": len(entries), "collected": len(ok_map), "rewritten": 0, "kept": 0, "spider": 0}
