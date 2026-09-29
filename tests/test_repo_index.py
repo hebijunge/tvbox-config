@@ -149,6 +149,7 @@ class TestIndexPersistence(CacheCase):
     def test_load_missing_or_broken_file(self):
         self.assertEqual(du.load_repo_index(os.path.join(_ROOT, ".qoder-tmp", "nope.json")), {})
         bad = os.path.join(_ROOT, ".qoder-tmp", "repo_index_broken.json")
+        os.makedirs(os.path.dirname(bad), exist_ok=True)  # 新检出树里没有这个目录，写前先建
         with open(bad, "w", encoding="utf-8") as f:
             f.write("{not json")
         self.assertEqual(du.load_repo_index(bad), {})
