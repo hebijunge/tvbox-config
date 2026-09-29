@@ -339,9 +339,80 @@ python scripts/fetch_merge.py
 | 5 | Gitee | **2026-09-29 起默认关闭**（`--gitee` 显式开启）。平台搜索 API 被禁（返回空）、网页被 WAF 405 → 只能曲线：GitHub 搜「引用 gitee.com 的配置」挖仓库全名，再用 Gitee 文件树 API 展开（需 `GITHUB_TOKEN`/`GITEE_TOKEN`）。实测一整轮 16 条候选里仅 4 条是配置、净新增 20 站（0.54%），其中两个候选还是同仓孪生文件，性价比不抵耗时 |
 | 6 | 搜索引擎 + 文章页 | Bing 搜 CSDN/博客园/知乎/**微信公众号公开文章**，从正文提取接口。微信不硬爬：只访问搜索引擎已收录的公开文章页（合规） |
 
-**收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。
-`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
+**取数通道与确定性**（2026-09-29 修）：本路的 github 取数原先写死 `https://ghproxy.net/` 兜底——那站不在每日镜像实测池里、09-19 实测仅 47KB/s，本机每条候选先白等 12s 直连再拖慢镜像，整轮 **10m40s**，还让 11 个高分候选因超时而「消失」。现改为复用 `fetch_merge` 解析好的镜像链（`GH_MIRRORS` env > 每日实测落盘 > 静态默认，取前 2 位），raw 直连只给 `DISCOVER_DIRECT_TIMEOUT`（默认 3s），陌生前缀/path 写法都先归一化避免叠双前缀 → **4m27s**。
+另一半原因更隐蔽：探测列表是 `list(set)[:top*3]`，set 顺序随 `PYTHONHASHSEED` 每进程洗牌，280 条候选**每轮随机漏掉 ~40 条根本没探测**；`sort(key=-score)` 在 90 分大并列时按并发完成顺序排，进池的是哪 80 条＝抽签。改成 `probe_window()`（URL 字典序 + 超上限按日轮转，同天可复现、跨天不饿死尾巴）与 `rank_results()`（score → tvbox 优先 → 站点数 → URL）。
+**但当时只修了一半，并且把结论说满了**（2026-09-29 后续核查）：我那句「剩下的差异是真实来源在变……不是我们制造的随机」是错的。收集与展开阶段还有五处同一类抽样——`discover_code_search` / `discover_repo_search` / `discover_lineage`（以及默认关闭的第 5 路 `discover_gitee`）各自 `return set(list(repos)[:max_repos])`（搜索配额已经付过，砍这一刀纯属白扔召回，且抽的是 set 顺序），main 里 `fresh_repos[:args.max_repos]` 再随机抽一次。证据：连跑两轮池子 45→29，缺失的 18 条高分候选（含 509、348、152 站的配置）**按仓库分组后是整仓消失**——7 个仓库在下一轮一个文件都没出现，这是「没展开」的签名，不是「探测失败」。逐条复核 `json_files_of` 后确认这些文件现在仍会被选中，源也没变。
+改法：三处收集不再截断（返回全量），只在展开环节用 `select_repos()`（同 `probe_window` 的排序+按日轮转）下一次确定性的刀，血统反查的 `owners[:30]` 也换成 `sorted()` 并把上限当护栏（当前 owner 数远小于它，不该拿它做抽样）。同时把归因需要的两块落进产物：`expanded_repos`（本轮展开了哪些仓）与 `unreachable`（L0 失败的错误类型直方图 + 按 URL 定序的样本，默认 40 条）——以前不可达条目连错误类型都不存，池子换手只能靠复跑猜。
+**顺带炸出来的两个自伤**（同一轮，都是新加的 `unreachable` 直方图直接指认的）：
+- K 轮 115 条失败里 **31 条是 `UnicodeEncodeError`**——`http://miqk.cc/小米/DEMO.json`、`http://jin.锦哥哥.love` 这类带中文的地址，请求根本没发出去就被记成「源不可达」。修法是在 `http_get` 这个唯一出口加 `_requestable()`（非 ASCII 域名 punycode、非 ASCII 路径百分号编码，`%` 保持在 safe 集里避免二次编码），六路发现一起受益；L 轮该错误类型**归零**。但要如实说：把那 4 条样本重探，**0 条真能连通**（全变成 URLError/HTTPError），所以这一修没换来召回，换来的是**归因正确**——以前是我们的崩溃冒充了源的状态，真出现「中文路径的活源」时也不会再被误杀。
+- 失败样本里还有 `` http://127.0.0.1:18765/live.m3u`` 这种种子 README 的本机示例，以及结尾粘着反引号的同一个地址出现两次（`.json` 代码段被 `URL_RE` 连反引号一起抓走）。`URL_RE` 字符类去掉反引号、`DROP_RE` 加本机/局域网段黑名单后，L 轮失败样本里这两类各 **0 条**（K 轮是 3 和 2）。
+**试过用便宜信号省展开配额，被数据否掉了**：去掉收集阶段截断后待展开仓从 43 涨到 **977**，于是拿「历轮真出货的
+28 个仓库（合计 84 条高分候选）」这同一批样本校准了两种门槛——① 按仓库名/描述关键词过滤：会**误杀 17/28 个仓、
+48/84 条高分候选**，被杀的就是主力 `793641910/binge`(8)、`gaotianliuyun/gao`(5)、`alantang1977/cluntop`(4)；
+② 按 star 排序：无区分度——真出货仓里 **10/28 是 0 star**，而 K 轮抽到的垃圾仓 `xray-ui` 有 855 star、
+`tvgate` 165 star。结论：「这仓到底有没有配置」没有免费信号，只能看文件树，所以**不加过滤**，只做确定性抽样。
+耗时与产出（同一天四轮，日志时间戳实测）：`--max-repos 15` 两轮 4m27s（真配置 38）与 5m32s（26）；
+`--max-repos 60` 两轮 7m20s（29）与 9m20s（34）。多展开 4 倍仓没测出真配置增加、却稳定多花 2-4 分钟，
+当时据此维持了 `--max-repos 15`。**这个结论只成立了一半**：它证明的是"没有缓存时，多抽仓不划算"，
+不等于"全展开没价值"——抽样省掉的是成本，同时也是覆盖。现在改成全展开 + 增量免检（见下一段），
+`daily.yml` 与 `run_all.py` 的 `--max-repos 15` 已摘掉。
+
+**全量覆盖 + 增量免检**（`state/repo_index.json`，2026-09-29）：既然"都要搞"，就不能靠每天重烧 40 分钟去搞——
+关键数据是**配置内容其实变得很慢**（样本 60 仓里近 24h 有 push 的只有 27%）。于是全展开所有新仓，但用两层免检
+把成本降到只付增量：
+- `pushed_at` 没变的仓**不重新列树**（省掉一半 API 调用）；
+- 树里某文件的 **blob sha 没变**就**不重探**——内容没变，形态结论（kind/score/内容指纹）必然也没变；
+- 只有"没见过的文件"和"blob 变了的文件"才走 L0。探失败的结论不永久缓存，按 `FAIL_RETRY_DAYS`（7 天）退避重试，
+  否则 35% 的即时失败会天天重烧预算、缓存永远攒不起来。
+
+两轮实测（250 仓样本，同一天、同切片）：
+- **冷轮**（索引为空）23m37s：展开 250 仓 → 775 个新文件，987 条候选，871 可达，**真配置 112 / canary 106**。
+- **热轮**（复用冷轮写的索引）17m33s：**树未变 175/250 仓、536 个文件直接免探**，只剩 471 条实探，
+  真配置 114 / canary 106（与冷轮基本一致，说明复用结论是准的）。
+对比旧的 15-60 仓抽样：真配置 26-40。全展开把真配置从 ~40 拉到 **112+**，而热轮的日常成本反而比全量重探省得多。
+注意热轮 17 分钟里有一大块是**发现阶段**（GitHub 代码搜索 + 血统反查的 API 节流）的固定底，缓存只砍「列树 + 重探」，
+砍不掉这一底；真到次日（跨天、多数仓 pushed_at 不变）会更低。
+
+顺带修的坑：`L0` 曾把**没编码的中文 URL**（`http://miqk.cc/小米/DEMO.json`）直接记成死源——那 31 条
+`UnicodeEncodeError` 根本没发过请求。现在 `http_get` 出口统一 `_requestable()`（非 ASCII 域名 punycode、路径
+百分号编码、`%` 保持不被二次编码），六路一起受益。
+实测连跑两轮（相隔 5 分钟）：候选池重合从 **18/80 → 60/80**，真配置重合 12/27 → 23/36，可达率 41%→44-50%。当时我把剩下的差异归给「真实来源在变＋网络抖动，不是我们制造的随机」——那句被上一段证伪了：里面还压着一层我们自己的抽样随机。四层抽样都改成确定性之后，残余差异才轮到源侧变动与网络抖动。
+
+**收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
+**候选池只留有效形态**（2026-09-29）：L0 判为 `other`/`json(非配置)`（score 0）的条目不再写进 `radar/discovered.json`——旧写法把「可达但非配置」的东西（GitHub 仓库主页 HTML、PWA `manifest.json`、`.github/labels.json`、star-history 的 SVG、`config.webp`）照样入池，实测**可达 133 条里 92 条（69%）是这类噪声**，既挤掉真候选又让阶段 3 白取一轮（`summary.pool_junk_dropped` 记录被剔数）。
+配套地，阶段 3 的 `eval_one` 先按形态分流再解析（与 discover 同口径）：`#EXTM3U`/`#genre#` → 记 `skipped=直播列表`（不算失败）、HTML/SVG → 记「候选池噪声」、BOM 与前导空白先 `lstrip` 再 `json.loads`。改前 80 条候选只有 **25 条评估成功**、55 条报 `Expecting value: line 1 column 1`（其实是形态不对，不是通道坏了）；改后 **41 条里 40 成功、0 失败**，可见新站点 2036 → **3183**。`summary` 也拆成 `evaluated / skipped_live / html_noise / no_sites / fetch_or_parse_failed`，不再用会误判的 `fetch_ok`（旧口径把跳过的也算成功）。
+**收录即按内容去重**（2026-09-29）：`dedup_by_content` 在 `rank_results` 定序之后跑，键是 L0 探测算出的内容
+sha256；同一份内容只留排名最前的代表，其余写进 `radar/discovered.json` 的 `content_dupes`（带 `same_as`
+指向代表）便于追溯。**只比完整读到的内容**：读满 `PROBE_MAX_BYTES`（300KB）的条目会打 `sha_partial=true` 并
+整条退出去重——截断条目的哈希只覆盖前缀，而「前 300KB 逐字节相同、尾部不同」是会发生的（同一仓库放一份
+`x.json` 只有 sites、再放一份 `x_full.json` 一字不动地多带 lives/parses），误杀一个真候选比少并一条严重得多；
+代价实测很小，最近两轮入池候选里被截断的只有 0-1 条。
+`summary.reachable` 取**去重前**的可达数（它是跨轮趋势指标，跟着去重一起变小会变成莫名下降）。
+实测连续两轮：去重前可达 138 / 140，分别并掉 **20 条（15 组）/ 19 条（11 组）**。形态分两类。**真的同一份配置**：`yoursmile66/TVBox/main/XC.json` 一份内容挂着 4 个入口
+（`gh-proxy.com` 两种路径写法、`ghproxy.net`、`github.moeyy.xyz`），`xyq254245` 的 `XYQTVBox.json` 3 个前缀，
+`gao/master/js.json` 的 `ghproxy.net`≡`gh-proxy.com`，`ztha.top` 的 https≡http。
+**「200 但不是配置」的同一张壳页**：5 个 `github.com/<仓>` 主页在那一轮返回同一个 58013 字节的中文页面
+（`lang="zh-CN"`，不是 GitHub 的仓库页；事后复测 `YueChan/Live` 又能拿到 235099 字节的真页面，说明是本地
+直连被间歇拦截），3 个 `agit.ai/*/raw/branch/*` 返回同一个 114 字节的 JS 跳转壳，`ghp.ci` 探到的路径返回
+2 字节的 `ok`（代理已废，只剩健康检查文本）。
+**为什么在发现侧就动手**：合并侧的 sha256 去重只保证产物不灌重复站点，而 canary 是「按顺序取前 N 个名额」，
+重复内容把名额占住等于把能带新内容的上游挤了出去——按 HEAD 那份旧产物对账：池里「字节数 + 站点数」都相同
+且完整读到的两组（`gao/master/js.json`、`ztha.top`）虚占 2 个位置、虚增 344 个站点，`state/extra_upstreams.json`
+那 25 条 canary 里 `gao/master/js.json` 也确实同时挂着 `ghproxy.net` 与 `gh-proxy.com` 两条（去重后只剩 1 条）；
+同处还有一组 9 条读满上限的大文件，那组按现在的规则**不并**（身份无法证明）。
 **canary 已默认开启**（`EXTRA_UPSTREAMS=1`，daily.yml），失效由自动黑名单兜底；要停用改回 `0`。
+注意 `total_unique_sites` 随候选集合逐轮变化（每轮挖到的池不同），别拿它跨轮直接相减当退化指标。
+
+**池子路由**（2026-09-29 定）：产物按池分四层——点播池按接口类型细分（`stores/cms.json` CMS 标准接口、
+`stores/csp.json` 蜘蛛仓、`stores/pan.json` 网盘仓（含 `pan_ck.json` 需 CK 的）、`stores/app.json` App 型）、
+直播池（`live.json` + `lives/`）、成人池含**点播与直播两个子池**（`adult.json` / `adult_live.json` +
+`adult_live_channels/`）。canary 里带成人特征的上游**不再整条剔除**（所有者指令），改为标 `"adult": true`
+成为「成人专供上游」：站点照常收但强制分类 adult → 落 `adult.json`；直播照常收但打上 `_adult_only`
+下放 `adult_live.json`；`parses` 与全局 `spider/wallpaper` 一律不收——它们是主配置的全局字段，名字带
+成人特征会直接漏进非成人产物。为什么不走既有的 `origin_votes`：投票只作用于「弱信号单命中」
+（`classify_site` 第 5 步），成人仓里大量站点名字干净、走投票仍会被判 `vod` 混进主配置，所以另开
+`ADULT_ONLY_ORIGINS` 强制通道。识别口径与门禁同源（`_candidate_adult_rule`：PORN_KW / 域名黑名单 /
+源模式），发现侧与装载侧各算一次，装载侧为准。
 
 **按来源上游保留 spider**（2026-09-19 起，开关 `ORIGIN_SPIDER=1` 默认开）：
 
@@ -359,6 +430,24 @@ python scripts/fetch_merge.py
 （`./deps/jar/spider_8955438d.jar`），字面与上游的 `./jar/spider.jar` 不同却指向同一份包。
 
 关掉：`ORIGIN_SPIDER=0`。
+
+**依赖整仓兜底两路**（2026-09-29）：主路是「每文件 × 镜像轮换」，`raw` 被掐时同仓几十个文件会成片失败。
+落回顺序是 主路 → manifest 缓存 → **路 A 稀疏浅克隆** → **路 B codeload tarball**：
+
+- 路 A：`git clone --filter=blob:none --depth 1 --no-checkout` + `sparse-checkout set` + `checkout`，
+  一仓一次**只取需要的那些 blob**，走 SSH（`DEPS_GIT_TRANSPORT=ssh`，不经第三方）。
+  本机实测 `13998394872/TVBox`（248MB、269 个路径缺失）克隆 4.6s / 本地仅 98KB，
+  全量取回 10.8s 落地 256 个文件 9.5MB；接进管线后整轮兜底 **33.5s 补回 263 个依赖**，
+  manifest 里 github 依赖的本地缺失从 278 降到 15。
+- 路 B：`codeload.github.com/<o>/<r>/tar.gz/refs/heads/<ref>` 整仓包（实测本机可直连），
+  只抽白名单路径。CI 上没有用户的 SSH key，这路顶上。
+  三条护栏：仓库体积 ≤30MB（`DEPS_TARBALL_MAX_REPO_KB`，上面那个 248MB 的仓就是被它挡掉的）、
+  同仓至少 3 个文件才划算、整仓下载 ≤60MB / 60s / 整轮 300s 预算。
+- 关闭：`DEPS_GIT_BACKFILL=0` / `DEPS_TARBALL_BACKFILL=0`。
+- **安全**：两条路都拿「仓库内路径」去拼文件系统路径读字节，而上游 URL 是攻击者可控输入。
+  `_safe_rel_path` 在解析阶段就拒空段、绝对路径、NUL、以及**百分号解码后含 `..`** 的路径
+  （`%2e%2e` 也算），克隆侧与 tar 侧再各查一遍；写盘侧另有 `pathutil.safe_segment` 把 `..` 变 `_`。
+  不做这层，一条 `.../main/../../../../etc/passwd` 就能把本地任意文件读进内容再发布出去。
 
 **csp 爬虫源真机实测**：`type 3` 的 `csp_*` 源（约 700 个）必须在 Android 运行时里跑，纯 HTTP 测不了。
 做法是自建最小宿主 APK（`DexClassLoader` 加载爬虫 jar + 宿主实现 `crawler.Spider` 基类），
@@ -403,11 +492,35 @@ python scripts/fetch_merge.py
 **探针权威性**：五关实测（csp/drpy）> HTTP L级 > js S级 > 连通性——浅探针的结论不能覆盖深探针，否则会出现「五关全通被判 dead」。
 
 观测配套：`health_report.py`（与快照对比，报新增/掉线/恢复/移除，产物 `exports/health_report.json`）、`dep_audit.py`（deps/ 重复与未引用分析，**只报告不删**）。
-**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 五路发现 → 评估收编 → 合并 → 探针实测 → 依赖闸门 → 入库/复标/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
+**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 五路发现 → 评估收编 → 合并 → 探针实测 → 依赖闸门 → 入库/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
 探针后置到合并之后（2026-09-29 重排）是为了「当天拉当天测」：探针吃当日产物，当日结论入库后经
-`export_healthy.py` 进 `exports/`（`all.json` 带 `_health`）。**主产物不带健康标注**——实测
-`_health/_checked_at/_latency_ms` 让订阅入口的 `tvbox.json` 从 1.29MB 涨到 1.67MB（+29%），
-而 TVBox 只是忽略未知字段、并不消费它，所以 `_strip_internal_fields` 无白名单、一律剥净。
+`export_healthy.py` 进 `exports/`（`all.json` 带 `_health`）。**主产物不带健康标注**——CI 实测
+去掉 `_health/_checked_at/_latency_ms` 后 `tvbox.json` 从 1,009,234B 降到 815,475B（−19%，
+本地 3724 站口径为 −29%），而 TVBox 只是忽略未知字段、并不消费它，所以 `_strip_internal_fields`
+无白名单、一律剥净。重排前后对照：探针有效性从 176/311（43% 的探针打在了已不在产物里的站）
+升到 172/181（5%）。
+
+**镜像测速口径**（`scripts/mirror_probe.py`）：固定池 28 个 + **三路发现增量**，按证据强度排队——
+路 0 **上游实证**：本管线自己的账本（`exports/upstream_status.json` 的 `channel=mirror:<host>`
+与 `success_url`、`radar/discovered.json` 的 reachable 候选、canary 清单）里真把上游配置取回来过
+的前缀；路 1 GitHub API 搜 `gh-proxy` 相关仓库读 README（本机实测 `api.github.com` **可直连**，
+被掐的只是 `raw.githubusercontent.com` 的 HTTP 响应，所以这路本地也跑得出东西）；路 2 Bing 搜公开清单帖。
+提取只认「前缀 + github/raw」的确证形态（`h/https://raw...` 与 `h/raw.githubusercontent.com/...`
+两种写法都认，多级路径后嵌 github 链接的不算），裸域名不算。新面孔先过**内容一致性闸门**——必须把
+本项目那个 8MB jar 逐字节原样返回（sha256 相等），截断/HTML 冒充/改写内容一律拒入池；
+2026-09-29 首轮实跑：公网挖到 3 个，毙掉 2 个伪代理（Cloudflare worker 空壳），`api.gitproxy.dev`
+校验通过以 2377KB/s 入池；上游实证 4 个新面孔里 3 个入池（`g.3344550.xyz` 2206KB/s、
+`gh-proxy.org` 1670、`ghproxy.net` 409），而账本里记着 `channel=mirror:` 成功过的
+`new.<IDN>.top` **没能原样返回目标 jar、被闸门拒**——「能取回内容但转发不忠实」正是这条路的风险，
+也说明闸门不是摆设。测速每站最多读 4MB、**总时限 12 秒**、**采 2 次取较差值**、
+**并发 3 路**，速度只算首包之后的传输段；低于 100KB/s 判慢移出池（全数被判慢时保留结果，防清空）。
+淘汰/伪代理记入 `state/mirror_dead.json` 冷却 30 天，近 3 天测过的不重复骚扰，发现结果缓存
+`state/mirror_discovered.json`（2 天）。为什么这么绕：单样本 6 路并发时轮间排名不可复现
+（同一镜像实测 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），而池首位会被写进静态 JSON 当外链前缀。
+结果落盘 `state/mirror_ranking.json`（留 7 轮），`fetch_merge.py` 按
+`GH_MIRRORS 环境变量 > 落盘实测 > 静态默认` 取池；外链主镜像取「近 3 轮至少 2 轮上榜、
+中位吞吐最高」而非当日第一（`_stable_ghproxy`），显式钉选 `GH_MIRRORS` 时则跟随钉选首位。
+可选加自己的清单源：Actions Variable 或环境变量 `MIRROR_LIST_URLS`（逗号分隔的纯文本清单页）。
 
 ## 本地运行
 

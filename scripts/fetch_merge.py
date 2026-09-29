@@ -87,18 +87,98 @@ MAX_BODY = 4096             # 验活最多读取字节数
 # v6.gh-proxy.org 260KB/s；ghproxy.net 47KB/s（慢管但稳定）；ghfast.top/gh.llkk.cc/rwa.ihtw.moe/ghp.ci
 # 沙箱侧限流/502 不可作首选，留作轮换兜底（GitHub runner 与用户侧网络画像不同，可能表现更好）。
 # batch18 调研补充（2026-09-24 深夜 / 09-25 00:15–00:30 复核）：gh-proxy.com 对 Guovin 路径在深夜时段 404、
-# 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住；输出侧 GHPROXY 维持首位
-#（09-19 实测双优），后续新引用引用前建议按当日实测选择镜像。jsdelivr 主域在沙箱网关 400，
+# 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住。
+# 输出侧主镜像（GHPROXY）自 2026-09-29 起不再跟「当日第一名」，改用近 3 轮中位吞吐择优，
+# 见 _stable_ghproxy。jsdelivr 主域在沙箱网关 400，
 # 引用 jsdelivr 应显式用 fastly.jsdelivr.net 子域（extra_upstreams jyoketsu 条目已按此规范化）。
-# 2026-09-29 所有者指令复测（1.86MB spider.jar，本机网络）：gh.acmsz.top 0.82MB/s 最快、
-# gh-proxy.com 0.60MB/s、gh.zwy.one 0.61MB/s，直连 raw 19.5s 断连 —— acmsz 置首为主镜像，原列表留作轮换。
-GH_MIRRORS = [m.strip() for m in os.environ.get(
-    "GH_MIRRORS",
-    "https://gh.acmsz.top/,https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
-    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://gh.llkk.cc/,"
-    "https://raw.ihtw.moe/,https://ghp.ci/"
-).split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.acmsz.top/"
+# 2026-09-29 大文件口径复测（8MB jar，每站读满 4MB 或 12s 时限，速度只算首包之后的传输段）：
+# gh.halonice.com 3019KB/s、30006000.xyz 2820、githubproxy.cc 2364、proxy.vvvv.ee 2001、
+# gh.padao.fun 1904；gh-proxy.com 144KB/s（12s 只拉到 1.8MB）；gh.acmsz.top 74KB/s 判慢淘汰
+# （同日两轮另测 205KB/s、347KB/s，均在末位区间）—— 09-29 早间「acmsz 最快」的结论是
+# 1.86MB 小文件口径的失真，已从静态首位撤下，仍留在 mirror_probe 候选池里按每日实测排位。
+# 同时删除 ghp.ci / gh.llkk.cc / raw.ihtw.moe：两份实测报告均列其为失效/限流，且不在
+# mirror_probe 候选池，留在轮换列表只会让死站各吃一次超时。
+MIRROR_RANKING_FILE = os.environ.get("MIRROR_RANKING_FILE", "state/mirror_ranking.json")
+MIRROR_RANKING_MAX_AGE_DAYS = int(os.environ.get("MIRROR_RANKING_MAX_AGE_DAYS", "3"))
+
+GH_MIRRORS_DEFAULT = (
+    "https://gh.halonice.com/,https://30006000.xyz/,https://githubproxy.cc/,"
+    "https://proxy.vvvv.ee/,https://gh.padao.fun/,https://github.cnxiaobai.com/,"
+    "https://fastgit.cc/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
+    "https://v6.gh-proxy.org/,https://gh-proxy.com/,https://ghproxy.net/,"
+    "https://gh.acmsz.top/"
+)
+
+
+def _load_mirror_rounds(path=None):
+    """读 mirror_probe 落盘的实测历史（最新一轮在前）。缺失/损坏/过期返回 []。"""
+    from datetime import datetime, timedelta, timezone
+    try:
+        with open(path or MIRROR_RANKING_FILE, encoding="utf-8") as f:
+            rounds = (json.load(f) or {}).get("rounds") or []
+    except (OSError, ValueError):
+        return []
+    if not rounds:
+        return []
+    gen = str(rounds[0].get("generated_at") or "")
+    try:
+        when = datetime.strptime(gen, "%Y-%m-%d %H:%M:%S UTC").replace(
+            tzinfo=timezone.utc)
+    except ValueError:
+        return []
+    if datetime.now(timezone.utc) - when > timedelta(days=MIRROR_RANKING_MAX_AGE_DAYS):
+        return []
+    return rounds
+
+
+def _mirrors_from_rounds(rounds):
+    if not rounds:
+        return []
+    out = []
+    for row in rounds[0].get("ranking") or []:
+        p = str(row.get("prefix") or "").strip()
+        if p:
+            out.append(p if p.endswith("/") else p + "/")
+    return out
+
+
+def _stable_ghproxy(rounds, fallback):
+    """外链改写用的主镜像：取近 3 轮里至少 2 轮上榜、中位吞吐最高的那个。
+
+    不用「当日第一名」：并发共享带宽 + 镜像冷热缓存会让单样本周间排名乱跳
+    （2026-09-29 实测同一镜像两轮 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），
+    而这个前缀要写进静态 JSON 发给所有用户，稳比快优先。"""
+    if not rounds:
+        return fallback
+    hits = {}
+    for idx, rd in enumerate(rounds[:3]):
+        for pos, row in enumerate(rd.get("ranking") or []):
+            p = str(row.get("prefix") or "").strip()
+            if p:
+                hits.setdefault(p, []).append((idx, pos, int(row.get("KBps") or 0)))
+    best, best_key = None, None
+    for p, recs in hits.items():
+        if len({i for i, _pos, _k in recs}) < 2:
+            continue  # 只在一轮出现过，可能是瞬时侥幸
+        vals = sorted(k for _i, _pos, k in recs)
+        median = vals[len(vals) // 2] if len(vals) % 2 else (
+            vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) // 2
+        key = (median, -min(pos for _i, pos, _k in recs), -min(i for i, _p, _k in recs))
+        if best_key is None or key > best_key:
+            best, best_key = p, key
+    chosen = best or fallback
+    return chosen if chosen.endswith("/") else chosen + "/"
+
+
+_MIRROR_ROUNDS = _load_mirror_rounds()
+GH_MIRRORS = [m.strip() for m in os.environ.get("GH_MIRRORS", "").split(",") if m.strip()]
+_MIRRORS_PINNED = bool(GH_MIRRORS)  # 人工/CI 显式指定列表时，不再自作主张换主镜像
+if not GH_MIRRORS:
+    # 没有 CI 注入（本地/手动跑）时，用当日实测顺序，而不是拍脑袋的静态默认
+    GH_MIRRORS = _mirrors_from_rounds(_MIRROR_ROUNDS) or [
+        m.strip() for m in GH_MIRRORS_DEFAULT.split(",") if m.strip()]
+GHPROXY = (GH_MIRRORS[0] if GH_MIRRORS else "") if _MIRRORS_PINNED else \
+    _stable_ghproxy(_MIRROR_ROUNDS, GH_MIRRORS[0] if GH_MIRRORS else "")
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 
@@ -529,6 +609,12 @@ UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAM
 # 需要显式 EXTRA_UPSTREAMS=1 才并入；开启后失效由现有自动黑名单兜住。
 EXTRA_UPSTREAMS_FILE = os.environ.get("EXTRA_UPSTREAMS_FILE", "state/extra_upstreams.json")
 EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
+# canary 里带成人特征的上游：2026-09-29 起不再整条剔除，改为「成人专供上游」——
+# 站点照样收（全部强制判 adult，落 adult.json），但它的 lives/parses/spider/wallpaper
+# 一律不进主产物。必须强制而不是靠 origin_votes：投票只作用于「弱信号单命中」
+# （见 classify_site 第 5 步），成人仓里大量站点名字干净，走投票仍会被判 vod 混进主配置。
+# 由 load_extra_upstreams() 填充（name 小写），classify_site 读它。
+ADULT_ONLY_ORIGINS: set = set()
 
 # ---------------- 成人内容发布开关（默认「不声明」模式，2026-09-22 所有者指令） ----------------
 # 所有者指令：adult.json 每天随 daily 聚合产出并提交更新到仓库，但「只是不声明」——
@@ -582,11 +668,16 @@ def load_extra_upstreams() -> list:
         if not (url and kind in PARSERS):
             continue
         url = _norm_jsdelivr(url)
-        rule = _candidate_adult_rule(u.get("name") or "", url)
+        name = u.get("name") or url[-28:]
+        rule = _candidate_adult_rule(name, url)
+        ent = {"name": name, "kind": kind, "url": url, "auto": True}
         if rule:
-            dropped.append((u.get("name") or url[-28:], rule))
-            continue
-        ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
+            # 2026-09-29 所有者指令：带成人特征的 canary 不再整条丢弃，改为进成人池。
+            # 站点强制 adult（落 adult.json）、直播强制下放成人直播池（adult_live.json），
+            # parses/spider/wallpaper 不收（它们是主配置的全局字段，名字会漏进非成人产物）。
+            ent["adult"] = True
+            ADULT_ONLY_ORIGINS.add(name.lower())
+            dropped.append((name, rule))
         # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
         if isinstance(u.get("mirrors"), list) and u["mirrors"]:
             ent["mirrors"] = [_norm_jsdelivr(m) for m in u["mirrors"] if isinstance(m, str) and m]
@@ -594,8 +685,10 @@ def load_extra_upstreams() -> list:
     if out:
         print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)
     if dropped:
+        print(f"    canary 成人特征上游 {len(dropped)} 个转成人池（站点→adult.json，"
+              f"直播→adult_live.json，不收 parses/spider）：", flush=True)
         for nm, r in dropped:
-            print(f"    canary 成人特征剔除：{nm} rule={r}", flush=True)
+            print(f"      - {nm} rule={r}", flush=True)
     return out
 
 
@@ -957,6 +1050,12 @@ def classify_site(s, overrides: dict = None, origin_votes: dict = None) -> str:
     # 2. 已知误报白名单
     if key in ADULT_FALSE_POSITIVE_KEYS:
         return "vod"
+
+    # 2b. 成人专供上游（canary 带成人特征）：整仓站点一律 adult，不看关键词。
+    # 不放投票里是因为投票只影响「弱信号单命中」，成人仓里名字干净的站点会漏判。
+    origin = (s.get("_origin") or s.get("origin") or "").lower()
+    if origin and ADULT_ONLY_ORIGINS and origin in ADULT_ONLY_ORIGINS:
+        return "adult"
     name_lower = name.lower()
     if any(frag in name_lower for frag in ADULT_FALSE_POSITIVE_NAME_FRAGMENTS):
         return "vod"
@@ -1772,6 +1871,303 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
+# ---- codeload 整仓 tarball 兜底（2026-09-29）----
+# 依赖收集是「每文件 × 镜像轮换」，同一个仓的几十个文件就是几十次握手；raw 被掐时成片
+# 失败（本地 deps 收集 878/2811 的根因之一）。实测 codeload.github.com 的整仓 tar.gz
+# 可直连（200 / 0.58s），于是一仓一次取回源码树，只抽需要的那几个文件。
+# 三条护栏：整仓体积上限（防 tar 拉爆内存/磁盘）、需要文件数阈值（少于阈值不划算）、
+# 整轮时间预算（防兜底路反过来把合并拖长）。
+DEPS_TARBALL_BACKFILL = os.environ.get("DEPS_TARBALL_BACKFILL", "1") == "1"
+DEPS_TARBALL_MIN_FILES = int(os.environ.get("DEPS_TARBALL_MIN_FILES", "3"))
+DEPS_TARBALL_MAX_REPO_KB = int(os.environ.get("DEPS_TARBALL_MAX_REPO_KB", "30000"))
+DEPS_TARBALL_MAX_BYTES = int(os.environ.get("DEPS_TARBALL_MAX_BYTES", "60000000"))
+DEPS_TARBALL_TIMEOUT = int(os.environ.get("DEPS_TARBALL_TIMEOUT", "60"))
+DEPS_TARBALL_REPOS_PER_ROUND = int(os.environ.get("DEPS_TARBALL_REPOS_PER_ROUND", "40"))
+DEPS_TARBALL_BUDGET_SEC = float(os.environ.get("DEPS_TARBALL_BUDGET_SEC", "300"))
+
+
+def _safe_rel_path(path: str) -> bool:
+    """仓库内相对路径白名单：空、绝对、含 `..` 或 NUL 的一律拒。
+
+    上游配置里的 URL 是攻击者可控输入，而两条兜底路都要拿「仓库内路径」去拼文件系统
+    路径读字节（稀疏克隆是 os.path.join(workdir, *path.split('/'))）。写盘侧
+    dep_local_path 有 safe_segment 把 `..` 变 `_` 兜底，但**读取侧没有**——不在这
+    里挡住，一条 `.../main/../../../../etc/passwd` 就能把本地任意文件读进内容再发布出去。
+    """
+    if not path or path.startswith(("/", "\\")) or "\x00" in path:
+        return False
+    segs = path.replace("\\", "/").split("/")
+    if any(seg in ("", "..") for seg in segs):
+        return False
+    # 再按解码后的形态查一遍（%2e%2e 之类）：正常的依赖路径不需要百分号编码的点，
+    # 出现就是有人在试探路径解析的边界，一律不收。
+    dec = urllib.parse.unquote(path).replace("\\", "/").split("/")
+    return not any(seg in ("", "..") for seg in dec)
+
+
+def gh_repo_ref_of(url: str):
+    """github/raw 链接 → (owner, repo, ref, 仓库内路径)；不可 tar 的形式返回 None。
+
+    认三种写法：raw.githubusercontent.com/o/r/<ref>/<path>、github.com/o/r/raw/<ref>/<path>、
+    github.com/o/r/blob/<ref>/<path>。release/download 的资产不在源码树里，一律不认；
+    镜像前缀先剥掉再判。路径不过 _safe_rel_path 的也直接拒。"""
+    inner, _had = _split_gh_prefix(url)
+    u = urllib.parse.urlparse(inner)
+    host = (u.netloc or "").lower()
+    segs = [s for s in u.path.split("/") if s]
+    if host == "raw.githubusercontent.com":
+        if len(segs) < 4:
+            return None
+        owner, repo, ref, path = segs[0], segs[1], segs[2], "/".join(segs[3:])
+    elif host in ("github.com", "www.github.com"):
+        if len(segs) >= 5 and segs[2] in ("raw", "blob"):
+            owner, repo, ref, path = segs[0], segs[1], segs[3], "/".join(segs[4:])
+        else:
+            return None
+    else:
+        return None
+    if not all((owner, repo, ref, path)) or not _safe_rel_path(path):
+        return None
+    return owner, repo, ref, path
+
+
+def gh_repo_size_kb(owner: str, repo: str):
+    """api.github.com 取仓库体积（KB）。api 本机实测可直连；取不到返回 None（未知不放行）。"""
+    try:
+        status, data, _ms = http_get(
+            f"https://api.github.com/repos/{owner}/{repo}", 8, 200_000,
+            extra_headers={"Accept": "application/vnd.github+json"})
+        if status != 200 or not data:
+            return None
+        return int((json.loads(data.decode("utf-8", "ignore")) or {}).get("size") or 0)
+    except Exception:  # noqa: BLE001 —— 兜底路的任何失败都不许影响主流程
+        return None
+
+
+def fetch_repo_tarball(owner: str, repo: str, ref: str):
+    """整仓 tar.gz：先按分支试 refs/heads，404 再按标签试 refs/tags。"""
+    for kind in ("heads", "tags"):
+        try:
+            status, data, _ms = http_get(
+                f"https://codeload.github.com/{owner}/{repo}/tar.gz/refs/{kind}/{ref}",
+                DEPS_TARBALL_TIMEOUT, DEPS_TARBALL_MAX_BYTES)
+        except Exception:  # noqa: BLE001
+            continue
+        if status == 200 and data:
+            return data
+    return None
+
+
+def tarball_take_files(tar_bytes: bytes, wanted: set):
+    """从 tar 里按「仓库内路径」白名单精确取文件 → {path: bytes}。
+
+    codeload 的 tar 顶层是 `<repo>-<sha>/`，剥首段才是仓库内路径。只读白名单内的成员、
+    落盘目标由调用方给定（不用成员名拼路径），所以没有 zip-slip 面。单文件超
+    DEP_MAX_BYTES 的与主路一样不收。"""
+    import io
+    import tarfile
+    out = {}
+    try:
+        with tarfile.open(fileobj=io.BytesIO(tar_bytes), mode="r:gz") as tf:
+            for m in tf.getmembers():
+                if not m.isfile():
+                    continue
+                parts = m.name.split("/", 1)
+                rel = parts[1] if len(parts) == 2 else m.name
+                if rel not in wanted or not _safe_rel_path(rel):
+                    continue
+                fobj = tf.extractfile(m)
+                if fobj is None:
+                    continue
+                data = fobj.read(DEP_MAX_BYTES + 1)
+                if len(data) <= DEP_MAX_BYTES:
+                    out[rel] = data
+    except Exception:  # noqa: BLE001
+        return {}
+    return out
+
+
+def deps_tarball_pick(needs):
+    """needs=[(kind_hint, url, origin)]（主路与 manifest 缓存都没补上的）→
+    ({(origin, url): bytes}, stats)。按仓聚合、体积与阈值过滤、时间预算内尽力而为。"""
+    groups = {}
+    for kind_hint, url, origin in needs:
+        g = gh_repo_ref_of(url)
+        if not g:
+            continue
+        owner, repo, ref, path = g
+        groups.setdefault((owner, repo, ref), []).append((origin, url, path))
+    stats = {"groups": len(groups), "repos_tried": 0, "repos_ok": 0, "files": 0,
+             "below_threshold": 0, "too_big": 0, "size_unknown": 0, "failed": 0,
+             "budget_cut": 0}
+    got = {}
+    t0 = time.time()
+    # 缺得越多的仓越划算，按文件数降序
+    ordered = sorted(groups.items(), key=lambda kv: -len(kv[1]))
+    for (owner, repo, ref), items in ordered[:DEPS_TARBALL_REPOS_PER_ROUND]:
+        if len(items) < DEPS_TARBALL_MIN_FILES:
+            stats["below_threshold"] += len(items)
+            continue
+        if time.time() - t0 > DEPS_TARBALL_BUDGET_SEC:
+            stats["budget_cut"] += 1
+            break
+        kb = gh_repo_size_kb(owner, repo)
+        if kb is None:
+            stats["size_unknown"] += 1
+            continue
+        if kb > DEPS_TARBALL_MAX_REPO_KB:
+            stats["too_big"] += len(items)
+            continue
+        stats["repos_tried"] += 1
+        tar = fetch_repo_tarball(owner, repo, ref)
+        if not tar:
+            stats["failed"] += 1
+            continue
+        data = tarball_take_files(tar, {p for _o, _u, p in items})
+        if not data:
+            stats["failed"] += 1
+            continue
+        stats["repos_ok"] += 1
+        for origin, url, path in items:
+            if path in data:
+                got[(origin, url)] = data[path]
+                stats["files"] += 1
+        del tar, data
+    return got, stats
+
+
+# ---- 稀疏浅克隆兜底（2026-09-29，SSH 传输）----
+# raw 被掐时最狠的一类：同一个仓缺几十上百个依赖（实测 13998394872/TVBox 缺 269 个）。
+# 逐文件走镜像要么超时要么 404，整仓 tarball 又被体积护栏挡住（该仓 248MB）。
+# 本机实测 SSH 全通，于是按 `--filter=blob:none --depth 1 --no-checkout` + sparse-checkout
+# 只取需要的那些 blob：**269 个路径 10.8 秒、只落 256 个文件 9.5MB**，且不经任何第三方。
+DEPS_GIT_BACKFILL = os.environ.get("DEPS_GIT_BACKFILL", "1") == "1"
+DEPS_GIT_TRANSPORT = os.environ.get("DEPS_GIT_TRANSPORT", "ssh").strip().lower()
+DEPS_GIT_MIN_FILES = int(os.environ.get("DEPS_GIT_MIN_FILES", "2"))
+DEPS_GIT_BUDGET_SEC = float(os.environ.get("DEPS_GIT_BUDGET_SEC", "420"))
+DEPS_GIT_TIMEOUT = int(os.environ.get("DEPS_GIT_TIMEOUT", "120"))
+DEPS_GIT_REPOS_PER_ROUND = int(os.environ.get("DEPS_GIT_REPOS_PER_ROUND", "25"))
+_git_probe_cache: dict = {}
+
+
+def _git_run(args, timeout):
+    """跑 git，返回 CompletedProcess 或 None（超时/异常/git 缺失都算 None）。
+    GIT_TERMINAL_PROMPT=0 必须有：私有或拼错的仓库名会弹凭据交互，把 shell 卡死。"""
+    import subprocess
+    env = dict(os.environ, GIT_TERMINAL_PROMPT="0", GIT_FLUSH="1")
+    try:
+        return subprocess.run(["git", *args], capture_output=True, timeout=timeout, env=env)
+    except Exception:  # noqa: BLE001
+        return None
+
+
+def _git_repo_url(owner: str, repo: str) -> str:
+    if DEPS_GIT_TRANSPORT == "https":
+        return f"https://github.com/{owner}/{repo}.git"
+    return f"git@github.com:{owner}/{repo}.git"
+
+
+def gh_repo_git_reachable(owner: str, repo: str) -> bool:
+    """一次性探测该仓能否用 git 直连（SSH/HTTPS 按 DEPS_GIT_TRANSPORT）。结果按仓缓存。"""
+    key = (owner, repo)
+    if key in _git_probe_cache:
+        return _git_probe_cache[key]
+    r = _git_run(["ls-remote", "--exit-code", "-q", _git_repo_url(owner, repo), "HEAD"], 15)
+    ok = bool(r and r.returncode == 0)
+    _git_probe_cache[key] = ok
+    return ok
+
+
+def deps_git_plan(needs):
+    """needs=[(kind_hint, url, origin)] → {(owner, repo, ref): [(origin, url, path)]}，
+    只保留可 git 直取且同仓文件数达阈值的组（按文件数降序，最划算的先做）。"""
+    groups: dict = {}
+    for _kind_hint, url, origin in needs:
+        g = gh_repo_ref_of(url)
+        if not g:
+            continue
+        owner, repo, ref, path = g
+        groups.setdefault((owner, repo, ref), []).append((origin, url, path))
+    out = {k: v for k, v in groups.items() if len(v) >= DEPS_GIT_MIN_FILES}
+    return dict(sorted(out.items(), key=lambda kv: -len(kv[1])))
+
+
+def deps_git_backfill(needs):
+    """按仓稀疏浅克隆，取回 needs 里那些文件。返回 ({(origin, url): bytes}, stats)。
+
+    全程在系统临时目录里做，finally 必删；不落地到 deps/（由调用方决定写哪），
+    只读我们白名单里的路径，所以没有路径穿越面。"""
+    import shutil
+    import tempfile
+    stats = {"groups": 0, "repos_ok": 0, "repos_failed": 0, "files": 0,
+             "probed_unreachable": 0, "budget_cut": 0}
+    got: dict = {}
+    plan = deps_git_plan(needs)
+    stats["groups"] = len(plan)
+    if not plan:
+        return got, stats
+    t0 = time.time()
+    for (owner, repo, ref), items in list(plan.items())[:DEPS_GIT_REPOS_PER_ROUND]:
+        if time.time() - t0 > DEPS_GIT_BUDGET_SEC:
+            stats["budget_cut"] += 1
+            break
+        if not gh_repo_git_reachable(owner, repo):
+            stats["probed_unreachable"] += 1
+            continue
+        workdir = tempfile.mkdtemp(prefix="tvbox-dep-git-")
+        try:
+            url_git = _git_repo_url(owner, repo)
+            r = _git_run(["clone", "--filter=blob:none", "--depth", "1", "--no-checkout",
+                          "--quiet", "-b", ref, url_git, workdir], DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                # -b <ref> 失败：ref 可能是标签或已删分支 → 退回默认分支再试一次
+                shutil.rmtree(workdir, ignore_errors=True)
+                os.makedirs(workdir, exist_ok=True)
+                r = _git_run(["clone", "--filter=blob:none", "--depth", "1",
+                              "--no-checkout", "--quiet", url_git, workdir],
+                             DEPS_GIT_TIMEOUT)
+                if r is None or r.returncode != 0:
+                    stats["repos_failed"] += 1
+                    continue
+            paths = [p for _o, _u, p in items if _safe_rel_path(p)]
+            if not paths:
+                stats["repos_failed"] += 1
+                continue
+            if _git_run(["-C", workdir, "sparse-checkout", "init", "--no-cone"], 30) is None:
+                stats["repos_failed"] += 1
+                continue
+            r = _git_run(["-C", workdir, "sparse-checkout", "set"] + paths, DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                stats["repos_failed"] += 1
+                continue
+            r = _git_run(["-C", workdir, "checkout"], DEPS_GIT_TIMEOUT)
+            if r is None or r.returncode != 0:
+                stats["repos_failed"] += 1
+                continue
+            n = 0
+            for origin, url, path in items:
+                if not _safe_rel_path(path):
+                    continue      # 读取侧自己也要再过一遍，不依赖上游解析
+                fp = os.path.join(workdir, *path.split("/"))
+                if not os.path.isfile(fp):
+                    continue          # 上游树里没有这个路径（多为作者已删）
+                try:
+                    if os.path.getsize(fp) > DEP_MAX_BYTES:
+                        continue
+                    with open(fp, "rb") as fh:
+                        data = fh.read()
+                except OSError:
+                    continue
+                got[(origin, url)] = data
+                n += 1
+            if n:
+                stats["repos_ok"] += 1
+                stats["files"] += n
+        finally:
+            shutil.rmtree(workdir, ignore_errors=True)
+    return got, stats
+
+
 def load_manifest() -> dict:
     try:
         with open(MANIFEST_PATH, encoding="utf-8") as f:
@@ -2346,6 +2742,62 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                 ok_map[key] = {"key": key, "url": e[1], "origin": e[2], "local": m["local"],
                                "ok": True, "kind": m["kind"], "md5": m["md5"],
                                "size": m.get("size", 0), "err": "", "channel": "manifest-cache"}
+
+    # ---- 3b. 整仓兜底：主路与 manifest 缓存都没补上的 github 文件 ----
+    # 顺序：先稀疏浅克隆（SSH，一仓一次只取需要的 blob，最准最快），
+    # 再用 codeload tarball 补剩余（≤30MB 小仓；CI 上没有 SSH key 时它顶上）。
+    _tb_got: dict = {}
+    _needs = [e for e in entries if f"{e[2]}|{e[1]}" not in ok_map]
+    if _needs and DEPS_GIT_BACKFILL:
+        _git_got, _gst = deps_git_backfill(_needs)
+        for _k, _v in _git_got.items():
+            _tb_got[_k] = (_v, "git-sparse")
+        print(f"  [deps] 稀疏克隆兜底：候选 {_gst['groups']} 组 → 成功 {_gst['repos_ok']} 仓，"
+              f"补回 {_gst['files']} 个文件（git 不可达 {_gst['probed_unreachable']} / "
+              f"失败 {_gst['repos_failed']} / 超预算停 {_gst['budget_cut']}）", flush=True)
+    if _needs and DEPS_TARBALL_BACKFILL:
+        _rest = [e for e in _needs if (e[2], e[1]) not in _tb_got]
+        _tb_raw, _tb_st = deps_tarball_pick(_rest)
+        for _k, _v in _tb_raw.items():
+            _tb_got[_k] = (_v, "codeload-tarball")
+        print(f"  [deps] codeload 整仓兜底：候选 {_tb_st['groups']} 组 → 实拉 "
+              f"{_tb_st['repos_tried']} 仓，补回 {_tb_st['files']} 个文件"
+              f"（跳过：不足阈值 {_tb_st['below_threshold']} / 仓库过大 {_tb_st['too_big']} / "
+              f"体积未知 {_tb_st['size_unknown']} / 取回失败 {_tb_st['failed']} / "
+              f"超预算停 {_tb_st['budget_cut']}）", flush=True)
+    for (origin, url), (data, channel) in _tb_got.items():
+        rkey = f"{origin}|{url}"
+        lp = dep_local_path(origin, url)
+        hint = {"jar": "jar", "zip": "jar", "js": "js", "json": "json",
+                "php": "jar"}.get(url.lower().split("?")[0].rsplit(".", 1)[-1], "")
+        kind = dep_classify(hint, data)
+        if kind == "unknown":
+            continue
+        try:
+            os.makedirs(os.path.dirname(lp), exist_ok=True)
+            with open(lp, "wb") as fh:
+                fh.write(data)
+        except OSError as ex:
+            print(f"  [deps] {channel} 落盘失败 {rkey}: {type(ex).__name__}", flush=True)
+            continue
+        raw_st = ""
+        if raw_store.ENABLED:
+            try:
+                raw_st = raw_store.ingest(
+                    raw_store.RAW_VOD_DIR, rkey, url, data,
+                    rel=lp[len("deps/"):] if lp.startswith("deps/") else lp,
+                    store_bytes=False)["status"]
+            except OSError as ex:  # noqa: BLE001
+                print(f"  [deps] {channel} {rkey} 账本写入失败：{ex}", flush=True)
+        ok_map[rkey] = {"key": rkey, "url": url, "origin": origin, "local": lp,
+                        "ok": True, "kind": kind,
+                        "md5": hashlib.md5(data).hexdigest(), "size": len(data),
+                        "err": "", "channel": channel, "raw_status": raw_st}
+        dep_backoff_clear(backoff, rkey)   # 补回来了，别再退避
+        _backoff_dirty.add(rkey)
+    if _backoff_dirty:
+        dep_backoff_save(backoff)
+
 
     # ---- 4. 改写引用 ----
     stats = {"total": len(entries), "collected": len(ok_map), "rewritten": 0, "kept": 0, "spider": 0}
@@ -4662,10 +5114,17 @@ def main() -> int:
         # ---- 合并 ----
         if kind == "tvbox":
             cfg = detail["cfg"]
+            # 成人专供上游：站点照常收（classify_site 会整仓强制 adult → adult.json），
+            # 直播照常收（打上 _adult_only，稍后下放 adult_live.json），
+            # 但 parses / 全局 spider / wallpaper 一律不收——它们是主配置的全局字段，
+            # 名字带成人特征会直接漏进非成人产物。
+            _a_only = name.lower() in ADULT_ONLY_ORIGINS
             cfg_sites = [s for s in (cfg.get("sites") or [])
                          if isinstance(s, dict) and s.get("key") and s.get("api")]
             cfg_lives = [l for l in (cfg.get("lives") or []) if isinstance(l, dict) and l.get("name")]
-            cfg_parses = [p for p in (cfg.get("parses") or []) if isinstance(p, dict) and p.get("name")]
+            cfg_parses = ([] if _a_only else
+                          [p for p in (cfg.get("parses") or [])
+                           if isinstance(p, dict) and p.get("name")])
             added_s = added_l = added_p = 0
             repl_s = repl_l = repl_p = 0
             sc = upstream_score(name, state)
@@ -4695,6 +5154,8 @@ def main() -> int:
                 elif sc > live_origin_score.get(k, -10 ** 9):
                     lives_by_name[k] = rewrite_gh(l)
                     repl_l += 1
+                if _a_only and isinstance(lives_by_name.get(k), dict):
+                    lives_by_name[k]["_adult_only"] = True   # 稍后下放成人直播池
             for p in cfg_parses:
                 k = merge_key_parse(p)
                 if not k:
@@ -4712,7 +5173,11 @@ def main() -> int:
                 merged_sites=added_s, merged_lives=added_l, merged_parses=added_p,
                 grade=grade_of(len(cfg_sites), valid), channel=info,
             )
+            if _a_only:
+                rec["adult_only"] = True
             for gk in ("spider", "wallpaper"):
+                if _a_only:
+                    break   # 成人专供上游不贡献主配置的全局字段
                 if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
                     merged[gk] = rewrite_gh(cfg[gk])
                     if gk == "spider":
@@ -5353,8 +5818,11 @@ def main() -> int:
             u = u.replace("https://https://", "https://", 1)
             u = u.replace("http://http://", "http://", 1)
         l["url"] = u
-        # 成人主题 lives 一律下放到 adult.json
-        if any(k in str(l.get("name") or "").lower() for k in ("传媒816", "18+", "成人", "pron", "live18")):
+        # 成人主题 lives 一律下放到 adult.json；成人专供上游的整条直播也下放
+        # （它的频道名可能很干净，关键词扫不到，但上游已被判定成人特征）
+        if l.pop("_adult_only", None) or any(
+                k in str(l.get("name") or "").lower()
+                for k in ("传媒816", "18+", "成人", "pron", "live18")):
             adult_lives.append({
                 "name": l.get("name"), "type": l.get("type", 1),
                 "url": l.get("url"), "group": "成人直播",

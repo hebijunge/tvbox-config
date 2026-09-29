@@ -27,10 +27,7 @@ import hashlib
 import json
 import os
 import sys
-import urllib.request
 from concurrent.futures import ThreadPoolExecutor
-
-UA = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 
 
 def norm(v):
@@ -56,9 +53,12 @@ def sites_of(doc):
 
     上游配置格式并不统一，裸数组（顶层就是站点列表）是真实存在的形态，
     必须兼容——否则一条非预期格式就会把整轮评估带崩。
+    裸数组分支要求 api（与 discover_upstreams.sites_of 同口径）：只认 name 会把
+    Alist 服务器列表那类「有 name 无 api」的数组当站点，而这里数出来的 unique
+    直接决定 canary 收编，虚高比误杀更贵。
     """
     if isinstance(doc, list):
-        return [x for x in doc if isinstance(x, dict) and (x.get("api") or x.get("name"))]
+        return [x for x in doc if isinstance(x, dict) and x.get("api")]
     if isinstance(doc, dict):
         v = doc.get("sites") or doc.get("video") or []
         return [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []
@@ -66,21 +66,17 @@ def sites_of(doc):
 
 
 def http_get(url, timeout=15):
-    """拉 URL，raw.githubusercontent.com 直连失败时走 ghproxy 镜像兜底。"""
-    req = urllib.request.Request(url, headers={"User-Agent": UA})
-    try:
-        with urllib.request.urlopen(req, timeout=timeout) as r:
-            return r.read().decode("utf-8", "replace")
-    except Exception:
-        if "raw.githubusercontent.com" in url:
-            mirror = "https://ghproxy.net/" + url
-            try:
-                req2 = urllib.request.Request(mirror, headers={"User-Agent": UA})
-                with urllib.request.urlopen(req2, timeout=timeout) as r:
-                    return r.read().decode("utf-8", "replace")
-            except Exception as e2:
-                raise RuntimeError(f"直连与镜像均失败: {str(e2)[:60]}")
-        raise
+    """拉 URL；github 链接走每日实测镜像链。
+
+    这里曾与 discover_upstreams 一样写死 `https://ghproxy.net/`（该站不在每日实测池、
+    09-19 实测仅 47KB/s）——而本脚本的 unique 完全取决于能不能取到候选内容，
+    慢镜像＝候选被算成 0 独有＝直接漏收编。取数实现统一交给 discover_upstreams，
+    避免同一份逻辑三处漂移。
+    """
+    sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+    import discover_upstreams as _du
+    _st, raw = _du.http_get(url, timeout, 4_000_000)
+    return raw.decode("utf-8", "replace")
 
 
 def load_base_fps(path):
@@ -90,15 +86,41 @@ def load_base_fps(path):
     return {fingerprint(s) for s in sites if isinstance(s, dict)}, len(sites)
 
 
+def _looks_like_live(text: str) -> bool:
+    """直播列表形态（m3u / txt #genre#），不是点播配置。"""
+    head = text[:2000]
+    return ("#EXTM3U" in head) or ("#EXTINF" in head) or ("#genre#" in head)
+
+
+def _looks_like_html(text: str) -> bool:
+    head = text[:200].lstrip().lower()
+    return head.startswith("<!doctype html") or head.startswith("<html") or head.startswith("<svg")
+
+
 def eval_one(cand, base_fps):
     url = cand.get("url")
     out = dict(cand)
-    out.update(total=0, dup=0, unique=0, unique_rate=0.0, err="")
+    out.update(total=0, dup=0, unique=0, unique_rate=0.0, err="", skipped="")
     try:
         txt = http_get(url)
-        doc = json.loads(txt)
     except Exception as e:
         out["err"] = str(e)[:120]
+        return out
+    # 与 discover_upstreams.probe_candidate 同口径：先按形态分流，再谈解析。
+    # 旧实现直接 json.loads，导致「直播列表 / HTML 页 / SVG」全被记成
+    # `Expecting value: line 1 column 1`——55 条失败里 32 条是这么来的，
+    # 看着像通道坏了，其实是候选本身不是点播配置。
+    if _looks_like_live(txt):
+        out["skipped"] = "直播列表（走直播线，不算点播独有度）"
+        out["entries"] = txt.count("#EXTINF") or txt.count(",http")
+        return out
+    if _looks_like_html(txt):
+        out["err"] = "HTML/SVG 页面（非配置，候选池噪声）"
+        return out
+    try:
+        doc = json.loads(txt.lstrip("\ufeff \t\r\n"))
+    except Exception as e:
+        out["err"] = f"{type(e).__name__}: {str(e)[:90]}"
         return out
     try:
         sites = sites_of(doc)
@@ -239,18 +261,37 @@ def main() -> int:
     results.sort(key=lambda r: (-r.get("unique", 0), -r.get("score", 0)))
 
     os.makedirs(os.path.dirname(os.path.join(repo, args.out)), exist_ok=True)
-    json.dump({
-        "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
-        "note": "候选独有度评估：unique=该候选带来、当前产物里没有的新站点数。收编应看 unique 而非 score。",
-        "base": {"file": args.base, "sites": base_n, "unique_fps": len(base_fps)},
-        "summary": {
-            "candidates": len(results),
-            "fetch_ok": sum(1 for r in results if not r.get("err")),
-            "with_unique": sum(1 for r in results if r.get("unique", 0) > 0),
-            "total_unique_sites": sum(r.get("unique", 0) for r in results),
-        },
-        "candidates": results,
-    }, open(os.path.join(repo, args.out), "w", encoding="utf-8"), ensure_ascii=False, indent=1)
+    # 汇总要能分清「成功评估 / 直播列表跳过 / HTML 噪声 / 真解析失败」，
+    # 否则 fetch_ok 会把跳过的也算成功（旧口径就是靠这个掩盖了 32 条假失败）
+    _skipped = sum(1 for r in results if r.get("skipped"))
+    _html = sum(1 for r in results if str(r.get("err", "")).startswith("HTML/SVG"))
+    _noarr = sum(1 for r in results if str(r.get("err", "")).startswith("无站点数组"))
+    _fetch_fail = sum(1 for r in results
+                      if r.get("err") and not str(r["err"]).startswith(("HTML/SVG", "无站点数组")))
+    summary = {
+        "candidates": len(results),
+        "evaluated": sum(1 for r in results
+                         if not r.get("err") and not r.get("skipped")),
+        "skipped_live": _skipped,
+        "html_noise": _html,
+        "no_sites": _noarr,
+        "fetch_or_parse_failed": _fetch_fail,
+        "fetch_ok": sum(1 for r in results if not r.get("err")),   # 兼容旧字段名
+        "with_unique": sum(1 for r in results if r.get("unique", 0) > 0),
+        "total_unique_sites": sum(r.get("unique", 0) for r in results),
+    }
+    with open(os.path.join(repo, args.out), "w", encoding="utf-8") as f:
+        json.dump({
+            "generated_at": __import__("datetime").datetime.now().isoformat(timespec="seconds"),
+            "note": "候选独有度评估：unique=该候选带来、当前产物里没有的新站点数。"
+                    "收编应看 unique 而非 score。",
+            "base": {"file": args.base, "sites": base_n, "unique_fps": len(base_fps)},
+            "summary": summary,
+            "candidates": results,
+        }, f, ensure_ascii=False, indent=1)
+    print(f"[eval] 汇总：评估成功 {summary['evaluated']} / 直播列表跳过 {summary['skipped_live']} "
+          f"/ HTML 噪声 {summary['html_noise']} / 无站点数组 {summary['no_sites']} "
+          f"/ 取数或解析失败 {summary['fetch_or_parse_failed']}（共 {len(results)} 条）", flush=True)
 
     print("\n==== 候选独有度（按 unique 降序；只看 score 会被重复站点误导）====")
     print(f"{'score':>5} {'站点':>5} {'重合':>5} {'独有':>5} {'独有率':>6}  url")

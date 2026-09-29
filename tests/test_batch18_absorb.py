@@ -192,10 +192,22 @@ class TestGovernance(unittest.TestCase):
         self.assertIn("https://fastly.jsdelivr.net/gh/jyoketsu/tv@main/m.json", urls)
 
     def test_gh_mirrors_intact(self):
-        # 守护口径：列表不得被截断（>=9），2026-09-29 起 acmsz 实测最快置首
-        self.assertGreaterEqual(len(fm.GH_MIRRORS), 9)
-        self.assertEqual(fm.GH_MIRRORS[0], "https://gh.acmsz.top/")
-        self.assertIn("https://gh-proxy.com/", fm.GH_MIRRORS)  # QC 软化口径：保留、按当日实测轮换
+        """守护口径断的是静态默认，不是运行时的 fm.GH_MIRRORS。
+
+        运行时列表会跟着当日实测漂移（优先级 GH_MIRRORS env > state/mirror_ranking.json
+        > 静态默认，2026-09-29 改造），拿它断首位会让用例随本机文件状态忽好忽坏。
+        2026-09-29 大文件复测（8MB jar / 12s 时限 / 双采样取较差）：gh.acmsz.top 三轮
+        74~347KB/s 居末位，已从首位撤下，仍留在池内按每日实测排位。"""
+        default = [m.strip() for m in fm.GH_MIRRORS_DEFAULT.split(",") if m.strip()]
+        self.assertGreaterEqual(len(default), 9)  # 列表不得被截断
+        self.assertIn("https://gh-proxy.com/", default)  # QC 软化口径：保留、按当日实测轮换
+        self.assertIn("https://gh.acmsz.top/", default)
+        self.assertNotEqual(default[0], "https://gh.acmsz.top/")
+        self.assertTrue(all(m.endswith("/") for m in default))
+        # 运行时池：非空且格式合法（长度取决于当日存活数，不断具体值）
+        self.assertTrue(fm.GH_MIRRORS)
+        self.assertTrue(all(m.startswith("https://") and m.endswith("/")
+                            for m in fm.GH_MIRRORS))
 
 
 class TestE2ELive(unittest.TestCase):

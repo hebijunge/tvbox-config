@@ -67,7 +67,7 @@ jobs:
       - name: 单元测试（config_decode / 吸收点 P1-P2 行为回归）
         run: python -m unittest discover -s tests -v
 
-      - name: 镜像复测并动态重排 GH_MIRRORS（实测延迟/吞吐，首位=运行时前缀；失败回退默认顺序）
+      - name: 镜像复测+三路发现新镜像（上游实证 / GitHub 搜索 / 搜索引擎清单），动态重排 GH_MIRRORS
         # P1-1 网络错误自动重试 1 次（max_attempts=2）；语法错误已被上方单元测试挡住，此处只兜网络抖动
         continue-on-error: true
         uses: nick-fields/retry@v3
@@ -83,7 +83,7 @@ jobs:
           # Gitee 路 2026-09-29 起默认关闭（净产出 0.54%，性价比为负）；
           # 要重开就在上面 run 加 --gitee，此 token 届时才生效
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
-        run: python scripts/discover_upstreams.py --max-repos 15 --pages 2 || true
+        run: python scripts/discover_upstreams.py --pages 2 || true   # 全展开＋增量索引：不再抽样，未变动的仓/文件免列免探
 
       - name: 候选独有度评估，并按 unique 收编 canary
         # 必须在 discover 之后：canary 收编标准看「独有站点数」，不是 discover 的 score。

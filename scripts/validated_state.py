@@ -371,7 +371,8 @@ def migrate(root=".", extra_feishu=None, note=None) -> dict:
     # 1) GitHub 线 upstreams_state
     up_path = os.path.join(root, "state", "upstreams_state.json")
     try:
-        ups = json.load(open(up_path, encoding="utf-8"))
+        with open(up_path, encoding="utf-8") as f:
+            ups = json.load(f)
     except Exception:  # noqa: BLE001
         ups = {}
     n_up = 0
@@ -429,7 +430,8 @@ def migrate(root=".", extra_feishu=None, note=None) -> dict:
     # 3) sites 段（GitHub 线站点验活历史原样并入）
     site_path = os.path.join(root, "state", "sites_state.json")
     try:
-        sites = json.load(open(site_path, encoding="utf-8"))
+        with open(site_path, encoding="utf-8") as f:
+            sites = json.load(f)
     except Exception:  # noqa: BLE001
         sites = {}
     for k, v in sites.items():

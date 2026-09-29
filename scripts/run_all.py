@@ -40,7 +40,7 @@ STAGES = [
     # 2026-09-29 流程重排（与 daily.yml 严格对齐）：探针整体后置到拉取合并之后，
     # 当天拉当天测；入库后的当日结论经 export_healthy 进 exports/，主产物不带健康标注。
     ("1", "镜像测速择优", ["scripts/mirror_probe.py"], True, {}),
-    ("2", "全网发现(五路)", ["scripts/discover_upstreams.py", "--max-repos", "15", "--pages", "2"], True,
+    ("2", "全网发现(五路)", ["scripts/discover_upstreams.py", "--pages", "2"], True,
      {"GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN", "")}),
     ("3", "候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
     ("4", "拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
