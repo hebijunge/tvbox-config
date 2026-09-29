@@ -202,8 +202,11 @@ def _round_epoch(rounds):
 def gh_search_hosts():
     """路 1：GitHub API 搜代理相关仓库，从搜索结果描述 / homepage / README 抽镜像前缀。
 
-    匿名也能搜（10 次/分钟），带 GITHUB_TOKEN 配额更高。本环境 GitHub 直连被墙时
-    这里整条返回空，不影响 Bing 路与固定池。"""
+    连通性实测（2026-09-29 本机）：api.github.com **可直连**（TCP + HTTP 200），被掐的是
+    raw.githubusercontent.com 的 HTTP 响应，所以这路本地就能跑，只是匿名配额低
+    （搜索 10 次/分钟）；带 GITHUB_TOKEN 配额更高，CI runner 原生直连两者都不受影响。
+    本机若设了 HTTPS_PROXY，urllib 会自动走代理，无需改代码。
+    实测 30.5s 返回 4 个前缀（上一轮入池的 api.gitproxy.dev 就出自这路的 README）。"""
     hosts = collections.Counter()
     tok = (os.environ.get("GITHUB_TOKEN") or "").strip()
     hdr = {"Accept": "application/vnd.github+json"}

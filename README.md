@@ -438,8 +438,8 @@ python scripts/fetch_merge.py
 **镜像测速口径**（`scripts/mirror_probe.py`）：固定池 28 个 + **三路发现增量**，按证据强度排队——
 路 0 **上游实证**：本管线自己的账本（`exports/upstream_status.json` 的 `channel=mirror:<host>`
 与 `success_url`、`radar/discovered.json` 的 reachable 候选、canary 清单）里真把上游配置取回来过
-的前缀；路 1 GitHub API 搜 `gh-proxy` 相关仓库读 README；路 2 Bing 搜公开清单帖（本地 GitHub
-直连被墙时路 1 静默跳过）。
+的前缀；路 1 GitHub API 搜 `gh-proxy` 相关仓库读 README（本机实测 `api.github.com` **可直连**，
+被掐的只是 `raw.githubusercontent.com` 的 HTTP 响应，所以这路本地也跑得出东西）；路 2 Bing 搜公开清单帖。
 提取只认「前缀 + github/raw」的确证形态（`h/https://raw...` 与 `h/raw.githubusercontent.com/...`
 两种写法都认，多级路径后嵌 github 链接的不算），裸域名不算。新面孔先过**内容一致性闸门**——必须把
 本项目那个 8MB jar 逐字节原样返回（sha256 相等），截断/HTML 冒充/改写内容一律拒入池；
