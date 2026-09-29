@@ -98,10 +98,15 @@ jobs:
 
       - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
         # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
-        # 这一路纯 Node+curl，能在 CI 直接跑 → 产物每日自动更新；
-        # csp 真机五关无法在 CI 跑，仍靠手工产出（见 docs/ARCHITECTURE.md 的时效降权说明）。
+        # 注意（2026-09-29 取证）：drpy-sandbox/ 在 .gitignore 内且 host.mjs 未随仓
+        # 提交，CI 检出树里没有该目录——此步实际是跳过而非每日更新；drpy_probe.json
+        # 属手工产物，受 store/rank_sites 的 PROBE_STALE_DAYS=7 时效降权约束。
         continue-on-error: true
         run: |
+          if [ ! -d drpy-sandbox ]; then
+            echo "::warning::drpy-sandbox 不在仓库中，跳过 drpy 五关实测（探针产物按 7 天时效降权）"
+            exit 0
+          fi
           cd drpy-sandbox && npm i --no-audit --no-fund
           cd ..
           python scripts/drpy_probe.py --workers 5 || true

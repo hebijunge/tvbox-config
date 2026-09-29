@@ -393,6 +393,15 @@ def ingest_probe(conn, path: str) -> int:
         except OSError:
             checked_at = None
     if checked_at:
+        # 时效闸门（与 rank_sites.PROBE_STALE_DAYS 同口径）：过期产物的结论（尤其
+        # D0/C0 判死）不得再刷新 interfaces 健康；历史数据当时已导入过，整段跳过。
+        try:
+            _age = (datetime.now() - datetime.fromisoformat(checked_at)).days
+        except ValueError:
+            _age = 0
+        if _age > int(os.environ.get("PROBE_STALE_DAYS", "7")):
+            log(f"[store] {probe_name} 产物已 {_age} 天未更新（>{os.environ.get('PROBE_STALE_DAYS', '7')}），跳过入库（时效降权）")
+            return 0
         conn.execute("DELETE FROM checks WHERE probe=? AND checked_at=?", (probe_name, checked_at))
     n = 0
     for r in sites:
