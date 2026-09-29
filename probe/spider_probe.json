@@ -1,12 +1,12 @@
 {
- "generated_at": "2026-09-29 01:26:13",
+ "generated_at": "2026-09-29 01:50:35",
  "note": "type 3 源的真实站点地址来源于本地 drpy 规则文件 / ext 配置；无信号者无法测速",
  "summary": {
   "total": 1428,
   "probed": 467,
-  "reachable": 266,
+  "reachable": 265,
   "no_signal": 961,
-  "p50_ms": 737
+  "p50_ms": 705
  },
  "sites": [
   {
@@ -30,16 +30,6 @@
    "ms": 0
   },
   {
-   "key": "csp_xbpq_lgyy",
-   "name": "蓝光影院(XBPQ)",
-   "kind": "csp",
-   "target": "https://lgyy.tv/vodshow/{cateId",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 25
-  },
-  {
    "key": "csp_xb_lgyys",
    "name": "蓝光影院(XBiu)",
    "kind": "csp",
@@ -47,17 +37,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 25
+   "ms": 34
   },
   {
-   "key": "忍者",
-   "name": "🥷忍者┃蓝光┃弹幕",
+   "key": "csp_xbpq_lgyy",
+   "name": "蓝光影院(XBPQ)",
    "kind": "csp",
-   "target": "https://mfxs123.sbs",
-   "from": "csp.ext-dict",
+   "target": "https://lgyy.tv/vodshow/{cateId",
+   "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 62
+   "ms": 35
   },
   {
    "key": "晴天",
@@ -67,17 +57,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 130
+   "ms": 46
   },
   {
-   "key": "集多聚合",
-   "name": "直播┃聚合",
+   "key": "萌豚",
+   "name": "萌豚｜APP",
    "kind": "csp",
-   "target": "https://lemonlive.pages.dev",
+   "target": "https://qjappcms.htsp4k.top",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 189
+   "ok": false,
+   "error": "URLError",
+   "ms": 49
   },
   {
    "key": "猴影视",
@@ -87,17 +77,27 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 201
+   "ms": 160
   },
   {
-   "key": "菲儿影视",
-   "name": "🥪菲菲┃蓝光┃无广",
+   "key": "忍者",
+   "name": "🥷忍者┃蓝光┃弹幕",
    "kind": "csp",
-   "target": "https://appcms.freehd.vip",
+   "target": "https://mfxs123.sbs",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 211
+   "ok": false,
+   "error": "URLError",
+   "ms": 158
+  },
+  {
+   "key": "枫叶影视",
+   "name": "♨️枫叶｜4K线路",
+   "kind": "csp",
+   "target": "https://www.vip1949.com/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 221
   },
   {
    "key": "иӮҘзҢ«",
@@ -110,24 +110,24 @@
    "ms": 0
   },
   {
-   "key": "萌豚",
-   "name": "萌豚｜APP",
+   "key": "集多聚合",
+   "name": "直播┃聚合",
    "kind": "csp",
-   "target": "https://qjappcms.htsp4k.top",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 247
-  },
-  {
-   "key": "榴莲4k",
-   "name": "榴莲｜APP",
-   "kind": "csp",
-   "target": "https://qjappcms.ll4k.xyz/",
+   "target": "https://lemonlive.pages.dev",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 258
+   "ms": 224
+  },
+  {
+   "key": "布布",
+   "name": "🦊布布丨蓝光秒播",
+   "kind": "csp",
+   "target": "https://323433ssdfd.top",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 270
   },
   {
    "key": "664K",
@@ -140,76 +140,6 @@
    "ms": 0
   },
   {
-   "key": "csp_WoGG1",
-   "name": "💖玩偶影视4K-备1",
-   "kind": "csp",
-   "target": "https://gh-proxy.com/https://raw.githubusercontent.com/FongMi/CatVodSpider/main/json/wogg.json",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 285
-  },
-  {
-   "key": "世界",
-   "name": "世界 • APP",
-   "kind": "csp",
-   "target": "https://appcms.4ksj.app",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 290
-  },
-  {
-   "key": "酷影",
-   "name": "酷影✨蓝光影视",
-   "kind": "csp",
-   "target": "https://www.tvkuys.xyz/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 272
-  },
-  {
-   "key": "酷影视",
-   "name": "😎酷影┃蓝光┃纯净",
-   "kind": "csp",
-   "target": "https://www.tvkuys.xyz/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 125
-  },
-  {
-   "key": "布布",
-   "name": "🦊布布丨蓝光秒播",
-   "kind": "csp",
-   "target": "https://323433ssdfd.top",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 344
-  },
-  {
-   "key": "枫叶影视",
-   "name": "♨️枫叶｜4K线路",
-   "kind": "csp",
-   "target": "https://www.vip1949.com/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 369
-  },
-  {
-   "key": "剧圈99",
-   "name": "⭕剧圈丨蓝光秒播",
-   "kind": "csp",
-   "target": "http://124.221.3.182:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 428
-  },
-  {
    "key": "4k_csp_Nmys",
    "name": "🌾┃农民┃直连",
    "kind": "csp",
@@ -217,37 +147,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 366
-  },
-  {
-   "key": "仓鼠",
-   "name": "🐹仓鼠┃蓝光┃弹幕",
-   "kind": "csp",
-   "target": "https://qjappcms.cs4k.top",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 444
-  },
-  {
-   "key": "线路10",
-   "name": "🏭厂长",
-   "kind": "csp",
-   "target": "https://www.4kcz.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 476
-  },
-  {
-   "key": "半日99",
-   "name": "🥰胖妞丨蓝光秒播",
-   "kind": "csp",
-   "target": "http://103.217.190.91:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 498
+   "ms": 213
   },
   {
    "key": "若雪",
@@ -257,27 +157,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 243
+   "ms": 53
   },
   {
-   "key": "MV_vod-2",
-   "name": "⚡┃明星┃MV",
+   "key": "世界",
+   "name": "世界 • APP",
    "kind": "csp",
-   "target": "https://agit.ai/fantaiying/fty/raw/branch/master/ext/MTV.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 199
-  },
-  {
-   "key": "奴娜",
-   "name": "奴娜丨APP",
-   "kind": "csp",
-   "target": "https://www.nntv.in/api.php/v1.vod",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 104
+   "target": "https://appcms.4ksj.app",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 286
   },
   {
    "key": "素白白",
@@ -287,17 +177,77 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 558
+   "ms": 294
   },
   {
-   "key": "厂长",
-   "name": "🏪厂长｜蓝光影视",
+   "key": "csp_WoGG1",
+   "name": "💖玩偶影视4K-备1",
    "kind": "csp",
-   "target": "https://cz01.vip",
+   "target": "https://gh-proxy.com/https://raw.githubusercontent.com/FongMi/CatVodSpider/main/json/wogg.json",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 303
+  },
+  {
+   "key": "酷影视",
+   "name": "😎酷影┃蓝光┃纯净",
+   "kind": "csp",
+   "target": "https://www.tvkuys.xyz/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 217
+  },
+  {
+   "key": "剧圈99",
+   "name": "⭕剧圈丨蓝光秒播",
+   "kind": "csp",
+   "target": "http://124.221.3.182:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 422
+  },
+  {
+   "key": "半日99",
+   "name": "🥰胖妞丨蓝光秒播",
+   "kind": "csp",
+   "target": "http://103.217.190.91:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 495
+  },
+  {
+   "key": "MV_vod-2",
+   "name": "⚡┃明星┃MV",
+   "kind": "csp",
+   "target": "https://agit.ai/fantaiying/fty/raw/branch/master/ext/MTV.json",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 473
+   "ms": 201
+  },
+  {
+   "key": "酷影",
+   "name": "酷影✨蓝光影视",
+   "kind": "csp",
+   "target": "https://www.tvkuys.xyz/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 470
+  },
+  {
+   "key": "线路10",
+   "name": "🏭厂长",
+   "kind": "csp",
+   "target": "https://www.4kcz.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 546
   },
   {
    "key": "全网影视",
@@ -307,7 +257,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 444,
-   "ms": 675
+   "ms": 576
+  },
+  {
+   "key": "奴娜",
+   "name": "奴娜丨APP",
+   "kind": "csp",
+   "target": "https://www.nntv.in/api.php/v1.vod",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 120
   },
   {
    "key": "魔方",
@@ -317,7 +277,47 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 771
+   "ms": 678
+  },
+  {
+   "key": "mutefun",
+   "name": "😄DFun┃动漫┃蓝光",
+   "kind": "csp",
+   "target": "https://www.mutefun.tv",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 684
+  },
+  {
+   "key": "菲儿影视",
+   "name": "🥪菲菲┃蓝光┃无广",
+   "kind": "csp",
+   "target": "https://appcms.freehd.vip",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 705
+  },
+  {
+   "key": "仓鼠",
+   "name": "🐹仓鼠┃蓝光┃弹幕",
+   "kind": "csp",
+   "target": "https://qjappcms.cs4k.top",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 704
+  },
+  {
+   "key": "榴莲4k",
+   "name": "榴莲｜APP",
+   "kind": "csp",
+   "target": "https://qjappcms.ll4k.xyz/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 713
   },
   {
    "key": "йҹ©еңҲ",
@@ -330,14 +330,14 @@
    "ms": 0
   },
   {
-   "key": "mutefun",
-   "name": "😄DFun┃动漫┃蓝光",
+   "key": "厂长",
+   "name": "🏪厂长｜蓝光影视",
    "kind": "csp",
-   "target": "https://www.mutefun.tv",
+   "target": "https://cz01.vip",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 798
+   "ms": 676
   },
   {
    "key": "先生",
@@ -347,7 +347,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 216
+   "ms": 146
   },
   {
    "key": "咕噜-2",
@@ -357,47 +357,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 493
-  },
-  {
-   "key": "五大采集平台采",
-   "name": "❤️‍分享官采",
-   "kind": "csp",
-   "target": "http://39.105.18.5:5565/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 532
-  },
-  {
-   "key": "布雷",
-   "name": "布雷丨APP",
-   "kind": "csp",
-   "target": "https://cms.bl4k.cc",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 864
-  },
-  {
-   "key": "juxiafan",
-   "name": "💝分享剧匣",
-   "kind": "csp",
-   "target": "http://jxfmax.juxiafan.com/icciu_api.php/v1.vod",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 300
-  },
-  {
-   "key": "鬼片之家",
-   "name": "🧛鬼片┃影视",
-   "kind": "csp",
-   "target": "https://www.guipian365.com/vodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 493
+   "ms": 433
   },
   {
    "key": "WoNiu",
@@ -407,97 +367,27 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 981
+   "ms": 796
   },
   {
-   "key": "双星99",
-   "name": "🌈双星｜动漫",
+   "key": "juxiafan",
+   "name": "💝分享剧匣",
    "kind": "csp",
-   "target": "http://111.180.139.119:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 497
-  },
-  {
-   "key": "Rebo",
-   "name": "🍓┆热播┆APP",
-   "kind": "csp",
-   "target": "http://v.rbotv.cn",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 902
-  },
-  {
-   "key": "csp_MeijuTT",
-   "name": "🧲美剧天堂",
-   "kind": "csp",
-   "target": "https://www.meijutt.net",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 117
-  },
-  {
-   "key": "csp_IkanBot",
-   "name": "👀爱看┃[采集]",
-   "kind": "csp",
-   "target": "https://www1.ikanbot.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 131
-  },
-  {
-   "key": "第七电影",
-   "name": "🍉第七电影┃xb",
-   "kind": "csp",
-   "target": "https://the7tv.com/the/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 199
-  },
-  {
-   "key": "csp_SeedHub",
-   "name": "🧲SeedHub",
-   "kind": "csp",
-   "target": "https://www.seedhub.cc",
+   "target": "http://jxfmax.juxiafan.com/icciu_api.php/v1.vod",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 109
+   "ms": 235
   },
   {
-   "key": "MTV-2",
-   "name": "🎧明星┃MV",
+   "key": "五大采集平台采",
+   "name": "❤️‍分享官采",
    "kind": "csp",
-   "target": "https://notabug.org/fantaiying/ext/raw/main/MTV.json",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 989
-  },
-  {
-   "key": "飞飞",
-   "name": "飞飞┃APP",
-   "kind": "csp",
-   "target": "https://qpcj.69mini.com/api.php/app/",
+   "target": "http://39.105.18.5:5565/api.php/app/",
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 1161
-  },
-  {
-   "key": "csp_初中",
-   "name": "📚┃初中┃课堂",
-   "kind": "csp",
-   "target": "https://img2.gelonghui.com/library/ba156-73e16cad-8257-4f33-b8c0-e051e72e546dnull",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 681
+   "ms": 504
   },
   {
    "key": "SaoHuo",
@@ -507,27 +397,67 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 522,
-   "ms": 1044
+   "ms": 414
   },
   {
-   "key": "csp_е°‘е„ҝ",
-   "name": "рҹ“ҡв”ғе°‘е„ҝв”ғж•ҷиӮІ",
+   "key": "鬼片之家",
+   "name": "🧛鬼片┃影视",
    "kind": "csp",
-   "target": "https://img2.gelonghui.com/library/1903b-eb0f1675-2437-4e72-bcf0-427b1626d79fnull",
+   "target": "https://www.guipian365.com/vodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 405
+  },
+  {
+   "key": "布雷",
+   "name": "布雷丨APP",
+   "kind": "csp",
+   "target": "https://cms.bl4k.cc",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 938
+  },
+  {
+   "key": "第七电影",
+   "name": "🍉第七电影┃xb",
+   "kind": "csp",
+   "target": "https://the7tv.com/the/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 141
+  },
+  {
+   "key": "双星99",
+   "name": "🌈双星｜动漫",
+   "kind": "csp",
+   "target": "http://111.180.139.119:19987/app/bn",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1117
+   "ms": 475
   },
   {
-   "key": "半日",
-   "name": "🅰半日",
+   "key": "csp_MeijuTT",
+   "name": "🧲美剧天堂",
    "kind": "csp",
-   "target": "http://103.217.190.91:19987/app/bn",
+   "target": "https://www.meijutt.net",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 110
+  },
+  {
+   "key": "csp_IkanBot",
+   "name": "👀爱看┃[采集]",
+   "kind": "csp",
+   "target": "https://www1.ikanbot.com/",
    "from": "csp.ext-dict",
    "ok": true,
-   "http": 200,
-   "ms": 1289
+   "http": 403,
+   "ms": 124
   },
   {
    "key": "csp_小学",
@@ -537,7 +467,77 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 819
+   "ms": 432
+  },
+  {
+   "key": "csp_е°‘е„ҝ",
+   "name": "рҹ“ҡв”ғе°‘е„ҝв”ғж•ҷиӮІ",
+   "kind": "csp",
+   "target": "https://img2.gelonghui.com/library/1903b-eb0f1675-2437-4e72-bcf0-427b1626d79fnull",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 741
+  },
+  {
+   "key": "csp_SeedHub",
+   "name": "🧲SeedHub",
+   "kind": "csp",
+   "target": "https://www.seedhub.cc",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 147
+  },
+  {
+   "key": "半日",
+   "name": "🅰半日",
+   "kind": "csp",
+   "target": "http://103.217.190.91:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1097
+  },
+  {
+   "key": "Rebo",
+   "name": "🍓┆热播┆APP",
+   "kind": "csp",
+   "target": "http://v.rbotv.cn",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1018
+  },
+  {
+   "key": "csp_初中",
+   "name": "📚┃初中┃课堂",
+   "kind": "csp",
+   "target": "https://img2.gelonghui.com/library/ba156-73e16cad-8257-4f33-b8c0-e051e72e546dnull",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 577
+  },
+  {
+   "key": "fyyy",
+   "name": "飞宇影院",
+   "kind": "csp",
+   "target": "http://ntfeiyu.com/nt/{cateId",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 326
+  },
+  {
+   "key": "MTV-2",
+   "name": "🎧明星┃MV",
+   "kind": "csp",
+   "target": "https://notabug.org/fantaiying/ext/raw/main/MTV.json",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 888
   },
   {
    "key": "Ikanbot",
@@ -550,164 +550,14 @@
    "ms": 0
   },
   {
-   "key": "fyyy",
-   "name": "飞宇影院",
+   "key": "飞飞",
+   "name": "飞飞┃APP",
    "kind": "csp",
-   "target": "http://ntfeiyu.com/nt/{cateId",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 400
-  },
-  {
-   "key": "Wwys",
-   "name": "🍙┆糯米┆影视",
-   "kind": "csp",
-   "target": "https://vip.wwgz.cn:5200",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 1226
-  },
-  {
-   "key": "csp_appys_2号币",
-   "name": "2号币",
-   "kind": "csp",
-   "target": "http://phoebe.cf/api.php/iptv/vod/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 143
-  },
-  {
-   "key": "爱优影视",
-   "name": "🫰🏻爱优┃影视",
-   "kind": "csp",
-   "target": "https://iuys2.cc/vodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 222
-  },
-  {
-   "key": "看美剧",
-   "name": "🇺🇸美剧┃看看",
-   "kind": "csp",
-   "target": "https://www.kmeiju.com/Show/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 235
-  },
-  {
-   "key": "567影院",
-   "name": "5️⃣南瓜┃影院",
-   "kind": "csp",
-   "target": "https://www.1234y.cc",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 179
-  },
-  {
-   "key": "New6v",
-   "name": "🧲New6V｜磁力",
-   "kind": "csp",
-   "target": "https://www.xb6v.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 914
-  },
-  {
-   "key": "王子-2",
-   "name": "🍟王子",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/7lj763gg402i7942503g9g9jk909jji3g0li9j088291253h4k141gggkk41435h43924kg6ik48i0856j01k882glkh4kllg538704jl5k4j1gl27j321g03",
+   "target": "https://qpcj.69mini.com/api.php/app/",
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 1668
-  },
-  {
-   "key": "🌸樱花动漫",
-   "name": "樱花动漫",
-   "kind": "csp",
-   "target": "https://www.857yhdm.com/show/{cateId",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 147
-  },
-  {
-   "key": "电影先生1",
-   "name": "❤️|电影┃先生",
-   "kind": "csp",
-   "target": "https://silidm.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 89
-  },
-  {
-   "key": "csp_Ikanbot",
-   "name": "👾Ikanbot",
-   "kind": "csp",
-   "target": "https://v.aikanbot.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 229
-  },
-  {
-   "key": "小鹿",
-   "name": "小鹿｜APP",
-   "kind": "csp",
-   "target": "https://xiaolu.pwwhu.cn",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 1577
-  },
-  {
-   "key": "csp_KubaCL",
-   "name": "🧲酷吧电影",
-   "kind": "csp",
-   "target": "https://www.kubady2.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 531
-  },
-  {
-   "key": "木耳",
-   "name": "木耳|弹幕",
-   "kind": "csp",
-   "target": "https://json02.heimuer.xyz/api.php/provide/vod/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 247
-  },
-  {
-   "key": "新6V-2",
-   "name": "🧲┃新6V┃磁力",
-   "kind": "csp",
-   "target": "https://www.xb6v.com/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 850
-  },
-  {
-   "key": "即可",
-   "name": "👋1080P┃即刻",
-   "kind": "csp",
-   "target": "https://www.jkdy.cc/vodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 261
+   "ms": 1175
   },
   {
    "key": "csp_高中",
@@ -717,17 +567,107 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 772
+   "ms": 360
   },
   {
-   "key": "三米ys",
-   "name": "《三米🔸影视》",
+   "key": "爱优影视",
+   "name": "🫰🏻爱优┃影视",
    "kind": "csp",
-   "target": "http://www.9-here.com/index.php/s/S-id-{cateId",
+   "target": "https://iuys2.cc/vodshow/{cateId",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 413
+   "ms": 270
+  },
+  {
+   "key": "Wwys",
+   "name": "🍙┆糯米┆影视",
+   "kind": "csp",
+   "target": "https://vip.wwgz.cn:5200",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 1120
+  },
+  {
+   "key": "🌸樱花动漫",
+   "name": "樱花动漫",
+   "kind": "csp",
+   "target": "https://www.857yhdm.com/show/{cateId",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 66
+  },
+  {
+   "key": "csp_KubaCL",
+   "name": "🧲酷吧电影",
+   "kind": "csp",
+   "target": "https://www.kubady2.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 465
+  },
+  {
+   "key": "看美剧",
+   "name": "🇺🇸美剧┃看看",
+   "kind": "csp",
+   "target": "https://www.kmeiju.com/Show/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 271
+  },
+  {
+   "key": "New6v",
+   "name": "🧲New6V｜磁力",
+   "kind": "csp",
+   "target": "https://www.xb6v.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 824
+  },
+  {
+   "key": "csp_appys_2号币",
+   "name": "2号币",
+   "kind": "csp",
+   "target": "http://phoebe.cf/api.php/iptv/vod/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 284
+  },
+  {
+   "key": "电影先生1",
+   "name": "❤️|电影┃先生",
+   "kind": "csp",
+   "target": "https://silidm.com/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 76
+  },
+  {
+   "key": "567影院",
+   "name": "5️⃣南瓜┃影院",
+   "kind": "csp",
+   "target": "https://www.1234y.cc",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 205
+  },
+  {
+   "key": "小鹿",
+   "name": "小鹿｜APP",
+   "kind": "csp",
+   "target": "https://xiaolu.pwwhu.cn",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1310
   },
   {
    "key": "首发-2",
@@ -737,87 +677,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 2132
-  },
-  {
-   "key": "布布影视APP",
-   "name": "🌺大鹅┃高清影视",
-   "kind": "csp",
-   "target": "https://bubutv.top",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 319
-  },
-  {
-   "key": "宝片电影",
-   "name": "🍉宝片┃xb",
-   "kind": "csp",
-   "target": "https://ibaopian.pro/vod/show/id/{cateId",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 233
-  },
-  {
-   "key": "爱看APP",
-   "name": "爱看｜APP",
-   "kind": "csp",
-   "target": "http://154.37.220.65",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 362
-  },
-  {
-   "key": "Kanqiu",
-   "name": "⚽┆看球┆体育",
-   "kind": "csp",
-   "target": "http://www.88kanqiu.one",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 2305
-  },
-  {
-   "key": "麦田",
-   "name": "[448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 麦田┃1080P",
-   "kind": "csp",
-   "target": "http://172.247.227.203:25321/mtys.php",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 417
-  },
-  {
-   "key": "广播迷",
-   "name": "♻️广播",
-   "kind": "csp",
-   "target": "http://www.guangbomi.com/tv/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 1368
-  },
-  {
-   "key": "狐狸君磁力",
-   "name": "💖分享狐狸",
-   "kind": "csp",
-   "target": "https://www.foxjun.com/s/?q={wd",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 1069
-  },
-  {
-   "key": "热播之家",
-   "name": "✅热播┃影视",
-   "kind": "csp",
-   "target": "https://rebozj.pro/type/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 1477
+   "ms": 1729
   },
   {
    "key": "师兄",
@@ -827,7 +687,137 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 2622
+   "ms": 1762
+  },
+  {
+   "key": "新6V-2",
+   "name": "🧲┃新6V┃磁力",
+   "kind": "csp",
+   "target": "https://www.xb6v.com/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 751
+  },
+  {
+   "key": "广播迷",
+   "name": "♻️广播",
+   "kind": "csp",
+   "target": "http://www.guangbomi.com/tv/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 856
+  },
+  {
+   "key": "csp_Ikanbot",
+   "name": "👾Ikanbot",
+   "kind": "csp",
+   "target": "https://v.aikanbot.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 337
+  },
+  {
+   "key": "三米ys",
+   "name": "《三米🔸影视》",
+   "kind": "csp",
+   "target": "http://www.9-here.com/index.php/s/S-id-{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 323
+  },
+  {
+   "key": "木耳",
+   "name": "木耳|弹幕",
+   "kind": "csp",
+   "target": "https://json02.heimuer.xyz/api.php/provide/vod/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 276
+  },
+  {
+   "key": "即可",
+   "name": "👋1080P┃即刻",
+   "kind": "csp",
+   "target": "https://www.jkdy.cc/vodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 302
+  },
+  {
+   "key": "爱看APP",
+   "name": "爱看｜APP",
+   "kind": "csp",
+   "target": "http://154.37.220.65",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 327
+  },
+  {
+   "key": "宝片电影",
+   "name": "🍉宝片┃xb",
+   "kind": "csp",
+   "target": "https://ibaopian.pro/vod/show/id/{cateId",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 238
+  },
+  {
+   "key": "Kanqiu",
+   "name": "⚽┆看球┆体育",
+   "kind": "csp",
+   "target": "http://www.88kanqiu.one",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 2007
+  },
+  {
+   "key": "布布影视APP",
+   "name": "🌺大鹅┃高清影视",
+   "kind": "csp",
+   "target": "https://bubutv.top",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 323
+  },
+  {
+   "key": "王子-2",
+   "name": "🍟王子",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/7lj763gg402i7942503g9g9jk909jji3g0li9j088291253h4k141gggkk41435h43924kg6ik48i0856j01k882glkh4kllg538704jl5k4j1gl27j321g03",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 2104
+  },
+  {
+   "key": "麦田",
+   "name": "[448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 麦田┃1080P",
+   "kind": "csp",
+   "target": "http://172.247.227.203:25321/mtys.php",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 386
+  },
+  {
+   "key": "狐狸君磁力",
+   "name": "💖分享狐狸",
+   "kind": "csp",
+   "target": "https://www.foxjun.com/s/?q={wd",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 861
   },
   {
    "key": "双黄",
@@ -837,17 +827,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 656
-  },
-  {
-   "key": "刺猬影视",
-   "name": "[367ms|直播] 🦔刺猬影视(优)",
-   "kind": "csp",
-   "target": "http://www.cccvvv.top/api.php/iptv/vod/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 1309
+   "ms": 659
   },
   {
    "key": "稀饭fm",
@@ -857,57 +837,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 796
-  },
-  {
-   "key": "可达",
-   "name": "可达｜APP",
-   "kind": "csp",
-   "target": "https://ledayy.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 853
-  },
-  {
-   "key": "58动漫",
-   "name": "💖吾吧动漫",
-   "kind": "csp",
-   "target": "http://www.ting38.com/search.php?searchword={wd",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 1449
-  },
-  {
-   "key": "曼波动漫",
-   "name": "🎀omofun｜动漫追番",
-   "kind": "csp",
-   "target": "https://app.omofun1.top",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 824
-  },
-  {
-   "key": "雪糕影视",
-   "name": "雪糕影视🎦XB",
-   "kind": "csp",
-   "target": "https://www.xgitv.com/vshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 1601
-  },
-  {
-   "key": "次元城",
-   "name": "次元城",
-   "kind": "csp",
-   "target": "http://app.95189371.cn/ciyuancheng.php/v6/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 416,
-   "ms": 886
+   "ms": 633
   },
   {
    "key": "旺旺",
@@ -917,7 +847,57 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 981
+   "ms": 641
+  },
+  {
+   "key": "曼波动漫",
+   "name": "🎀omofun｜动漫追番",
+   "kind": "csp",
+   "target": "https://app.omofun1.top",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 697
+  },
+  {
+   "key": "可达",
+   "name": "可达｜APP",
+   "kind": "csp",
+   "target": "https://ledayy.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 763
+  },
+  {
+   "key": "雪糕影视",
+   "name": "雪糕影视🎦XB",
+   "kind": "csp",
+   "target": "https://www.xgitv.com/vshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 1270
+  },
+  {
+   "key": "58动漫",
+   "name": "💖吾吧动漫",
+   "kind": "csp",
+   "target": "http://www.ting38.com/search.php?searchword={wd",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 1398
+  },
+  {
+   "key": "次元城",
+   "name": "次元城",
+   "kind": "csp",
+   "target": "http://app.95189371.cn/ciyuancheng.php/v6/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 416,
+   "ms": 859
   },
   {
    "key": "途趣影院",
@@ -927,27 +907,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 1500
+   "ms": 1425
   },
   {
-   "key": "线路5",
-   "name": "🔥🔥首发",
+   "key": "热播之家",
+   "name": "✅热播┃影视",
    "kind": "csp",
-   "target": "https://yun-1316442804.cos.ap-guangzhou.myqcloud.com/603.txt|FTgP4Gq8zPiqbt7M|V122|okhttp/3.10.0",
-   "from": "csp.ext-str",
+   "target": "https://rebozj.pro/type/{cateId",
+   "from": "csp.ext-dict",
    "ok": true,
-   "http": 404,
-   "ms": 816
-  },
-  {
-   "key": "tu",
-   "name": "📚少儿┃兔兔┃教育",
-   "kind": "csp",
-   "target": "https://tuxiaobei.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 1162
+   "http": 403,
+   "ms": 2064
   },
   {
    "key": "幸福｜拾光",
@@ -957,7 +927,37 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 1132
+   "ms": 971
+  },
+  {
+   "key": "tu",
+   "name": "📚少儿┃兔兔┃教育",
+   "kind": "csp",
+   "target": "https://tuxiaobei.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 1034
+  },
+  {
+   "key": "刺猬影视",
+   "name": "[367ms|直播] 🦔刺猬影视(优)",
+   "kind": "csp",
+   "target": "http://www.cccvvv.top/api.php/iptv/vod/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 2069
+  },
+  {
+   "key": "线路5",
+   "name": "🔥🔥首发",
+   "kind": "csp",
+   "target": "https://yun-1316442804.cos.ap-guangzhou.myqcloud.com/603.txt|FTgP4Gq8zPiqbt7M|V122|okhttp/3.10.0",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 754
   },
   {
    "key": "csp_Biliych",
@@ -977,17 +977,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 1135
-  },
-  {
-   "key": "csp_Guazi",
-   "name": "🍉瓜子",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Guazi",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 862
+   "ms": 1322
   },
   {
    "key": "臻彩天堂",
@@ -997,17 +987,7 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 340
-  },
-  {
-   "key": "嫖嫖嫖",
-   "name": "《嫖嫖🔹秒播》",
-   "kind": "csp",
-   "target": "https://www.gs4x7nq4.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 3196
+   "ms": 236
   },
   {
    "key": "久久",
@@ -1017,7 +997,27 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 545
+   "ms": 460
+  },
+  {
+   "key": "AppV7Mtq",
+   "name": "📦蒙太奇",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/AppV7Mtq",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 1502
+  },
+  {
+   "key": "csp_Guazi",
+   "name": "🍉瓜子",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Guazi",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 1578
   },
   {
    "key": "玩我哥哥",
@@ -1037,17 +1037,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 185
+   "ms": 294
   },
   {
-   "key": "GuaziLive",
-   "name": "🏆瓜子体育",
+   "key": "歪比",
+   "name": "歪比巴卜",
    "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/GuaziLive",
-   "from": "csp.ext-str",
+   "target": "https://www.wbbb1.com/",
+   "from": "csp.ext-dict",
    "ok": true,
-   "http": 404,
-   "ms": 1433
+   "http": 403,
+   "ms": 1483
   },
   {
    "key": "cctv-2",
@@ -1060,14 +1060,14 @@
    "ms": 0
   },
   {
-   "key": "奈飞中文",
-   "name": "🎗┃奈飞┃秒播",
+   "key": "BbkqLive",
+   "name": "🏆88体育",
    "kind": "csp",
-   "target": "http://qrh.yimkj.cn/ym/lib/nfzw.json",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/BbkqLive",
    "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 41
+   "ok": true,
+   "http": 404,
+   "ms": 1489
   },
   {
    "key": "七新",
@@ -1080,14 +1080,24 @@
    "ms": 0
   },
   {
-   "key": "AppV7Mtq",
-   "name": "📦蒙太奇",
+   "key": "Czzy",
+   "name": "🏭厂长",
    "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/AppV7Mtq",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Czzy",
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 1796
+   "ms": 1806
+  },
+  {
+   "key": "GuaziLive",
+   "name": "🏆瓜子体育",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/GuaziLive",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 1897
   },
   {
    "key": "csp_XYQ_lu1",
@@ -1097,87 +1107,7 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 248
-  },
-  {
-   "key": "Czzy",
-   "name": "🏭厂长",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Czzy",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 1593
-  },
-  {
-   "key": "BbkqLive",
-   "name": "🏆88体育",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/BbkqLive",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 1609
-  },
-  {
-   "key": "追剧APP",
-   "name": "🚀追剧┃APP",
-   "kind": "csp",
-   "target": "http://z.kzjtv.com/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 193
-  },
-  {
-   "key": "猪猪",
-   "name": "☀猪猪🔹在线",
-   "kind": "csp",
-   "target": "https://qj4.catbb.xyz|eecbio48dsq13kkk|V122|okhttp/3.10.0",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 0
-  },
-  {
-   "key": "AiKan_Spider",
-   "name": "🚀秒播┃爱看剧场",
-   "kind": "csp",
-   "target": "http://43.248.117.123:4680",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 243
-  },
-  {
-   "key": "Yyy",
-   "name": "🦁在线直播〔SP〕",
-   "kind": "csp",
-   "target": "https://api-tx.shumaxc.xyz",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 52
-  },
-  {
-   "key": "丫头动漫",
-   "name": "丫头｜APP",
-   "kind": "csp",
-   "target": "http://tv.yy-fun.cc",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 69
-  },
-  {
-   "key": "囧次元",
-   "name": "囧次元┃动漫",
-   "kind": "csp",
-   "target": "http://jjjj.nilinili.org",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 86
+   "ms": 275
   },
   {
    "key": "MjHggg",
@@ -1187,7 +1117,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 2174
+   "ms": 2053
+  },
+  {
+   "key": "Yyy",
+   "name": "🦁在线直播〔SP〕",
+   "kind": "csp",
+   "target": "https://api-tx.shumaxc.xyz",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 39
   },
   {
    "key": "AppV6Tg",
@@ -1197,27 +1137,67 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 1400
+   "ms": 1362
   },
   {
-   "key": "晓晓",
-   "name": "晓晓｜APP",
+   "key": "猪猪",
+   "name": "☀猪猪🔹在线",
    "kind": "csp",
-   "target": "http://yss.ewo.asia",
+   "target": "https://qj4.catbb.xyz|eecbio48dsq13kkk|V122|okhttp/3.10.0",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 1
+  },
+  {
+   "key": "奈飞中文",
+   "name": "🎗┃奈飞┃秒播",
+   "kind": "csp",
+   "target": "http://qrh.yimkj.cn/ym/lib/nfzw.json",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 313
+  },
+  {
+   "key": "囧次元",
+   "name": "囧次元┃动漫",
+   "kind": "csp",
+   "target": "http://jjjj.nilinili.org",
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 211
+   "ms": 33
   },
   {
-   "key": "歪比",
-   "name": "歪比巴卜",
+   "key": "丫头动漫",
+   "name": "丫头｜APP",
    "kind": "csp",
-   "target": "https://www.wbbb1.com/",
+   "target": "http://tv.yy-fun.cc",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 2044
+   "ok": false,
+   "error": "URLError",
+   "ms": 78
+  },
+  {
+   "key": "AiKan_Spider",
+   "name": "🚀秒播┃爱看剧场",
+   "kind": "csp",
+   "target": "http://43.248.117.123:4680",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 207
+  },
+  {
+   "key": "追剧APP",
+   "name": "🚀追剧┃APP",
+   "kind": "csp",
+   "target": "http://z.kzjtv.com/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 207
   },
   {
    "key": "黑猫动漫",
@@ -1227,7 +1207,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 126
+   "ms": 48
+  },
+  {
+   "key": "晓晓",
+   "name": "晓晓｜APP",
+   "kind": "csp",
+   "target": "http://yss.ewo.asia",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 142
   },
   {
    "key": "枫叶电影",
@@ -1237,17 +1227,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 339
-  },
-  {
-   "key": "金牌影视",
-   "name": "🧿金牌｜蓝光秒播",
-   "kind": "csp",
-   "target": "https://m.610pkea.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 5529
+   "ms": 197
   },
   {
    "key": "布卡",
@@ -1257,7 +1237,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 2256
+   "ms": 1947
+  },
+  {
+   "key": "金牌影视",
+   "name": "🧿金牌｜蓝光秒播",
+   "kind": "csp",
+   "target": "https://m.610pkea.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 5286
   },
   {
    "key": "优众影视",
@@ -1267,7 +1257,7 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 243
+   "ms": 209
   },
   {
    "key": "线路9",
@@ -1277,17 +1267,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 2322
+   "ms": 2230
   },
   {
-   "key": "csp_xpath_测试",
-   "name": " 🌾测试(XPF)",
+   "key": "听心99",
+   "name": "☀听心🔹视频",
    "kind": "csp",
-   "target": "https://gh.halonice.com/https://github.com/heroaku/TVboxo/raw/main/Js/%E6%A8%A1%E7%89%88/xpthtest.json",
-   "from": "csp.ext-str",
+   "target": "https://api.12321app.com",
+   "from": "csp.ext-dict",
    "ok": true,
-   "http": 404,
-   "ms": 440
+   "http": 200,
+   "ms": 2063
   },
   {
    "key": "csp_xb_test ",
@@ -1297,17 +1287,27 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 520
+   "ms": 214
   },
   {
-   "key": "csp_xb_35ju",
-   "name": " 💠星空影院(R)",
+   "key": "csp_xpath_测试",
+   "name": " 🌾测试(XPF)",
    "kind": "csp",
-   "target": "https://m.7caa.com/list/{cateId",
+   "target": "https://gh.halonice.com/https://github.com/heroaku/TVboxo/raw/main/Js/%E6%A8%A1%E7%89%88/xpthtest.json",
    "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 680
+   "ok": true,
+   "http": 404,
+   "ms": 463
+  },
+  {
+   "key": "嫖嫖嫖",
+   "name": "《嫖嫖🔹秒播》",
+   "kind": "csp",
+   "target": "https://www.gs4x7nq4.com/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 4766
   },
   {
    "key": "csp_Sukebei",
@@ -1320,6 +1320,16 @@
    "ms": 0
   },
   {
+   "key": "csp_xb_35ju",
+   "name": " 💠星空影院(R)",
+   "kind": "csp",
+   "target": "https://m.7caa.com/list/{cateId",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 695
+  },
+  {
    "key": "應用商店",
    "name": "應用商店",
    "kind": "csp",
@@ -1327,37 +1337,7 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 971
-  },
-  {
-   "key": "新感觉",
-   "name": "[1416ms|金鹰] 💪新感觉｜APP",
-   "kind": "csp",
-   "target": "http://43.248.100.147:9892/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 233
-  },
-  {
-   "key": "csp_xpath_网络搜集库qiumi",
-   "name": "JRKAN直播赛事",
-   "kind": "csp",
-   "target": "https://image.api.losfer.cn/down.php/6d4b33742b4f57e4299673369fc4616a.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 904
-  },
-  {
-   "key": "听心99",
-   "name": "☀听心🔹视频",
-   "kind": "csp",
-   "target": "https://api.12321app.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 2915
+   "ms": 1009
   },
   {
    "key": "csp_xb_auete",
@@ -1367,7 +1347,27 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 401,
-   "ms": 1070
+   "ms": 709
+  },
+  {
+   "key": "新感觉",
+   "name": "[1416ms|金鹰] 💪新感觉｜APP",
+   "kind": "csp",
+   "target": "http://43.248.100.147:9892/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 222
+  },
+  {
+   "key": "csp_xpath_网络搜集库qiumi",
+   "name": "JRKAN直播赛事",
+   "kind": "csp",
+   "target": "https://image.api.losfer.cn/down.php/6d4b33742b4f57e4299673369fc4616a.json",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 852
   },
   {
    "key": "csp_xb_lib",
@@ -1377,7 +1377,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 753
+   "ms": 860
   },
   {
    "key": "BiliHeji",
@@ -1387,7 +1387,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 436
+   "ms": 561
   },
   {
    "key": "zhiqiu",
@@ -1400,6 +1400,16 @@
    "ms": 0
   },
   {
+   "key": "еҺӮй•ҝ",
+   "name": "рҹҸӯв”ғеҺӮй•ҝв”ғеҪұи§Ҷ",
+   "kind": "csp",
+   "target": "https://www.czzy89.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 519
+  },
+  {
    "key": "视频库",
    "name": "✅视频┃影视",
    "kind": "csp",
@@ -1407,17 +1417,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 403,
-   "ms": 99
-  },
-  {
-   "key": "csp_xb_cokemv",
-   "name": "cokemv(XBiu)",
-   "kind": "csp",
-   "target": "https://cokemv.me/vodshow/{cateId",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 623
+   "ms": 120
   },
   {
    "key": "Ddrk",
@@ -1427,17 +1427,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 819
+   "ms": 900
   },
   {
-   "key": "еҺӮй•ҝ",
-   "name": "рҹҸӯв”ғеҺӮй•ҝв”ғеҪұи§Ҷ",
+   "key": "csp_xb_cokemv",
+   "name": "cokemv(XBiu)",
    "kind": "csp",
-   "target": "https://www.czzy89.com",
+   "target": "https://cokemv.me/vodshow/{cateId",
    "from": "csp.ext-str",
    "ok": true,
-   "http": 403,
-   "ms": 1051
+   "http": 200,
+   "ms": 796
   },
   {
    "key": "云朵影视-2",
@@ -1447,7 +1447,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 400,
-   "ms": 930
+   "ms": 1020
   },
   {
    "key": "XingHui",
@@ -1457,7 +1457,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 400,
-   "ms": 501
+   "ms": 512
   },
   {
    "key": "白白影视",
@@ -1467,7 +1467,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 4473
+   "ms": 4178
   },
   {
    "key": "ting",
@@ -1497,7 +1497,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 403,
-   "ms": 140
+   "ms": 138
   },
   {
    "key": "csp_xb_lez",
@@ -1507,7 +1507,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 197
+   "ms": 175
+  },
+  {
+   "key": "剧透社",
+   "name": "⭐️剧透社",
+   "kind": "csp",
+   "target": "https://1.star2.cn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 896
   },
   {
    "key": "怀桑",
@@ -1517,27 +1527,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8061
+   "ms": 8039
   },
   {
-   "key": "薯条",
-   "name": "薯条｜APP",
+   "key": "吉利",
+   "name": "吉利(xBPQ)",
    "kind": "csp",
-   "target": "https://dyttandroid-1372779881.cos.ap-guangzhou.myqcloud.com/app_dyttandroid.txt",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8057
-  },
-  {
-   "key": "csp_appys_大猫",
-   "name": "大猫",
-   "kind": "csp",
-   "target": "http://app.ishen520.com/api.php/v1.vod",
+   "target": "https://ghproxy.com/https://agit.ai/xiaohewanwan/jar/raw/branch/main/shaokaochedui/%e5%90%89%e5%88%a9.json",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 427
+   "ms": 433
   },
   {
    "key": "csp_XBPQ_qiyou",
@@ -1550,54 +1550,14 @@
    "ms": 0
   },
   {
-   "key": "吉利",
-   "name": "吉利(xBPQ)",
+   "key": "薯条",
+   "name": "薯条｜APP",
    "kind": "csp",
-   "target": "https://ghproxy.com/https://agit.ai/xiaohewanwan/jar/raw/branch/main/shaokaochedui/%e5%90%89%e5%88%a9.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 546
-  },
-  {
-   "key": "csp_XBPQ_南瓜影视",
-   "name": "南瓜影视",
-   "kind": "csp",
-   "target": "https://www.ngys8.com/vodshow/id/{cateId",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 690
-  },
-  {
-   "key": "xbpq_喵次元",
-   "name": "💖喵喵动漫",
-   "kind": "csp",
-   "target": "https://www.catwcy.com/show/{cateId",
+   "target": "https://dyttandroid-1372779881.cos.ap-guangzhou.myqcloud.com/app_dyttandroid.txt",
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8699
-  },
-  {
-   "key": "csp_xb_zxzj",
-   "name": "在线之家(XBiu)",
-   "kind": "csp",
-   "target": "http://home.jundie.top:666/json/XBiu/zxzj.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 401,
-   "ms": 714
-  },
-  {
-   "key": "剧透社",
-   "name": "⭐️剧透社",
-   "kind": "csp",
-   "target": "https://1.star2.cn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 1049
+   "ms": 8176
   },
   {
    "key": "csp_xpath_wanmeikk",
@@ -1607,7 +1567,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 336
+   "ms": 157
+  },
+  {
+   "key": "csp_XBPQ_南瓜影视",
+   "name": "南瓜影视",
+   "kind": "csp",
+   "target": "https://www.ngys8.com/vodshow/id/{cateId",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 738
   },
   {
    "key": "csp_NewCz",
@@ -1617,17 +1587,27 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 926
+   "ms": 788
   },
   {
-   "key": "木瓜",
-   "name": "木瓜｜APP",
+   "key": "csp_xb_zxzj",
+   "name": "在线之家(XBiu)",
    "kind": "csp",
-   "target": "http://www.yezitv.top/dtym.json",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 49
+   "target": "http://home.jundie.top:666/json/XBiu/zxzj.json",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 401,
+   "ms": 682
+  },
+  {
+   "key": "wencai",
+   "name": "✏️┆文才┆影视",
+   "kind": "csp",
+   "target": "https://www.tjrongze.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 1991
   },
   {
    "key": "csp_appysv2_M2_暖光影视",
@@ -1637,17 +1617,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 132
+   "ms": 87
   },
   {
-   "key": "csp_Ysgc",
-   "name": "工厂",
+   "key": "木瓜",
+   "name": "木瓜｜APP",
    "kind": "csp",
-   "target": "https://www.ysgc.fun",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 624
+   "target": "http://www.yezitv.top/dtym.json",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 48
   },
   {
    "key": "tvyb",
@@ -1657,7 +1637,27 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 503,
-   "ms": 605
+   "ms": 862
+  },
+  {
+   "key": "csp_Ysgc",
+   "name": "工厂",
+   "kind": "csp",
+   "target": "https://www.ysgc.fun",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 877
+  },
+  {
+   "key": "csp_xb_ysgc",
+   "name": "影视工厂(XBiu)",
+   "kind": "csp",
+   "target": "https://www.ysgc.fun/vodtype/{cateId",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 719
   },
   {
    "key": "游戏 | 直播",
@@ -1667,7 +1667,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 29
+   "ms": 26
   },
   {
    "key": "csp_JianPian",
@@ -1687,17 +1687,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 35
-  },
-  {
-   "key": "csp_xb_ysgc",
-   "name": "影视工厂(XBiu)",
-   "kind": "csp",
-   "target": "https://www.ysgc.fun/vodtype/{cateId",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 628
+   "ms": 60
   },
   {
    "key": "xsj",
@@ -1707,37 +1697,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 520,
-   "ms": 943
-  },
-  {
-   "key": "wencai",
-   "name": "✏️┆文才┆影视",
-   "kind": "csp",
-   "target": "https://www.tjrongze.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 2988
-  },
-  {
-   "key": "玩偶 | 蜡笔",
-   "name": "玩偶 | 蜡笔",
-   "kind": "csp",
-   "target": "http://www.labi88.sbs/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 328
-  },
-  {
-   "key": "玩偶虎斑2",
-   "name": "玩偶 | 虎斑2",
-   "kind": "csp",
-   "target": "http://xsayang.fun:12512",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 949
+   "ms": 1043
   },
   {
    "key": "永乐APP",
@@ -1747,7 +1707,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "TimeoutError",
-   "ms": 8071
+   "ms": 8113
+  },
+  {
+   "key": "魅影影视",
+   "name": "💖分享魅影",
+   "kind": "csp",
+   "target": "https://www.heitujc.com/search/-------------.html?wd={wd",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "TimeoutError",
+   "ms": 8125
   },
   {
    "key": "玩偶 | 木偶",
@@ -1757,7 +1727,37 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1365
+   "ms": 1190
+  },
+  {
+   "key": "玩偶 | 讴歌",
+   "name": "玩偶 | 讴歌",
+   "kind": "csp",
+   "target": "https://woog.nxog.eu.org/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 233
+  },
+  {
+   "key": "玩偶 | 蜡笔",
+   "name": "玩偶 | 蜡笔",
+   "kind": "csp",
+   "target": "http://www.labi88.sbs/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 390
+  },
+  {
+   "key": "csp_xb_zbk",
+   "name": "真不卡(XBiu)",
+   "kind": "csp",
+   "target": "https://www.zbkk.net/vodshow/{cateId",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 236
   },
   {
    "key": "csp_XYQHiker素白白",
@@ -1770,54 +1770,14 @@
    "ms": 0
   },
   {
-   "key": "魅影影视",
-   "name": "💖分享魅影",
+   "key": "玩偶虎斑2",
+   "name": "玩偶 | 虎斑2",
    "kind": "csp",
-   "target": "https://www.heitujc.com/search/-------------.html?wd={wd",
+   "target": "http://xsayang.fun:12512",
    "from": "csp.ext-dict",
    "ok": false,
-   "error": "TimeoutError",
-   "ms": 8136
-  },
-  {
-   "key": "玩偶 | 讴歌",
-   "name": "玩偶 | 讴歌",
-   "kind": "csp",
-   "target": "https://woog.nxog.eu.org/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 213
-  },
-  {
-   "key": "csp_xb_zbk",
-   "name": "真不卡(XBiu)",
-   "kind": "csp",
-   "target": "https://www.zbkk.net/vodshow/{cateId",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 401,
-   "ms": 614
-  },
-  {
-   "key": "芬奇",
-   "name": "芬奇｜APP",
-   "kind": "csp",
-   "target": "https://wsapi.dafenqi.mom/yuming.txt",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 436,
-   "ms": 566
-  },
-  {
-   "key": "csp_appys_萌蛋蛋",
-   "name": "萌蛋",
-   "kind": "csp",
-   "target": "http://app.mengdandan.com/xgapp.php/v1/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 914
+   "error": "RemoteDisconnected",
+   "ms": 911
   },
   {
    "key": "csp_红狐狸影视",
@@ -1827,7 +1787,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 9530
+   "ms": 9386
   },
   {
    "key": "VIP电影",
@@ -1837,7 +1797,57 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 10017
+   "ms": 10010
+  },
+  {
+   "key": "芬奇",
+   "name": "芬奇｜APP",
+   "kind": "csp",
+   "target": "https://wsapi.dafenqi.mom/yuming.txt",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 436,
+   "ms": 650
+  },
+  {
+   "key": "小城采集站",
+   "name": "小城┃采集",
+   "kind": "csp",
+   "target": "http://v.cute6.cn/api.php/v1.vod",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8286
+  },
+  {
+   "key": "csp_appys_萌蛋蛋",
+   "name": "萌蛋",
+   "kind": "csp",
+   "target": "http://app.mengdandan.com/xgapp.php/v1/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 709
+  },
+  {
+   "key": "漫国动漫",
+   "name": "漫国 • 动漫",
+   "kind": "csp",
+   "target": "http://114.66.27.208:806",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8007
+  },
+  {
+   "key": "线路7",
+   "name": "🚀帧享",
+   "kind": "csp",
+   "target": "https://www.tangsan.fun/zx.php",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8118
   },
   {
    "key": "金都",
@@ -1847,17 +1857,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 567
-  },
-  {
-   "key": "csp_fantuan",
-   "name": "饭团",
-   "kind": "csp",
-   "target": "https://www.fantuanhd.com",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 59
+   "ms": 461
   },
   {
    "key": "csp_XBPQ_饭团",
@@ -1870,14 +1870,14 @@
    "ms": 0
   },
   {
-   "key": "漫国动漫",
-   "name": "漫国 • 动漫",
+   "key": "csp_fantuan",
+   "name": "饭团",
    "kind": "csp",
-   "target": "http://114.66.27.208:806",
-   "from": "csp.ext-dict",
+   "target": "https://www.fantuanhd.com",
+   "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 8008
+   "ms": 40
   },
   {
    "key": "央视经典-2",
@@ -1890,24 +1890,14 @@
    "ms": 0
   },
   {
-   "key": "闪影",
-   "name": "闪影｜APP",
+   "key": "双子星",
+   "name": "✨双子星丨动漫秒播",
    "kind": "csp",
-   "target": "http://38.47.213.61:41271/mogai_api.php/v1.vod",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 451
-  },
-  {
-   "key": "益达影视",
-   "name": "🌝┃益达┃App",
-   "kind": "csp",
-   "target": "https://myd666.tv/lvdou_api.php/v1.vod",
-   "from": "csp.ext-str",
+   "target": "http://175.178.65.250:19987/app/bn",
+   "from": "csp.ext-dict",
    "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 114
+   "error": "URLError",
+   "ms": 8003
   },
   {
    "key": "片库",
@@ -1917,47 +1907,27 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 200
+   "ms": 125
   },
   {
-   "key": "小城采集站",
-   "name": "小城┃采集",
+   "key": "闪影",
+   "name": "闪影｜APP",
    "kind": "csp",
-   "target": "http://v.cute6.cn/api.php/v1.vod",
+   "target": "http://38.47.213.61:41271/mogai_api.php/v1.vod",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 504
+  },
+  {
+   "key": "益达影视",
+   "name": "🌝┃益达┃App",
+   "kind": "csp",
+   "target": "https://myd666.tv/lvdou_api.php/v1.vod",
    "from": "csp.ext-str",
    "ok": false,
-   "error": "URLError",
-   "ms": 8390
-  },
-  {
-   "key": "线路7",
-   "name": "🚀帧享",
-   "kind": "csp",
-   "target": "https://www.tangsan.fun/zx.php",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8070
-  },
-  {
-   "key": "双子星",
-   "name": "✨双子星丨动漫秒播",
-   "kind": "csp",
-   "target": "http://175.178.65.250:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8008
-  },
-  {
-   "key": "Jpys",
-   "name": "金牌影视",
-   "kind": "csp",
-   "target": "https://www.ksnnhbj.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 1733
+   "error": "RemoteDisconnected",
+   "ms": 183
   },
   {
    "key": "若惜",
@@ -1967,17 +1937,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8000
-  },
-  {
-   "key": "csp_beijihu",
-   "name": "🎪┃极狐┃App",
-   "kind": "csp",
-   "target": "https://www.kuin.one/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 29
+   "ms": 8008
   },
   {
    "key": "zxzj-2",
@@ -1987,7 +1947,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 562
+   "ms": 406
   },
   {
    "key": "zxzj",
@@ -1997,57 +1957,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 631
+   "ms": 493
   },
   {
-   "key": "xgapp",
-   "name": "🍉┃西瓜┃v3",
+   "key": "csp_beijihu",
+   "name": "🎪┃极狐┃App",
    "kind": "csp",
-   "target": "https://www.gsjtlxy.top/xgapp.php/v3/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 731
-  },
-  {
-   "key": "csp_Zxzj",
-   "name": "🏠在线之家",
-   "kind": "csp",
-   "target": "https://www.zxzj.pro/",
+   "target": "https://www.kuin.one/api.php/app/",
    "from": "csp.ext-str",
    "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 194
-  },
-  {
-   "key": "Auete",
-   "name": "🏝┃Aue┃无广",
-   "kind": "csp",
-   "target": "https://auete.pro/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 312
-  },
-  {
-   "key": "csp_Bdys",
-   "name": "🐞哔嘀影视",
-   "kind": "csp",
-   "target": "https://www.yjys02.com",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 152
-  },
-  {
-   "key": "立播-2",
-   "name": "🌟立播┃秒播",
-   "kind": "csp",
-   "target": "https://www.libvio.run",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 985
+   "error": "URLError",
+   "ms": 50
   },
   {
    "key": "疯狗",
@@ -2057,7 +1977,97 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8458
+   "ms": 8533
+  },
+  {
+   "key": "Jpys",
+   "name": "金牌影视",
+   "kind": "csp",
+   "target": "https://www.ksnnhbj.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 1607
+  },
+  {
+   "key": "立播-2",
+   "name": "🌟立播┃秒播",
+   "kind": "csp",
+   "target": "https://www.libvio.run",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 867
+  },
+  {
+   "key": "FanShu",
+   "name": "🍠┆番薯┆动漫",
+   "kind": "csp",
+   "target": "https://max.moyu666666.top/fanshu.php",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 400,
+   "ms": 765
+  },
+  {
+   "key": "浪酷影视",
+   "name": "浪酷｜APP",
+   "kind": "csp",
+   "target": "http://v.lkuys.cn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 4659
+  },
+  {
+   "key": "csp_Zxzj",
+   "name": "🏠在线之家",
+   "kind": "csp",
+   "target": "https://www.zxzj.pro/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 184
+  },
+  {
+   "key": "Auete",
+   "name": "🏝┃Aue┃无广",
+   "kind": "csp",
+   "target": "https://auete.pro/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 383
+  },
+  {
+   "key": "xgapp",
+   "name": "🍉┃西瓜┃v3",
+   "kind": "csp",
+   "target": "https://www.gsjtlxy.top/xgapp.php/v3/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 934
+  },
+  {
+   "key": "YunZhenXiang",
+   "name": "[1390ms|xn--6orr3pi6g9uu] 秒播┃二七",
+   "kind": "csp",
+   "target": "https://www.tangsan.fun/zx.php",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8113
+  },
+  {
+   "key": "csp_Bdys",
+   "name": "🐞哔嘀影视",
+   "kind": "csp",
+   "target": "https://www.yjys02.com",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 197
   },
   {
    "key": "Auete-2",
@@ -2067,23 +2077,33 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 742
-  },
-  {
-   "key": "MqTv",
-   "name": "🐦┃麻雀┃影视",
-   "kind": "csp",
-   "target": "https://www.mqtv.cc",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 518
+   "ms": 549
   },
   {
    "key": "龙伊影视",
    "name": "👺龙伊┃专线",
    "kind": "csp",
    "target": "http://影视.龙伊.top/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "UnicodeEncodeError",
+   "ms": 0
+  },
+  {
+   "key": "csp_MYYS",
+   "name": "👻忍者",
+   "kind": "csp",
+   "target": "http://rzys.xyz",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 167
+  },
+  {
+   "key": "fishhxq",
+   "name": "💃┆韩圈┆影视",
+   "kind": "csp",
+   "target": "http://www.小不点.com/api//2026/fishhxq.php",
    "from": "csp.ext-str",
    "ok": false,
    "error": "UnicodeEncodeError",
@@ -2097,107 +2117,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 541
+   "ms": 518
   },
   {
-   "key": "fishhxq",
-   "name": "💃┆韩圈┆影视",
+   "key": "MqTv",
+   "name": "🐦┃麻雀┃影视",
    "kind": "csp",
-   "target": "http://www.小不点.com/api//2026/fishhxq.php",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "UnicodeEncodeError",
-   "ms": 0
-  },
-  {
-   "key": "FanShu",
-   "name": "🍠┆番薯┆动漫",
-   "kind": "csp",
-   "target": "https://max.moyu666666.top/fanshu.php",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 400,
-   "ms": 1191
-  },
-  {
-   "key": "csp_Voflix",
-   "name": "💕Voflix",
-   "kind": "csp",
-   "target": "https://www.voflix.me/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 99
-  },
-  {
-   "key": "csp_MYYS",
-   "name": "👻忍者",
-   "kind": "csp",
-   "target": "http://rzys.xyz",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 175
-  },
-  {
-   "key": "浪酷影视",
-   "name": "浪酷｜APP",
-   "kind": "csp",
-   "target": "http://v.lkuys.cn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 5159
-  },
-  {
-   "key": "csp_AppYsV2_3",
-   "name": "💕速看100[V2]",
-   "kind": "csp",
-   "target": "https://sk100.tv/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 403,
-   "ms": 114
-  },
-  {
-   "key": "csp_AppYsV2_4",
-   "name": "💕迪迪",
-   "kind": "csp",
-   "target": "https://api123.adys.app/xgapp.php/v3/",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 202
-  },
-  {
-   "key": "千梦影视",
-   "name": "💖分享千梦",
-   "kind": "csp",
-   "target": "https://www.qmjzys.com/api.php/app/",
+   "target": "https://www.mqtv.cc",
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 54
-  },
-  {
-   "key": "csp_亮亮",
-   "name": "💡┃亮亮┃APP",
-   "kind": "csp",
-   "target": "http://xiutan.shiyifacai.com/zuoan/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 80
-  },
-  {
-   "key": "YunZhenXiang",
-   "name": "[1390ms|xn--6orr3pi6g9uu] 秒播┃二七",
-   "kind": "csp",
-   "target": "https://www.tangsan.fun/zx.php",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8070
+   "ms": 601
   },
   {
    "key": "TingBookJinXia",
@@ -2207,17 +2137,57 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 1451
+   "ms": 1079
   },
   {
-   "key": "闪影视界",
-   "name": "💝分享闪影",
+   "key": "csp_Voflix",
+   "name": "💕Voflix",
    "kind": "csp",
-   "target": "http://38.47.213.61:41271/mogai_api.php/v1.vod",
+   "target": "https://www.voflix.me/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 173
+  },
+  {
+   "key": "千梦影视",
+   "name": "💖分享千梦",
+   "kind": "csp",
+   "target": "https://www.qmjzys.com/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 41
+  },
+  {
+   "key": "csp_AppYsV2_4",
+   "name": "💕迪迪",
+   "kind": "csp",
+   "target": "https://api123.adys.app/xgapp.php/v3/",
    "from": "csp.ext-str",
    "ok": true,
-   "http": 200,
-   "ms": 458
+   "http": 404,
+   "ms": 214
+  },
+  {
+   "key": "csp_亮亮",
+   "name": "💡┃亮亮┃APP",
+   "kind": "csp",
+   "target": "http://xiutan.shiyifacai.com/zuoan/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 39
+  },
+  {
+   "key": "csp_AppYsV2_3",
+   "name": "💕速看100[V2]",
+   "kind": "csp",
+   "target": "https://sk100.tv/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 249
   },
   {
    "key": "哔嘀弹幕",
@@ -2227,37 +2197,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 10022
+   "ms": 10008
   },
   {
-   "key": "影视备份",
-   "name": "😈影迷┃影视",
+   "key": "闪影视界",
+   "name": "💝分享闪影",
    "kind": "csp",
-   "target": "http://apple.xn--9kqr9lk79c.top/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 146
-  },
-  {
-   "key": "csp_MeiJu69",
-   "name": "🗽┃六九┃美剧",
-   "kind": "csp",
-   "target": "https://www.69mj.com/xgapp.php/v2/",
+   "target": "http://38.47.213.61:41271/mogai_api.php/v1.vod",
    "from": "csp.ext-str",
    "ok": true,
-   "http": 403,
-   "ms": 251
-  },
-  {
-   "key": "鑫鑫影视",
-   "name": "🥇┃鑫鑫┃App",
-   "kind": "csp",
-   "target": "http://yingszj.xn--654a.cc/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 102
+   "http": 200,
+   "ms": 457
   },
   {
    "key": "Czsapp",
@@ -2267,7 +2217,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 737
+   "ms": 662
+  },
+  {
+   "key": "闪影视界",
+   "name": "💝分享闪影",
+   "kind": "csp",
+   "target": "http://38.47.213.61:41271/mogai_api.php/v1.vod",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 403,
+   "ms": 145
   },
   {
    "key": "csp_Lib-2",
@@ -2277,27 +2237,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 677
+   "ms": 545
   },
   {
-   "key": "快影",
-   "name": "🦄️快影",
+   "key": "影视备份",
+   "name": "😈影迷┃影视",
    "kind": "csp",
-   "target": "http://iosa.xn--654a.cc/api.php/app/",
+   "target": "http://apple.xn--9kqr9lk79c.top/api.php/app/",
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 161
-  },
-  {
-   "key": "TingBook",
-   "name": "📻┆六月┆有声",
-   "kind": "csp",
-   "target": "https://app.365ting.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 500,
-   "ms": 1516
+   "ms": 131
   },
   {
    "key": "csp_XBPQ_LIBVIO",
@@ -2307,17 +2257,87 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 10017
+   "ms": 10025
   },
   {
-   "key": "P4_绿豆",
-   "name": "🐼┃绿豆┃影视",
+   "key": "鑫鑫影视",
+   "name": "🥇┃鑫鑫┃App",
    "kind": "csp",
-   "target": "http://s.weixine.net/api.php/app/",
-   "from": "csp.ext-dict",
+   "target": "http://yingszj.xn--654a.cc/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 122
+  },
+  {
+   "key": "快影",
+   "name": "🦄️快影",
+   "kind": "csp",
+   "target": "http://iosa.xn--654a.cc/api.php/app/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 91
+  },
+  {
+   "key": "TingBook",
+   "name": "📻┆六月┆有声",
+   "kind": "csp",
+   "target": "https://app.365ting.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 500,
+   "ms": 1153
+  },
+  {
+   "key": "csp_appys_大猫",
+   "name": "大猫",
+   "kind": "csp",
+   "target": "http://app.ishen520.com/api.php/v1.vod",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "TimeoutError",
+   "ms": 8125
+  },
+  {
+   "key": "焦炭影视",
+   "name": "💣焦炭影视",
+   "kind": "csp",
+   "target": "http://45.125.46.61/box/json/%E7%84%A6%E7%82%AD%E5%BD%B1%E8%A7%86.json",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 1901
+  },
+  {
+   "key": "金牌-2",
+   "name": "🥇金牌",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/7lj763gg402i7942463j9j9jh8579590k3hjii5gi4i73l2k5l",
+   "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 2684
+   "ms": 1092
+  },
+  {
+   "key": "XiFan",
+   "name": "🥣┃稀饭┃动漫",
+   "kind": "csp",
+   "target": "https://dm.xifanacg.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1087
+  },
+  {
+   "key": "映画",
+   "name": "映画｜APP",
+   "kind": "csp",
+   "target": "https://cms140.yhg.one",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8119
   },
   {
    "key": "木偶哥哥",
@@ -2327,7 +2347,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 365
+   "ms": 280
   },
   {
    "key": "XiFan",
@@ -2340,16 +2360,6 @@
    "ms": 1281
   },
   {
-   "key": "焦炭影视",
-   "name": "💣焦炭影视",
-   "kind": "csp",
-   "target": "http://45.125.46.61/box/json/%E7%84%A6%E7%82%AD%E5%BD%B1%E8%A7%86.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 2071
-  },
-  {
    "key": "csp_AppRZ",
    "name": " 🕵┃忍者┃影视",
    "kind": "csp",
@@ -2357,17 +2367,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 179
-  },
-  {
-   "key": "3QQQ",
-   "name": "[448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 大鹅┃1080P",
-   "kind": "csp",
-   "target": "https://asd123sx23xdacsx.top",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 431
+   "ms": 218
   },
   {
    "key": "living",
@@ -2377,27 +2377,27 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 48
+   "ms": 22
   },
   {
-   "key": "来看影视",
-   "name": "[616ms|软件] 来看｜影视",
+   "key": "P4_绿豆",
+   "name": "🐼┃绿豆┃影视",
    "kind": "csp",
-   "target": "https://git.yylx.win/raw.githubusercontent.com/PizazzGY/NewTVBox/main/movie/json/LKYS.json",
-   "from": "csp.ext-str",
+   "target": "http://s.weixine.net/api.php/app/",
+   "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 527
+   "ms": 3191
   },
   {
-   "key": "映画",
-   "name": "映画｜APP",
+   "key": "3QQQ",
+   "name": "[448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 大鹅┃1080P",
    "kind": "csp",
-   "target": "https://cms140.yhg.one",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8079
+   "target": "https://asd123sx23xdacsx.top",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 334
   },
   {
    "key": "е…үзӣҳ",
@@ -2420,14 +2420,14 @@
    "ms": 0
   },
   {
-   "key": "金牌-2",
-   "name": "🥇金牌",
+   "key": "csp_appys_段友",
+   "name": "段友",
    "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/7lj763gg402i7942463j9j9jh8579590k3hjii5gi4i73l2k5l",
+   "target": "https://shangjihuoke.com/api.php/tv.vod",
    "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 2067
+   "ok": false,
+   "error": "URLError",
+   "ms": 8137
   },
   {
    "key": "Kan360",
@@ -2437,37 +2437,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 456,
-   "ms": 923
-  },
-  {
-   "key": "XBPQ_宝宝趣学",
-   "name": "✍️┃学习┃课堂",
-   "kind": "csp",
-   "target": "https://yydsys.top/duo/json/video_data.json",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 10019
-  },
-  {
-   "key": "csp_Xlys",
-   "name": "[906ms|https://www.ls660.com/TV/feimao.json] 🏔️┃修罗┃磁力",
-   "kind": "csp",
-   "target": "https://xl01.com.de",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 902
-  },
-  {
-   "key": "csp_biubiu_cupfox",
-   "name": "🦊茶杯狐",
-   "kind": "csp",
-   "target": "http://45.125.46.61/box/json/%E8%8C%B6%E6%9D%AF%E7%8B%90.json",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 2128
+   "ms": 508
   },
   {
    "key": "猎豹",
@@ -2477,7 +2447,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "TimeoutError",
-   "ms": 8107
+   "ms": 8121
   },
   {
    "key": "玩偶虎斑",
@@ -2490,6 +2460,16 @@
    "ms": 8008
   },
   {
+   "key": "xbpq_喵次元",
+   "name": "💖喵喵动漫",
+   "kind": "csp",
+   "target": "https://www.catwcy.com/show/{cateId",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 17427
+  },
+  {
    "key": "哆啦新番社",
    "name": "哆啦┃新番社",
    "kind": "csp",
@@ -2497,27 +2477,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 257
-  },
-  {
-   "key": "外剧",
-   "name": "外剧丨APP",
-   "kind": "csp",
-   "target": "https://guowaiju.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 296
-  },
-  {
-   "key": "旗星",
-   "name": "旗星｜APP",
-   "kind": "csp",
-   "target": "http://ys.qist.top",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 322
+   "ms": 268
   },
   {
    "key": "修罗影视",
@@ -2527,7 +2487,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 696
+   "ms": 388
   },
   {
    "key": "жҪ®жөҒ",
@@ -2537,57 +2497,47 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 987
+   "ms": 621
   },
   {
-   "key": "иҚҗзүҮ",
-   "name": "рҹҺ¬в”ғиҚҗзүҮв”ғеҪұи§Ҷ",
+   "key": "csp_biubiu_cupfox",
+   "name": "🦊茶杯狐",
    "kind": "csp",
-   "target": "https://api.ztcgi.com",
+   "target": "http://45.125.46.61/box/json/%E8%8C%B6%E6%9D%AF%E7%8B%90.json",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 1062
+   "ms": 1871
   },
   {
-   "key": "五八",
-   "name": "五八丨APP",
+   "key": "csp_Xlys",
+   "name": "[906ms|https://www.ls660.com/TV/feimao.json] 🏔️┃修罗┃磁力",
    "kind": "csp",
-   "target": "https://dy.58ys.vip",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 502,
-   "ms": 1086
-  },
-  {
-   "key": "拾光",
-   "name": "拾光┃秒播APP",
-   "kind": "csp",
-   "target": "https://dy.stxbed.com",
+   "target": "https://xl01.com.de",
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 761
+   "ms": 858
   },
   {
-   "key": "猫爪",
-   "name": "猫爪｜APP",
+   "key": "旗星",
+   "name": "旗星｜APP",
    "kind": "csp",
-   "target": "https://dy.8ttv.cn",
+   "target": "http://ys.qist.top",
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 190
+   "ms": 262
   },
   {
-   "key": "木兮影视",
-   "name": "木兮｜影视",
+   "key": "来看影视",
+   "name": "[616ms|软件] 来看｜影视",
    "kind": "csp",
-   "target": "https://film.symx.club",
+   "target": "https://git.yylx.win/raw.githubusercontent.com/PizazzGY/NewTVBox/main/movie/json/LKYS.json",
    "from": "csp.ext-str",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 700
+   "ok": true,
+   "http": 404,
+   "ms": 1023
   },
   {
    "key": "冷心",
@@ -2597,7 +2547,47 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1121
+   "ms": 847
+  },
+  {
+   "key": "拾光",
+   "name": "拾光┃秒播APP",
+   "kind": "csp",
+   "target": "https://dy.stxbed.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 747
+  },
+  {
+   "key": "猫爪",
+   "name": "猫爪｜APP",
+   "kind": "csp",
+   "target": "https://dy.8ttv.cn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 195
+  },
+  {
+   "key": "木兮影视",
+   "name": "木兮｜影视",
+   "kind": "csp",
+   "target": "https://film.symx.club",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 704
+  },
+  {
+   "key": "外剧",
+   "name": "外剧丨APP",
+   "kind": "csp",
+   "target": "https://guowaiju.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 945
   },
   {
    "key": "萝卜",
@@ -2607,7 +2597,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 502,
-   "ms": 307
+   "ms": 221
   },
   {
    "key": "湘漓",
@@ -2617,7 +2607,17 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 760
+   "ms": 763
+  },
+  {
+   "key": "五八",
+   "name": "五八丨APP",
+   "kind": "csp",
+   "target": "https://dy.58ys.vip",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 502,
+   "ms": 1515
   },
   {
    "key": "漫国",
@@ -2627,7 +2627,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 779
+   "ms": 835
   },
   {
    "key": "丫丫",
@@ -2660,6 +2660,16 @@
    "ms": 0
   },
   {
+   "key": "紫金",
+   "name": "紫金丨APP",
+   "kind": "csp",
+   "target": "http://www.zjcvod.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 480
+  },
+  {
    "key": "黑猫",
    "name": "🐼┃黑猫┃APP",
    "kind": "csp",
@@ -2670,14 +2680,24 @@
    "ms": 0
   },
   {
-   "key": "追番99",
-   "name": "追番｜APP",
+   "key": "追番达人99",
+   "name": "🐎追番┃1080P",
    "kind": "csp",
-   "target": "https://api.hboqy.cn.hboqy.cn/api",
+   "target": "https://app2026.ystva.com",
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 424
+   "ms": 121
+  },
+  {
+   "key": "иҚҗзүҮ",
+   "name": "рҹҺ¬в”ғиҚҗзүҮв”ғеҪұи§Ҷ",
+   "kind": "csp",
+   "target": "https://api.ztcgi.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 1698
   },
   {
    "key": "玩偶 | 闪电uc",
@@ -2690,14 +2710,34 @@
    "ms": 8008
   },
   {
-   "key": "兔子",
-   "name": "🐇┃兔子┃APP",
+   "key": "csp_XBiu口袋影院",
+   "name": "💢口袋影视(XB)",
    "kind": "csp",
-   "target": "https://dyyztvappapigoodgx.68.gy:12689/ciwk28vu38io8/apiurl.txt|dyyztvapiappyyds",
-   "from": "csp.ext-str",
+   "target": "http://www.koudaitv.com/type/{cateId",
+   "from": "csp.ext-dict",
    "ok": true,
-   "http": 404,
-   "ms": 255
+   "http": 200,
+   "ms": 160
+  },
+  {
+   "key": "追番99",
+   "name": "追番｜APP",
+   "kind": "csp",
+   "target": "https://api.hboqy.cn.hboqy.cn/api",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 600
+  },
+  {
+   "key": "HkTv",
+   "name": "[3080ms|接口] TVB云播影视",
+   "kind": "csp",
+   "target": "http://www.hktvyb.vip/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 23
   },
   {
    "key": "驿站",
@@ -2707,47 +2747,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 467
+   "ms": 584
   },
   {
-   "key": "csp_XBiu口袋影院",
-   "name": "💢口袋影视(XB)",
+   "key": "兔子",
+   "name": "🐇┃兔子┃APP",
    "kind": "csp",
-   "target": "http://www.koudaitv.com/type/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 237
-  },
-  {
-   "key": "肥猫",
-   "name": "🐼┃肥猫┃APP",
-   "kind": "csp",
-   "target": "https://wsapi.dafenqi.mom/yuming.txt|bH5mI8iK0tK7aQ5x",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 436,
-   "ms": 546
-  },
-  {
-   "key": "新首发",
-   "name": "👻标清┃1080P",
-   "kind": "csp",
-   "target": "https://yun-1316442804.cos.ap-guangzhou.myqcloud.com/600.txt|FTgP4Gq8zPiqbt7M|V122|okhttp/3.10.0",
+   "target": "https://dyyztvappapigoodgx.68.gy:12689/ciwk28vu38io8/apiurl.txt|dyyztvapiappyyds",
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 735
-  },
-  {
-   "key": "csp_appys_段友",
-   "name": "段友",
-   "kind": "csp",
-   "target": "https://shangjihuoke.com/api.php/tv.vod",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 10279
+   "ms": 531
   },
   {
    "key": "玩偶 | 多多",
@@ -2757,7 +2767,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 10010
+   "ms": 10009
   },
   {
    "key": "csp_biubiu_斗鱼-2",
@@ -2770,36 +2780,6 @@
    "ms": 0
   },
   {
-   "key": "追番达人99",
-   "name": "🐎追番┃1080P",
-   "kind": "csp",
-   "target": "https://app2026.ystva.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 866
-  },
-  {
-   "key": "W55Movie",
-   "name": "[3080ms|接口] 555电影",
-   "kind": "csp",
-   "target": "https://w55xy.com/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 639
-  },
-  {
-   "key": "csp_appysv2_追剧TV",
-   "name": "追剧TV(萝卜)",
-   "kind": "csp",
-   "target": "http://111.229.120.180:88/lvdou_api.php/v2.vod",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8005
-  },
-  {
    "key": "Xinsj",
    "name": "♻️视觉",
    "kind": "csp",
@@ -2807,7 +2787,37 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 195
+   "ms": 180
+  },
+  {
+   "key": "肥猫",
+   "name": "🐼┃肥猫┃APP",
+   "kind": "csp",
+   "target": "https://wsapi.dafenqi.mom/yuming.txt|bH5mI8iK0tK7aQ5x",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 436,
+   "ms": 594
+  },
+  {
+   "key": "ChangZhang",
+   "name": "[3080ms|接口] 厂长影视",
+   "kind": "csp",
+   "target": "https://www.czzy.site/",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 310
+  },
+  {
+   "key": "yj",
+   "name": "影视|哔嘀",
+   "kind": "csp",
+   "target": "https://www.yjys01.com",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 200
   },
   {
    "key": "csp_Live2Vod_1",
@@ -2820,44 +2830,14 @@
    "ms": 0
   },
   {
-   "key": "热剧",
-   "name": "热剧丨APP",
+   "key": "新首发",
+   "name": "👻标清┃1080P",
    "kind": "csp",
-   "target": "https://www.rebovod.com",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 1734
-  },
-  {
-   "key": "ChangZhang",
-   "name": "[3080ms|接口] 厂长影视",
-   "kind": "csp",
-   "target": "https://www.czzy.site/",
+   "target": "https://yun-1316442804.cos.ap-guangzhou.myqcloud.com/600.txt|FTgP4Gq8zPiqbt7M|V122|okhttp/3.10.0",
    "from": "csp.ext-str",
    "ok": true,
-   "http": 200,
-   "ms": 476
-  },
-  {
-   "key": "yj",
-   "name": "影视|哔嘀",
-   "kind": "csp",
-   "target": "https://www.yjys01.com",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 256
-  },
-  {
-   "key": "知年",
-   "name": "📅┆知年┆APP",
-   "kind": "csp",
-   "target": "https://max.moyu666666.top/appun.php",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 400,
-   "ms": 883
+   "http": 404,
+   "ms": 705
   },
   {
    "key": "csp_xpath_kuqimv-2",
@@ -2867,7 +2847,37 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 238
+   "ms": 255
+  },
+  {
+   "key": "csp_xpath_huya",
+   "name": "虎牙(XP)",
+   "kind": "csp",
+   "target": "http://freed.yuanhsing.cf/TVBox/MaooXP/huya2.json",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 299
+  },
+  {
+   "key": "知年",
+   "name": "📅┆知年┆APP",
+   "kind": "csp",
+   "target": "https://max.moyu666666.top/appun.php",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 400,
+   "ms": 705
+  },
+  {
+   "key": "W55Movie",
+   "name": "[3080ms|接口] 555电影",
+   "kind": "csp",
+   "target": "https://w55xy.com/",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 616
   },
   {
    "key": "应用商店",
@@ -2880,16 +2890,6 @@
    "ms": 0
   },
   {
-   "key": "csp_xpath_huya",
-   "name": "虎牙(XP)",
-   "kind": "csp",
-   "target": "http://freed.yuanhsing.cf/TVBox/MaooXP/huya2.json",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 266
-  },
-  {
    "key": "BiliCzong",
    "name": "📚初中┃教育",
    "kind": "csp",
@@ -2897,7 +2897,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 259
+   "ms": 194
+  },
+  {
+   "key": "热剧",
+   "name": "热剧丨APP",
+   "kind": "csp",
+   "target": "https://www.rebovod.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1804
   },
   {
    "key": "光盘",
@@ -2907,7 +2917,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 1104
+   "ms": 887
   },
   {
    "key": "玖卿乐播",
@@ -2917,27 +2927,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 323
+   "ms": 402
   },
   {
-   "key": "多多影音",
-   "name": "👲┃多多┃影音",
+   "key": "csp_appysv2_追剧TV",
+   "name": "追剧TV(萝卜)",
    "kind": "csp",
-   "target": "https://tv.yydsys.top",
-   "from": "csp.ext-dict",
+   "target": "http://111.229.120.180:88/lvdou_api.php/v2.vod",
+   "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 6048
-  },
-  {
-   "key": "顾我",
-   "name": "顾我｜APP",
-   "kind": "csp",
-   "target": "https://daen-1256234123.cos.ap-shanghai.myqcloud.com/MuQi/pgqj.json",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8010
+   "ms": 8003
   },
   {
    "key": "动画片",
@@ -2947,37 +2947,27 @@
    "from": "js.host",
    "ok": true,
    "http": 200,
-   "ms": 551
+   "ms": 350
   },
   {
-   "key": "BiliSer",
-   "name": "📚少儿┃教育",
+   "key": "BiliGequ",
+   "name": "🎉歌曲┃Bili",
    "kind": "csp",
-   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-7y79ukN4TsLcdydmg5TFRj.gz",
+   "target": "https://cdn.waimaimingtang.com/file/images/bwc/20260527100843-9aefe070b5.aowu",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 985
+   "ms": 945
   },
   {
-   "key": "BiliXxue",
-   "name": "📚小学┃教育",
+   "key": "BiliXiqu",
+   "name": "🎉戏曲┃Bili",
    "kind": "csp",
-   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-4VMpA5z1erwuRYyDVSkc9T.gz",
+   "target": "https://cdn.waimaimingtang.com/file/images/bwc/20260527100913-7601517540.aowu",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1062
-  },
-  {
-   "key": "BiliGzong",
-   "name": "📚高中┃教育",
-   "kind": "csp",
-   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-vsfDQmE86Ei5LCTWJ2X6Nv.gz",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 1011
+   "ms": 959
   },
   {
    "key": "豆瓣影院",
@@ -2987,7 +2977,17 @@
    "from": "js.host",
    "ok": true,
    "http": 403,
-   "ms": 158
+   "ms": 138
+  },
+  {
+   "key": "BiliXxue",
+   "name": "📚小学┃教育",
+   "kind": "csp",
+   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-4VMpA5z1erwuRYyDVSkc9T.gz",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 983
   },
   {
    "key": "武享吧",
@@ -2997,17 +2997,27 @@
    "from": "js.host",
    "ok": true,
    "http": 403,
-   "ms": 208
+   "ms": 145
   },
   {
-   "key": "cat_荐片app",
-   "name": "☀荐片🔹蓝光",
-   "kind": "js",
-   "target": "https://ev2089.zxbwv.com",
-   "from": "js.url",
+   "key": "BiliSer",
+   "name": "📚少儿┃教育",
+   "kind": "csp",
+   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-7y79ukN4TsLcdydmg5TFRj.gz",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1031
+  },
+  {
+   "key": "顾我",
+   "name": "顾我｜APP",
+   "kind": "csp",
+   "target": "https://daen-1256234123.cos.ap-shanghai.myqcloud.com/MuQi/pgqj.json",
+   "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 1388
+   "ms": 8035
   },
   {
    "key": "cat_骚火",
@@ -3017,37 +3027,7 @@
    "from": "js.host",
    "ok": true,
    "http": 522,
-   "ms": 689
-  },
-  {
-   "key": "56动漫",
-   "name": "56｜动漫",
-   "kind": "js",
-   "target": "https://www.56dm.cc/",
-   "from": "js.host",
-   "ok": true,
-   "http": 403,
-   "ms": 441
-  },
-  {
-   "key": "恰娃子",
-   "name": "娃娃｜影视",
-   "kind": "js",
-   "target": "https://api.cj7wq4.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 1274
-  },
-  {
-   "key": "恰瓜子",
-   "name": "恰恰｜影视",
-   "kind": "js",
-   "target": "https://api.cj7wq4.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 1216
+   "ms": 423
   },
   {
    "key": "JRKAN直播",
@@ -3057,17 +3037,7 @@
    "from": "js.host",
    "ok": true,
    "http": 200,
-   "ms": 966
-  },
-  {
-   "key": "蚂蚁",
-   "name": "🐜1080P┃蚂蚁",
-   "kind": "csp",
-   "target": "http://122.228.84.103:5822/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8004
+   "ms": 661
   },
   {
    "key": "Cat_荐片",
@@ -3077,7 +3047,17 @@
    "from": "js.host",
    "ok": true,
    "http": 200,
-   "ms": 576
+   "ms": 193
+  },
+  {
+   "key": "56动漫",
+   "name": "56｜动漫",
+   "kind": "js",
+   "target": "https://www.56dm.cc/",
+   "from": "js.host",
+   "ok": true,
+   "http": 403,
+   "ms": 262
   },
   {
    "key": "比特影视",
@@ -3087,17 +3067,127 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 2004
+   "ms": 1864
   },
   {
-   "key": "HkTv",
-   "name": "[3080ms|接口] TVB云播影视",
+   "key": "cat_荐片app",
+   "name": "☀荐片🔹蓝光",
+   "kind": "js",
+   "target": "https://ev2089.zxbwv.com",
+   "from": "js.url",
+   "ok": false,
+   "error": "URLError",
+   "ms": 1557
+  },
+  {
+   "key": "BiliGzong",
+   "name": "📚高中┃教育",
    "kind": "csp",
-   "target": "http://www.hktvyb.vip/",
+   "target": "https://nos.netease.com/youdata-netease/public-utilUpload-vsfDQmE86Ei5LCTWJ2X6Nv.gz",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 1751
+  },
+  {
+   "key": "恰瓜子",
+   "name": "恰恰｜影视",
+   "kind": "js",
+   "target": "https://api.cj7wq4.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 1475
+  },
+  {
+   "key": "哔站记录片",
+   "name": "🍬🅱哔站影视",
+   "kind": "js",
+   "target": "https://api.bilibili.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 773
+  },
+  {
+   "key": "哔站教育",
+   "name": "🍬🅱哔站教育",
+   "kind": "js",
+   "target": "https://api.bilibili.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 679
+  },
+  {
+   "key": "个影",
+   "name": "🌀个影｜1920",
+   "kind": "js",
+   "target": "https://www.4kvm.top",
+   "from": "js.url",
+   "ok": true,
+   "http": 200,
+   "ms": 694
+  },
+  {
+   "key": "随身评书",
+   "name": "📻随身┃评书",
+   "kind": "js",
+   "target": "https://www.psmp3.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 979
+  },
+  {
+   "key": "GZAPP",
+   "name": "瓜子｜APP",
+   "kind": "js",
+   "target": "https://api.gudvxty.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 1582
+  },
+  {
+   "key": "恰娃子",
+   "name": "娃娃｜影视",
+   "kind": "js",
+   "target": "https://api.cj7wq4.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 1910
+  },
+  {
+   "key": "cat咖啡体育",
+   "name": "⚽咖啡🔹球赛",
+   "kind": "js",
+   "target": "https://kafeizhibo.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 904
+  },
+  {
+   "key": "小哩",
+   "name": "🌀小哩｜1280",
+   "kind": "js",
+   "target": "https://api.bilibili.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 586
+  },
+  {
+   "key": "蚂蚁",
+   "name": "🐜1080P┃蚂蚁",
+   "kind": "csp",
+   "target": "http://122.228.84.103:5822/api.php/app/",
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 2670
+   "ms": 8008
   },
   {
    "key": "csp_加速",
@@ -3110,14 +3200,14 @@
    "ms": 8008
   },
   {
-   "key": "随身评书",
-   "name": "📻随身┃评书",
+   "key": "cat_非凡网",
+   "name": "☀非凡🔹影視",
    "kind": "js",
-   "target": "https://www.psmp3.com",
-   "from": "js.host",
+   "target": "https://ffzy5.tv",
+   "from": "js.url",
    "ok": true,
    "http": 200,
-   "ms": 962
+   "ms": 1357
   },
   {
    "key": "csp_赞赞",
@@ -3130,56 +3220,6 @@
    "ms": 8008
   },
   {
-   "key": "哔站教育",
-   "name": "🍬🅱哔站教育",
-   "kind": "js",
-   "target": "https://api.bilibili.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 729
-  },
-  {
-   "key": "小哩",
-   "name": "🌀小哩｜1280",
-   "kind": "js",
-   "target": "https://api.bilibili.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 644
-  },
-  {
-   "key": "cat咖啡体育",
-   "name": "⚽咖啡🔹球赛",
-   "kind": "js",
-   "target": "https://kafeizhibo.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 936
-  },
-  {
-   "key": "哔站记录片",
-   "name": "🍬🅱哔站影视",
-   "kind": "js",
-   "target": "https://api.bilibili.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 990
-  },
-  {
-   "key": "个影",
-   "name": "🌀个影｜1920",
-   "kind": "js",
-   "target": "https://www.4kvm.top",
-   "from": "js.url",
-   "ok": true,
-   "http": 200,
-   "ms": 866
-  },
-  {
    "key": "星辰",
    "name": "☀星星🔹秒播",
    "kind": "js",
@@ -3187,57 +3227,7 @@
    "from": "js.url",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 224
-  },
-  {
-   "key": "听了么",
-   "name": "📻听歌｜音乐",
-   "kind": "js",
-   "target": "http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&rn=30&order=hot&pn=1",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 1013
-  },
-  {
-   "key": "cat_非凡网",
-   "name": "☀非凡🔹影視",
-   "kind": "js",
-   "target": "https://ffzy5.tv",
-   "from": "js.url",
-   "ok": true,
-   "http": 200,
-   "ms": 1404
-  },
-  {
-   "key": "全片源",
-   "name": "💖分享全网",
-   "kind": "csp",
-   "target": "http://chaoqianys.top:91/api.php/app/",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8286
-  },
-  {
-   "key": "片吧影院",
-   "name": "片吧｜影视",
-   "kind": "js",
-   "target": "https://www.pbkan.com/",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 802
-  },
-  {
-   "key": "电影网影视",
-   "name": "影网｜影视",
-   "kind": "js",
-   "target": "http://www.dgpengcheng.com/",
-   "from": "js.host",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 536
+   "ms": 185
   },
   {
    "key": "奇米动漫",
@@ -3247,7 +3237,47 @@
    "from": "js.host",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 150
+   "ms": 124
+  },
+  {
+   "key": "片吧影院",
+   "name": "片吧｜影视",
+   "kind": "js",
+   "target": "https://www.pbkan.com/",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 641
+  },
+  {
+   "key": "听了么",
+   "name": "📻听歌｜音乐",
+   "kind": "js",
+   "target": "http://wapi.kuwo.cn/api/pc/classify/playlist/getRcmPlayList?loginUid=0&loginSid=0&appUid=76039576&rn=30&order=hot&pn=1",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 1005
+  },
+  {
+   "key": "电影网影视",
+   "name": "影网｜影视",
+   "kind": "js",
+   "target": "http://www.dgpengcheng.com/",
+   "from": "js.host",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 468
+  },
+  {
+   "key": "清风DJ",
+   "name": "清风｜听歌",
+   "kind": "js",
+   "target": "https://www.vvvdj.com",
+   "from": "js.host",
+   "ok": false,
+   "error": "URLError",
+   "ms": 248
   },
   {
    "key": "310直播",
@@ -3257,37 +3287,7 @@
    "from": "js.host",
    "ok": false,
    "error": "URLError",
-   "ms": 49
-  },
-  {
-   "key": "凤凰FM",
-   "name": "📻凤凰┃FM",
-   "kind": "js",
-   "target": "https://s.fm.renbenai.com",
-   "from": "js.url",
-   "ok": true,
-   "http": 404,
-   "ms": 1132
-  },
-  {
-   "key": "cat_旺旺网",
-   "name": "☀旺旺🔹视频",
-   "kind": "js",
-   "target": "https://vip.wwgz.cn:5200",
-   "from": "js.url",
-   "ok": true,
-   "http": 200,
-   "ms": 1206
-  },
-  {
-   "key": "奇奇",
-   "name": "☀爱在🔹心意",
-   "kind": "js",
-   "target": "https://www.iqiyi.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 678
+   "ms": 159
   },
   {
    "key": "盘库",
@@ -3297,7 +3297,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 141
+   "ms": 135
+  },
+  {
+   "key": "cat_优夏网",
+   "name": "☀游侠🔹视频",
+   "kind": "js",
+   "target": "http://yoxayg.com",
+   "from": "js.url",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 462
   },
   {
    "key": "MoggV2",
@@ -3320,14 +3330,14 @@
    "ms": 0
   },
   {
-   "key": "清风DJ",
-   "name": "清风｜听歌",
+   "key": "酷酷",
+   "name": "☀悠悠🔹岁月",
    "kind": "js",
-   "target": "https://www.vvvdj.com",
+   "target": "https://www.%79%6f%75%6b%75.com",
    "from": "js.host",
-   "ok": false,
-   "error": "URLError",
-   "ms": 325
+   "ok": true,
+   "http": 200,
+   "ms": 976
   },
   {
    "key": "二小网盘",
@@ -3337,17 +3347,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 82
-  },
-  {
-   "key": "cat_剧迷网",
-   "name": "☀剧迷🔹视频",
-   "kind": "js",
-   "target": "https://web.88spa-03.com:8443",
-   "from": "js.url",
-   "ok": true,
-   "http": 200,
-   "ms": 1446
+   "ms": 114
   },
   {
    "key": "云朵影视APP",
@@ -3357,17 +3357,27 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 215
+   "ms": 295
   },
   {
-   "key": "cat_优夏网",
-   "name": "☀游侠🔹视频",
+   "key": "cat_旺旺网",
+   "name": "☀旺旺🔹视频",
    "kind": "js",
-   "target": "http://yoxayg.com",
+   "target": "https://vip.wwgz.cn:5200",
    "from": "js.url",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 633
+   "ok": true,
+   "http": 200,
+   "ms": 1142
+  },
+  {
+   "key": "凤凰FM",
+   "name": "📻凤凰┃FM",
+   "kind": "js",
+   "target": "https://s.fm.renbenai.com",
+   "from": "js.url",
+   "ok": true,
+   "http": 404,
+   "ms": 1192
   },
   {
    "key": "聚搜",
@@ -3377,17 +3387,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "UnicodeEncodeError",
-   "ms": 0
+   "ms": 1
   },
   {
-   "key": "腾腾",
-   "name": "☀腾翼🔹天翔",
+   "key": "六月听书",
+   "name": "📚️听书┃六月",
    "kind": "js",
-   "target": "https://v.qq.com",
+   "target": "http://m.6yueting.com",
    "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 1175
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 565
   },
   {
    "key": "cloudLJ",
@@ -3407,7 +3417,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 161
+   "ms": 123
+  },
+  {
+   "key": "cat_剧迷网",
+   "name": "☀剧迷🔹视频",
+   "kind": "js",
+   "target": "https://web.88spa-03.com:8443",
+   "from": "js.url",
+   "ok": true,
+   "http": 200,
+   "ms": 1385
   },
   {
    "key": "猫吃鱼",
@@ -3417,17 +3437,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 28
+   "ms": 47
   },
   {
-   "key": "六月听书",
-   "name": "📚️听书┃六月",
-   "kind": "js",
-   "target": "http://m.6yueting.com",
-   "from": "js.host",
+   "key": "全片源",
+   "name": "💖分享全网",
+   "kind": "csp",
+   "target": "http://chaoqianys.top:91/api.php/app/",
+   "from": "csp.ext-str",
    "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 565
+   "error": "URLError",
+   "ms": 8238
   },
   {
    "key": "8号影院",
@@ -3437,17 +3457,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 126
+   "ms": 194
   },
   {
-   "key": "GZAPP",
-   "name": "瓜子｜APP",
+   "key": "奇奇",
+   "name": "☀爱在🔹心意",
    "kind": "js",
-   "target": "https://api.gudvxty.com",
+   "target": "https://www.iqiyi.com",
    "from": "js.host",
    "ok": true,
    "http": 200,
-   "ms": 3135
+   "ms": 1216
   },
   {
    "key": "pansou | fish",
@@ -3457,7 +3477,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 503,
-   "ms": 218
+   "ms": 207
+  },
+  {
+   "key": "腾腾",
+   "name": "☀腾翼🔹天翔",
+   "kind": "js",
+   "target": "https://v.qq.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 1361
   },
   {
    "key": "✨雪糕影院✨",
@@ -3467,13 +3497,63 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 81
+   "ms": 113
   },
   {
    "key": "趣盘-2",
    "name": "🥳百度趣盘┃4K弹幕",
    "kind": "csp",
    "target": "https://www.qupanshe.com",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 671
+  },
+  {
+   "key": "囧次元动漫",
+   "name": "🔂囧次元┃动漫",
+   "kind": "csp",
+   "target": "https://jiongciyuan.org/index.php/vod/show/area/{area",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 218
+  },
+  {
+   "key": "✨YY影视✨",
+   "name": "《天微🔹秒播》",
+   "kind": "csp",
+   "target": "https://uuys.cc",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 256
+  },
+  {
+   "key": "白嫖者",
+   "name": "🧿白嫖┃影视",
+   "kind": "csp",
+   "target": "https://www.qyzf88.com/qyvodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 155
+  },
+  {
+   "key": "baipao",
+   "name": "💖分享白嫖",
+   "kind": "csp",
+   "target": "https://www.qyzf88.com/qyvodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 169
+  },
+  {
+   "key": "木偶网盘",
+   "name": "💿木偶🔹盘4k",
+   "kind": "csp",
+   "target": "https://www.muou.site",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
@@ -3487,87 +3567,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 404
-  },
-  {
-   "key": "光鸭社区-2",
-   "name": "🦆光鸭社区",
-   "kind": "csp",
-   "target": "https://gy.lubao2.de5.net",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "TimeoutError",
-   "ms": 8313
-  },
-  {
-   "key": "囧次元动漫",
-   "name": "🔂囧次元┃动漫",
-   "kind": "csp",
-   "target": "https://jiongciyuan.org/index.php/vod/show/area/{area",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 224
-  },
-  {
-   "key": "木偶网盘",
-   "name": "💿木偶🔹盘4k",
-   "kind": "csp",
-   "target": "https://www.muou.site",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 897
-  },
-  {
-   "key": "白嫖者",
-   "name": "🧿白嫖┃影视",
-   "kind": "csp",
-   "target": "https://www.qyzf88.com/qyvodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 150
-  },
-  {
-   "key": "baipao",
-   "name": "💖分享白嫖",
-   "kind": "csp",
-   "target": "https://www.qyzf88.com/qyvodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 221
-  },
-  {
-   "key": "快映网盘",
-   "name": "💿快映🔹盘4k",
-   "kind": "csp",
-   "target": "http://38.76.197.172:12521",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 867
-  },
-  {
-   "key": "虎斑网盘",
-   "name": "💿虎斑🔹盘4k",
-   "kind": "csp",
-   "target": "http://38.76.197.172:16969",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 886
-  },
-  {
-   "key": "✨YY影视✨",
-   "name": "《天微🔹秒播》",
-   "kind": "csp",
-   "target": "https://uuys.cc",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 622
+   "ms": 520
   },
   {
    "key": "卫总影院",
@@ -3577,7 +3577,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 334
+   "ms": 203
+  },
+  {
+   "key": "泰剧看看",
+   "name": "🇹🇭泰剧┃影视",
+   "kind": "csp",
+   "target": "https://taiquantv.com/search.php?page={catePg",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 377
   },
   {
    "key": "Hjzc",
@@ -3590,14 +3600,14 @@
    "ms": 0
   },
   {
-   "key": "奥秘网盘",
-   "name": "📀奥秘┃网盘",
+   "key": "csp_XBPQ_98影院",
+   "name": "98影院(XBPQ)",
    "kind": "csp",
-   "target": "https://vip.omii.top/",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 152
+   "target": "http://www.98ju.com/{cateId",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 200,
+   "ms": 531
   },
   {
    "key": "UcYunPan",
@@ -3630,16 +3640,6 @@
    "ms": 0
   },
   {
-   "key": "csp_biubiu_在线之家",
-   "name": "[默认]防尴尬源",
-   "kind": "csp",
-   "target": "https://pan.css.lc/api/v3/file/get/131/%E5%9C%A8%E7%BA%BF%E4%B9%8B%E5%AE%B60714.json?sign=oZLLkoVrc4nHPpNMMkmxPKdljvWYfIvm8-UeFsEGc0w%3D%3A0",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 200,
-   "ms": 223
-  },
-  {
    "key": "03影院",
    "name": "🛀03影┃BPQ",
    "kind": "csp",
@@ -3647,37 +3647,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 42
-  },
-  {
-   "key": "黑狐",
-   "name": "🦊黑狐┃BPQ",
-   "kind": "csp",
-   "target": "http://fagmn.com",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 148
-  },
-  {
-   "key": "cat体育聚合",
-   "name": "⚽聚合🔹球赛",
-   "kind": "js",
-   "target": "https://www.88kanqiu.la",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 1376
-  },
-  {
-   "key": "泰剧看看",
-   "name": "🇹🇭泰剧┃影视",
-   "kind": "csp",
-   "target": "https://taiquantv.com/search.php?page={catePg",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 490
+   "ms": 51
   },
   {
    "key": "csp_XBPQ_6080",
@@ -3687,7 +3657,37 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 66
+   "ms": 27
+  },
+  {
+   "key": "虎斑网盘",
+   "name": "💿虎斑🔹盘4k",
+   "kind": "csp",
+   "target": "http://38.76.197.172:16969",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 790
+  },
+  {
+   "key": "快映网盘",
+   "name": "💿快映🔹盘4k",
+   "kind": "csp",
+   "target": "http://38.76.197.172:12521",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 842
+  },
+  {
+   "key": "奥秘网盘",
+   "name": "📀奥秘┃网盘",
+   "kind": "csp",
+   "target": "https://vip.omii.top/",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 160
   },
   {
    "key": "alist",
@@ -3697,17 +3697,37 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 442
+   "ms": 326
   },
   {
-   "key": "酷酷",
-   "name": "☀悠悠🔹岁月",
-   "kind": "js",
-   "target": "https://www.%79%6f%75%6b%75.com",
-   "from": "js.host",
+   "key": "kkk动漫",
+   "name": "🌈三看｜动漫",
+   "kind": "csp",
+   "target": "https://cn.agekkkk.com/",
+   "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 2535
+   "ms": 305
+  },
+  {
+   "key": "黑狐",
+   "name": "🦊黑狐┃BPQ",
+   "kind": "csp",
+   "target": "http://fagmn.com",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 184
+  },
+  {
+   "key": "csp_biubiu_在线之家",
+   "name": "[默认]防尴尬源",
+   "kind": "csp",
+   "target": "https://pan.css.lc/api/v3/file/get/131/%E5%9C%A8%E7%BA%BF%E4%B9%8B%E5%AE%B60714.json?sign=oZLLkoVrc4nHPpNMMkmxPKdljvWYfIvm8-UeFsEGc0w%3D%3A0",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 401,
+   "ms": 385
   },
   {
    "key": "网盘 | 片库",
@@ -3720,14 +3740,14 @@
    "ms": 153
   },
   {
-   "key": "kkk动漫",
-   "name": "🌈三看｜动漫",
+   "key": "EightEight",
+   "name": "🅿️88网盘",
    "kind": "csp",
-   "target": "https://cn.agekkkk.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 551
+   "target": "https://662688.xyz",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 55
   },
   {
    "key": "立播弹幕版",
@@ -3737,17 +3757,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 549
-  },
-  {
-   "key": "EightEight",
-   "name": "🅿️88网盘",
-   "kind": "csp",
-   "target": "https://662688.xyz",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 51
+   "ms": 489
   },
   {
    "key": "csp_biubiu_短视频",
@@ -3757,7 +3767,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 404,
-   "ms": 260
+   "ms": 206
   },
   {
    "key": "csp_樱之空",
@@ -3767,37 +3777,27 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1392
+   "ms": 1158
   },
   {
-   "key": "cat蜘蛛体育",
-   "name": "⚽蜘蛛🔹球赛",
-   "kind": "js",
-   "target": "https://zzzbvip429.com",
-   "from": "js.host",
+   "key": "csp_Zhaozy",
+   "name": "📀找资源(搜索)",
+   "kind": "csp",
+   "target": "https://zhaoziyuan1.cc/so?filename={wd",
+   "from": "csp.ext-str",
    "ok": true,
    "http": 200,
-   "ms": 2797
+   "ms": 253
   },
   {
-   "key": "csp_Mp4Mov",
-   "name": "🧲Mp4电影",
+   "key": "光鸭社区-2",
+   "name": "🦆光鸭社区",
    "kind": "csp",
-   "target": "https://www.padmp4.com",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8731
-  },
-  {
-   "key": "盤搜天意",
-   "name": "网盘 | 盤搜天意",
-   "kind": "csp",
-   "target": "https://www.tianyiso.com",
+   "target": "https://gy.lubao2.de5.net",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 712
+   "ok": false,
+   "error": "TimeoutError",
+   "ms": 8167
   },
   {
    "key": "观影",
@@ -3807,47 +3807,47 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 725
+   "ms": 645
   },
   {
-   "key": "小雷",
-   "name": "网盘 | 小雷",
+   "key": "多多影音",
+   "name": "👲┃多多┃影音",
    "kind": "csp",
-   "target": "https://www.leijing1.com/",
+   "target": "https://tv.yydsys.top",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 882
-  },
-  {
-   "key": "csp_Zhaozy",
-   "name": "📀找资源(搜索)",
-   "kind": "csp",
-   "target": "https://zhaoziyuan1.cc/so?filename={wd",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 401,
-   "ms": 598
-  },
-  {
-   "key": "蜡笔网盘",
-   "name": "蜡笔|网盘",
-   "kind": "csp",
-   "target": "https://xiaocgege.shop/$$$proxy$$$1$$$./deps/cluntop/jsm/lib/wogg.json$$$LABI",
-   "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 231
+   "ms": 10018
   },
   {
-   "key": "pansou|fish",
-   "name": "📀pansou|fish",
+   "key": "盤搜天意",
+   "name": "网盘 | 盤搜天意",
    "kind": "csp",
-   "target": "https://s.panhunt.com",
+   "target": "https://www.tianyiso.com",
    "from": "csp.ext-dict",
    "ok": true,
+   "http": 403,
+   "ms": 708
+  },
+  {
+   "key": "cat蜘蛛体育",
+   "name": "⚽蜘蛛🔹球赛",
+   "kind": "js",
+   "target": "https://zzzbvip429.com",
+   "from": "js.host",
+   "ok": true,
    "http": 200,
-   "ms": 729
+   "ms": 2613
+  },
+  {
+   "key": "cat体育聚合",
+   "name": "⚽聚合🔹球赛",
+   "kind": "js",
+   "target": "https://www.88kanqiu.la",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 2008
   },
   {
    "key": "低端影视",
@@ -3857,17 +3857,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 146
+   "ms": 126
   },
   {
-   "key": "妖狐影视",
-   "name": "🦊妖妃┃影视",
+   "key": "pansou|fish",
+   "name": "📀pansou|fish",
    "kind": "csp",
-   "target": "https://www.midianshi.com/",
+   "target": "https://s.panhunt.com",
    "from": "csp.ext-dict",
    "ok": true,
-   "http": 403,
-   "ms": 198
+   "http": 200,
+   "ms": 653
   },
   {
    "key": "Wogg",
@@ -3877,7 +3877,27 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 455
+   "ms": 307
+  },
+  {
+   "key": "小雷",
+   "name": "网盘 | 小雷",
+   "kind": "csp",
+   "target": "https://www.leijing1.com/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 969
+  },
+  {
+   "key": "蜡笔网盘",
+   "name": "蜡笔|网盘",
+   "kind": "csp",
+   "target": "https://xiaocgege.shop/$$$proxy$$$1$$$./deps/cluntop/jsm/lib/wogg.json$$$LABI",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 325
   },
   {
    "key": " 百姓 ",
@@ -3887,17 +3907,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 216
+   "ms": 159
   },
   {
-   "key": "Mogg",
-   "name": "木偶哥哥|网盘",
+   "key": "妖狐影视",
+   "name": "🦊妖妃┃影视",
    "kind": "csp",
-   "target": "http://123.666291.xyz/$$$noproxy$$$1$$$./deps/cluntop/jsm/lib/wogg.json$$$MOGG",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 581
+   "target": "https://www.midianshi.com/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 403,
+   "ms": 203
   },
   {
    "key": "csp_XBPQ_碟迷",
@@ -3907,7 +3927,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 282
+   "ms": 222
   },
   {
    "key": "碟迷影院",
@@ -3917,7 +3937,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 181
+   "ms": 182
+  },
+  {
+   "key": "Mogg",
+   "name": "木偶哥哥|网盘",
+   "kind": "csp",
+   "target": "http://123.666291.xyz/$$$noproxy$$$1$$$./deps/cluntop/jsm/lib/wogg.json$$$MOGG",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 604
   },
   {
    "key": "XBPQ_短剧TV",
@@ -3927,27 +3957,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 263
-  },
-  {
-   "key": "金漫TV",
-   "name": "🥝金曼┃影视",
-   "kind": "csp",
-   "target": "https://www.jinman6.com/index.php/vod/show/id/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 315
-  },
-  {
-   "key": "乌卡猫影院",
-   "name": "🙀乌猫┃影视",
-   "kind": "csp",
-   "target": "https://www.wukamao.com/vodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 338
+   "ms": 183
   },
   {
    "key": "无极99",
@@ -3966,8 +3976,28 @@
    "target": "https://ceshi307386.oss-cn-beijing.aliyuncs.com/ceshi421.txt",
    "from": "csp.ext-dict",
    "ok": true,
-   "http": 404,
-   "ms": 1180
+   "http": 200,
+   "ms": 197
+  },
+  {
+   "key": "金漫TV",
+   "name": "🥝金曼┃影视",
+   "kind": "csp",
+   "target": "https://www.jinman6.com/index.php/vod/show/id/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 287
+  },
+  {
+   "key": "乌卡猫影院",
+   "name": "🙀乌猫┃影视",
+   "kind": "csp",
+   "target": "https://www.wukamao.com/vodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 320
   },
   {
    "key": "OK短剧",
@@ -3977,27 +4007,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 389
-  },
-  {
-   "key": "橙子99",
-   "name": "橙子┃APP",
-   "kind": "csp",
-   "target": "http://113.31.180.218:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8008
-  },
-  {
-   "key": "影视森林",
-   "name": "🐘森林┃影视",
-   "kind": "csp",
-   "target": "https://www.ncshdxx.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 403,
-   "ms": 354
+   "ms": 252
   },
   {
    "key": "干饭",
@@ -4007,7 +4017,7 @@
    "from": "csp.ext-str",
    "ok": true,
    "http": 403,
-   "ms": 1379
+   "ms": 1077
   },
   {
    "key": "行动-2",
@@ -4026,8 +4036,8 @@
    "target": "https://hong.hgyx.vip/index.php/vod/show/id/20.html",
    "from": "csp.ext-dict",
    "ok": true,
-   "http": 200,
-   "ms": 580
+   "http": 403,
+   "ms": 398
   },
   {
    "key": "XBPQ_葡萄",
@@ -4037,27 +4047,47 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 200
+   "ms": 201
   },
   {
-   "key": "唐人",
-   "name": "💖分享唐人",
+   "key": "csp_Mp4Mov",
+   "name": "🧲Mp4电影",
    "kind": "csp",
-   "target": "https://www.trjvod.com/index.php/vod/show/area/{area",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 367
+   "target": "https://www.padmp4.com",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8728
   },
   {
-   "key": "鹊桥",
-   "name": "鹊桥｜影视 ",
+   "key": "影视森林",
+   "name": "🐘森林┃影视",
    "kind": "csp",
-   "target": "http://114bate.com/hdshow/{cateId",
+   "target": "https://www.ncshdxx.com/",
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 395
+   "ms": 526
+  },
+  {
+   "key": "仓鼠-2",
+   "name": "仓鼠｜APP",
+   "kind": "csp",
+   "target": "https://ceshi307386.oss-cn-beijing.aliyuncs.com/ceshi421.txt",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 1180
+  },
+  {
+   "key": "行动-2",
+   "name": "😌┃行动┃APP",
+   "kind": "csp",
+   "target": "https://lanyingjisu.oss-cn-wuhan-lr.aliyuncs.com/lyjszx.txt|oW5UxZ5kWVr1DI69",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 965
   },
   {
    "key": "SVIP短剧",
@@ -4067,67 +4097,7 @@
    "from": "js.host",
    "ok": true,
    "http": 404,
-   "ms": 1264
-  },
-  {
-   "key": "csp_XBPQ_aoaotv",
-   "name": "🎦┃短剧┃嗷嗷",
-   "kind": "csp",
-   "target": "https://aoao.tv/vodshow/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 253
-  },
-  {
-   "key": "赵本山小品网",
-   "name": "🤡本山┃大全",
-   "kind": "csp",
-   "target": "http://m.u77.net/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 632
-  },
-  {
-   "key": "fok",
-   "name": "🌙┃夸克┃影视",
-   "kind": "csp",
-   "target": "https://www.freeok.vip/vod-show/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 400,
-   "ms": 493
-  },
-  {
-   "key": "孜然影视",
-   "name": "🐐孜然┃影视",
-   "kind": "csp",
-   "target": "https://zrys1.icu/index.php/vod/show/area/{area",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 429,
-   "ms": 623
-  },
-  {
-   "key": "顾我99",
-   "name": "顾我丨APP",
-   "kind": "csp",
-   "target": "http://117.50.200.113:19987/app/bn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 8008
-  },
-  {
-   "key": "csp_XBPQ_动漫",
-   "name": "动漫┃XBPQ",
-   "kind": "csp",
-   "target": "https://www.ppxdm.com/",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 200,
-   "ms": 711
+   "ms": 945
   },
   {
    "key": "HonHon",
@@ -4137,7 +4107,77 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 943
+   "ms": 404
+  },
+  {
+   "key": "csp_XBPQ_aoaotv",
+   "name": "🎦┃短剧┃嗷嗷",
+   "kind": "csp",
+   "target": "https://aoao.tv/vodshow/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 207
+  },
+  {
+   "key": "唐人",
+   "name": "💖分享唐人",
+   "kind": "csp",
+   "target": "https://www.trjvod.com/index.php/vod/show/area/{area",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 710
+  },
+  {
+   "key": "孜然影视",
+   "name": "🐐孜然┃影视",
+   "kind": "csp",
+   "target": "https://zrys1.icu/index.php/vod/show/area/{area",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 429,
+   "ms": 637
+  },
+  {
+   "key": "赵本山小品网",
+   "name": "🤡本山┃大全",
+   "kind": "csp",
+   "target": "http://m.u77.net/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 794
+  },
+  {
+   "key": "csp_XBPQ_动漫",
+   "name": "动漫┃XBPQ",
+   "kind": "csp",
+   "target": "https://www.ppxdm.com/",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 200,
+   "ms": 724
+  },
+  {
+   "key": "无极99",
+   "name": "无极┃APP",
+   "kind": "csp",
+   "target": "http://111.170.140.70:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8003
+  },
+  {
+   "key": "橙子99",
+   "name": "橙子┃APP",
+   "kind": "csp",
+   "target": "http://113.31.180.218:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8007
   },
   {
    "key": "csp_XBPQ_起看",
@@ -4147,17 +4187,17 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 200,
-   "ms": 1007
+   "ms": 830
   },
   {
-   "key": "腐剧",
-   "name": "腐剧",
+   "key": "fok",
+   "name": "🌙┃夸克┃影视",
    "kind": "csp",
-   "target": "http://www.fuju2024.cc:8013/ruifenglb_api.php/v1.vod",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 16060
+   "target": "https://www.freeok.vip/vod-show/{cateId",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 400,
+   "ms": 1069
   },
   {
    "key": "✨影视大全1✨",
@@ -4167,47 +4207,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 60
-  },
-  {
-   "key": "果果",
-   "name": "☀茫茫🔹人海",
-   "kind": "js",
-   "target": "https://pianku.api.mgtv.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 404,
-   "ms": 491
-  },
-  {
-   "key": "csp_XBPQ_毒蛇影院",
-   "name": "💫┃毒蛇影院┃XB",
-   "kind": "csp",
-   "target": "https://vres.uujjyp.cn/vod1/vod+data-original=",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 429,
-   "ms": 1052
-  },
-  {
-   "key": "墨点",
-   "name": "🍙墨点┃影视",
-   "kind": "csp",
-   "target": "https://www.modiandy.com",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 121
-  },
-  {
-   "key": "你好帅",
-   "name": "《好帅🎦短剧》",
-   "kind": "csp",
-   "target": "https://nhsyy.com/vodshwo/{cateId",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 1416
+   "ms": 134
   },
   {
    "key": "你好帅2",
@@ -4217,17 +4217,47 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 404,
-   "ms": 1491
+   "ms": 963
   },
   {
-   "key": "csp_XBPQ_98影院",
-   "name": "98影院(XBPQ)",
+   "key": "墨点",
+   "name": "🍙墨点┃影视",
    "kind": "csp",
-   "target": "http://www.98ju.com/{cateId",
-   "from": "csp.ext-str",
+   "target": "https://www.modiandy.com",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 38
+  },
+  {
+   "key": "你好帅",
+   "name": "《好帅🎦短剧》",
+   "kind": "csp",
+   "target": "https://nhsyy.com/vodshwo/{cateId",
+   "from": "csp.ext-dict",
    "ok": true,
-   "http": 200,
-   "ms": 4463
+   "http": 404,
+   "ms": 1038
+  },
+  {
+   "key": "csp_XBPQ_毒蛇影院",
+   "name": "💫┃毒蛇影院┃XB",
+   "kind": "csp",
+   "target": "https://vres.uujjyp.cn/vod1/vod+data-original=",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 429,
+   "ms": 1041
+  },
+  {
+   "key": "果果",
+   "name": "☀茫茫🔹人海",
+   "kind": "js",
+   "target": "https://pianku.api.mgtv.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 404,
+   "ms": 576
   },
   {
    "key": "动漫大全",
@@ -4237,7 +4267,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 343
+   "ms": 286
   },
   {
    "key": "影梦影视",
@@ -4247,27 +4277,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 229
-  },
-  {
-   "key": "Tg豆瓣",
-   "name": "🔍Tg豆瓣┃👉公众号【春秋导航】收集整理-🈲贩卖",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 1469
-  },
-  {
-   "key": "Hgdh",
-   "name": "🔥短剧推荐",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Hgdh",
-   "from": "csp.ext-str",
-   "ok": true,
-   "http": 404,
-   "ms": 1436
+   "ms": 195
   },
   {
    "key": "csp_短剧网香",
@@ -4277,7 +4287,27 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 119
+   "ms": 132
+  },
+  {
+   "key": "TgYunPan|本地",
+   "name": "🅿TgYunPan|本地",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 1074
+  },
+  {
+   "key": "顾我99",
+   "name": "顾我丨APP",
+   "kind": "csp",
+   "target": "http://117.50.200.113:19987/app/bn",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 8003
   },
   {
    "key": " 刘公ff子",
@@ -4287,17 +4317,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 175
+   "ms": 179
   },
   {
-   "key": "656",
-   "name": "🧿梦想┃影视",
+   "key": "85K影院",
+   "name": "8️⃣85K┃影视",
    "kind": "csp",
-   "target": "https://www.kkys02.com/",
+   "target": "https://85k.ltd//index.php/vod/show/area/{area",
    "from": "csp.ext-dict",
-   "ok": true,
-   "http": 850,
-   "ms": 1522
+   "ok": false,
+   "error": "URLError",
+   "ms": 196
   },
   {
    "key": "凯奇追剧",
@@ -4307,17 +4337,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 24
-  },
-  {
-   "key": "动漫岛",
-   "name": "动漫岛｜动漫",
-   "kind": "js",
-   "target": "http://www.dmd85.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 6033
+   "ms": 37
   },
   {
    "key": "米兔影视",
@@ -4327,7 +4347,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 121
+   "ms": 42
+  },
+  {
+   "key": "csp_Hmys",
+   "name": "🦉河马",
+   "kind": "csp",
+   "target": "https://m.jmzp.net.cn",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 324
   },
   {
    "key": "短剧one",
@@ -4377,7 +4407,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 144
+   "ms": 75
+  },
+  {
+   "key": "Hgdh",
+   "name": "🔥短剧推荐",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Hgdh",
+   "from": "csp.ext-str",
+   "ok": true,
+   "http": 404,
+   "ms": 1447
   },
   {
    "key": "csp_XBPQ_vstv",
@@ -4387,7 +4427,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 2020
+   "ms": 1564
   },
   {
    "key": "护航短剧",
@@ -4397,17 +4437,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "RemoteDisconnected",
-   "ms": 566
-  },
-  {
-   "key": "csp_XBPQ_6080z",
-   "name": "💫┃6080┃XB",
-   "kind": "csp",
-   "target": "https://6080z.com/vodsearch/{wd",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 520,
-   "ms": 933
+   "ms": 324
   },
   {
    "key": "龙伊短剧",
@@ -4417,17 +4447,47 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 349
+   "ms": 274
   },
   {
-   "key": "✨纵横|影视✨",
-   "name": "🍓纵横┃影视",
+   "key": "656",
+   "name": "🧿梦想┃影视",
    "kind": "csp",
-   "target": "https://www.tonglicable.com",
+   "target": "https://www.kkys02.com/",
    "from": "csp.ext-dict",
+   "ok": true,
+   "http": 850,
+   "ms": 1615
+  },
+  {
+   "key": "csp_XBPQ_6080z",
+   "name": "💫┃6080┃XB",
+   "kind": "csp",
+   "target": "https://6080z.com/vodsearch/{wd",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 520,
+   "ms": 1018
+  },
+  {
+   "key": "腐剧",
+   "name": "腐剧",
+   "kind": "csp",
+   "target": "http://www.fuju2024.cc:8013/ruifenglb_api.php/v1.vod",
+   "from": "csp.ext-str",
    "ok": false,
-   "error": "RemoteDisconnected",
-   "ms": 804
+   "error": "URLError",
+   "ms": 16092
+  },
+  {
+   "key": "动漫岛",
+   "name": "动漫岛｜动漫",
+   "kind": "js",
+   "target": "http://www.dmd85.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 5809
   },
   {
    "key": "盘Ta",
@@ -4437,7 +4497,17 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 471
+   "ms": 417
+  },
+  {
+   "key": "Tg豆瓣",
+   "name": "🔍Tg豆瓣┃👉公众号【春秋导航】收集整理-🈲贩卖",
+   "kind": "csp",
+   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6",
+   "from": "csp.ext-dict",
+   "ok": true,
+   "http": 404,
+   "ms": 2419
   },
   {
    "key": "一起看呀吧",
@@ -4447,27 +4517,7 @@
    "from": "csp.ext-dict",
    "ok": true,
    "http": 403,
-   "ms": 2319
-  },
-  {
-   "key": "TgYunPan|本地",
-   "name": "🅿TgYunPan|本地",
-   "kind": "csp",
-   "target": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6",
-   "from": "csp.ext-dict",
-   "ok": true,
-   "http": 404,
-   "ms": 2532
-  },
-  {
-   "key": "天天影视",
-   "name": "天天｜APP",
-   "kind": "csp",
-   "target": "http://tt.ysdqjs.cn",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 24924
+   "ms": 2088
   },
   {
    "key": "海马短剧",
@@ -4477,17 +4527,27 @@
    "from": "js.host",
    "ok": true,
    "http": 200,
-   "ms": 1732
+   "ms": 1464
   },
   {
-   "key": "85K影院",
-   "name": "8️⃣85K┃影视",
+   "key": "天天影视",
+   "name": "天天｜APP",
    "kind": "csp",
-   "target": "https://85k.ltd//index.php/vod/show/area/{area",
+   "target": "http://tt.ysdqjs.cn",
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 2217
+   "ms": 24872
+  },
+  {
+   "key": "✨纵横|影视✨",
+   "name": "🍓纵横┃影视",
+   "kind": "csp",
+   "target": "https://www.tonglicable.com",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "RemoteDisconnected",
+   "ms": 2901
   },
   {
    "key": "cat_永乐网",
@@ -4497,7 +4557,47 @@
    "from": "js.host",
    "ok": false,
    "error": "TimeoutError",
-   "ms": 8039
+   "ms": 8050
+  },
+  {
+   "key": "聚合短剧",
+   "name": "🎬聚合丨短剧",
+   "kind": "js",
+   "target": "https://mbd.baidu.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 4376
+  },
+  {
+   "key": "Cat_百度短剧",
+   "name": "🎦百度🔹短剧",
+   "kind": "js",
+   "target": "https://mbd.baidu.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 4068
+  },
+  {
+   "key": "百度短剧",
+   "name": "🎬百度丨短剧",
+   "kind": "js",
+   "target": "https://mbd.baidu.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 4171
+  },
+  {
+   "key": "Cat_聚合短剧",
+   "name": "🎦聚合🔹短剧",
+   "kind": "js",
+   "target": "https://mbd.baidu.com",
+   "from": "js.host",
+   "ok": true,
+   "http": 200,
+   "ms": 4413
   },
   {
    "key": "闪电网盘",
@@ -4517,7 +4617,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8307
+   "ms": 8088
   },
   {
    "key": "多多网盘",
@@ -4527,67 +4627,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 10012
-  },
-  {
-   "key": "Cat_聚合短剧",
-   "name": "🎦聚合🔹短剧",
-   "kind": "js",
-   "target": "https://mbd.baidu.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 5070
-  },
-  {
-   "key": "聚合短剧",
-   "name": "🎬聚合丨短剧",
-   "kind": "js",
-   "target": "https://mbd.baidu.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 5040
-  },
-  {
-   "key": "百度短剧",
-   "name": "🎬百度丨短剧",
-   "kind": "js",
-   "target": "https://mbd.baidu.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 4906
-  },
-  {
-   "key": "Cat_百度短剧",
-   "name": "🎦百度🔹短剧",
-   "kind": "js",
-   "target": "https://mbd.baidu.com",
-   "from": "js.host",
-   "ok": true,
-   "http": 200,
-   "ms": 5007
-  },
-  {
-   "key": "土豆网盘",
-   "name": "《土豆💿网盘》",
-   "kind": "csp",
-   "target": "https://yunpan.yunpay.cc/",
-   "from": "csp.ext-dict",
-   "ok": false,
-   "error": "URLError",
-   "ms": 10027
-  },
-  {
-   "key": "csp_xBPQ_胖虎",
-   "name": "胖虎",
-   "kind": "csp",
-   "target": "https://yydsys.top/duo/json/panghu.json",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 10027
+   "ms": 10029
   },
   {
    "key": "白嫖采集",
@@ -4597,7 +4637,27 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "TimeoutError",
-   "ms": 8343
+   "ms": 8310
+  },
+  {
+   "key": "土豆网盘",
+   "name": "《土豆💿网盘》",
+   "kind": "csp",
+   "target": "https://yunpan.yunpay.cc/",
+   "from": "csp.ext-dict",
+   "ok": false,
+   "error": "URLError",
+   "ms": 10013
+  },
+  {
+   "key": "csp_xBPQ_胖虎",
+   "name": "胖虎",
+   "kind": "csp",
+   "target": "https://yydsys.top/duo/json/panghu.json",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 10023
   },
   {
    "key": "熊猫短剧",
@@ -4607,7 +4667,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8085
+   "ms": 8114
   },
   {
    "key": "FoFo影院",
@@ -4617,7 +4677,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8038
+   "ms": 8048
   },
   {
    "key": "短剧好看",
@@ -4627,7 +4687,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "TimeoutError",
-   "ms": 8142
+   "ms": 8104
   },
   {
    "key": "影趣影视",
@@ -4637,7 +4697,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 8827
+   "ms": 8771
   },
   {
    "key": "红狐狸影院",
@@ -4647,7 +4707,7 @@
    "from": "csp.ext-dict",
    "ok": false,
    "error": "URLError",
-   "ms": 9206
+   "ms": 8915
   },
   {
    "key": "py_zyy",
@@ -4657,17 +4717,7 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 9958
-  },
-  {
-   "key": "py_Yinl2",
-   "name": "音乐",
-   "kind": "csp",
-   "target": "https://yydsys.top/duo/Bili/yinyue.py",
-   "from": "csp.ext-str",
-   "ok": false,
-   "error": "URLError",
-   "ms": 9561
+   "ms": 10014
   },
   {
    "key": "py_xiangsh",
@@ -4677,7 +4727,17 @@
    "from": "csp.ext-str",
    "ok": false,
    "error": "URLError",
-   "ms": 9721
+   "ms": 10019
+  },
+  {
+   "key": "py_Yinl2",
+   "name": "音乐",
+   "kind": "csp",
+   "target": "https://yydsys.top/duo/Bili/yinyue.py",
+   "from": "csp.ext-str",
+   "ok": false,
+   "error": "URLError",
+   "ms": 10030
   },
   {
    "key": "咕噜",

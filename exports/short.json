@@ -91,7 +91,7 @@
   {
    "name": "🍬电信🍬",
    "type": 0,
-   "url": "https://ghproxy.felicity.land/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
+   "url": "https://v6.gh-proxy.org/https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u",
    "playerType": 2,
    "ua": "okhttp/3.15",
    "epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}"
@@ -2839,6 +2839,36 @@
    "url": "https://live.fanmingming.cn/tv/m3u/ipv6.m3u",
    "playerType": 2,
    "timeout": 10
+  },
+  {
+   "name": "iptv",
+   "type": 0,
+   "url": "http://127.0.0.1:9978/proxy?do=live&url=https://jihulab.com/okcaptain/kko/-/raw/main/ip.txt",
+   "playerType": 1,
+   "ua": "okhttp/3.15",
+   "epg": "http://epg.112114.xyz/?ch={name}&date={date}",
+   "logo": "https://epg.112114.xyz/logo/{name}.png",
+   "timeout": 10
+  },
+  {
+   "name": "mitv",
+   "type": 0,
+   "url": "http://127.0.0.1:9978/proxy?do=live&url=https://jihulab.com/okcaptain/kko/-/raw/main/mt.txt",
+   "playerType": 1,
+   "ua": "okhttp/3.15",
+   "epg": "http://epg.112114.xyz/?ch={name}&date={date}",
+   "logo": "https://epg.112114.xyz/logo/{name}.png",
+   "timeout": 10
+  },
+  {
+   "name": "ddns",
+   "type": 0,
+   "url": "http://127.0.0.1:9978/proxy?do=live&url=http://mywlkj.ddns.net:754/tv.php",
+   "playerType": 1,
+   "ua": "okhttp/3.15",
+   "epg": "http://epg.112114.xyz/?ch={name}&date={date}",
+   "logo": "https://epg.112114.xyz/logo/{name}.png",
+   "timeout": 10
   }
  ],
  "parses": [
@@ -3433,26 +3463,6 @@
    "ext": {
     "flag": [
      "leduo"
-    ]
-   }
-  },
-  {
-   "name": "欢雨",
-   "type": 1,
-   "url": "http://www.youhuifuligou.com/json/?id=7&url=",
-   "ext": {
-    "flag": [
-     "qq",
-     "腾讯",
-     "qiyi",
-     "爱奇艺",
-     "奇艺",
-     "youku",
-     "优酷",
-     "letv",
-     "乐视",
-     "xigua",
-     "西瓜"
     ]
    }
   },
@@ -4312,7 +4322,7 @@
   "cnzz.com"
  ],
  "version": "2026-09-29-b3",
- "updated_at": "2026-09-29T09:29:07+08:00",
+ "updated_at": "2026-09-29T09:52:31+08:00",
  "sites": [
   {
    "key": "围观短剧",
@@ -4477,6 +4487,28 @@
    "_type": "短剧"
   },
   {
+   "key": " 百姓 ",
+   "name": "🎦农民影视2",
+   "type": 3,
+   "api": "csp_XBPQ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": {
+    "简介": "⚠️特别提醒您⚠️请勿相信影片中的广告，以免上当受骗❗️+剧情介绍：&&</p >",
+    "分类url": "https://www.gymboreejn.com/vodshow/{cateId}-{area}--{class}-----{catePg}---{year}.html[https://www.gymboreejn.com/vodtype/{cateId}.html]",
+    "分类": "电影$1#剧集$2#综艺$3#动漫$4#动画片$29#短剧$31#影视解说$32#邵氏电影$39"
+   },
+   "jar": "./deps/sv/tiantiankaixin/%E5%A4%A9%E5%A4%A9%E5%BC%80%E5%BF%83/spider.jar",
+   "group": "短剧",
+   "_health": "degraded",
+   "_checked_at": "2026-09-28 01:58:29",
+   "_latency_ms": 204,
+   "_level": null,
+   "_source": null,
+   "_type": "短剧"
+  },
+  {
    "key": "妖狐影视",
    "name": "🦊妖妃┃影视",
    "type": 3,
@@ -4501,43 +4533,26 @@
    "_type": "短剧"
   },
   {
-   "key": " 百姓 ",
-   "name": "🎦农民影视2",
-   "type": 3,
-   "api": "csp_XBPQ",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1,
-   "ext": {
-    "简介": "⚠️特别提醒您⚠️请勿相信影片中的广告，以免上当受骗❗️+剧情介绍：&&</p >",
-    "分类url": "https://www.gymboreejn.com/vodshow/{cateId}-{area}--{class}-----{catePg}---{year}.html[https://www.gymboreejn.com/vodtype/{cateId}.html]",
-    "分类": "电影$1#剧集$2#综艺$3#动漫$4#动画片$29#短剧$31#影视解说$32#邵氏电影$39"
-   },
-   "jar": "./deps/sv/tiantiankaixin/%E5%A4%A9%E5%A4%A9%E5%BC%80%E5%BF%83/spider.jar",
-   "group": "短剧",
-   "_health": "degraded",
-   "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 204,
-   "_level": null,
-   "_source": null,
-   "_type": "短剧"
-  },
-  {
-   "key": "碟迷影院",
-   "name": "🛸碟迷┃影视",
+   "key": "XBPQ_短剧TV",
+   "name": "🆖短剧┃TV",
    "type": 3,
    "api": "csp_XBPQ",
    "ext": {
-    "简介": "id=\"jq-jieshao\">&&</p >",
-    "搜索url": "https://www.diemi.cc/search{wd}/page/{pg}/",
-    "分类url": "https://www.iidie.com/type-{cateId}-{catePg}/",
-    "分类": "电影$dianying#电视剧$dianshiju#综艺$zongyi#动漫$dongman",
-    "类型": "动作片$dongzuo#喜剧片$xiju#爱情片$aiqing#科幻片$kehuan#恐怖片$kongbu#战争片$zhanzheng#剧情片$juqing||国产$guochan#韩剧$hanju#港剧$gangju#美剧$meiju#日剧$riju#台剧$taibei#泰剧$taiju#短剧$duanju||空||空"
+    "副标题": "公子专属",
+    "线路数组": "stui-pannel__head bottom-line&&",
+    "线路标题": "title\">&&",
+    "播放数组": "stui-content__playlist&&",
+    "播放列表": "",
+    "播放标题": ">&&",
+    "播放链接": "href='&&'",
+    "跳转播放链接": "urlDecode(var player_*url\":\"&&\")",
+    "分类": "抖音短剧$20#快手短剧$21#视频号短剧$22#热播短剧$23",
+    "分类url": "http://www.duanjutv.cc/vodtype/{cateId}-{catePg}.html"
    },
    "group": "短剧",
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 268,
+   "_latency_ms": 301,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -4579,26 +4594,29 @@
    "_type": "短剧"
   },
   {
-   "key": "XBPQ_短剧TV",
-   "name": "🆖短剧┃TV",
+   "key": "✨HG短剧✨",
+   "name": "✨HG短剧✨乐哥甄选✨",
    "type": 3,
    "api": "csp_XBPQ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
    "ext": {
-    "副标题": "公子专属",
-    "线路数组": "stui-pannel__head bottom-line&&",
-    "线路标题": "title\">&&",
-    "播放数组": "stui-content__playlist&&",
-    "播放列表": "",
-    "播放标题": ">&&",
-    "播放链接": "href='&&'",
-    "跳转播放链接": "urlDecode(var player_*url\":\"&&\")",
-    "分类": "抖音短剧$20#快手短剧$21#视频号短剧$22#热播短剧$23",
-    "分类url": "http://www.duanjutv.cc/vodtype/{cateId}-{catePg}.html"
+    "请求头": "User-Agent$MOBILE_UA",
+    "编码": "UTF-8",
+    "图片代理": "",
+    "主页url": "https://hong.hgyx.vip/index.php/vod/show/id/20.html",
+    "首页": "200",
+    "起始页": "1",
+    "分类url": "https://hong.hgyx.vip/index.php/vod/show/class/{cateId}/id/20/page/{catePg}.html",
+    "分类": "古装&虐恋&逆袭&悬疑&神豪&重生&反转&穿越&总裁&甜宠&言情&爽文&女恋&都市&脑洞&仙侠",
+    "分类值": "*",
+    "简介": "👉请不要相信视频中的广告，以免上当受骗！+<p>&&</p>"
    },
    "group": "短剧",
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 301,
+   "_latency_ms": 281,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -4649,30 +4667,6 @@
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
    "_latency_ms": 357,
-   "_level": null,
-   "_source": null,
-   "_type": "短剧"
-  },
-  {
-   "key": "影视森林",
-   "name": "🐘森林┃影视",
-   "type": 3,
-   "api": "csp_XBPQ",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1,
-   "ext": {
-    "请求头": "User-Agent$MOBILE_UA",
-    "编码": "UTF-8",
-    "主页url": "https://www.ncshdxx.com/",
-    "分类url": "https://www.ncshdxx.com/vodshow/{cateId}-{area}-{by}-{class}-{lang}-{letter}---{catePg}---{year}/",
-    "分类": "电影$dianying#电视剧$dsj#综艺$zongyi#动漫$dongman#爽文短剧$shuangwenduanju#4k电影$4kdianying#体育赛事$tiyusaishi",
-    "类型": "喜剧片$xijupian#动作片$dongzuopian#爱情片$aiqingpian#科幻片$kehuanpian#恐怖片$kongbupian#剧情片$juqingpian#战争片$zhanzhengpian#悬疑片$xuanyipian#犯罪片$fanzuipian#冒险片$maoxianpian#动画片$donghuapian#惊悚片$jingsongpian#奇幻片$qihuanpian#纪录片$jilupian#武侠片$wuxiapian||国产剧$guochanju#欧美剧$oumeiju#日剧$riju#韩剧$hanju#港剧$gangju#台剧$taiju#泰剧$taiju#海外剧$haiwaiju||空||国产动漫$guochandongman#日韩动漫$rihandongman#欧美动漫$oumeidongman#港台动漫$gangtaidongman#海外动漫$haiwaidongman||空||空||空"
-   },
-   "group": "短剧",
-   "_health": "degraded",
-   "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 325,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -4800,27 +4794,23 @@
    "_type": "短剧"
   },
   {
-   "key": "fok",
-   "name": "🌙┃夸克┃影视",
+   "key": "HonHon",
+   "name": "🍅┆红红┆短剧",
    "type": 3,
-   "api": "csp_XBPQ",
+   "api": "csp_HonHon",
+   "searchable": 1,
+   "quickSearch": 1,
+   "genre": "shortdrama",
+   "filterable": 1,
    "ext": {
-    "分类url": "https://www.freeok.vip/vod-show/{cateId}-{area}-------{catePg}---{year}.html",
-    "分类": "FREE电影&FREE剧集&FREE动漫&FREE综艺&FREE短剧&FREE少儿",
-    "分类值": "1&2&3&4&12&5",
-    "播放请求头": "User-Agent$Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
-    "副标题": "<div class=\"module-item-note\">&&</div>",
-    "嗅探词": "m3u8#.m3u8#.mp4#freeok.mp4#/obj/",
-    "线路数组": "data-dropdown-value=&&</div>[不包含:夸克]",
-    "线路标题": "<span>&&</small>",
-    "导演": "导演：&&</div>",
-    "主演": "主演：&&</div>",
-    "简介": "<p>&&</p>"
+    "host": "https://short.fishcloud.top",
+    "quality": "1080p",
+    "danmu": false
    },
    "group": "短剧",
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 1026,
+   "_latency_ms": 818,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -4876,23 +4866,27 @@
    "_type": "短剧"
   },
   {
-   "key": "HonHon",
-   "name": "🍅┆红红┆短剧",
+   "key": "fok",
+   "name": "🌙┃夸克┃影视",
    "type": 3,
-   "api": "csp_HonHon",
-   "searchable": 1,
-   "quickSearch": 1,
-   "genre": "shortdrama",
-   "filterable": 1,
+   "api": "csp_XBPQ",
    "ext": {
-    "host": "https://short.fishcloud.top",
-    "quality": "1080p",
-    "danmu": false
+    "分类url": "https://www.freeok.vip/vod-show/{cateId}-{area}-------{catePg}---{year}.html",
+    "分类": "FREE电影&FREE剧集&FREE动漫&FREE综艺&FREE短剧&FREE少儿",
+    "分类值": "1&2&3&4&12&5",
+    "播放请求头": "User-Agent$Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    "副标题": "<div class=\"module-item-note\">&&</div>",
+    "嗅探词": "m3u8#.m3u8#.mp4#freeok.mp4#/obj/",
+    "线路数组": "data-dropdown-value=&&</div>[不包含:夸克]",
+    "线路标题": "<span>&&</small>",
+    "导演": "导演：&&</div>",
+    "主演": "主演：&&</div>",
+    "简介": "<p>&&</p>"
    },
    "group": "短剧",
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 818,
+   "_latency_ms": 1026,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -5074,6 +5068,46 @@
    "_type": "短剧"
   },
   {
+   "key": "csp_XBPQ_6080z",
+   "name": "💫┃6080┃XB",
+   "type": 3,
+   "api": "csp_XBPQ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0,
+   "ext": {
+    "过滤词": "lzm3u8#?id=",
+    "嗅探词": ".m3u8#.mp4",
+    "数组": "lazy lazyloaded&&</a",
+    "图片": "data-src=\"&&\"",
+    "标题": "title=\"&&\"",
+    "副标题": "video-class\">&&</span>",
+    "链接": "href=\"&&\"",
+    "简介": "vod_content\">&&<a",
+    "线路数组": "module-tab-item tab-item&&</div",
+    "线路标题": "span>&&</span",
+    "播放数组": "<div class=\"module-blocklist&&</div",
+    "跳转播放链接": "urlDecode(var player_*\"url\":\"&&\")",
+    "搜索模式": "1",
+    "搜索数组": "lazy lazyload&&</h3",
+    "搜索图片": "data-src=\"&&\"",
+    "搜索标题": "title=\"&&\"",
+    "搜索副标题": "video-serial\" href=*>&&</a >",
+    "搜索链接": "href=\"&&\"",
+    "搜索url": "https://6080z.com/vodsearch/{wd}----------{pg}---.html",
+    "搜索后缀": "/voddetail/",
+    "分类url": "https://6080z.com/vodshow/{cateId}-{area}-{by}-{class}-{lang}-{letter}---{catePg}---{year}.html",
+    "分类": "电影$1#剧集$2#综艺$3#动漫$4#短剧$39#体育$34#解说$40"
+   },
+   "group": "短剧",
+   "_health": "degraded",
+   "_checked_at": "2026-09-28 01:58:29",
+   "_latency_ms": 981,
+   "_level": null,
+   "_source": null,
+   "_type": "短剧"
+  },
+  {
    "key": "你好帅2",
    "name": "🧸好帅┃短剧",
    "type": 3,
@@ -5096,6 +5130,66 @@
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
    "_latency_ms": 1115,
+   "_level": null,
+   "_source": null,
+   "_type": "短剧"
+  },
+  {
+   "name": "🔥短剧推荐",
+   "key": "Hgdh",
+   "type": 3,
+   "api": "csp_HgdhAmns",
+   "searchable": 1,
+   "quickSearch": 1,
+   "changeable": 0,
+   "genre": "shortdrama",
+   "ext": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Hgdh",
+   "jar": "./deps/feishu-sync/api/bendi/yydsapi/nf/lib/f7a737368ecfe7c8413a773614e60807.png",
+   "group": "短剧",
+   "_health": "degraded",
+   "_checked_at": "2026-09-28 01:58:29",
+   "_latency_ms": 1024,
+   "_level": null,
+   "_source": null,
+   "_type": "短剧"
+  },
+  {
+   "key": "TgYunPan|本地",
+   "name": "🅿TgYunPan|本地",
+   "type": 3,
+   "api": "csp_TgYunPanLocal",
+   "searchable": 1,
+   "filterable": 0,
+   "switchable": 0,
+   "ext": {
+    "count": 4,
+    "channelUsername": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6,peccxinpd,yunpan139,yggpan,yunpanuc,shareAliyun,yunpan189,BaiduCloudDisk,Channel_Shares_115,gimy115,ydypzyfx,dianying4K,sbsbsnsqq,Q_dongman,ysmffx,XiangxiuNBB,yoyokuakeduanju,yeqingjie_GJG666,TG654TG,PanjClub,guoman4K,alyp_1,kuake_yppan,Baidu_Netdisk,bdwpzhpd,baidu_yppan,zyfb123,xx123pan,zyzhpd123,yp123pan,cloudtianyi,txtyzy,tianyirigeng,tyypzhpd,zaihuayun,ali_yppan",
+    "commonConfig": "./deps/localized/679c3d78da-peizhi.json"
+   },
+   "group": "短剧",
+   "_health": "degraded",
+   "_checked_at": "2026-09-28 01:58:29",
+   "_latency_ms": 1198,
+   "_level": null,
+   "_source": null,
+   "_type": "短剧"
+  },
+  {
+   "key": "csp_XBPQ_vstv",
+   "name": "♻️VS短剧",
+   "type": 3,
+   "api": "csp_XBPQ",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": {
+    "分类url": "https://www.ytshengde.com/sanyisw/{cateId}-{area}-------{catePg}---{year}.html",
+    "分类": "短剧$5#电视剧$2#电影$1#动漫$4#综艺$3"
+   },
+   "group": "短剧",
+   "_health": "degraded",
+   "_checked_at": "2026-09-28 01:58:29",
+   "_latency_ms": 1809,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -5142,42 +5236,30 @@
    "_type": "短剧"
   },
   {
-   "key": "csp_XBPQ_vstv",
-   "name": "♻️VS短剧",
+   "key": "一起看呀吧",
+   "name": "[1416ms|金鹰] 👨‍👨‍👧一起看┃app",
    "type": 3,
    "api": "csp_XBPQ",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 1,
    "ext": {
-    "分类url": "https://www.ytshengde.com/sanyisw/{cateId}-{area}-------{catePg}---{year}.html",
-    "分类": "短剧$5#电视剧$2#电影$1#动漫$4#综艺$3"
+    "首页": "短剧",
+    "副标题": "🥝老胡推荐🥝",
+    "线路数组": "#playlist*\">&&</a>",
+    "线路标题": "🌽专享🌽+<span>&&</span>+线路",
+    "播放数组": "class=\"playlistlink&&</ul>",
+    "播放列表": "<li&&</li>",
+    "播放标题": "title=\"&&\"",
+    "播放链接": "href=\"&&\"",
+    "跳转播放链接": "varurlDecode(var player*url\":\"&&\")",
+    "分类url": "http://www.lxsgsy.com/search.php?page={catePg}&searchtype=5&order={by}&tid={cateId}&area={area}&year={year}&letter=&yuyan=&state=&money=&ver=&jq=[]",
+    "分类": "电影$1&电视剧$2&短剧$30&综艺$3&动漫$4&都是$5&刚好$6&东方$7"
    },
    "group": "短剧",
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 1809,
-   "_level": null,
-   "_source": null,
-   "_type": "短剧"
-  },
-  {
-   "key": "TgYunPan|本地",
-   "name": "🅿TgYunPan|本地",
-   "type": 3,
-   "api": "csp_TgYunPanLocal",
-   "searchable": 1,
-   "filterable": 0,
-   "switchable": 0,
-   "ext": {
-    "count": 4,
-    "channelUsername": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6,peccxinpd,yunpan139,yggpan,yunpanuc,shareAliyun,yunpan189,BaiduCloudDisk,Channel_Shares_115,gimy115,ydypzyfx,dianying4K,sbsbsnsqq,Q_dongman,ysmffx,XiangxiuNBB,yoyokuakeduanju,yeqingjie_GJG666,TG654TG,PanjClub,guoman4K,alyp_1,kuake_yppan,Baidu_Netdisk,bdwpzhpd,baidu_yppan,zyfb123,xx123pan,zyzhpd123,yp123pan,cloudtianyi,txtyzy,tianyirigeng,tyypzhpd,zaihuayun,ali_yppan",
-    "commonConfig": "./deps/localized/679c3d78da-peizhi.json"
-   },
-   "group": "短剧",
-   "_health": "degraded",
-   "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 1198,
+   "_latency_ms": 2159,
    "_level": null,
    "_source": null,
    "_type": "短剧"
@@ -5226,35 +5308,6 @@
    "_health": "degraded",
    "_checked_at": "2026-09-28 01:58:29",
    "_latency_ms": 948,
-   "_level": null,
-   "_source": null,
-   "_type": "短剧"
-  },
-  {
-   "key": "一起看呀吧",
-   "name": "[1416ms|金鹰] 👨‍👨‍👧一起看┃app",
-   "type": 3,
-   "api": "csp_XBPQ",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1,
-   "ext": {
-    "首页": "短剧",
-    "副标题": "🥝老胡推荐🥝",
-    "线路数组": "#playlist*\">&&</a>",
-    "线路标题": "🌽专享🌽+<span>&&</span>+线路",
-    "播放数组": "class=\"playlistlink&&</ul>",
-    "播放列表": "<li&&</li>",
-    "播放标题": "title=\"&&\"",
-    "播放链接": "href=\"&&\"",
-    "跳转播放链接": "varurlDecode(var player*url\":\"&&\")",
-    "分类url": "http://www.lxsgsy.com/search.php?page={catePg}&searchtype=5&order={by}&tid={cateId}&area={area}&year={year}&letter=&yuyan=&state=&money=&ver=&jq=[]",
-    "分类": "电影$1&电视剧$2&短剧$30&综艺$3&动漫$4&都是$5&刚好$6&东方$7"
-   },
-   "group": "短剧",
-   "_health": "degraded",
-   "_checked_at": "2026-09-28 01:58:29",
-   "_latency_ms": 2159,
    "_level": null,
    "_source": null,
    "_type": "短剧"

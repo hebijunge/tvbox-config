@@ -1,20 +1,69 @@
 {
- "generated_at": "2026-09-29 01:26:26",
+ "generated_at": "2026-09-29 01:50:47",
  "note": "drpy 规则半动态验证：按规则构造分类页/搜索页请求，验证站点结构是否还对得上规则",
  "summary": {
   "total": 50,
   "levels": {
    "S0": 38,
-   "S?": 6,
+   "S?": 5,
+   "S3": 5,
    "S1": 1,
-   "S2": 1,
-   "S3": 4
+   "S2": 1
   }
  },
  "sites": [
   {
-   "key": "cat_旺旺网",
-   "name": "☀旺旺🔹视频",
+   "key": "Cat_荐片",
+   "name": "☀鉴片🔹极速",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "cat蜘蛛体育",
+   "name": "⚽蜘蛛🔹球赛",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "哔站记录片",
+   "name": "🍬🅱哔站影视",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "cat_骚火",
+   "name": "☀骚火🔹视频",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "cat_非凡网",
+   "name": "☀非凡🔹影視",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "听了么",
+   "name": "📻听歌｜音乐",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "哔站教育",
+   "name": "🍬🅱哔站教育",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "cat_剧迷网",
+   "name": "☀剧迷🔹视频",
    "kind": "js",
    "level": "S0",
    "reason": "无本地规则文件"
@@ -41,27 +90,6 @@
    "reason": "无本地规则文件"
   },
   {
-   "key": "cat_骚火",
-   "name": "☀骚火🔹视频",
-   "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
-   "key": "Cat_荐片",
-   "name": "☀鉴片🔹极速",
-   "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
-   "key": "哔站教育",
-   "name": "🍬🅱哔站教育",
-   "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
    "key": "cat_荐片app",
    "name": "☀荐片🔹蓝光",
    "kind": "js",
@@ -69,40 +97,19 @@
    "reason": "无本地规则文件"
   },
   {
-   "key": "cat_非凡网",
-   "name": "☀非凡🔹影視",
+   "key": "cat_旺旺网",
+   "name": "☀旺旺🔹视频",
    "kind": "js",
    "level": "S0",
    "reason": "无本地规则文件"
   },
   {
-   "key": "哔站记录片",
-   "name": "🍬🅱哔站影视",
+   "key": "小哩",
+   "name": "🌀小哩｜1280",
    "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
-   "key": "听了么",
-   "name": "📻听歌｜音乐",
-   "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
-   "key": "cat_剧迷网",
-   "name": "☀剧迷🔹视频",
-   "kind": "js",
-   "level": "S0",
-   "reason": "无本地规则文件"
-  },
-  {
-   "key": "凤凰FM",
-   "name": "📻凤凰┃FM",
-   "kind": "js",
-   "rule": "deps/tianshen/iy/lib/凤凰FM.png",
-   "host": null,
-   "searchable_rule": "2",
+   "rule": "deps/tianshen/iy/lib/小哩.png",
+   "host": "https://api.bilibili.com",
+   "searchable_rule": "1",
    "syntax_ok": false,
    "level": "S0",
    "reason": "规则文件语法错误"
@@ -129,6 +136,17 @@
    "reason": "无本地规则文件"
   },
   {
+   "key": "布雷影视",
+   "name": "布雷｜影视",
+   "kind": "js",
+   "rule": "deps/shiguang/svip/heads/main/js/布雷.js",
+   "host": null,
+   "searchable_rule": null,
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
    "key": "随身评书",
    "name": "📻随身┃评书",
    "kind": "js",
@@ -140,12 +158,74 @@
    "reason": "规则文件语法错误"
   },
   {
-   "key": "小哩",
-   "name": "🌀小哩｜1280",
+   "key": "藤藤",
+   "name": "❤藤藤｜4K测试",
    "kind": "js",
-   "rule": "deps/tianshen/iy/lib/小哩.png",
-   "host": "https://api.bilibili.com",
-   "searchable_rule": "1",
+   "rule": "deps/tianshen/iy/lib/藤藤.png",
+   "host": null,
+   "searchable_rule": null,
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
+   "key": "凤凰FM",
+   "name": "📻凤凰┃FM",
+   "kind": "js",
+   "rule": "deps/tianshen/iy/lib/凤凰FM.png",
+   "host": null,
+   "searchable_rule": "2",
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
+   "key": "hipy_js_TVB云播",
+   "name": "🎦TVB云播(drpy_t3)",
+   "kind": "js",
+   "rule": "deps/sv/tiantiankaixin/%E5%A4%A9%E5%A4%A9%E5%BC%80%E5%BF%83/js/TVB云播.js",
+   "host": null,
+   "searchable_rule": null,
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
+   "key": "茫茫",
+   "name": "🌀茫茫｜1920",
+   "kind": "js",
+   "rule": "deps/tianshen/iy/lib/茫茫.png",
+   "host": null,
+   "searchable_rule": null,
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
+   "key": "小优",
+   "name": "🌀小优｜1280",
+   "kind": "js",
+   "rule": "deps/tianshen/iy/lib/小优.png",
+   "host": null,
+   "searchable_rule": null,
+   "syntax_ok": false,
+   "level": "S0",
+   "reason": "规则文件语法错误"
+  },
+  {
+   "key": "cat体育聚合",
+   "name": "⚽聚合🔹球赛",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "小爱",
+   "name": "🌀小爱｜1280",
+   "kind": "js",
+   "rule": "deps/tianshen/iy/lib/小爱.png",
+   "host": null,
+   "searchable_rule": null,
    "syntax_ok": false,
    "level": "S0",
    "reason": "规则文件语法错误"
@@ -308,6 +388,48 @@
    "reason": "分类页无效：HTTP 403"
   },
   {
+   "key": "Cat_聚合短剧",
+   "name": "🎦聚合🔹短剧",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "聚合短剧",
+   "name": "🎬聚合丨短剧",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "百度短剧",
+   "name": "🎬百度丨短剧",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "Cat_百度短剧",
+   "name": "🎦百度🔹短剧",
+   "kind": "js",
+   "level": "S0",
+   "reason": "无本地规则文件"
+  },
+  {
+   "key": "310直播",
+   "name": "310｜看球",
+   "kind": "js",
+   "rule": "deps/shiguang/svip/heads/main/js/310直播.js",
+   "host": "http://www.310.tv",
+   "searchable_rule": "0",
+   "syntax_ok": true,
+   "cat_url": "http://www.310.tv/?s=0&t=1&a=&g=1",
+   "cat_signal": 0,
+   "cat_evidence": "URLError",
+   "level": "S?",
+   "reason": "本机网络不可达：URLError"
+  },
+  {
    "key": "56动漫",
    "name": "56｜动漫",
    "kind": "js",
@@ -320,6 +442,20 @@
    "cat_evidence": "HTTP 403",
    "level": "S0",
    "reason": "分类页无效：HTTP 403"
+  },
+  {
+   "key": "奇米动漫",
+   "name": "奇米｜动漫",
+   "kind": "js",
+   "rule": "deps/shiguang/svip/heads/main/js/奇米动漫.js",
+   "host": "http://www.qimiqimi.net",
+   "searchable_rule": "2",
+   "syntax_ok": true,
+   "cat_url": "http://www.qimiqimi.net/show/1fyfilter.html",
+   "cat_signal": 0,
+   "cat_evidence": "RemoteDisconnected",
+   "level": "S?",
+   "reason": "本机网络不可达：RemoteDisconnected"
   },
   {
    "key": "清风DJ",
@@ -336,18 +472,21 @@
    "reason": "本机网络不可达：URLError"
   },
   {
-   "key": "果果",
-   "name": "☀茫茫🔹人海",
+   "key": "动画片",
+   "name": "动画片｜动漫",
    "kind": "js",
-   "rule": "deps/xingwei/kstore/xw/js/果果.js",
-   "host": "https://pianku.api.mgtv.com",
+   "rule": "deps/shiguang/svip/heads/main/js/动画片大全.js",
+   "host": "https://www.dhpdq2.com/",
    "searchable_rule": "2",
    "syntax_ok": true,
-   "cat_url": "https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=&pn=1&pc=80&hudong=1&_support=10000000&kind=a1&area=a1",
-   "cat_signal": 0,
-   "cat_evidence": "HTTP 400",
-   "level": "S0",
-   "reason": "分类页无效：HTTP 400"
+   "cat_url": "https://www.dhpdq2.com/katong/1-1/",
+   "cat_ms": 212,
+   "cat_signal": 1,
+   "cat_evidence": "html 链接 2 个",
+   "level": "S3",
+   "search_url": "https://www.dhpdq2.com/vodsearch/%E5%BA%86%E4%BD%99%E5%B9%B4----------1---/",
+   "search_signal": 1,
+   "search_evidence": "html 链接 2 个"
   },
   {
    "key": "电影网影视",
@@ -372,7 +511,7 @@
    "searchable_rule": "0",
    "syntax_ok": true,
    "cat_url": "http://www.jrkankan.com/?lan=1/",
-   "cat_ms": 551,
+   "cat_ms": 508,
    "cat_signal": 0,
    "cat_evidence": "无内容特征",
    "level": "S1",
@@ -391,6 +530,37 @@
    "cat_evidence": "HTTP 404",
    "level": "S0",
    "reason": "分类页无效：HTTP 404"
+  },
+  {
+   "key": "果果",
+   "name": "☀茫茫🔹人海",
+   "kind": "js",
+   "rule": "deps/xingwei/kstore/xw/js/果果.js",
+   "host": "https://pianku.api.mgtv.com",
+   "searchable_rule": "2",
+   "syntax_ok": true,
+   "cat_url": "https://pianku.api.mgtv.com/rider/list/pcweb/v3?platform=pcweb&channelId=&pn=1&pc=80&hudong=1&_support=10000000&kind=a1&area=a1",
+   "cat_signal": 0,
+   "cat_evidence": "HTTP 400",
+   "level": "S0",
+   "reason": "分类页无效：HTTP 400"
+  },
+  {
+   "key": "恰娃子",
+   "name": "娃娃｜影视",
+   "kind": "js",
+   "rule": "deps/shiguang/svip/heads/main/js/瓜娃子.js",
+   "host": "https://api.cj7wq4.com",
+   "searchable_rule": null,
+   "syntax_ok": true,
+   "cat_url": "https://api.cj7wq4.com/App/IndexList/indexList",
+   "cat_ms": 557,
+   "cat_signal": 1,
+   "cat_evidence": "json 非空但无数组",
+   "level": "S3",
+   "search_url": "https://api.cj7wq4.com/App/Index/findMoreVod",
+   "search_signal": 1,
+   "search_evidence": "json 非空但无数组"
   },
   {
    "key": "腾腾",
@@ -435,20 +605,21 @@
    "reason": "分类页无效：HTTP 404"
   },
   {
-   "key": "SVIP短剧",
-   "name": "SVIP｜短剧",
+   "key": "恰瓜子",
+   "name": "恰恰｜影视",
    "kind": "js",
-   "rule": "deps/shiguang/svip/heads/main/js/星芽短剧.js",
-   "host": "https://xvapp.xingya.com.cn",
-   "searchable_rule": "1",
+   "rule": "deps/shiguang/svip/heads/main/js/恰瓜子.js",
+   "host": "https://api.cj7wq4.com",
+   "searchable_rule": "2",
    "syntax_ok": true,
-   "cat_url": "https://xvapp.xingya.com.cn/cloud/v2/theater/home_page?theater_class_id=&type=1&fyfilter&page_num=1&page_size=24",
-   "cat_ms": 959,
+   "cat_url": "https://api.cj7wq4.com/App/IndexList/indexList",
+   "cat_ms": 565,
    "cat_signal": 1,
    "cat_evidence": "json 非空但无数组",
-   "level": "S2",
-   "search_url": "https://xvapp.xingya.com.cn/v3/search",
-   "search_evidence": "HTTP 404"
+   "level": "S3",
+   "search_url": "https://api.cj7wq4.com/App/Index/findMoreVod#%E5%BA%86%E4%BD%99%E5%B9%B4",
+   "search_signal": 1,
+   "search_evidence": "json 非空但无数组"
   },
   {
    "key": "GZAPP",
@@ -459,13 +630,29 @@
    "searchable_rule": "0",
    "syntax_ok": true,
    "cat_url": "https://api.gudvxty.com/App/IndexList/indexList",
-   "cat_ms": 1985,
+   "cat_ms": 1594,
    "cat_signal": 1,
    "cat_evidence": "json 非空但无数组",
    "level": "S3",
    "search_url": "https://api.gudvxty.com/App/Index/findMoreVod#%E5%BA%86%E4%BD%99%E5%B9%B4",
    "search_signal": 1,
    "search_evidence": "json 非空但无数组"
+  },
+  {
+   "key": "SVIP短剧",
+   "name": "SVIP｜短剧",
+   "kind": "js",
+   "rule": "deps/shiguang/svip/heads/main/js/星芽短剧.js",
+   "host": "https://xvapp.xingya.com.cn",
+   "searchable_rule": "1",
+   "syntax_ok": true,
+   "cat_url": "https://xvapp.xingya.com.cn/cloud/v2/theater/home_page?theater_class_id=&type=1&fyfilter&page_num=1&page_size=24",
+   "cat_ms": 1936,
+   "cat_signal": 1,
+   "cat_evidence": "json 非空但无数组",
+   "level": "S2",
+   "search_url": "https://xvapp.xingya.com.cn/v3/search",
+   "search_evidence": "HTTP 404"
   },
   {
    "key": "奇奇",
@@ -476,45 +663,11 @@
    "searchable_rule": "2",
    "syntax_ok": true,
    "cat_url": "https://pcw-api.iqiyi.com/search/recommend/list?channel_id=&data_type=1&page_id=1&ret_num=48",
-   "cat_ms": 1099,
+   "cat_ms": 925,
    "cat_signal": 1,
    "cat_evidence": "json 非空但无数组",
    "level": "S3",
    "search_url": "https://search.video.iqiyi.com/o?if=html5&key=%E5%BA%86%E4%BD%99%E5%B9%B4&pageNum=1&pos=1&pageSize=24&site=iqiyi",
-   "search_signal": 1,
-   "search_evidence": "json 非空但无数组"
-  },
-  {
-   "key": "恰娃子",
-   "name": "娃娃｜影视",
-   "kind": "js",
-   "rule": "deps/shiguang/svip/heads/main/js/瓜娃子.js",
-   "host": "https://api.cj7wq4.com",
-   "searchable_rule": null,
-   "syntax_ok": true,
-   "cat_url": "https://api.cj7wq4.com/App/IndexList/indexList",
-   "cat_ms": 1808,
-   "cat_signal": 1,
-   "cat_evidence": "json 非空但无数组",
-   "level": "S3",
-   "search_url": "https://api.cj7wq4.com/App/Index/findMoreVod",
-   "search_signal": 1,
-   "search_evidence": "json 非空但无数组"
-  },
-  {
-   "key": "恰瓜子",
-   "name": "恰恰｜影视",
-   "kind": "js",
-   "rule": "deps/shiguang/svip/heads/main/js/恰瓜子.js",
-   "host": "https://api.cj7wq4.com",
-   "searchable_rule": "2",
-   "syntax_ok": true,
-   "cat_url": "https://api.cj7wq4.com/App/IndexList/indexList",
-   "cat_ms": 1804,
-   "cat_signal": 1,
-   "cat_evidence": "json 非空但无数组",
-   "level": "S3",
-   "search_url": "https://api.cj7wq4.com/App/Index/findMoreVod#%E5%BA%86%E4%BD%99%E5%B9%B4",
    "search_signal": 1,
    "search_evidence": "json 非空但无数组"
   },
@@ -541,20 +694,6 @@
    "searchable_rule": "2",
    "syntax_ok": true,
    "cat_url": "http://m.6yueting.com/ys//o2/p1",
-   "cat_signal": 0,
-   "cat_evidence": "URLError",
-   "level": "S?",
-   "reason": "本机网络不可达：URLError"
-  },
-  {
-   "key": "动画片",
-   "name": "动画片｜动漫",
-   "kind": "js",
-   "rule": "deps/shiguang/svip/heads/main/js/动画片大全.js",
-   "host": "https://www.dhpdq2.com/",
-   "searchable_rule": "2",
-   "syntax_ok": true,
-   "cat_url": "https://www.dhpdq2.com/katong/1-1/",
    "cat_signal": 0,
    "cat_evidence": "URLError",
    "level": "S?",
