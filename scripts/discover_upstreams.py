@@ -222,7 +222,12 @@ def sites_of(doc):
     所以判据必须是「能不能解析出站点数组」，而不是「结构长什么样」。
     """
     if isinstance(doc, list):
-        return [x for x in doc if isinstance(x, dict) and (x.get("api") or x.get("name"))]
+        # 裸数组形态要求元素带 api：2026-09-29 独立通道抽查抓到 pubtargus/CatVodTVSpider
+        # 的 js/alist.json（18 项 Alist 服务器列表，键是 name/server/startPage，**0 项有 api**）
+        # 被旧判据当成「tvbox 配置 18 站」打 80 分。产物侧不会脏（fetch_merge 合并要求
+        # key+api），但会白占 canary 名额、并把 unique 评估喂脏。
+        # 保留 dict.sites 分支的宽松（有 sites 键本身就是配置的结构证据）。
+        return [x for x in doc if isinstance(x, dict) and x.get("api")]
     if isinstance(doc, dict):
         for key in ("sites", "video"):
             v = doc.get(key)
@@ -758,7 +763,12 @@ def json_files_of(full_name):
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-repos", type=int, default=20, help="每路最多展开的仓库数")
-    ap.add_argument("--top", type=int, default=80, help="候选池上限")
+    ap.add_argument("--top", type=int, default=400,
+                    help="候选池写入上限（默认高于探测窗口＝不额外丢弃已探到的可达结果；"
+                         "旧值 80 会把 reachable 108-128 条里的 28-48 条挡在池外，"
+                         "阶段 3 因此根本没机会收编它们）")
+    ap.add_argument("--probe-cap", type=int, default=320,
+                    help="L0 探测窗口上限（超出部分按日轮转，避免每轮随机漏探）")
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
     ap.add_argument("--gitee", action="store_true",
@@ -818,7 +828,7 @@ def main() -> int:
     candidates = {u for u in candidates if u and u not in known}
     print(f"[discover] 候选 {len(candidates)} 条，开始 L0 探测 ...", flush=True)
 
-    probe_list = probe_window(candidates, max(args.top * 4, args.top))
+    probe_list = probe_window(candidates, args.probe_cap)
     if len(probe_list) < len(candidates):
         print(f"[discover]   超出探测上限，按日轮转只探其中 {len(probe_list)} 条"
               f"（原 set 顺序＝每轮随机漏 {len(candidates) - len(probe_list)} 条）", flush=True)
@@ -852,19 +862,24 @@ def main() -> int:
             return "source_pattern:%s" % m.group(0)[:24]
         return None
 
-    canary_kept, canary_dropped = [], []
+    # 2026-09-29 所有者指令：带成人特征的候选不再剔除，改为打上 adult 标记进成人池
+    # （站点→adult.json、直播→adult_live.json；fetch_merge 装载时按同口径复核并强制分类）。
+    canary_adult = []
     for r in canary:
         rule = _adult_rule_of(r["url"])
         if rule:
-            canary_dropped.append({"url": r["url"], "rule": rule, "score": r["score"]})
-        else:
-            canary_kept.append(r)
-    canary = canary_kept
-    if canary_dropped:
-        print(f"[discover] canary 成人特征剔除 {len(canary_dropped)} 条：")
-        for d in canary_dropped:
+            r["adult_rule"] = rule
+            canary_adult.append({"url": r["url"], "rule": rule, "score": r["score"]})
+    if canary_adult:
+        print(f"[discover] canary 成人特征 {len(canary_adult)} 条转成人池（不剔除）：")
+        for d in canary_adult:
             print(f"    - {d['url']}  rule={d['rule']}", flush=True)
 
+    # 候选池不再二次截断：旧实现写死 results[:80]，而本轮 reachable 就有 108-128 条，
+    # 排 81 名之后的可达候选阶段 3 连看都看不到（实测有 74 站、58 站的配置就是这样掉的）。
+    if len(results) > args.top:
+        print(f"[discover] 注意：可达 {len(results)} 条超过池上限 {args.top}，"
+              f"截断写入，丢 {len(results) - args.top} 条", flush=True)
     doc = {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S"),
         "note": "自动发现的上游候选；高分配置已同步进 state/extra_upstreams.json 作为 canary 自动拉取",
@@ -872,9 +887,9 @@ def main() -> int:
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
         "summary": {"candidates": len(candidates), "reachable": len(results),
                     "tvbox_configs": len(good), "canary": len(canary),
-                    "canary_dropped_adult": len(canary_dropped)},
+                    "canary_adult": len(canary_adult)},
         "candidates": results[: args.top],
-        "canary_dropped_adult": canary_dropped,
+        "canary_adult": canary_adult,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
@@ -890,7 +905,10 @@ def main() -> int:
             _u = _u.replace("://cdn.jsdelivr.net/", "://fastly.jsdelivr.net/")
         extra.append({"name": f"auto/{i+1}-{r['evidence'].get('sites', 0)}s",
                       "kind": "tvbox", "url": _u, "auto": True,
-                      "score": r["score"]})
+                      "score": r["score"],
+                      # 成人特征的上游不剔除，打标交给 fetch_merge（它按门禁同口径复核，
+                      # 并把该仓站点强制 adult→adult.json、直播强制→adult_live.json）
+                      **({"adult": True} if r.get("adult_rule") else {})})
     os.makedirs(os.path.dirname(args.canary_out) or ".", exist_ok=True)
     with open(args.canary_out, "w", encoding="utf-8") as f:
         json.dump({"generated_at": doc["generated_at"], "upstreams": extra}, f,

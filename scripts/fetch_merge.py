@@ -609,6 +609,12 @@ UPSTREAM_BASES = {u["name"]: u["url"].rsplit("/", 1)[0] + "/" for u in (UPSTREAM
 # 需要显式 EXTRA_UPSTREAMS=1 才并入；开启后失效由现有自动黑名单兜住。
 EXTRA_UPSTREAMS_FILE = os.environ.get("EXTRA_UPSTREAMS_FILE", "state/extra_upstreams.json")
 EXTRA_UPSTREAMS_ON = os.environ.get("EXTRA_UPSTREAMS", "0") == "1"
+# canary 里带成人特征的上游：2026-09-29 起不再整条剔除，改为「成人专供上游」——
+# 站点照样收（全部强制判 adult，落 adult.json），但它的 lives/parses/spider/wallpaper
+# 一律不进主产物。必须强制而不是靠 origin_votes：投票只作用于「弱信号单命中」
+# （见 classify_site 第 5 步），成人仓里大量站点名字干净，走投票仍会被判 vod 混进主配置。
+# 由 load_extra_upstreams() 填充（name 小写），classify_site 读它。
+ADULT_ONLY_ORIGINS: set = set()
 
 # ---------------- 成人内容发布开关（默认「不声明」模式，2026-09-22 所有者指令） ----------------
 # 所有者指令：adult.json 每天随 daily 聚合产出并提交更新到仓库，但「只是不声明」——
@@ -662,11 +668,16 @@ def load_extra_upstreams() -> list:
         if not (url and kind in PARSERS):
             continue
         url = _norm_jsdelivr(url)
-        rule = _candidate_adult_rule(u.get("name") or "", url)
+        name = u.get("name") or url[-28:]
+        rule = _candidate_adult_rule(name, url)
+        ent = {"name": name, "kind": kind, "url": url, "auto": True}
         if rule:
-            dropped.append((u.get("name") or url[-28:], rule))
-            continue
-        ent = {"name": u.get("name") or url[-28:], "kind": kind, "url": url, "auto": True}
+            # 2026-09-29 所有者指令：带成人特征的 canary 不再整条丢弃，改为进成人池。
+            # 站点强制 adult（落 adult.json）、直播强制下放成人直播池（adult_live.json），
+            # parses/spider/wallpaper 不收（它们是主配置的全局字段，名字会漏进非成人产物）。
+            ent["adult"] = True
+            ADULT_ONLY_ORIGINS.add(name.lower())
+            dropped.append((name, rule))
         # 吸收点 P1-2：canary 名单同样支持 mirrors 多镜像选通
         if isinstance(u.get("mirrors"), list) and u["mirrors"]:
             ent["mirrors"] = [_norm_jsdelivr(m) for m in u["mirrors"] if isinstance(m, str) and m]
@@ -674,8 +685,10 @@ def load_extra_upstreams() -> list:
     if out:
         print(f"    canary 上游 {len(out)} 个已并入本轮拉取（EXTRA_UPSTREAMS=1）", flush=True)
     if dropped:
+        print(f"    canary 成人特征上游 {len(dropped)} 个转成人池（站点→adult.json，"
+              f"直播→adult_live.json，不收 parses/spider）：", flush=True)
         for nm, r in dropped:
-            print(f"    canary 成人特征剔除：{nm} rule={r}", flush=True)
+            print(f"      - {nm} rule={r}", flush=True)
     return out
 
 
@@ -1037,6 +1050,12 @@ def classify_site(s, overrides: dict = None, origin_votes: dict = None) -> str:
     # 2. 已知误报白名单
     if key in ADULT_FALSE_POSITIVE_KEYS:
         return "vod"
+
+    # 2b. 成人专供上游（canary 带成人特征）：整仓站点一律 adult，不看关键词。
+    # 不放投票里是因为投票只影响「弱信号单命中」，成人仓里名字干净的站点会漏判。
+    origin = (s.get("_origin") or s.get("origin") or "").lower()
+    if origin and ADULT_ONLY_ORIGINS and origin in ADULT_ONLY_ORIGINS:
+        return "adult"
     name_lower = name.lower()
     if any(frag in name_lower for frag in ADULT_FALSE_POSITIVE_NAME_FRAGMENTS):
         return "vod"
@@ -5095,10 +5114,17 @@ def main() -> int:
         # ---- 合并 ----
         if kind == "tvbox":
             cfg = detail["cfg"]
+            # 成人专供上游：站点照常收（classify_site 会整仓强制 adult → adult.json），
+            # 直播照常收（打上 _adult_only，稍后下放 adult_live.json），
+            # 但 parses / 全局 spider / wallpaper 一律不收——它们是主配置的全局字段，
+            # 名字带成人特征会直接漏进非成人产物。
+            _a_only = name.lower() in ADULT_ONLY_ORIGINS
             cfg_sites = [s for s in (cfg.get("sites") or [])
                          if isinstance(s, dict) and s.get("key") and s.get("api")]
             cfg_lives = [l for l in (cfg.get("lives") or []) if isinstance(l, dict) and l.get("name")]
-            cfg_parses = [p for p in (cfg.get("parses") or []) if isinstance(p, dict) and p.get("name")]
+            cfg_parses = ([] if _a_only else
+                          [p for p in (cfg.get("parses") or [])
+                           if isinstance(p, dict) and p.get("name")])
             added_s = added_l = added_p = 0
             repl_s = repl_l = repl_p = 0
             sc = upstream_score(name, state)
@@ -5128,6 +5154,8 @@ def main() -> int:
                 elif sc > live_origin_score.get(k, -10 ** 9):
                     lives_by_name[k] = rewrite_gh(l)
                     repl_l += 1
+                if _a_only and isinstance(lives_by_name.get(k), dict):
+                    lives_by_name[k]["_adult_only"] = True   # 稍后下放成人直播池
             for p in cfg_parses:
                 k = merge_key_parse(p)
                 if not k:
@@ -5145,7 +5173,11 @@ def main() -> int:
                 merged_sites=added_s, merged_lives=added_l, merged_parses=added_p,
                 grade=grade_of(len(cfg_sites), valid), channel=info,
             )
+            if _a_only:
+                rec["adult_only"] = True
             for gk in ("spider", "wallpaper"):
+                if _a_only:
+                    break   # 成人专供上游不贡献主配置的全局字段
                 if gk in cfg and gk not in merged and isinstance(cfg[gk], str):
                     merged[gk] = rewrite_gh(cfg[gk])
                     if gk == "spider":
@@ -5786,8 +5818,11 @@ def main() -> int:
             u = u.replace("https://https://", "https://", 1)
             u = u.replace("http://http://", "http://", 1)
         l["url"] = u
-        # 成人主题 lives 一律下放到 adult.json
-        if any(k in str(l.get("name") or "").lower() for k in ("传媒816", "18+", "成人", "pron", "live18")):
+        # 成人主题 lives 一律下放到 adult.json；成人专供上游的整条直播也下放
+        # （它的频道名可能很干净，关键词扫不到，但上游已被判定成人特征）
+        if l.pop("_adult_only", None) or any(
+                k in str(l.get("name") or "").lower()
+                for k in ("传媒816", "18+", "成人", "pron", "live18")):
             adult_lives.append({
                 "name": l.get("name"), "type": l.get("type", 1),
                 "url": l.get("url"), "group": "成人直播",

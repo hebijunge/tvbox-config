@@ -370,6 +370,17 @@ python scripts/fetch_merge.py
 **收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
 **canary 已默认开启**（`EXTRA_UPSTREAMS=1`，daily.yml），失效由自动黑名单兜底；要停用改回 `0`。
 
+**池子路由**（2026-09-29 定）：产物按池分四层——点播池按接口类型细分（`stores/cms.json` CMS 标准接口、
+`stores/csp.json` 蜘蛛仓、`stores/pan.json` 网盘仓（含 `pan_ck.json` 需 CK 的）、`stores/app.json` App 型）、
+直播池（`live.json` + `lives/`）、成人池含**点播与直播两个子池**（`adult.json` / `adult_live.json` +
+`adult_live_channels/`）。canary 里带成人特征的上游**不再整条剔除**（所有者指令），改为标 `"adult": true`
+成为「成人专供上游」：站点照常收但强制分类 adult → 落 `adult.json`；直播照常收但打上 `_adult_only`
+下放 `adult_live.json`；`parses` 与全局 `spider/wallpaper` 一律不收——它们是主配置的全局字段，名字带
+成人特征会直接漏进非成人产物。为什么不走既有的 `origin_votes`：投票只作用于「弱信号单命中」
+（`classify_site` 第 5 步），成人仓里大量站点名字干净、走投票仍会被判 `vod` 混进主配置，所以另开
+`ADULT_ONLY_ORIGINS` 强制通道。识别口径与门禁同源（`_candidate_adult_rule`：PORN_KW / 域名黑名单 /
+源模式），发现侧与装载侧各算一次，装载侧为准。
+
 **按来源上游保留 spider**（2026-09-19 起，开关 `ORIGIN_SPIDER=1` 默认开）：
 
 每个上游配置都声明自己的顶层 `spider`，而且各不相同（`./jar/pg.jar`、`./jar/pg_upgraded.jar`、

@@ -220,9 +220,13 @@ class AdultGateBinarySkipTest(unittest.TestCase):
 
 
 class CanaryAdultFilterTest(unittest.TestCase):
-    """canary 上游自动发现无成人过滤，曾吸入 jigedos/1024 仓作为 auto/15-46s
-    进 list.json [142] 命中门禁；本组测试钉死 fetch_merge 加载 + discovery 收录
-    两层都按门禁同口径（PORN_KW/域名黑名单/源模式）剔除。"""
+    """canary 自动发现里带成人特征的上游（曾吸入 jigedos/1024 仓）。
+
+    2026-09-29 所有者指令改口径：**不再整条剔除**，改为「成人专供上游」——站点强制
+    adult→adult.json、直播强制→adult_live.json，parses/全局 spider/wallpaper 不收。
+    本组测试钉死：识别口径仍是门禁同口径（PORN_KW/域名黑名单/源模式），
+    且装载后必须注册进 ADULT_ONLY_ORIGINS（classify_site 靠它强制分类）。
+    """
 
     def test_fetch_merge_drops_adult_candidate(self):
         # 直接调 _candidate_adult_rule（门禁同口径）
@@ -243,8 +247,8 @@ class CanaryAdultFilterTest(unittest.TestCase):
         self.assertIsNone(fetch_merge._candidate_adult_rule(
             "auto/test", "https://raw.githubusercontent.com/dlgt7/TVbox-interface/main/jj.json"))
 
-    def test_load_extra_upstreams_filters_in_memory(self):
-        # 不写盘：monkeypatch EXTRA_UPSTREAMS_FILE 指向临时文件，验证剔除行为
+    def test_load_extra_upstreams_tags_adult_in_memory(self):
+        # 不写盘：monkeypatch EXTRA_UPSTREAMS_FILE 指向临时文件，验证「打标不剔除」
         sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "scripts"))
         import fetch_merge
         with tempfile.TemporaryDirectory() as td:
@@ -254,30 +258,45 @@ class CanaryAdultFilterTest(unittest.TestCase):
                 "upstreams": [
                     {"name": "auto/keep", "kind": "tvbox",
                      "url": "https://szyyds.cn/tv/x.json", "auto": True},
-                    {"name": "auto/drop-1024", "kind": "tvbox",
+                    {"name": "auto/adult-1024", "kind": "tvbox",
                      "url": "https://g.3344550.xyz/https://raw.githubusercontent.com/jigedos/1024/master/jsm.json",
                      "auto": True},
-                    {"name": "auto/drop-name", "kind": "tvbox",
-                     "url": "https://example.com/y.json", "auto": True},
                 ],
             }
-            open(ef, "w", encoding="utf-8").write(json.dumps(payload, ensure_ascii=False))
+            with open(ef, "w", encoding="utf-8") as f:
+                f.write(json.dumps(payload, ensure_ascii=False))
             saved = {k: getattr(fetch_merge, k) for k in
                      ("EXTRA_UPSTREAMS_FILE", "EXTRA_UPSTREAMS_ON", "PARSERS")}
+            saved_origins = set(fetch_merge.ADULT_ONLY_ORIGINS)
             try:
                 fetch_merge.EXTRA_UPSTREAMS_FILE = ef
                 fetch_merge.EXTRA_UPSTREAMS_ON = True
+                fetch_merge.ADULT_ONLY_ORIGINS.clear()
                 out = fetch_merge.load_extra_upstreams()
                 names = [e["name"] for e in out]
                 self.assertIn("auto/keep", names)
-                self.assertNotIn("auto/drop-1024", names,
-                                 "URL 含 1024 仓路径的 canary 必须剔除")
-                # name 命中也剔除：auto/drop-name 名字里没有，但下面再验证 name-命中场景
+                self.assertIn("auto/adult-1024", names,
+                              "成人特征 canary 必须留在拉取名单里（转成人池，不剔除）")
+                by_name = {e["name"]: e for e in out}
+                self.assertTrue(by_name["auto/adult-1024"].get("adult"))
+                self.assertNotIn("adult", by_name["auto/keep"])
+                self.assertEqual(fetch_merge.ADULT_ONLY_ORIGINS, {"auto/adult-1024"})
+                # 强制分类真的生效：干净名字的站点也因来源上游而判 adult
+                self.assertEqual(
+                    fetch_merge.classify_site({"key": "k", "name": "未命名", "api": "http://a",
+                                               "_origin": "auto/adult-1024"}),
+                    "adult")
+                self.assertEqual(
+                    fetch_merge.classify_site({"key": "k2", "name": "未命名", "api": "http://a",
+                                               "_origin": "auto/keep"}),
+                    "vod")
             finally:
                 for k, v in saved.items():
                     setattr(fetch_merge, k, v)
+                fetch_merge.ADULT_ONLY_ORIGINS.clear()
+                fetch_merge.ADULT_ONLY_ORIGINS.update(saved_origins)
 
-    def test_discover_filter_drops_adult_canary(self):
+    def test_discover_adult_rule_matches_fetch_merge(self):
         # discover_upstreams 是脚本（顶层 if-main 复用同名函数），不直接 import。
         # 改为 execfile 抽出 _adult_rule_of 验证：取脚本源码 → exec 内层 def。
         import importlib.util
