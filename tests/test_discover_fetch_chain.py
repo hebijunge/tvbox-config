@@ -150,10 +150,6 @@ class TestHttpGet(unittest.TestCase):
         self.assertEqual(len(self.seen), 1)
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 class TestProbeWindow(unittest.TestCase):
     """候选窗口与排序的确定性（阶段 2 池子换手的真凶）。"""
 
@@ -200,3 +196,7 @@ class TestRank(unittest.TestCase):
         rows = [{"url": "https://a", "score": 60, "kind": "m3u", "evidence": {"entries": 7}},
                 {"url": "https://b", "score": 60, "kind": "other", "evidence": {}}]
         self.assertEqual(du.rank_results(rows)[0]["url"], "https://a")
+
+
+if __name__ == "__main__":
+    unittest.main()

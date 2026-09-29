@@ -25,6 +25,7 @@
 
 import argparse
 import concurrent.futures as cf
+import hashlib
 import json
 import os
 import re
@@ -38,6 +39,9 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 UA = {"User-Agent": "tvbox-config-radar", "Accept": "*/*"}
 GH_ACCEPT = {"Accept": "application/vnd.github+json", "X-GitHub-Api-Version": "2022-11-28"}
+# L0 探测的读取上限：只读前这么多字节就够判形态。dedup_by_content 依赖它判断
+# 「内容是否被完整读到」，所以上限与截断标记必须同源，不能各写各的字面量。
+PROBE_MAX_BYTES = 300_000
 
 
 def _load_token() -> str:
@@ -261,6 +265,37 @@ def probe_window(candidates, cap, day=None):
     return rot[:cap]
 
 
+def dedup_by_content(rows):
+    """按内容指纹去重，只留排名最前的代表（rows 已由 rank_results 定序）。
+
+    为什么必要：同一份配置在生态里被反复镜像——历轮产物里 `gao/master/js.json`
+    （51621 字节 / 298 站点）稳定以 `ghproxy.net/…` 与 `gh-proxy.com/…` 两个前缀同时入池，
+    HEAD 那份 canary（25 条）就占了 2 个名额。合并侧虽有 sha256 内容去重兜底不会真灌两份，
+    但 canary 名额被重复内容占着，等于把「能带新内容的上游」挤了出去。
+    键就用 sha256，且**只比完整读到的内容**：L0 最多读 PROBE_MAX_BYTES（300KB），截断条目
+    （sha_partial=True）的哈希只覆盖前缀，而「前 300KB 逐字节相同、尾部不同」是会发生的——
+    同一仓库放一份 `x.json`（只有 sites）和一份 `x_full.json`（sites 一字不动再多带 lives/parses），
+    两份都超 300KB，前缀哈希与截断后的 bytes 全一样，一比就误杀。所以截断条目一律退出去重
+    （宁少并一条，不能误杀候选），代价实测很小：最近两轮入池的候选里读到上限的只有 0-1 条。
+    既然进比较的都是完整内容，哈希相同则长度必然相同，字节数不必再叠进键。
+    没有哈希的条目（不可达等）同样原样保留。
+    """
+    seen = {}
+    kept, dupes = [], []
+    for r in rows:
+        digest = r.get("sha256")
+        if not digest or r.get("sha_partial"):
+            kept.append(r)
+            continue
+        if digest in seen:
+            dupes.append({"url": r.get("url"), "same_as": seen[digest].get("url"),
+                          "sha256": digest, "bytes": r.get("bytes", 0)})
+            continue
+        seen[digest] = r
+        kept.append(r)
+    return kept, dupes
+
+
 def rank_results(rows):
     """稳定排序：score 降序 → tvbox 优先 → 站点/条目数降序 → URL 字典序。
 
@@ -277,7 +312,7 @@ def probe_candidate(url):
     """L0 形态探测：判断候选到底是 tvbox 配置、m3u 还是别的。"""
     r = {"url": url, "reachable": False, "kind": None, "score": 0, "evidence": {}}
     try:
-        st, raw = http_get(url, 12, 300_000)
+        st, raw = http_get(url, 12, PROBE_MAX_BYTES)
     except Exception as e:  # noqa: BLE001  探测边界：单条候选的任何异常都不该打断整轮扫描
         r["error"] = f"{type(e).__name__}"[:60]
         return r
@@ -286,6 +321,10 @@ def probe_candidate(url):
         return r
     r["reachable"] = True
     r["bytes"] = len(raw)
+    # 内容指纹（sha256 前 16 位 = 64bit，判重够用）：镜像/转抄副本在候选里极多，
+    # dedup_by_content 靠它把重复内容并成一条
+    r["sha256"] = hashlib.sha256(raw).hexdigest()[:16]
+    r["sha_partial"] = len(raw) >= PROBE_MAX_BYTES
     text = raw.decode("utf-8", "replace").lstrip("\ufeff \t\r\n")
 
     if text.startswith("#EXTM3U") or "#EXTM3U" in text[:2000]:
@@ -839,6 +878,15 @@ def main() -> int:
             if r.get("reachable"):
                 results.append(r)
     results = rank_results(results)
+    # reachable 记「探测可达」的真实条数，去重前——它是跨轮趋势指标（可达率），
+    # 若跟着去重一起变小就成了莫名下降。被并掉的数量单列 content_dupes。
+    reachable = len(results)
+    results, content_dupes = dedup_by_content(results)
+    if content_dupes:
+        print(f"[discover] 同内容镜像去重 {len(content_dupes)} 条（保留代表，canary 名额让给不同内容）：",
+              flush=True)
+        for dd in content_dupes[:8]:
+            print(f"    = {dd['url'][:60]}  同于  {dd['same_as'][:60]}", flush=True)
 
     good = [r for r in results if r.get("kind") == "tvbox" and r["score"] >= 70]
     canary = [r for r in results if r["score"] >= args.canary_score and r.get("kind") == "tvbox"]
@@ -893,12 +941,14 @@ def main() -> int:
         "note": "自动发现的上游候选；高分配置已同步进 state/extra_upstreams.json 作为 canary 自动拉取",
         "auth": "token" if TOKEN else "anonymous",
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
-        "summary": {"candidates": len(candidates), "reachable": len(results),
+        "summary": {"candidates": len(candidates), "reachable": reachable,
                     "pool_junk_dropped": junk, "pool": len(pool[: args.top]),
+                    "content_dupes": len(content_dupes),
                     "tvbox_configs": len(good), "canary": len(canary),
                     "canary_adult": len(canary_adult)},
         "candidates": pool[: args.top],
         "canary_adult": canary_adult,
+        "content_dupes": content_dupes,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:
@@ -923,7 +973,8 @@ def main() -> int:
         json.dump({"generated_at": doc["generated_at"], "upstreams": extra}, f,
                   ensure_ascii=False, indent=1)
 
-    print(f"[discover] 完成：可达 {len(results)}，真配置 {len(good)}，canary {len(extra)}")
+    print(f"[discover] 完成：可达 {reachable}（去重后入池 {len(results)}），"
+          f"真配置 {len(good)}，canary {len(extra)}")
     for r in results[:10]:
         ev = r.get("evidence", {})
         print(f"   {r['score']:3d}  {r.get('kind'):8} sites={ev.get('sites', '-'):<5} {r['url'][:88]}")

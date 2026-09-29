@@ -370,7 +370,27 @@ python scripts/fetch_merge.py
 **收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
 **候选池只留有效形态**（2026-09-29）：L0 判为 `other`/`json(非配置)`（score 0）的条目不再写进 `radar/discovered.json`——旧写法把「可达但非配置」的东西（GitHub 仓库主页 HTML、PWA `manifest.json`、`.github/labels.json`、star-history 的 SVG、`config.webp`）照样入池，实测**可达 133 条里 92 条（69%）是这类噪声**，既挤掉真候选又让阶段 3 白取一轮（`summary.pool_junk_dropped` 记录被剔数）。
 配套地，阶段 3 的 `eval_one` 先按形态分流再解析（与 discover 同口径）：`#EXTM3U`/`#genre#` → 记 `skipped=直播列表`（不算失败）、HTML/SVG → 记「候选池噪声」、BOM 与前导空白先 `lstrip` 再 `json.loads`。改前 80 条候选只有 **25 条评估成功**、55 条报 `Expecting value: line 1 column 1`（其实是形态不对，不是通道坏了）；改后 **41 条里 40 成功、0 失败**，可见新站点 2036 → **3183**。`summary` 也拆成 `evaluated / skipped_live / html_noise / no_sites / fetch_or_parse_failed`，不再用会误判的 `fetch_ok`（旧口径把跳过的也算成功）。
+**收录即按内容去重**（2026-09-29）：`dedup_by_content` 在 `rank_results` 定序之后跑，键是 L0 探测算出的内容
+sha256；同一份内容只留排名最前的代表，其余写进 `radar/discovered.json` 的 `content_dupes`（带 `same_as`
+指向代表）便于追溯。**只比完整读到的内容**：读满 `PROBE_MAX_BYTES`（300KB）的条目会打 `sha_partial=true` 并
+整条退出去重——截断条目的哈希只覆盖前缀，而「前 300KB 逐字节相同、尾部不同」是会发生的（同一仓库放一份
+`x.json` 只有 sites、再放一份 `x_full.json` 一字不动地多带 lives/parses），误杀一个真候选比少并一条严重得多；
+代价实测很小，最近两轮入池候选里被截断的只有 0-1 条。
+`summary.reachable` 取**去重前**的可达数（它是跨轮趋势指标，跟着去重一起变小会变成莫名下降）。
+实测连续两轮：去重前可达 138 / 140，分别并掉 **20 条（15 组）/ 19 条（11 组）**。形态分两类。**真的同一份配置**：`yoursmile66/TVBox/main/XC.json` 一份内容挂着 4 个入口
+（`gh-proxy.com` 两种路径写法、`ghproxy.net`、`github.moeyy.xyz`），`xyq254245` 的 `XYQTVBox.json` 3 个前缀，
+`gao/master/js.json` 的 `ghproxy.net`≡`gh-proxy.com`，`ztha.top` 的 https≡http。
+**「200 但不是配置」的同一张壳页**：5 个 `github.com/<仓>` 主页在那一轮返回同一个 58013 字节的中文页面
+（`lang="zh-CN"`，不是 GitHub 的仓库页；事后复测 `YueChan/Live` 又能拿到 235099 字节的真页面，说明是本地
+直连被间歇拦截），3 个 `agit.ai/*/raw/branch/*` 返回同一个 114 字节的 JS 跳转壳，`ghp.ci` 探到的路径返回
+2 字节的 `ok`（代理已废，只剩健康检查文本）。
+**为什么在发现侧就动手**：合并侧的 sha256 去重只保证产物不灌重复站点，而 canary 是「按顺序取前 N 个名额」，
+重复内容把名额占住等于把能带新内容的上游挤了出去——按 HEAD 那份旧产物对账：池里「字节数 + 站点数」都相同
+且完整读到的两组（`gao/master/js.json`、`ztha.top`）虚占 2 个位置、虚增 344 个站点，`state/extra_upstreams.json`
+那 25 条 canary 里 `gao/master/js.json` 也确实同时挂着 `ghproxy.net` 与 `gh-proxy.com` 两条（去重后只剩 1 条）；
+同处还有一组 9 条读满上限的大文件，那组按现在的规则**不并**（身份无法证明）。
 **canary 已默认开启**（`EXTRA_UPSTREAMS=1`，daily.yml），失效由自动黑名单兜底；要停用改回 `0`。
+注意 `total_unique_sites` 随候选集合逐轮变化（每轮挖到的池不同），别拿它跨轮直接相减当退化指标。
 
 **池子路由**（2026-09-29 定）：产物按池分四层——点播池按接口类型细分（`stores/cms.json` CMS 标准接口、
 `stores/csp.json` 蜘蛛仓、`stores/pan.json` 网盘仓（含 `pan_ck.json` 需 CK 的）、`stores/app.json` App 型）、
