@@ -368,6 +368,8 @@ python scripts/fetch_merge.py
 实测连跑两轮（相隔 5 分钟）：候选池重合从 **18/80 → 60/80**，真配置重合 12/27 → 23/36，可达率 41%→44-50%。剩下的差异是真实来源在变（仓库搜索按 updated 排序、文章页结果不同）与网络抖动，不是我们制造的随机。
 
 **收编标准 = 独有站点数（unique），不是评分**：生态互相抄配置极普遍，实测 score 30 的候选带来 17 个新站点、score 90 的只带来 3 个。`scripts/evaluate_candidates.py` 算 unique（候选指纹 sha1(api+ext) 不在当前库的数量），`--min-unique 3 --write-canary` 写 canary 池。
+**候选池只留有效形态**（2026-09-29）：L0 判为 `other`/`json(非配置)`（score 0）的条目不再写进 `radar/discovered.json`——旧写法把「可达但非配置」的东西（GitHub 仓库主页 HTML、PWA `manifest.json`、`.github/labels.json`、star-history 的 SVG、`config.webp`）照样入池，实测**可达 133 条里 92 条（69%）是这类噪声**，既挤掉真候选又让阶段 3 白取一轮（`summary.pool_junk_dropped` 记录被剔数）。
+配套地，阶段 3 的 `eval_one` 先按形态分流再解析（与 discover 同口径）：`#EXTM3U`/`#genre#` → 记 `skipped=直播列表`（不算失败）、HTML/SVG → 记「候选池噪声」、BOM 与前导空白先 `lstrip` 再 `json.loads`。改前 80 条候选只有 **25 条评估成功**、55 条报 `Expecting value: line 1 column 1`（其实是形态不对，不是通道坏了）；改后 **41 条里 40 成功、0 失败**，可见新站点 2036 → **3183**。`summary` 也拆成 `evaluated / skipped_live / html_noise / no_sites / fetch_or_parse_failed`，不再用会误判的 `fetch_ok`（旧口径把跳过的也算成功）。
 **canary 已默认开启**（`EXTRA_UPSTREAMS=1`，daily.yml），失效由自动黑名单兜底；要停用改回 `0`。
 
 **池子路由**（2026-09-29 定）：产物按池分四层——点播池按接口类型细分（`stores/cms.json` CMS 标准接口、

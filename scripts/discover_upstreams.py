@@ -877,6 +877,14 @@ def main() -> int:
 
     # 候选池不再二次截断：旧实现写死 results[:80]，而本轮 reachable 就有 108-128 条，
     # 排 81 名之后的可达候选阶段 3 连看都看不到（实测有 74 站、58 站的配置就是这样掉的）。
+    # 候选池只留有形态结论的条目（score>0 即 tvbox/m3u）：可达但内容无关的
+    # （仓库主页 HTML、PWA manifest、SVG 图表、GitHub labels.json …）L0 早就判成
+    # other/非配置、0 分，却仍按 reachable 写进池子——实测 80 条里占 47 条，
+    # 既挤掉真候选（阶段 3 因此漏收 300 站级别的配置），又让阶段 3 白取一轮。
+    pool = [r for r in results if r.get("score", 0) > 0]
+    junk = len(results) - len(pool)
+    if junk:
+        print(f"[discover] 候选池剔除「可达但非配置」{junk} 条，保留 {len(pool)} 条", flush=True)
     if len(results) > args.top:
         print(f"[discover] 注意：可达 {len(results)} 条超过池上限 {args.top}，"
               f"截断写入，丢 {len(results) - args.top} 条", flush=True)
@@ -886,9 +894,10 @@ def main() -> int:
         "auth": "token" if TOKEN else "anonymous",
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
         "summary": {"candidates": len(candidates), "reachable": len(results),
+                    "pool_junk_dropped": junk, "pool": len(pool[: args.top]),
                     "tvbox_configs": len(good), "canary": len(canary),
                     "canary_adult": len(canary_adult)},
-        "candidates": results[: args.top],
+        "candidates": pool[: args.top],
         "canary_adult": canary_adult,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
