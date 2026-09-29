@@ -35,10 +35,13 @@
     所以测速只能经镜像前缀，这正是产物里引用镜像前缀的原因。
 """
 
+import collections
 import concurrent.futures as cf
 import json
 import os
+import re
 import time
+import urllib.parse
 import urllib.request
 
 RAW_BASE = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
@@ -107,6 +110,274 @@ CANDIDATES = [
 ]
 
 UA = {"User-Agent": "tvbox-config-mirror-probe"}
+
+# ---------------- 新镜像发现（固定池之外的增量来源） ----------------
+# 从公网挖新代理，两条路：
+#   1. GitHub API 搜「gh-proxy / ghproxy」相关仓库，读它们的 README 与 homepage ——
+#      公共实例域名通常就写在项目首页；有 GITHUB_TOKEN 配额更高，本地无 token 也能匿名搜。
+#   2. Bing 搜「github 加速 镜像 域名 列表」等中文清单帖，抓搜索结果页正文再抽域名。
+#      与 discover_upstreams.discover_web 同一姿态：只访问搜索引擎已收录的公开页面，
+#      不登录、不碰验证页。
+# 提取只认「镜像前缀」这一确证形态（https://<host>/<可选路径>/https?://(raw.githubusercontent|github).com/...），
+# 裸域名一律不算，避免把博客站、图床、EPG 站误当镜像。
+# 准入还有一道内容一致性闸门：新面孔必须把本项目一个 8MB jar 原样吐回来
+# （sha256 与工作区文件逐字节相等）才允许进池——镜像篡改/截断/HTML 冒充都拦得住。
+# 局限要写明白：这只证明它对「本仓路径」转发忠实；第三方上游内容是否被改，
+# 本地没有可信参照物，无法在此闸门内验证，靠 fetch_merge 侧的 md5/sha256 与人工抽查兜。
+# 每轮最多试 NEW_PER_ROUND 个新面孔；近 RECENT_TEST_DAYS 天测过的跳过；
+# 判死/判慢/内容不符的进 DEAD_MEMORY 冷却 DEAD_COOLDOWN_DAYS 天，不再骚扰。
+MIRROR_LIST_URLS = [u.strip() for u in os.environ.get("MIRROR_LIST_URLS", "").split(",")
+                    if u.strip()]
+NEW_PER_ROUND = int(os.environ.get("MIRROR_NEW_PER_ROUND", "8"))
+DEAD_COOLDOWN_DAYS = int(os.environ.get("MIRROR_DEAD_COOLDOWN_DAYS", "30"))
+RECENT_TEST_DAYS = int(os.environ.get("MIRROR_RECENT_TEST_DAYS", "3"))
+DISCOVERED_CACHE = os.environ.get("MIRROR_DISCOVERED_CACHE", "state/mirror_discovered.json")
+DEAD_MEMORY = os.environ.get("MIRROR_DEAD_MEMORY", "state/mirror_dead.json")
+DISCOVER_CACHE_DAYS = float(os.environ.get("MIRROR_DISCOVER_CACHE_DAYS", "2"))
+ONLINE_MAX_PAGES = int(os.environ.get("MIRROR_ONLINE_MAX_PAGES", "12"))
+ONLINE_MAX_BYTES = 800_000
+GH_SEARCH_QUERIES = ["gh-proxy", "ghproxy", "github 加速 镜像"]
+GH_SEARCH_REPOS_CAP = int(os.environ.get("MIRROR_GH_SEARCH_REPOS", "12"))
+BING_QUERIES = ["github 加速 镜像 域名 列表", "gh-proxy 公共实例 地址",
+                "github raw 镜像 站 地址 ghproxy", "ghproxy 可用 域名 2026"]
+BROWSER_UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+              "(KHTML, like Gecko) Chrome/124.0 Safari/537.36")
+PAGE_HOST_RE = re.compile(r"(csdn\.net|zhihu\.com|cnblogs\.com|jianshu\.com|"
+                          r"weixin\.qq\.com|segmentfault\.com|36kr\.com|"
+                          r"sspai\.com|v2ex\.com|githubusercontent\.com)")
+URL_RE = re.compile(r"https?://[^\s\"'<>()\[\],;]+")
+PREFIX_PAT = re.compile(
+    r"https?://([A-Za-z0-9][A-Za-z0-9._-]*\.[A-Za-z]{2,})/[^\s\"'<>\\)]{0,60}?https?://"
+    r"(?:raw\.githubusercontent\.com|github\.com)/")
+# 明显不是镜像的：被代理的源站本身与短链服务
+PREFIX_HOST_DENY = {"raw.githubusercontent.com", "bit.ly", "t.ly", "github.com",
+                    "githubusercontent.com"}
+
+
+def extract_prefix_hosts(text):
+    """从文本里提取「镜像前缀」形态的域名 → Counter（引用次数越多越可能活着）。"""
+    c = collections.Counter()
+    for m in PREFIX_PAT.finditer(text or ""):
+        h = m.group(1).lower()
+        if h not in PREFIX_HOST_DENY:
+            c[h] += 1
+    return c
+
+
+def _http_text(url, timeout=15, cap=ONLINE_MAX_BYTES, headers=None):
+    """通用取文本：任何异常都返回空串（发现路不许影响测速主流程）。"""
+    hdr = {"User-Agent": BROWSER_UA, "Accept-Language": "zh-CN,zh;q=0.9",
+           "Accept": "text/html,application/json;q=0.9,*/*;q=0.8"}
+    hdr.update(headers or {})
+    try:
+        req = urllib.request.Request(url, headers=hdr)
+        with urllib.request.urlopen(req, timeout=timeout) as r:
+            return r.read(cap).decode("utf-8", "ignore")
+    except Exception:
+        return ""
+
+
+def _round_epoch(rounds):
+    """把 ranking 里的 generated_at（UTC 字符串）转成 epoch 秒，供「近 N 天测过」判断。"""
+    import calendar
+    out = []
+    for rd in rounds or []:
+        try:
+            stamp = calendar.timegm(time.strptime(str(rd.get("generated_at")),
+                                                  "%Y-%m-%d %H:%M:%S UTC"))
+        except (ValueError, TypeError):
+            stamp = 0
+        out.append((stamp, rd))
+    return out
+
+
+def gh_search_hosts():
+    """路 1：GitHub API 搜代理相关仓库，从搜索结果描述 / homepage / README 抽镜像前缀。
+
+    匿名也能搜（10 次/分钟），带 GITHUB_TOKEN 配额更高。本环境 GitHub 直连被墙时
+    这里整条返回空，不影响 Bing 路与固定池。"""
+    hosts = collections.Counter()
+    tok = (os.environ.get("GITHUB_TOKEN") or "").strip()
+    hdr = {"Accept": "application/vnd.github+json"}
+    if tok:
+        hdr["Authorization"] = "Bearer " + tok
+    seen_repos = set()
+    for q in GH_SEARCH_QUERIES:
+        url = ("https://api.github.com/search/repositories?"
+               + urllib.parse.urlencode({"q": q, "sort": "updated",
+                                         "per_page": GH_SEARCH_REPOS_CAP}))
+        raw = _http_text(url, timeout=12, headers=hdr)
+        try:
+            items = (json.loads(raw) or {}).get("items") or []
+        except ValueError:
+            continue
+        for it in items:
+            full = it.get("full_name") or ""
+            blob = " ".join(filter(None, [it.get("description"), it.get("homepage")]))
+            hosts.update(extract_prefix_hosts(blob))
+            if not full or full in seen_repos:
+                continue
+            seen_repos.add(full)
+            readme = _http_text("https://api.github.com/repos/%s/readme" % full,
+                                timeout=12, cap=1_500_000,
+                                headers={**hdr, "Accept": "application/vnd.github.raw"})
+            hosts.update(extract_prefix_hosts(readme))
+    return hosts
+
+
+def bing_pages(q, per=10):
+    """必应搜索（cn.bing.com 国内稳定）。返回 (SERP 原文, 结果页 URL 列表)。"""
+    url = "https://cn.bing.com/search?" + urllib.parse.urlencode({"q": q, "count": per})
+    html = _http_text(url)
+    found = []
+    for m in URL_RE.finditer(html):
+        u = m.group(0).rstrip(".,;)")
+        if re.search(r"(bing\.com|microsoft|msn\.com)", u, re.I):
+            continue
+        if PAGE_HOST_RE.search(u):
+            found.append(u)
+    return html, list(dict.fromkeys(found))[:per]
+
+
+def bing_hosts():
+    """路 2：搜索引擎找公开清单帖，SERP 正文与帖子正文一起抽前缀。"""
+    hosts = collections.Counter()
+    pages = []
+    for q in BING_QUERIES:
+        html, found = bing_pages(q)
+        hosts.update(extract_prefix_hosts(html))
+        pages += found
+    for p in list(dict.fromkeys(pages))[:ONLINE_MAX_PAGES]:
+        hosts.update(extract_prefix_hosts(_http_text(p)))
+    return hosts
+
+
+def fetch_list_hosts(urls):
+    """路 3（可选）：MIRROR_LIST_URLS 显式提供的纯文本清单，按同一正则提取。"""
+    hosts = collections.Counter()
+    for u in urls:
+        hosts.update(extract_prefix_hosts(_http_text(u)))
+    return hosts
+
+
+def online_hosts(force=False):
+    """汇总三路公网来源，落盘缓存 DISCOVER_CACHE_DAYS 天（挖一次够几轮用）。"""
+    now = time.time()
+    cache = _load_json(DISCOVERED_CACHE, {})
+    if not force and cache.get("hosts") and \
+            now - cache.get("scanned_at", 0) < DISCOVER_CACHE_DAYS * 86400:
+        return collections.Counter(cache["hosts"])
+    hosts = collections.Counter()
+    hosts.update(gh_search_hosts())
+    hosts.update(bing_hosts())
+    hosts.update(fetch_list_hosts(MIRROR_LIST_URLS))
+    try:
+        os.makedirs(os.path.dirname(DISCOVERED_CACHE) or ".", exist_ok=True)
+        with open(DISCOVERED_CACHE, "w", encoding="utf-8") as f:
+            json.dump({"scanned_at": now,
+                       "queries": {"github": GH_SEARCH_QUERIES, "bing": BING_QUERIES},
+                       "list_urls": MIRROR_LIST_URLS,
+                       "hosts": dict(hosts.most_common(300))}, f,
+                      ensure_ascii=False, indent=1)
+    except OSError:
+        pass
+    return hosts
+
+
+def _load_json(path, default):
+    try:
+        with open(path, encoding="utf-8") as f:
+            return json.load(f) or default
+    except (OSError, ValueError):
+        return default
+
+
+def _recent_tested(fixed_hosts, rounds, dead, now=None):
+    """本轮该跳过的 host：固定池 + 近 RECENT_TEST_DAYS 天测过的 + 冷却中的判死站。"""
+    now = now or time.time()
+    skip = set(fixed_hosts)
+    for stamp, rd in _round_epoch(rounds):
+        if now - stamp > RECENT_TEST_DAYS * 86400:
+            continue
+        for key in ("ranking", "discovered"):
+            for row in rd.get(key) or []:
+                h = _host_of(row.get("prefix") or "")
+                if h:
+                    skip.add(h)
+    for h, info in (dead or {}).items():
+        if info.get("at", 0) >= now - DEAD_COOLDOWN_DAYS * 86400:
+            skip.add(h)
+    return skip
+
+
+def discover_hosts(fixed_hosts, rounds, dead, hosts=None):
+    """返回本轮要新试的 [(https://host/ , 出现次数)]，按公网出现频次降序，最多 NEW_PER_ROUND 个。"""
+    hosts = hosts if hosts is not None else online_hosts()
+    skip = _recent_tested(fixed_hosts, rounds, dead)
+    out = []
+    for h, n in hosts.most_common():
+        if h in skip or h in PREFIX_HOST_DENY:
+            continue
+        out.append((f"https://{h}/", n))
+        if len(out) >= NEW_PER_ROUND:
+            break
+    return out
+
+
+def verify_prefix_content(prefix, deadline=None):
+    """内容一致性闸门：镜像必须把本项目那个 8MB jar **逐字节原样**吐回来。
+
+    截断、HTML 冒充、改写内容都在这里拦下——新面孔来自公网陌生页面，进池前先验一次。
+    时限默认 60s：8MB 在 60s 内下不完就是 <140KB/s，本来也过不了测速门槛，直接拒。
+    局限见模块注释：只覆盖本仓路径的转发忠实性。"""
+    import hashlib
+    deadline = deadline or float(os.environ.get("MIRROR_VERIFY_DEADLINE", "60"))
+    local = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                         TARGETS_BIG[0].split("/main/", 1)[-1])
+    if not os.path.isfile(local):
+        return True  # 无参照物时不拦（CI 上 jar 在仓内，正常不会走到这里）
+    want = hashlib.sha256()
+    with open(local, "rb") as f:
+        while True:
+            blk = f.read(262144)
+            if not blk:
+                break
+            want.update(blk)
+    want = want.hexdigest()
+    got = hashlib.sha256()
+    t0 = time.time()
+    try:
+        req = urllib.request.Request(prefix + TARGETS_BIG[0], headers=UA)
+        with urllib.request.urlopen(req, timeout=PROBE_READ_TIMEOUT) as r:
+            n = 0
+            while True:
+                if time.time() - t0 > deadline:
+                    return False  # 超时未完：视为不合格（慢且不可靠）
+                chunk = r.read(262144)
+                if not chunk:
+                    break
+                got.update(chunk)
+                n += len(chunk)
+                if n > 40_000_000:
+                    return False
+    except Exception:
+        return False
+    return got.hexdigest() == want
+
+
+def _host_of(url):
+    m = re.match(r"https?://([^/]+)", url or "")
+    return m.group(1).lower() if m else ""
+
+
+def remember_dead(dead, prefixes, reason, kbps=None):
+    now = time.time()
+    for p in prefixes:
+        h = _host_of(p if isinstance(p, str) else p.get("prefix"))
+        if not h or h in {x.rstrip("/").split("//")[-1] for x in CANDIDATES}:
+            continue  # 固定池成员只在本轮移出 GH_MIRRORS，不写冷却（每日仍要复测）
+        dead[h] = {"reason": reason, "KBps": kbps, "at": now}
+    return dead
 
 
 def _fetch(url, timeout):
@@ -198,16 +469,23 @@ def probe_big(prefix):
     return 0, False, 0, False
 
 
-def probe_one(prefix):
+def probe_one(prefix, origin="fixed"):
+    base = {"prefix": prefix, "origin": origin, "ttfb_ms": None, "KBps": 0,
+            "bytes": 0, "alive": False, "fake": False, "content_bad": False,
+            "truncated": False, "score_ok": False}
+    if origin == "discovered" and not verify_prefix_content(prefix):
+        base["content_bad"] = True  # 公网陌生前缀：内容不忠实直接出局，不测速不入池
+        return base
     ttfb, fake_small = probe_small(prefix)
     if fake_small:
-        return {"prefix": prefix, "ttfb_ms": None, "KBps": 0, "bytes": 0,
-                "alive": False, "fake": True, "score_ok": False, "truncated": False}
+        base["fake"] = True
+        return base
     kbps, fake_big, nbytes, trunc = (probe_big(prefix) if ttfb is not None
                                      else (0, False, 0, False))
-    return {"prefix": prefix, "ttfb_ms": ttfb, "KBps": kbps, "bytes": nbytes,
-            "alive": ttfb is not None, "fake": fake_big, "truncated": trunc,
-            "score_ok": ttfb is not None and kbps > 0}
+    base.update({"ttfb_ms": ttfb, "KBps": kbps, "bytes": nbytes,
+                 "alive": ttfb is not None, "fake": fake_big, "truncated": trunc,
+                 "score_ok": ttfb is not None and kbps > 0})
+    return base
 
 
 def save_ranking(summary):
@@ -224,6 +502,7 @@ def save_ranking(summary):
     rounds.insert(0, {"generated_at": summary["generated_at"],
                       "first": summary["first"],
                       "ranking": summary["ranking"],
+                      "discovered": summary.get("discovered") or [],
                       "slow_dropped": summary["slow_dropped"],
                       "fake_success": summary["fake_success"],
                       "dead": summary["dead"]})
@@ -244,10 +523,19 @@ def save_ranking(summary):
 
 
 def main():
+    rounds_hist = _load_json(RANKING_FILE, {}).get("rounds") or []
+    dead_mem = _load_json(DEAD_MEMORY, {})
+    fixed_hosts = {_host_of(p) for p in CANDIDATES}
+    new_hosts = discover_hosts(fixed_hosts, rounds_hist, dead_mem)
+    hits = {p: n for p, n in new_hosts}
+    if new_hosts:
+        print(f"  [发现] 公网新面孔 {len(new_hosts)} 个（先验内容忠实性再测速）："
+              + " ".join(f"{_host_of(p)}×{n}" for p, n in new_hosts))
+    tasks = [(p, "fixed") for p in CANDIDATES] + [(p, "discovered") for p, _n in new_hosts]
     with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
-        results = list(ex.map(probe_one, CANDIDATES))
+        results = list(ex.map(lambda t: probe_one(*t), tasks))
 
-    # 分档：达标镜像按速度降序 → 仅小文件存活的按延迟升序 → 判慢/不可达/假成功淘汰
+    # 分档：达标镜像按速度降序 → 仅小文件存活的按延迟升序 → 判慢/不可达/假成功/内容不符淘汰
     measured = sorted([r for r in results if r["alive"] and r["KBps"] > 0],
                       key=lambda r: -r["KBps"])
     fast = [r for r in measured if r["KBps"] >= MIN_KBPS]
@@ -255,7 +543,8 @@ def main():
     ok_small = sorted([r for r in results if r["alive"] and r["KBps"] == 0],
                       key=lambda r: r["ttfb_ms"])
     fake = [r for r in results if r["fake"]]
-    dead = [r for r in results if not r["alive"] and not r["fake"]]
+    bad_content = [r for r in results if r["content_bad"]]
+    dead = [r for r in results if not r["alive"] and not r["fake"] and not r["content_bad"]]
     # 判慢的不进 GH_MIRRORS：留着只会在拉取时白等一轮时限。全部被判慢时（例如
     # runner 侧带宽被并发压穿）保留测速结果，避免把镜像池清空。
     if fast:
@@ -279,6 +568,7 @@ def main():
             ordered = [pinned] + rest
             print(f"MIRROR_PIN 生效：首位固定为 {pin.rstrip('/')}")
 
+    pool_set = {r["prefix"].rstrip("/") for r in ordered}
     summary = {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "first": ordered[0]["prefix"].rstrip("/") if ordered else None,
@@ -295,7 +585,15 @@ def main():
         "dead": [r["prefix"] for r in dead],
         "ranking": [{"prefix": r["prefix"].rstrip("/"), "ttfb_ms": r["ttfb_ms"],
                      "KBps": r["KBps"], "bytes": r["bytes"],
-                     "capped": r["truncated"]} for r in ordered],
+                     "capped": r["truncated"], "origin": r["origin"]}
+                    for r in ordered],
+        # 新面孔全量留档（含被淘汰的）：既给人看战果，也让下一轮跳过它们
+        "discovered": [{"prefix": r["prefix"].rstrip("/"), "hits": hits.get(r["prefix"], 0),
+                        "KBps": r["KBps"], "ttfb_ms": r["ttfb_ms"],
+                        "alive": r["alive"], "fake": r["fake"],
+                        "content_bad": r["content_bad"],
+                        "in_pool": r["prefix"].rstrip("/") in pool_set}
+                       for r in results if r["origin"] == "discovered"],
     }
     print("== 镜像实测排名 ==")
     print(f"  吞吐口径：大文件 {TARGETS_BIG[0].rsplit('/', 1)[-1]}，"
@@ -303,14 +601,35 @@ def main():
           f"每站采 {PROBE_SAMPLES} 次取较差值，并发 {WORKERS} 路；<{MIN_KBPS}KB/s 判慢淘汰")
     for i, r in enumerate(ordered, 1):
         flag = "（按时限截断）" if r["truncated"] else ""
-        print(f"  {i}. {r['prefix'].rstrip('/')}  ttfb={r['ttfb_ms']}ms  "
-              f"{r['KBps']}KB/s（读 {r['bytes'] / 1048576:.1f}MB{flag}）")
+        tag = " *新" if r["origin"] == "discovered" else ""
+        print(f"  {i}. {r['prefix'].rstrip('/')}{flag}  ttfb={r['ttfb_ms']}ms  "
+              f"{r['KBps']}KB/s（读 {r['bytes'] / 1048576:.1f}MB）{tag}")
     for r in slow:
         print(f"  ~. {r['prefix'].rstrip('/')}  {r['KBps']}KB/s 判慢，已移出 GH_MIRRORS")
     for r in fake:
         print(f"  x. {r['prefix'].rstrip('/')}  假成功（HTTP 200 但内容非目标文件，判 dead）")
+    for r in bad_content:
+        print(f"  x. {r['prefix'].rstrip('/')}  内容不一致（未原样返回目标 jar），拒入池")
     for r in dead:
         print(f"  x. {r['prefix'].rstrip('/')}  不可达")
+    if summary["discovered"]:
+        added = [d for d in summary["discovered"] if d["in_pool"]]
+        print(f"  [发现] 公网 {len(summary['discovered'])} 个新面孔，"
+              f"通过忠实性+测速入池 {len(added)} 个"
+              + ("：" + " ".join(f"{d['prefix'].split('//')[-1].rstrip('/')} "
+                                 f"{d['KBps']}KB/s" for d in added) if added else ""))
+    # 判死记忆：本轮出局的新面孔记入冷却，DEAD_COOLDOWN_DAYS 内不再浪费测速额度
+    rejected = ([r["prefix"] for r in bad_content] + [r["prefix"] for r in fake]
+                + [r["prefix"] for r in dead] + [r["prefix"] for r in slow])
+    rejected = [p for p in rejected if _host_of(p) not in fixed_hosts]
+    if rejected:
+        remember_dead(dead_mem, rejected, "probe-rejected")
+        try:
+            os.makedirs(os.path.dirname(DEAD_MEMORY) or ".", exist_ok=True)
+            with open(DEAD_MEMORY, "w", encoding="utf-8") as f:
+                json.dump(dead_mem, f, ensure_ascii=False, indent=1)
+        except OSError:
+            pass
     if ordered:
         save_ranking(summary)
     print(json.dumps(summary, ensure_ascii=False))

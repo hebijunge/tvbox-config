@@ -435,14 +435,20 @@ python scripts/fetch_merge.py
 无白名单、一律剥净。重排前后对照：探针有效性从 176/311（43% 的探针打在了已不在产物里的站）
 升到 172/181（5%）。
 
-**镜像测速口径**（`scripts/mirror_probe.py`）：候选池 28 个，每站先测小文件 TTFB，再用
-8MB jar 测吞吐——**每站最多读 4MB、总时限 12 秒、采 2 次取较差值、并发 3 路**，速度只算
-首包之后的传输段；低于 100KB/s 判慢直接移出池。为什么这么绕：单样本 6 路并发时轮间排名
-不可复现（同一镜像实测 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），而池首位会被写进静态 JSON
-当外链前缀。改口后两轮 top3 集合一致。结果落盘 `state/mirror_ranking.json`（留 7 轮），
-`fetch_merge.py` 按 `GH_MIRRORS 环境变量 > 落盘实测 > 静态默认` 取池；外链主镜像取
-「近 3 轮至少 2 轮上榜、中位吞吐最高」而非当日第一（`_stable_ghproxy`），显式钉选
-`GH_MIRRORS` 时则跟随钉选首位。
+**镜像测速口径**（`scripts/mirror_probe.py`）：固定池 28 个 + **公网发现增量**（GitHub API 搜
+`gh-proxy` 相关仓库读 README，以及 Bing 搜公开清单帖；本地 GitHub 直连被墙时该路静默跳过）。
+提取只认「前缀 + github/raw」的确证形态，裸域名不算。新面孔先过**内容一致性闸门**——必须把
+本项目那个 8MB jar 逐字节原样返回（sha256 相等），截断/HTML 冒充/改写内容一律拒入池；
+2026-09-29 首轮实跑：挖到 3 个，毙掉 2 个伪代理（Cloudflare worker 空壳），`api.gitproxy.dev`
+校验通过并以 2377KB/s 入池第 8 名。测速每站最多读 4MB、**总时限 12 秒**、**采 2 次取较差值**、
+**并发 3 路**，速度只算首包之后的传输段；低于 100KB/s 判慢移出池（全数被判慢时保留结果，防清空）。
+淘汰/伪代理记入 `state/mirror_dead.json` 冷却 30 天，近 3 天测过的不重复骚扰，发现结果缓存
+`state/mirror_discovered.json`（2 天）。为什么这么绕：单样本 6 路并发时轮间排名不可复现
+（同一镜像实测 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），而池首位会被写进静态 JSON 当外链前缀。
+结果落盘 `state/mirror_ranking.json`（留 7 轮），`fetch_merge.py` 按
+`GH_MIRRORS 环境变量 > 落盘实测 > 静态默认` 取池；外链主镜像取「近 3 轮至少 2 轮上榜、
+中位吞吐最高」而非当日第一（`_stable_ghproxy`），显式钉选 `GH_MIRRORS` 时则跟随钉选首位。
+可选加自己的清单源：Actions Variable 或环境变量 `MIRROR_LIST_URLS`（逗号分隔的纯文本清单页）。
 
 ## 本地运行
 
