@@ -18,8 +18,21 @@
 
 测速对象：
   - 小文件 stores/duocang.json（~1KB）：TTFB 延迟（配置加载体验）；
-  - 中文件 deps/jar/spider_8955438d.jar（~1.9MB）：吞吐速度（依赖下载体验）；
-    该文件 404（未来路径变更）时自动退化为纯延迟排序。
+  - 大文件 deps/jar/yt_a4a15fb7.jar（8.0MB，每站最多读 4MB）：**吞吐速度按「首包之后的
+    传输段」计算**，不含 TTFB。此前用 1.9MB 的 jar，字节太少容易被 CDN 热缓存和首包
+    延迟主导，慢镜像与快镜像分不开（2026-09-29 所有者要求改用大文件实测）。
+    大文件全部 404/拉不动时自动退化到 1.9MB 兜底包，再不行退化为纯延迟排序。
+  - 每站总时限 12s（MIRROR_PROBE_DEADLINE）：到点按已读字节算速度并标记截断，慢镜像
+    不许磨时间；低于 MIRROR_MIN_KBPS（默认 100KB/s）判慢，直接移出 GH_MIRRORS。
+    全部被判慢时（并发压穿 runner 带宽等）保留测速结果，避免镜像池被清空。
+  - 大文件每站采 2 次取**较差的一次**（MIRROR_PROBE_SAMPLES=1 可退回单次）。理由：
+    并发共享带宽 + 镜像侧缓存冷热，单样本轮间排名乱跳（2026-09-29 实测同一镜像
+    两轮 2822KB/s ↔ 375KB/s，名次从第 2 掉到第 23），而首位会被写进静态 JSON 的
+    外链前缀，必须可复现。取较差值而非平均，是宁可低估也不给侥幸高分让位。
+  - 结果落盘 state/mirror_ranking.json（保留最近 7 轮），fetch_merge.py 在没有
+    GH_MIRRORS 环境变量时读它，本地跑不再退到静态默认顺序。
+  - 直连 raw.githubusercontent.com 在本环境被墙（2026-09-29 复测 RemoteDisconnected），
+    所以测速只能经镜像前缀，这正是产物里引用镜像前缀的原因。
 """
 
 import concurrent.futures as cf
@@ -30,7 +43,23 @@ import urllib.request
 
 RAW_BASE = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 TARGET_SMALL = RAW_BASE + "/stores/duocang.json"
-TARGET_BIG = RAW_BASE + "/deps/jar/spider_8955438d.jar"
+# 依次尝试：8MB jar 优先，路径迁移时退化到 1.9MB
+TARGETS_BIG = [RAW_BASE + "/deps/jar/yt_a4a15fb7.jar",
+               RAW_BASE + "/deps/jar/spider_8955438d.jar"]
+# 每站最多读多少字节、单站总时限、单次读超时、判慢门槛。
+# 时限必须是 wall-clock 总时限：urllib 的 timeout 只管单次 socket 读，
+# 慢镜像每次读都在超时内返回，可以合法磨满几分钟把整轮拖住（2026-09-29 实测
+# wget.la 17KB/s 单站磨了 240s，整轮从 90s 涨到 4m14s）。到点就用已读字节算速度。
+PROBE_BYTES = int(os.environ.get("MIRROR_PROBE_BYTES", "4194304"))
+PROBE_DEADLINE = float(os.environ.get("MIRROR_PROBE_DEADLINE", "12"))
+PROBE_READ_TIMEOUT = int(os.environ.get("MIRROR_PROBE_READ_TIMEOUT", "8"))
+MIN_KBPS = int(os.environ.get("MIRROR_MIN_KBPS", "100"))
+# 每站大文件采样次数，取较差的一次（见模块 docstring 的轮间抖动实测）
+PROBE_SAMPLES = max(1, int(os.environ.get("MIRROR_PROBE_SAMPLES", "2")))
+# 并发：越低干扰越小，排名越可复现（6 路并发曾把排名变成掷骰子）
+WORKERS = int(os.environ.get("MIRROR_PROBE_WORKERS", "3"))
+RANKING_FILE = os.environ.get("MIRROR_RANKING_FILE", "state/mirror_ranking.json")
+RANKING_KEEP_ROUNDS = int(os.environ.get("MIRROR_RANKING_KEEP_ROUNDS", "7"))
 
 # 候选镜像（域名式前缀，支持 raw + release；顺序仅是初始值，实际以每日实测重排为准）。
 # 候选池 2026-09-19 依据两份独立实测报告合并更新：
@@ -115,42 +144,125 @@ def probe_small(prefix):
     return best, False
 
 
+def _fetch_stream(url, timeout, cap, deadline):
+    """流式读取至多 cap 字节，受 wall-clock 总时限 deadline 约束。
+    返回 (ttfb_ms, 实读字节, 传输段秒数, 前4字节, 是否按时截断)；
+    传输段秒数不含首包延迟，吞吐只反映持续下载速度。读途中断流/超时不丢弃：
+    已收到的字节照样参与测速（那正是它慢的证据）。"""
+    t0 = time.time()
+    req = urllib.request.Request(url, headers=UA)
+    with urllib.request.urlopen(req, timeout=timeout) as r:
+        ttfb = time.time() - t0
+        head = r.read(4) or b""
+        n = len(head)
+        t1 = time.time()
+        truncated = False
+        while n < cap:
+            left = deadline - (time.time() - t1)
+            if left <= 0:
+                truncated = True
+                break
+            try:
+                chunk = r.read(min(262144, cap - n))
+            except Exception:
+                truncated = True  # 单次读超时/连接断：按已读字节计速
+                break
+            if not chunk:
+                break
+            n += len(chunk)
+        return round(ttfb * 1000), n, max(time.time() - t1, 0.01), head, truncated
+
+
 def probe_big(prefix):
-    """中文件吞吐实测，返回 (KB/s, is_fake)；失败返回 (0, False)。"""
-    try:
-        _ttfb, body, total = _fetch(prefix + TARGET_BIG, timeout=30)
-        if len(body) < 100_000:
-            return 0, False
-        if not body.startswith(b"PK\x03\x04"):  # jar 即 zip 包，魔数 PK
-            return 0, True
-        return round(len(body) / 1024 / max(total, 0.01)), False
-    except Exception:
-        return 0, False
+    """大文件吞吐实测（不含 TTFB），每站采 PROBE_SAMPLES 次、取较差的一次。
+    返回 (KB/s, is_fake, 实读字节, 截断)。拉不动返回 (0, False, 0, False)。"""
+    worst = None
+    for target in TARGETS_BIG:
+        for _ in range(PROBE_SAMPLES):
+            try:
+                _ttfb, n, secs, head, trunc = _fetch_stream(
+                    prefix + target, PROBE_READ_TIMEOUT, PROBE_BYTES, PROBE_DEADLINE)
+            except Exception:
+                continue  # 连首包都没回来，换下一次采样/兜底文件
+            if not head.startswith(b"PK\x03\x04"):  # jar 即 zip 包，魔数 PK
+                if n >= 200_000:
+                    return 0, True, n, trunc  # 拉到实质内容却不是 zip → 假成功
+                continue  # 多半是 404 小页，换兜底文件再判
+            if n < 65_536 and not trunc:
+                continue  # 样本太小且不是被时限截断，不作数
+            kbps = round(n / 1024 / secs)
+            if worst is None or kbps < worst[0]:
+                worst = (kbps, False, n, trunc)
+        if worst is not None:
+            return worst
+    return 0, False, 0, False
 
 
 def probe_one(prefix):
     ttfb, fake_small = probe_small(prefix)
     if fake_small:
-        return {"prefix": prefix, "ttfb_ms": None, "KBps": 0,
-                "alive": False, "fake": True, "score_ok": False}
-    kbps, fake_big = probe_big(prefix) if ttfb is not None else (0, False)
-    return {"prefix": prefix, "ttfb_ms": ttfb, "KBps": kbps,
-            "alive": ttfb is not None, "fake": fake_big,
+        return {"prefix": prefix, "ttfb_ms": None, "KBps": 0, "bytes": 0,
+                "alive": False, "fake": True, "score_ok": False, "truncated": False}
+    kbps, fake_big, nbytes, trunc = (probe_big(prefix) if ttfb is not None
+                                     else (0, False, 0, False))
+    return {"prefix": prefix, "ttfb_ms": ttfb, "KBps": kbps, "bytes": nbytes,
+            "alive": ttfb is not None, "fake": fake_big, "truncated": trunc,
             "score_ok": ttfb is not None and kbps > 0}
 
 
+def save_ranking(summary):
+    """落盘测速历史（最新一轮在前，保留 RANKING_KEEP_ROUNDS 轮）。
+    本地跑没有 $GITHUB_ENV，靠这个文件把当日实测交给 fetch_merge 用；
+    同时供其挑选「多轮都靠前」的稳定镜像做外链改写主镜像。"""
+    rounds = []
+    try:
+        if os.path.isfile(RANKING_FILE):
+            old = json.load(open(RANKING_FILE, encoding="utf-8")) or {}
+            rounds = old.get("rounds") or []
+    except Exception as e:  # noqa: BLE001
+        print(f"  [mirror_probe] 旧排名文件不可读（重建）：{type(e).__name__}: {e}")
+    rounds.insert(0, {"generated_at": summary["generated_at"],
+                      "first": summary["first"],
+                      "ranking": summary["ranking"],
+                      "slow_dropped": summary["slow_dropped"],
+                      "fake_success": summary["fake_success"],
+                      "dead": summary["dead"]})
+    doc = {"version": 1, "big_file": summary["big_file"],
+           "probe_bytes_cap": summary["probe_bytes_cap"],
+           "probe_deadline_sec": summary["probe_deadline_sec"],
+           "min_kbps_floor": summary["min_kbps_floor"],
+           "samples": summary["samples"], "workers": summary["workers"],
+           "rounds": rounds[:RANKING_KEEP_ROUNDS]}
+    try:
+        os.makedirs(os.path.dirname(RANKING_FILE) or ".", exist_ok=True)
+        with open(RANKING_FILE, "w", encoding="utf-8") as f:
+            json.dump(doc, f, ensure_ascii=False, indent=1)
+        print(f"  [mirror_probe] 实测已落盘 {RANKING_FILE}"
+              f"（{len(doc['rounds'])} 轮历史）")
+    except OSError as e:
+        print(f"  [mirror_probe] 落盘失败（不阻断，fetch_merge 回退默认顺序）：{e}")
+
+
 def main():
-    with cf.ThreadPoolExecutor(max_workers=6) as ex:
+    with cf.ThreadPoolExecutor(max_workers=WORKERS) as ex:
         results = list(ex.map(probe_one, CANDIDATES))
 
-    # 排序：存活且大文件可测速的按速度降序 → 仅小文件存活的按延迟升序 → 不可达/假成功垫底
-    ok_both = sorted([r for r in results if r["alive"] and r["KBps"] > 0],
-                     key=lambda r: -r["KBps"])
+    # 分档：达标镜像按速度降序 → 仅小文件存活的按延迟升序 → 判慢/不可达/假成功淘汰
+    measured = sorted([r for r in results if r["alive"] and r["KBps"] > 0],
+                      key=lambda r: -r["KBps"])
+    fast = [r for r in measured if r["KBps"] >= MIN_KBPS]
+    slow = [r for r in measured if r["KBps"] < MIN_KBPS]
     ok_small = sorted([r for r in results if r["alive"] and r["KBps"] == 0],
                       key=lambda r: r["ttfb_ms"])
     fake = [r for r in results if r["fake"]]
     dead = [r for r in results if not r["alive"] and not r["fake"]]
-    ordered = ok_both + ok_small
+    # 判慢的不进 GH_MIRRORS：留着只会在拉取时白等一轮时限。全部被判慢时（例如
+    # runner 侧带宽被并发压穿）保留测速结果，避免把镜像池清空。
+    if fast:
+        ordered = fast + ok_small
+    else:
+        ordered = measured + ok_small
+        slow = []
 
     # MIRROR_PIN：用户侧手动钉首位（仓库 Actions Variable / 环境变量皆可）。
     # 探测视角是 CI runner 的网络，不代表用户手机侧；用户实测更快者可钉住首位，其余仍自动重排。
@@ -170,19 +282,37 @@ def main():
     summary = {
         "generated_at": time.strftime("%Y-%m-%d %H:%M:%S UTC", time.gmtime()),
         "first": ordered[0]["prefix"].rstrip("/") if ordered else None,
-        "alive": len(ok_both) + len(ok_small),
+        "alive": len(fast) + len(slow) + len(ok_small),
+        "big_file": TARGETS_BIG[0],
+        "probe_bytes_cap": PROBE_BYTES,
+        "probe_deadline_sec": PROBE_DEADLINE,
+        "min_kbps_floor": MIN_KBPS,
+        "samples": PROBE_SAMPLES,
+        "workers": WORKERS,
         "fake_success": [r["prefix"] for r in fake],
+        "slow_dropped": [{"prefix": r["prefix"].rstrip("/"), "KBps": r["KBps"]}
+                         for r in slow],
         "dead": [r["prefix"] for r in dead],
         "ranking": [{"prefix": r["prefix"].rstrip("/"), "ttfb_ms": r["ttfb_ms"],
-                     "KBps": r["KBps"]} for r in ordered],
+                     "KBps": r["KBps"], "bytes": r["bytes"],
+                     "capped": r["truncated"]} for r in ordered],
     }
     print("== 镜像实测排名 ==")
+    print(f"  吞吐口径：大文件 {TARGETS_BIG[0].rsplit('/', 1)[-1]}，"
+          f"每站最多读 {PROBE_BYTES // 1024}KB、总时限 {PROBE_DEADLINE:.0f}s，"
+          f"每站采 {PROBE_SAMPLES} 次取较差值，并发 {WORKERS} 路；<{MIN_KBPS}KB/s 判慢淘汰")
     for i, r in enumerate(ordered, 1):
-        print(f"  {i}. {r['prefix'].rstrip('/')}  ttfb={r['ttfb_ms']}ms  {r['KBps']}KB/s")
+        flag = "（按时限截断）" if r["truncated"] else ""
+        print(f"  {i}. {r['prefix'].rstrip('/')}  ttfb={r['ttfb_ms']}ms  "
+              f"{r['KBps']}KB/s（读 {r['bytes'] / 1048576:.1f}MB{flag}）")
+    for r in slow:
+        print(f"  ~. {r['prefix'].rstrip('/')}  {r['KBps']}KB/s 判慢，已移出 GH_MIRRORS")
     for r in fake:
         print(f"  x. {r['prefix'].rstrip('/')}  假成功（HTTP 200 但内容非目标文件，判 dead）")
     for r in dead:
         print(f"  x. {r['prefix'].rstrip('/')}  不可达")
+    if ordered:
+        save_ranking(summary)
     print(json.dumps(summary, ensure_ascii=False))
 
     if not ordered:

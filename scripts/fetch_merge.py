@@ -87,18 +87,98 @@ MAX_BODY = 4096             # 验活最多读取字节数
 # v6.gh-proxy.org 260KB/s；ghproxy.net 47KB/s（慢管但稳定）；ghfast.top/gh.llkk.cc/rwa.ihtw.moe/ghp.ci
 # 沙箱侧限流/502 不可作首选，留作轮换兜底（GitHub runner 与用户侧网络画像不同，可能表现更好）。
 # batch18 调研补充（2026-09-24 深夜 / 09-25 00:15–00:30 复核）：gh-proxy.com 对 Guovin 路径在深夜时段 404、
-# 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住；输出侧 GHPROXY 维持首位
-#（09-19 实测双优），后续新引用引用前建议按当日实测选择镜像。jsdelivr 主域在沙箱网关 400，
+# 复核时段 200 且与 raw 直连字节级一致——该镜像「间歇不稳定」，拉取侧轮换已兜住。
+# 输出侧主镜像（GHPROXY）自 2026-09-29 起不再跟「当日第一名」，改用近 3 轮中位吞吐择优，
+# 见 _stable_ghproxy。jsdelivr 主域在沙箱网关 400，
 # 引用 jsdelivr 应显式用 fastly.jsdelivr.net 子域（extra_upstreams jyoketsu 条目已按此规范化）。
-# 2026-09-29 所有者指令复测（1.86MB spider.jar，本机网络）：gh.acmsz.top 0.82MB/s 最快、
-# gh-proxy.com 0.60MB/s、gh.zwy.one 0.61MB/s，直连 raw 19.5s 断连 —— acmsz 置首为主镜像，原列表留作轮换。
-GH_MIRRORS = [m.strip() for m in os.environ.get(
-    "GH_MIRRORS",
-    "https://gh.acmsz.top/,https://gh-proxy.com/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
-    "https://v6.gh-proxy.org/,https://ghproxy.net/,https://gh.llkk.cc/,"
-    "https://raw.ihtw.moe/,https://ghp.ci/"
-).split(",") if m.strip()]
-GHPROXY = GH_MIRRORS[0] if GH_MIRRORS else "https://gh.acmsz.top/"
+# 2026-09-29 大文件口径复测（8MB jar，每站读满 4MB 或 12s 时限，速度只算首包之后的传输段）：
+# gh.halonice.com 3019KB/s、30006000.xyz 2820、githubproxy.cc 2364、proxy.vvvv.ee 2001、
+# gh.padao.fun 1904；gh-proxy.com 144KB/s（12s 只拉到 1.8MB）；gh.acmsz.top 74KB/s 判慢淘汰
+# （同日两轮另测 205KB/s、347KB/s，均在末位区间）—— 09-29 早间「acmsz 最快」的结论是
+# 1.86MB 小文件口径的失真，已从静态首位撤下，仍留在 mirror_probe 候选池里按每日实测排位。
+# 同时删除 ghp.ci / gh.llkk.cc / raw.ihtw.moe：两份实测报告均列其为失效/限流，且不在
+# mirror_probe 候选池，留在轮换列表只会让死站各吃一次超时。
+MIRROR_RANKING_FILE = os.environ.get("MIRROR_RANKING_FILE", "state/mirror_ranking.json")
+MIRROR_RANKING_MAX_AGE_DAYS = int(os.environ.get("MIRROR_RANKING_MAX_AGE_DAYS", "3"))
+
+GH_MIRRORS_DEFAULT = (
+    "https://gh.halonice.com/,https://30006000.xyz/,https://githubproxy.cc/,"
+    "https://proxy.vvvv.ee/,https://gh.padao.fun/,https://github.cnxiaobai.com/,"
+    "https://fastgit.cc/,https://gh.zwy.one/,https://ghproxy.cxkpro.top/,"
+    "https://v6.gh-proxy.org/,https://gh-proxy.com/,https://ghproxy.net/,"
+    "https://gh.acmsz.top/"
+)
+
+
+def _load_mirror_rounds(path=None):
+    """读 mirror_probe 落盘的实测历史（最新一轮在前）。缺失/损坏/过期返回 []。"""
+    from datetime import datetime, timedelta, timezone
+    try:
+        with open(path or MIRROR_RANKING_FILE, encoding="utf-8") as f:
+            rounds = (json.load(f) or {}).get("rounds") or []
+    except (OSError, ValueError):
+        return []
+    if not rounds:
+        return []
+    gen = str(rounds[0].get("generated_at") or "")
+    try:
+        when = datetime.strptime(gen, "%Y-%m-%d %H:%M:%S UTC").replace(
+            tzinfo=timezone.utc)
+    except ValueError:
+        return []
+    if datetime.now(timezone.utc) - when > timedelta(days=MIRROR_RANKING_MAX_AGE_DAYS):
+        return []
+    return rounds
+
+
+def _mirrors_from_rounds(rounds):
+    if not rounds:
+        return []
+    out = []
+    for row in rounds[0].get("ranking") or []:
+        p = str(row.get("prefix") or "").strip()
+        if p:
+            out.append(p if p.endswith("/") else p + "/")
+    return out
+
+
+def _stable_ghproxy(rounds, fallback):
+    """外链改写用的主镜像：取近 3 轮里至少 2 轮上榜、中位吞吐最高的那个。
+
+    不用「当日第一名」：并发共享带宽 + 镜像冷热缓存会让单样本周间排名乱跳
+    （2026-09-29 实测同一镜像两轮 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），
+    而这个前缀要写进静态 JSON 发给所有用户，稳比快优先。"""
+    if not rounds:
+        return fallback
+    hits = {}
+    for idx, rd in enumerate(rounds[:3]):
+        for pos, row in enumerate(rd.get("ranking") or []):
+            p = str(row.get("prefix") or "").strip()
+            if p:
+                hits.setdefault(p, []).append((idx, pos, int(row.get("KBps") or 0)))
+    best, best_key = None, None
+    for p, recs in hits.items():
+        if len({i for i, _pos, _k in recs}) < 2:
+            continue  # 只在一轮出现过，可能是瞬时侥幸
+        vals = sorted(k for _i, _pos, k in recs)
+        median = vals[len(vals) // 2] if len(vals) % 2 else (
+            vals[len(vals) // 2 - 1] + vals[len(vals) // 2]) // 2
+        key = (median, -min(pos for _i, pos, _k in recs), -min(i for i, _p, _k in recs))
+        if best_key is None or key > best_key:
+            best, best_key = p, key
+    chosen = best or fallback
+    return chosen if chosen.endswith("/") else chosen + "/"
+
+
+_MIRROR_ROUNDS = _load_mirror_rounds()
+GH_MIRRORS = [m.strip() for m in os.environ.get("GH_MIRRORS", "").split(",") if m.strip()]
+_MIRRORS_PINNED = bool(GH_MIRRORS)  # 人工/CI 显式指定列表时，不再自作主张换主镜像
+if not GH_MIRRORS:
+    # 没有 CI 注入（本地/手动跑）时，用当日实测顺序，而不是拍脑袋的静态默认
+    GH_MIRRORS = _mirrors_from_rounds(_MIRROR_ROUNDS) or [
+        m.strip() for m in GH_MIRRORS_DEFAULT.split(",") if m.strip()]
+GHPROXY = (GH_MIRRORS[0] if GH_MIRRORS else "") if _MIRRORS_PINNED else \
+    _stable_ghproxy(_MIRROR_ROUNDS, GH_MIRRORS[0] if GH_MIRRORS else "")
 
 REPO_RAW = "https://raw.githubusercontent.com/hebijunge/tvbox-config/main"
 

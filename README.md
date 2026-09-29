@@ -427,11 +427,22 @@ python scripts/fetch_merge.py
 **探针权威性**：五关实测（csp/drpy）> HTTP L级 > js S级 > 连通性——浅探针的结论不能覆盖深探针，否则会出现「五关全通被判 dead」。
 
 观测配套：`health_report.py`（与快照对比，报新增/掉线/恢复/移除，产物 `exports/health_report.json`）、`dep_audit.py`（deps/ 重复与未引用分析，**只报告不删**）。
-**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 五路发现 → 评估收编 → 合并 → 探针实测 → 依赖闸门 → 入库/复标/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
+**一键编排**：`python3 scripts/run_all.py` 本地完整复现 CI 七阶段（镜像测速 → 五路发现 → 评估收编 → 合并 → 探针实测 → 依赖闸门 → 入库/导出/日报/审计），支持 `--from N` 从指定阶段续跑。
 探针后置到合并之后（2026-09-29 重排）是为了「当天拉当天测」：探针吃当日产物，当日结论入库后经
-`export_healthy.py` 进 `exports/`（`all.json` 带 `_health`）。**主产物不带健康标注**——实测
-`_health/_checked_at/_latency_ms` 让订阅入口的 `tvbox.json` 从 1.29MB 涨到 1.67MB（+29%），
-而 TVBox 只是忽略未知字段、并不消费它，所以 `_strip_internal_fields` 无白名单、一律剥净。
+`export_healthy.py` 进 `exports/`（`all.json` 带 `_health`）。**主产物不带健康标注**——CI 实测
+去掉 `_health/_checked_at/_latency_ms` 后 `tvbox.json` 从 1,009,234B 降到 815,475B（−19%，
+本地 3724 站口径为 −29%），而 TVBox 只是忽略未知字段、并不消费它，所以 `_strip_internal_fields`
+无白名单、一律剥净。重排前后对照：探针有效性从 176/311（43% 的探针打在了已不在产物里的站）
+升到 172/181（5%）。
+
+**镜像测速口径**（`scripts/mirror_probe.py`）：候选池 28 个，每站先测小文件 TTFB，再用
+8MB jar 测吞吐——**每站最多读 4MB、总时限 12 秒、采 2 次取较差值、并发 3 路**，速度只算
+首包之后的传输段；低于 100KB/s 判慢直接移出池。为什么这么绕：单样本 6 路并发时轮间排名
+不可复现（同一镜像实测 2822KB/s ↔ 375KB/s，名次第 2 ↔ 第 23），而池首位会被写进静态 JSON
+当外链前缀。改口后两轮 top3 集合一致。结果落盘 `state/mirror_ranking.json`（留 7 轮），
+`fetch_merge.py` 按 `GH_MIRRORS 环境变量 > 落盘实测 > 静态默认` 取池；外链主镜像取
+「近 3 轮至少 2 轮上榜、中位吞吐最高」而非当日第一（`_stable_ghproxy`），显式钉选
+`GH_MIRRORS` 时则跟随钉选首位。
 
 ## 本地运行
 
