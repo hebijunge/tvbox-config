@@ -278,17 +278,19 @@ def _blacklist_stats():
             "note": "state/blacklist_auto.txt=连续失败自动停用（下轮不再拉取）/ manual=人工"}
 
 
+# 阶段 id 与 run_all.py 的 STAGES 对齐（2026-09-29 流程重排：探针后置到合并之后）。
+# 提取器函数名沿用重排前的旧 id（_s2a_* 等），对应关系以本表 key 为准。
 STAGE_EXTRACTORS = {
     "1": _s1_mirror,
-    "2a": _s2a_sites_probe,
-    "2b": _s2b_spider_probe,
-    "2c": _s2c_js_probe,
-    "2d": _s2d_dedup_mirrors,
-    "3": _s3_drpy,
-    "4": _s4_discover,
-    "5": _s5_evaluate,
-    "6": _s6_fetch_merge,
-    "6b": _s6b_dep_repair,
+    "2": _s4_discover,
+    "3": _s5_evaluate,
+    "4": _s6_fetch_merge,
+    "5a": _s2a_sites_probe,
+    "5b": _s2b_spider_probe,
+    "5c": _s2c_js_probe,
+    "5d": _s2d_dedup_mirrors,
+    "5e": _s3_drpy,
+    "6": _s6b_dep_repair,
     "7a": _s7a_store,
     "7b": _s7b_export,
     "7c": _s7c_live_prune,
@@ -299,10 +301,11 @@ STAGE_EXTRACTORS = {
 }
 
 STAGE_TITLES = {
-    "1": "镜像测速择优", "2a": "探针: HTTP L1-L3", "2b": "探针: type3 连通性",
-    "2c": "探针: JS 分类页", "2d": "同库镜像去重", "3": "drpy 沙箱五关",
-    "4": "全网发现(六路)", "5": "候选评估+canary收编", "6": "拉取合并(必须成功)",
-    "6b": "依赖完整性闸门", "7a": "入库", "7b": "导出清单", "7c": "直播死源剔除",
+    "1": "镜像测速择优", "2": "全网发现(五路)", "3": "候选评估+canary收编",
+    "4": "拉取合并(必须成功)", "5a": "探针: HTTP L1-L3", "5b": "探针: type3 连通性",
+    "5c": "探针: JS 分类页", "5d": "同库镜像去重", "5e": "drpy 沙箱五关",
+    "6": "依赖完整性闸门", "7a": "入库",
+    "7b": "导出清单", "7c": "直播死源剔除",
     "7d": "健康日报", "7e": "依赖审计", "8": "采集入口可达性探测", "9": "本地接口包",
 }
 
@@ -357,13 +360,13 @@ def write_pipeline_report() -> tuple:
         "steps": steps,
         "totals": {
             "interfaces_total": next((s["stats"].get("interfaces_total")
-                                      for s in reversed(steps) if s["stage"] == "6"), None),
+                                      for s in reversed(steps) if s["stage"] == "4"), None),
             "sites_total": next((s["stats"].get("sites_total")
-                                 for s in reversed(steps) if s["stage"] == "6"), None),
+                                 for s in reversed(steps) if s["stage"] == "4"), None),
             "sites_kept": next((s["stats"].get("sites_kept")
-                                for s in reversed(steps) if s["stage"] == "6"), None),
+                                for s in reversed(steps) if s["stage"] == "4"), None),
             "multi_repo_counts": next((s["stats"].get("multi_repo_counts")
-                                      for s in reversed(steps) if s["stage"] == "6"), None),
+                                      for s in reversed(steps) if s["stage"] == "4"), None),
             "health_by": db_dist.get("by_health"),
             "healthy": db_dist.get("alive_healthy"),
             "degraded": db_dist.get("alive_degraded"),
@@ -373,9 +376,9 @@ def write_pipeline_report() -> tuple:
                 (s["stats"].get("pruned_in_products")
                  for s in reversed(steps) if s["stage"] == "7c"), None),
             "deps_repaired": next((s["stats"].get("repaired")
-                                   for s in reversed(steps) if s["stage"] == "6b"), None),
+                                   for s in reversed(steps) if s["stage"] == "6"), None),
             "deps_was_missing": next((s["stats"].get("was_missing")
-                                     for s in reversed(steps) if s["stage"] == "6b"), None),
+                                     for s in reversed(steps) if s["stage"] == "6"), None),
             "blacklist_auto_lines": bl["auto_lines"],
             "blacklist_manual_lines": bl["manual_lines"],
             "steps_ok": sum(1 for s in steps if s.get("status") == "OK"),
@@ -403,29 +406,29 @@ def write_pipeline_report() -> tuple:
 
     def _brief(sid, st):
         st = st or {}
-        if sid == "6":
+        if sid == "4":
             return (f"上游 {st.get('upstreams_total')} 个｜接口汇总 {st.get('interfaces_total')}"
                     f"（可用 {st.get('interfaces_by_verdict', {}).get('usable')} / 死 "
                     f"{st.get('interfaces_by_verdict', {}).get('dead')}）｜站点 {st.get('sites_total')}"
                     f" → 留 {st.get('sites_kept')}（二级去重剔 {st.get('dedup_secondary_removed')}）｜"
                     f"多仓 {st.get('multi_repo_counts')}")
-        if sid == "2a":
+        if sid == "5a":
             sv = (st.get("summary") or {})
             return f"L1-L3 实测 {sv.get('total')} 站（{json.dumps(sv.get('levels'), ensure_ascii=False)}）" if sv else str(st)
-        if sid == "2b":
+        if sid == "5b":
             sv = st.get("summary") or {}
             return f"连通 {sv.get('reachable')}/{sv.get('probed')}（无信号 {sv.get('no_signal')}）"
-        if sid == "2c":
+        if sid == "5c":
             sv = st.get("summary") or {}
             return f"JS 源 {sv.get('total')}（{json.dumps(st.get('level_dist'), ensure_ascii=False)}）"
-        if sid == "3":
+        if sid == "5e":
             lv = st.get("level_dist") or {}
             return f"五关全通(D5) {lv.get('D5', 0)} / 共 {lv.get('D5', 0) + lv.get('D4', 0) + lv.get('D3', 0) + lv.get('D2', 0) + lv.get('D1', 0) + lv.get('D0', 0)}"
-        if sid == "4":
-            return f"候选 {st.get('candidates')}"
-        if sid == "5":
+        if sid == "2":
+            return f"候选 {st.get('candidates')}（Gitee 路默认关闭，需 --gitee）"
+        if sid == "3":
             return f"canary {st.get('extra_upstreams')} 条 / 人工池 {st.get('candidate_pool')}"
-        if sid == "6b":
+        if sid == "6":
             return f"缺失 {st.get('was_missing')} → 重下成功 {st.get('repaired')}（失败 {st.get('repair_failed')}）"
         if sid == "7a":
             h = st.get("health_dist") or {}
@@ -452,8 +455,8 @@ def write_pipeline_report() -> tuple:
         "## 全链路总账",
         "",
         f"- 接口（上游实测 verdict）：汇总 **{t.get('interfaces_total')}** 个，可用 "
-        f"**{next((s['stats'].get('interfaces_by_verdict', {}).get('usable') for s in reversed(steps) if s.get('stage') == '6'), '?')}**，"
-        f"死 **{next((s['stats'].get('interfaces_by_verdict', {}).get('dead') for s in reversed(steps) if s.get('stage') == '6'), '?')}**（连续失败自动进黑名单）",
+        f"**{next((s['stats'].get('interfaces_by_verdict', {}).get('usable') for s in reversed(steps) if s.get('stage') == '4'), '?')}**，"
+        f"死 **{next((s['stats'].get('interfaces_by_verdict', {}).get('dead') for s in reversed(steps) if s.get('stage') == '4'), '?')}**（连续失败自动进黑名单）",
         f"- 站点：上游汇总 **{t.get('sites_total')}** → 去重/门禁后留 **{t.get('sites_kept')}**",
         f"- 多仓拆分（stores/）：{t.get('multi_repo_counts')}",
         f"- 全库健康（DB）：healthy **{t.get('healthy')}** / degraded **{t.get('degraded')}** "

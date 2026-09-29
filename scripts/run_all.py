@@ -11,11 +11,11 @@ CI 上的流程拆在 workflow 的多个 step 里，本地想"从头到尾跑一
 阶段与失败策略（与 daily.yml 一致）
 ------------------------------------
   1. 镜像测速择优           continue-on-error
-  2. 探针实测（吃上一轮产物） continue-on-error
-  3. drpy 沙箱五关实测       continue-on-error
-  4. 全网发现（六路）        continue-on-error
-  5. 候选评估 + canary 收编  continue-on-error
-  6. 拉取合并（必须成功）    失败则中止
+  2. 全网发现（默认五路）     continue-on-error（Gitee 路需 --gitee 才开）
+  3. 候选评估 + canary 收编  continue-on-error
+  4. 拉取合并（必须成功）    失败则中止
+  5. 探针实测（当天拉当天测） continue-on-error：HTTP/spider/js/同库去重/drpy
+  6. 依赖完整性闸门         continue-on-error
   7. 入库 → 导出 → 日报/审计 continue-on-error
 
 日志：logs/run_all_<时间>.log（logs/ 不入库）
@@ -37,18 +37,20 @@ PY = sys.executable or "python"
 
 STAGES = [
     # (stage_id, 展示名, [cmd...], continue_on_fail, extra_env)
+    # 2026-09-29 流程重排（与 daily.yml 严格对齐）：探针整体后置到拉取合并之后，
+    # 当天拉当天测；入库后的当日结论经 export_healthy 进 exports/，主产物不带健康标注。
     ("1", "镜像测速择优", ["scripts/mirror_probe.py"], True, {}),
-    ("2a", "探针: HTTP L1-L3", ["scripts/probe_sites.py", "--only", "http", "--concurrency", "20"], True, {}),
-    ("2b", "探针: type3 连通性", ["scripts/probe_spiders.py", "--concurrency", "20"], True, {}),
-    ("2c", "探针: JS 分类页", ["scripts/probe_js.py", "--concurrency", "20"], True, {}),
-    ("2d", "同库镜像去重", ["scripts/dedup_mirrors.py"], True, {}),
-    ("3", "drpy 沙箱五关", ["scripts/drpy_probe.py", "--workers", "5"], True, {}),
-    ("4", "全网发现(六路)", ["scripts/discover_upstreams.py", "--max-repos", "15", "--pages", "2"], True,
+    ("2", "全网发现(五路)", ["scripts/discover_upstreams.py", "--max-repos", "15", "--pages", "2"], True,
      {"GITHUB_TOKEN": os.environ.get("GITHUB_TOKEN", "")}),
-    ("5", "候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
-    ("6", "拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
+    ("3", "候选评估+canary收编", ["scripts/evaluate_candidates.py", "--min-unique", "3", "--write-canary"], True, {}),
+    ("4", "拉取合并(必须成功)", ["scripts/fetch_merge.py"], False,
      {"EXTRA_UPSTREAMS": "1", "CONCURRENCY": "24"}),
-    ("6b", "依赖完整性闸门", ["scripts/dep_repair.py", "--workers", "8"], True, {}),
+    ("5a", "探针: HTTP L1-L3", ["scripts/probe_sites.py", "--only", "http", "--concurrency", "20"], True, {}),
+    ("5b", "探针: type3 连通性", ["scripts/probe_spiders.py", "--concurrency", "20"], True, {}),
+    ("5c", "探针: JS 分类页", ["scripts/probe_js.py", "--concurrency", "20"], True, {}),
+    ("5d", "同库镜像去重", ["scripts/dedup_mirrors.py"], True, {}),
+    ("5e", "drpy 沙箱五关", ["scripts/drpy_probe.py", "--workers", "5"], True, {}),
+    ("6", "依赖完整性闸门", ["scripts/dep_repair.py", "--workers", "8"], True, {}),
     ("7a", "入库(接口/直播/检测/依赖)", ["scripts/store.py", "--ingest-sites", "tvbox.json",
                                     "--ingest-lives", "tvbox.json", "--probe-lives",
                                     "--ingest-probes", "probe/sites_probe.json",
@@ -93,12 +95,12 @@ def main() -> int:
         if m and int(m.group()) < int(args.from_stage):
             log(f, f"---- 跳过 {name}（--from {args.from_stage}）")
             continue
-        if args.skip_drpy and sid == "3":
+        if args.skip_drpy and sid == "5e":
             log(f, f"---- 跳过 {name}")
             results.append((name, "SKIP", 0, sid))
             _pss.write_step_file(sid, "SKIP", 0.0, cmd=" ".join(cmd))
             continue
-        if args.skip_probes and sid.startswith("2"):
+        if args.skip_probes and sid.startswith("5"):
             log(f, f"---- 跳过 {name}")
             results.append((name, "SKIP", 0, sid))
             _pss.write_step_file(sid, "SKIP", 0.0, cmd=" ".join(cmd))

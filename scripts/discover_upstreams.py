@@ -2,11 +2,15 @@
 # -*- coding: utf-8 -*-
 """全网上游自动发现：把「人工维护的 40 条清单」升级为「自动检索 + 自动评级 + canary 收编」。
 
-四路发现（有 GITHUB_TOKEN 时全开，否则自动降级，不会报错）：
+六路发现（有 GITHUB_TOKEN 时全开，否则自动降级，不会报错）：
   1. 代码搜索   搜 TVBox 配置特征串，捞出「没人 star 但内容对」的新仓（**需要 token**）
   2. 仓库搜索   按 topic / 关键词找聚合仓（未认证也可用）
   3. 种子递归   导航仓 README → 内部链接 → 二级页面
   4. 血统反查   从已收录源的 GitHub 地址反查同仓其他配置（同族 json 常成批存在）
+  5. Gitee      **默认关闭**（--gitee 显式开启）：平台搜索 API 被禁、网页 WAF 405，
+                只剩曲线方案；实测一整轮只贡献 1 个有效新仓 / 净 20 站（0.54%），
+                两个候选还是同仓孪生文件（内容去重后一条不剩），性价比不抵耗时
+  6. 搜索引擎   Bing 收录的公开文章页（CSDN/博客园/知乎/微信公众号），合规
 
 每条候选做 L0 形态探测（JSON 含 sites / #EXTM3U / txt）并打分，产出：
     radar/discovered.json      候选池（含评分与证据，供人工查看）
@@ -416,11 +420,13 @@ def discover_lineage(known_repos, max_repos):
     return set(list(repos)[:max_repos])
 
 
-# ---------------- 第 5 路：Gitee ----------------
+# ---------------- 第 5 路：Gitee（默认关闭，--gitee 显式开启） ----------------
 # 国内大量 TVBox 配置托管在 Gitee（GitHub 常连不上，很多作者首选 Gitee），
 # 此前四路全部走 GitHub，等于漏掉整个国内盘。Gitee OpenAPI(v5) 匿名即可用。
 # 在 GitHub 配置文件里挖「引用了 gitee.com 的配置」，从中提取 Gitee 仓库全名。
 # （Gitee 自家搜索 API 已被平台限制为空、网页搜索需登录+WAF，见 discover_gitee 注释）
+# 2026-09-29 降级为 opt-in：曲线方案要跑 GitHub 代码搜索 + 展开文件树，成本不低，
+# 而当日实测 16 条候选里只有 4 条是配置、净新增 20 站（0.54%），性价比为负。
 GITEE_HUNT_QUERIES = [
     '"gitee.com" "sites" "spider" extension:json',
     '"gitee.com" "api.php/provide/vod" extension:json',
@@ -646,7 +652,8 @@ def main() -> int:
     ap.add_argument("--top", type=int, default=80, help="候选池上限")
     ap.add_argument("--no-code-search", action="store_true")
     ap.add_argument("--no-lineage", action="store_true", help="跳过第 4 路血统反查")
-    ap.add_argument("--no-gitee", action="store_true", help="跳过第 5 路 Gitee 搜索")
+    ap.add_argument("--gitee", action="store_true",
+                    help="启用第 5 路 Gitee 曲线发现（默认关闭，2026-09-29 实测净产出 0.54%%）")
     ap.add_argument("--no-web", action="store_true", help="跳过第 6 路搜索引擎+文章页")
     ap.add_argument("--max-pages", type=int, default=20, help="第 6 路最多抓取的文章页数")
     ap.add_argument("--pages", type=int, default=2, help="代码搜索翻页数（扩大召回）")
@@ -680,8 +687,8 @@ def main() -> int:
     if not args.no_web:
         repo_urls |= discover_web(args.max_pages)
 
-    # 第 5 路 Gitee 单独展开（raw 地址构造方式与 GitHub 不同）
-    if not args.no_gitee:
+    # 第 5 路 Gitee 单独展开（raw 地址构造方式与 GitHub 不同）；2026-09-29 起默认关闭
+    if args.gitee:
         g_repos = discover_gitee(args.max_repos)
         fresh_g = [r for r in g_repos if r and r not in known_repos]
         print(f"[discover] Gitee 待展开仓库 {len(fresh_g)} 个", flush=True)

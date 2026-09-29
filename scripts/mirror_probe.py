@@ -41,16 +41,16 @@ TARGET_BIG = RAW_BASE + "/deps/jar/spider_8955438d.jar"
 #   ghproxy.homeboyc.cn、ghproxy.cn、ghproxy.link、mirror.houlang.cloud、down.npee.cn、
 #   moeyy.cn/gh-proxy；ghproxy.net（B 实测截断 27KB/s、A 仅 97KB/s）；gh-proxy.net（无实测证据）。
 CANDIDATES = [
+    # —— 2026-09-29 所有者指令：本机实测不可达者移出候选池 ——
+    #   ghfast.top（不可达）、ghproxy.cc（不可达）、gh.xxooo.cf（不可达）已删。
     # —— 报告B 真可用/可用档（海外节点实测，sha256 三方一致）——
     "https://gh-proxy.com/",        # B 第一 20.5MB/s 三轮极稳；A 太原视角仅 145KB/s（环境差异）
-    "https://ghfast.top/",          # B 第二 10MB/s
+    "https://gh.acmsz.top/",        # 所有者 09-29 指定：本机 1.86MB 实测 0.82MB/s 最快
     "https://gh.xmly.dev/",         # B 第三 8.4MB/s
     "https://githubproxy.cc/",      # B 7.2MB/s；A 中速档 1740KB/s（双报告交叉可用）
-    "https://ghproxy.cc/",          # B 7.3MB/s（慢启动）
     "https://gh.sixyin.com/",       # B 4.9MB/s；A 862KB/s
     "https://proxy.vvvv.ee/",       # B 6.3MB/s
     # —— 报告A 极速档 Top13（太原 ≥3MB/s）——
-    "https://gh.xxooo.cf/",
     "https://github.dpik.top/",
     "https://gh.halonice.com/",
     "https://gh.padao.fun/",

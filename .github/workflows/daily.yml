@@ -76,46 +76,12 @@ jobs:
           max_attempts: 2
           command: python scripts/mirror_probe.py
 
-      - name: 接口实测 HTTP（L1-L3 连通性）—— 网络抖动自动重试 1 次（P1-1）
-        # 基于上一轮产物跑：探针需要 tvbox.json，而本轮合并又需要探针结论，一轮延迟自洽即可。
-        continue-on-error: true
-        uses: nick-fields/retry@v3
-        with:
-          timeout_minutes: 25
-          max_attempts: 2
-          command: python scripts/probe_sites.py --only http --concurrency 24
-
-      - name: 接口实测（spider/js/去重）—— 为去重与排序提供实测数据
-        continue-on-error: true
-        run: |
-          python scripts/probe_spiders.py --concurrency 24 || true
-          python scripts/probe_js.py --concurrency 20 || true
-          python scripts/dedup_mirrors.py || true
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
-        # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
-        # 注意（2026-09-29 取证）：drpy-sandbox/ 在 .gitignore 内且 host.mjs 未随仓
-        # 提交，CI 检出树里没有该目录——此步实际是跳过而非每日更新；drpy_probe.json
-        # 属手工产物，受 store/rank_sites 的 PROBE_STALE_DAYS=7 时效降权约束。
-        continue-on-error: true
-        run: |
-          if [ ! -d drpy-sandbox ]; then
-            echo "::warning::drpy-sandbox 不在仓库中，跳过 drpy 五关实测（探针产物按 7 天时效降权）"
-            exit 0
-          fi
-          cd drpy-sandbox && npm i --no-audit --no-fund
-          cd ..
-          python scripts/drpy_probe.py --workers 5 || true
-
-      - name: 全网上游发现（四路：代码搜索 / 仓库搜索 / 种子递归 / 血统反查）
+      - name: 全网上游发现（五路：代码搜索 / 仓库搜索 / 种子递归 / 血统反查 / 搜索引擎文章页）
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          # Gitee 文件树 API 配额用（搜索 API 已被平台禁，曲线方案只需配额）
+          # Gitee 路 2026-09-29 起默认关闭（净产出 0.54%，性价比为负）；
+          # 要重开就在上面 run 加 --gitee，此 token 届时才生效
           GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
         run: python scripts/discover_upstreams.py --max-repos 15 --pages 2 || true
 
@@ -151,6 +117,42 @@ jobs:
               exit 0
             fi
             exit $rc
+
+      - name: 接口实测 HTTP（L1-L3 连通性）—— 网络抖动自动重试 1 次（P1-1）
+        # 2026-09-29 流程重排：探针后置于拉取合并——测的是**今天刚生成的 tvbox.json**，
+        # 当天拉当天测；新源不再等明天的轮次。老源结论走 24h 缓存 + V7 分档轮转控时。
+        continue-on-error: true
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 25
+          max_attempts: 2
+          command: python scripts/probe_sites.py --only http --concurrency 24
+
+      - name: 接口实测（spider/js/去重）—— 为去重与排序提供实测数据
+        continue-on-error: true
+        run: |
+          python scripts/probe_spiders.py --concurrency 24 || true
+          python scripts/probe_js.py --concurrency 20 || true
+          python scripts/dedup_mirrors.py || true
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: drpy 本地 JS 源五关实测（Node 沙箱，CI 可跑）
+        # 覆盖 270 个 type=3 本地 JS 源：真机 jar 测的是 csp_* 类，覆盖不到这批。
+        # 注意（2026-09-29 取证）：drpy-sandbox/ 在 .gitignore 内且 host.mjs 未随仓
+        # 提交，CI 检出树里没有该目录——此步实际是跳过而非每日更新；drpy_probe.json
+        # 属手工产物，受 store/rank_sites 的 PROBE_STALE_DAYS=7 时效降权约束。
+        continue-on-error: true
+        run: |
+          if [ ! -d drpy-sandbox ]; then
+            echo "::warning::drpy-sandbox 不在仓库中，跳过 drpy 五关实测（探针产物按 7 天时效降权）"
+            exit 0
+          fi
+          cd drpy-sandbox && npm i --no-audit --no-fund
+          cd ..
+          python scripts/drpy_probe.py --workers 5 || true
 
       - name: 依赖审计（只报告，不删除）
         continue-on-error: true
