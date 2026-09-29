@@ -91,10 +91,17 @@ SEEDS = [
     ("noimank", "https://raw.githubusercontent.com/noimank/tvbox/main/tvboxmuti.json"),
 ]
 
-URL_RE = re.compile(r"https?://[^\s\"'<>\\)\]]+", re.I)
+URL_RE = re.compile(r"https?://[^\s\"'<>\\)\]`]+", re.I)   # 反引号不算 URL 字符：README 里
+# 的 `.json` 代码段会把结尾反引号粘进地址，同一份配置因此变成两条候选（实测 K 轮样本里
+# 就有 `http://127.0.0.1:18765/live.m3u` 与带尾反引号的那条同时出现）
 DROP_RE = re.compile(
     r"github\.com/[^/]+/[^/]+/(tree|blob|issues|pull|actions)|img\.shields\.io|badge|"
-    r"avatars|\.png|\.jpg|\.svg|\.ico|\.webp|\.zip|\.apk|\.exe", re.I)
+    r"avatars|\.png|\.jpg|\.svg|\.ico|\.webp|\.zip|\.apk|\.exe|"
+    # 本机/局域网地址（种子 README 的 Alist、pyinstaller 示例里满是这种）：永远不可能
+    # 是公网上游，留着只白烧探测配额——K 轮 115 条失败样本里 3 条是这类地址。
+    # 注意这段不能以 | 开头：相邻字面量拼接后多出一个空分支，search 会对任何 URL 都命中
+    r"^https?://(localhost|127\.|0\.0\.0\.0|192\.168\.|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|\[?::1\])",
+    re.I)
 
 
 _FM = None
@@ -177,6 +184,39 @@ def _gh_attempts(url, timeout):
     return [(inner, fast)] + [(m2 + inner, timeout) for m2 in chain]
 
 
+def _requestable(url):
+    """把 URL 变成 urllib 真发得出去的样子：非 ASCII 域名 punycode、非 ASCII 路径/query 百分号编码。
+
+    2026-09-29 K 轮实测：115 条 L0 失败里 **31 条是 UnicodeEncodeError**，样本全是带中文的地址
+    （`http://miqk.cc/小蒙/DEMO.json`、`http://jin.动漫.love`、`http://itvbox.cc/影视合集`）——
+    请求根本没发出去就被记成「源不可达」，把活源写成死源，比慢更糟。
+    fetch_merge 里同口径的转换写在 `dep_download` 内部，这里放到 `http_get` 这个唯一出口，
+    六路发现全部受益；域名 punycode 复用 fetch_merge 的 `_idna_host`（内置 idna 对部分中文域名会抛错）。
+    """
+    try:
+        parts = urllib.parse.urlsplit(url)
+    except ValueError:
+        return url
+    host = parts.hostname or ""
+    if host and not host.isascii():
+        fm = _fm()
+        try:
+            newhost = fm._idna_host(host) if fm else host.encode("idna").decode("ascii")
+        except (UnicodeError, ValueError):
+            return url                      # punycode 都编不出来的，本来就是坏地址
+        netloc = newhost if not parts.port else f"{newhost}:{parts.port}"
+        if parts.username or parts.password:
+            auth = parts.username or ""
+            if parts.password:
+                auth += f":{parts.password}"
+            netloc = f"{auth}@{netloc}"
+        parts = parts._replace(netloc=netloc)
+    out = parts.geturl()
+    if not out.isascii():
+        out = urllib.parse.quote(out, safe="%/:=&?~#+!$,;'@()*[]|")
+    return out
+
+
 def http_get(url, timeout=10, max_bytes=0, headers=None):
     """拉取；github 链接按镜像链兜底（见 _gh_attempts / mirror_chain）。
 
@@ -188,7 +228,7 @@ def http_get(url, timeout=10, max_bytes=0, headers=None):
     last = None
     for i, (u, t) in enumerate(attempts):
         try:
-            req = urllib.request.Request(u, headers=hdrs)
+            req = urllib.request.Request(_requestable(u), headers=hdrs)
             with urllib.request.urlopen(req, timeout=t) as r:
                 return r.status, r.read(max_bytes) if max_bytes else r.read()
         except Exception as e:  # noqa: BLE001
@@ -248,21 +288,39 @@ def sites_of(doc):
     return []
 
 
+def _day_rotated(ordered, cap, day=None):
+    """已排序列表 → 确定性窗口：不超过 cap 就全给，超了按「年内第几天 × cap」轮转起点。
+
+    同一天完全可复现，跨天把尾巴也轮到，不会永远饿死同一批。
+    """
+    if cap <= 0 or len(ordered) <= cap:
+        return list(ordered)
+    day = day if day is not None else int(time.strftime("%j"))
+    off = (day * cap) % len(ordered)
+    rot = ordered[off:] + ordered[:off]
+    return rot[:cap]
+
+
 def probe_window(candidates, cap, day=None):
     """确定性的 L0 探测窗口。
 
     旧实现是 `list(set)[:cap]`：set 的迭代顺序由 PYTHONHASHSEED 决定（每个进程洗牌），
     于是 280 条候选每轮随机漏掉 ~40 条根本没被探测——这才是候选池隔 20 分钟只剩
-    18/80 重合的主因，而不是上游一天变脸。改法：按 URL 字典序排，超出上限时按
-    「年内第几天 × cap」轮转起点，同一天完全可复现，跨天把尾巴也轮到，不会永远饿死同一批。
+    18/80 重合的主因，而不是上游一天变脸。改法：按 URL 字典序排，超出上限走 _day_rotated。
     """
-    ordered = sorted(candidates)
-    if cap <= 0 or len(ordered) <= cap:
-        return ordered
-    day = day if day is not None else int(time.strftime("%j"))
-    off = (day * cap) % len(ordered)
-    rot = ordered[off:] + ordered[:off]
-    return rot[:cap]
+    return _day_rotated(sorted(candidates), cap, day)
+
+
+def select_repos(repos, cap, day=None):
+    """仓库展开的抽样也要确定性——和探测窗口是同一类 bug。
+
+    2026-09-29 查「J 轮池子从 45 缩到 29、18 条高分候选凭空不在池里」时定位到这里：
+    旧写法 `fresh_repos[:args.max_repos]` 直接切 set 派生的列表，本轮 43 个新仓只展开
+    字典序最前的 15 个、其余 28 个连文件树都不去列，等于每轮随机决定「哪些仓库有机会
+    被看到」。抽中与否决定了整轮候选集合，比 L0 探测失败的影响大得多（那 18 条里含
+    509 站、348 站、152 站的配置）。同样的修法：排序 + 按日轮转，跨天把别的仓也轮到。
+    """
+    return _day_rotated(sorted(r for r in repos if r), cap, day)
 
 
 def dedup_by_content(rows):
@@ -294,6 +352,23 @@ def dedup_by_content(rows):
         seen[digest] = r
         kept.append(r)
     return kept, dupes
+
+
+def unreachable_stats(failed, sample=40):
+    """探测失败的构成。
+
+    没有这个，「这一轮池子为什么缩了」永远只能猜：2026-09-29 查 J 轮池 45→29 时，
+    产物里只留有形态结论的条目，127 条失败连错误类型都不落盘，分不清是源真挂了、
+    镜像链在超时、还是压根没进候选。明细按 URL 字典序取前 sample 条（全量进直方图）。
+    """
+    by = {}
+    for r in failed:
+        key = (r.get("error") or "无错误信息（空响应）")[:60]
+        by[key] = by.get(key, 0) + 1
+    return {"count": len(failed),
+            "by_error": dict(sorted(by.items(), key=lambda kv: (-kv[1], kv[0]))),
+            "sample": [{"url": r["url"], "error": r.get("error") or ""}
+                       for r in sorted(failed, key=lambda x: x.get("url") or "")[:sample]]}
 
 
 def rank_results(rows):
@@ -385,7 +460,7 @@ def known_urls():
     return urls, repos
 
 
-def discover_code_search(max_repos, pages=2):
+def discover_code_search(pages=2):
     """第 1 路：GitHub 代码搜索（需 token）。支持翻页扩大召回。"""
     if not TOKEN:
         print("  [跳过] 代码搜索需要 GITHUB_TOKEN", flush=True)
@@ -408,10 +483,14 @@ def discover_code_search(max_repos, pages=2):
                 break                      # 该查询已翻到最后一页
             time.sleep(2)
         print(f"  [代码搜索] {q[:40]} → {total} 仓", flush=True)
-    return set(list(repos)[:max_repos])
+    # 不在这里砍到 max_repos：搜索请求的配额已经付过了，砍等于白扔召回；
+    # 而且旧写法 `set(list(repos)[:max_repos])` 切的是 set 派生列表，每进程随机抽样，
+    # 180 个命中里随机留 15 个——本轮看得见哪些仓、下轮换一批，池子换手根本没法归因。
+    # 真正的成本在「展开文件树 + L0 探测」，那一刀由 main 里的 select_repos 确定性地下。
+    return repos
 
 
-def discover_repo_search(max_repos):
+def discover_repo_search():
     """第 2 路：仓库搜索（未认证可用）。"""
     repos = set()
     for q in REPO_QUERIES:
@@ -423,7 +502,7 @@ def discover_repo_search(max_repos):
             repos.add(item.get("full_name"))
         print(f"  [仓库搜索] {q[:30]} → {doc.get('total_count')} 命中", flush=True)
         time.sleep(1)
-    return set(list(repos)[:max_repos])
+    return repos
 
 
 def discover_seeds():
@@ -540,23 +619,18 @@ def discover_qingning(live_out="radar/live_seeds.json"):
     return warehouse, live
 
 
-def discover_lineage(known_repos, max_repos):
+def discover_lineage(known_repos):
     """第 4 路：血统反查 —— 已收录源所在仓库的同 owner 其他仓。
 
     同族配置常成批存在（一个人/组织往往维护好几个 box 仓）。从已知 owner 反查，
     能捞到「已经在生态内、有同源血统、但我们还没收录」的配置——
     比满网乱搜的命中率高得多。
     """
-    owners, seen = [], set()
-    for full in known_repos:
-        if "/" not in full:
-            continue
-        owner = full.split("/")[0]
-        if owner and owner not in seen:
-            seen.add(owner)
-            owners.append(owner)
+    owners = sorted({full.split("/")[0] for full in known_repos if "/" in full})
     repos = set()
-    for owner in owners[:30]:
+    # 护栏不是抽样口：当前已知仓 36 个、owner 更少，60 全覆盖得到；改成按日轮转会让更多
+    # 同族配置「今天没机会被看到」，那正是这次要消掉的问题
+    for owner in owners[:60]:
         # /users/{owner}/repos 对组织同样有效（GitHub 会跟随重定向）
         doc = gh_api(f"/users/{owner}/repos", {"per_page": 30, "sort": "updated"})
         if not doc or not isinstance(doc, list):
@@ -570,7 +644,8 @@ def discover_lineage(known_repos, max_repos):
         if n:
             print(f"  [血统反查] {owner} → {n} 个新仓", flush=True)
         time.sleep(1)
-    return set(list(repos)[:max_repos])
+    # 同 code search：搜索已付出的配额不该再被随机砍一刀，截断交给 select_repos
+    return repos
 
 
 # ---------------- 第 5 路：Gitee（默认关闭，--gitee 显式开启） ----------------
@@ -647,7 +722,7 @@ def gitee_files_of(full_name):
     return [(full_name, branch, p) for p in out[:8]]
 
 
-def discover_gitee(max_repos):
+def discover_gitee():
     """第 5 路：发现 Gitee 上的 TVBox 配置仓库。
 
     【平台现实，实测结论】
@@ -699,7 +774,8 @@ def discover_gitee(max_repos):
         print(f"  [Gitee挖取] {q[:44]} → 扫 {pulled} 个文件", flush=True)
         time.sleep(2)
     print(f"  [Gitee] 从 GitHub 配置中挖到 {len(repos)} 个 Gitee 仓库全名", flush=True)
-    return set(list(repos)[:max_repos])
+    # 同 GitHub 两路：收集阶段不做随机抽样，展开几个由 select_repos 定
+    return repos
 
 
 # ---------------- 第 6 路：搜索引擎 + 文章页（博客 / CSDN / 微信公众号）----------------
@@ -775,7 +851,13 @@ def discover_web(max_pages=20):
 
 
 def json_files_of(full_name):
-    """列出一个仓库里值得探测的配置类文件。"""
+    """列出一个仓库里值得探测的配置类文件。
+
+    默认分支必须解析出来用在 URL 里（`/main/x.json`）：`/git/trees/HEAD` 也能列树、raw 侧
+    `HEAD` 也是合法 ref（实测与 `/main/` 同一份内容），但生成的 URL 形态一变就再也对不上
+    `known_urls()` 里按完整 URL 记录的历史上游，等于把已知源当新候选重收一遍——省一次
+    API 调用不值这个代价，所以这里保留两次调用。
+    """
     info = gh_api(f"/repos/{full_name}")
     if not info:
         return []
@@ -783,6 +865,9 @@ def json_files_of(full_name):
     tree = gh_api(f"/repos/{full_name}/git/trees/{branch}", {"recursive": "1"})
     if not tree:
         return []
+    if tree.get("truncated"):
+        # recursive 树条目数超上限时 GitHub 会截断，必须留痕：不然会误判「这仓只有这些文件」
+        print(f"  [树截断] {full_name} 的 git tree 被 API 截断，文件清单不完整", flush=True)
     out = []
     for it in tree.get("tree", []):
         p = it.get("path") or ""
@@ -795,13 +880,18 @@ def json_files_of(full_name):
         if re.search(r"(node_modules|package-lock|tsconfig|\.min\.)", p, re.I):
             continue
         out.append(p)
+    if tree.get("truncated"):
+        # recursive 树超 10 万条目会被 GitHub 截断，这里必须留痕：否则会误判「这仓只有这些文件」
+        print(f"  [树截断] {full_name} 的 git tree 被 API 截断，文件清单不完整", flush=True)
     out.sort(key=lambda p: (0 if re.search(r"(tvbox|box|jsm|js|config|api)", p, re.I) else 1, len(p)))
-    return [(full_name, branch, p) for p in out[:8]]
+    return [(full_name, "HEAD", p) for p in out[:8]]
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--max-repos", type=int, default=20, help="每路最多展开的仓库数")
+    ap.add_argument("--max-repos", type=int, default=20,
+                    help="本轮展开多少个新仓的文件树（按日轮转抽样，跨天覆盖其余；"
+                         "收集阶段不再随机砍，所以这个数就是真正的召回闸门）")
     ap.add_argument("--top", type=int, default=400,
                     help="候选池写入上限（默认高于探测窗口＝不额外丢弃已探到的可达结果；"
                          "旧值 80 会把 reachable 108-128 条里的 28-48 条挡在池外，"
@@ -828,10 +918,10 @@ def main() -> int:
 
     repos = set()
     if not args.no_code_search:
-        repos |= discover_code_search(args.max_repos, pages=args.pages)
-    repos |= discover_repo_search(args.max_repos)
+        repos |= discover_code_search(pages=args.pages)
+    repos |= discover_repo_search()
     if not args.no_lineage:
-        repos |= discover_lineage(known_repos, args.max_repos)
+        repos |= discover_lineage(known_repos)
     repo_urls = discover_seeds()
     # 第 2.5 路（2026-09-21 点播+容错线）：zhuiju 机器可读清单 + QingNing 结构化分节
     repo_urls |= discover_zhuiju()
@@ -847,20 +937,22 @@ def main() -> int:
 
     # 第 5 路 Gitee 单独展开（raw 地址构造方式与 GitHub 不同）；2026-09-29 起默认关闭
     if args.gitee:
-        g_repos = discover_gitee(args.max_repos)
+        g_repos = discover_gitee()
         fresh_g = [r for r in g_repos if r and r not in known_repos]
         print(f"[discover] Gitee 待展开仓库 {len(fresh_g)} 个", flush=True)
         with cf.ThreadPoolExecutor(8) as ex:
-            for files in ex.map(gitee_files_of, fresh_g[: args.max_repos]):
+            for files in ex.map(gitee_files_of, select_repos(fresh_g, args.max_repos)):
                 for fn, br, p in files:
                     repo_urls.add(gitee_raw_url(fn, br, p))
 
     fresh_repos = [r for r in repos if r and r not in known_repos]
-    print(f"[discover] 待展开仓库 {len(fresh_repos)} 个", flush=True)
+    expand_repos = select_repos(fresh_repos, args.max_repos)
+    print(f"[discover] 待展开仓库 {len(fresh_repos)} 个，本轮按日轮转展开 {len(expand_repos)} 个："
+          f" {', '.join(expand_repos[:6])}{' …' if len(expand_repos) > 6 else ''}", flush=True)
 
     candidates = set(repo_urls)
     with cf.ThreadPoolExecutor(8) as ex:
-        for files in ex.map(json_files_of, fresh_repos[: args.max_repos]):
+        for files in ex.map(json_files_of, expand_repos):
             for fn, br, p in files:
                 candidates.add(raw_url(fn, br, p))
 
@@ -872,11 +964,14 @@ def main() -> int:
         print(f"[discover]   超出探测上限，按日轮转只探其中 {len(probe_list)} 条"
               f"（原 set 顺序＝每轮随机漏 {len(candidates) - len(probe_list)} 条）", flush=True)
 
-    results = []
+    results, failed = [], []
     with cf.ThreadPoolExecutor(16) as ex:
         for r in ex.map(probe_candidate, probe_list):
-            if r.get("reachable"):
-                results.append(r)
+            (results if r.get("reachable") else failed).append(r)
+    unreach = unreachable_stats(failed)
+    if unreach["count"]:
+        top = " / ".join(f"{k} {v}" for k, v in list(unreach["by_error"].items())[:5])
+        print(f"[discover] L0 探测失败 {unreach['count']} 条（构成：{top}）", flush=True)
     results = rank_results(results)
     # reachable 记「探测可达」的真实条数，去重前——它是跨轮趋势指标（可达率），
     # 若跟着去重一起变小就成了莫名下降。被并掉的数量单列 content_dupes。
@@ -941,7 +1036,9 @@ def main() -> int:
         "note": "自动发现的上游候选；高分配置已同步进 state/extra_upstreams.json 作为 canary 自动拉取",
         "auth": "token" if TOKEN else "anonymous",
         "queries": {"code": CODE_QUERIES, "repo": REPO_QUERIES},
-        "summary": {"candidates": len(candidates), "reachable": reachable,
+        "summary": {"candidates": len(candidates), "probed": len(probe_list),
+                    "reachable": reachable, "unreachable": unreach["count"],
+                    "repos_fresh": len(fresh_repos), "repos_expanded": len(expand_repos),
                     "pool_junk_dropped": junk, "pool": len(pool[: args.top]),
                     "content_dupes": len(content_dupes),
                     "tvbox_configs": len(good), "canary": len(canary),
@@ -949,6 +1046,10 @@ def main() -> int:
         "candidates": pool[: args.top],
         "canary_adult": canary_adult,
         "content_dupes": content_dupes,
+        # 归因用：本轮到底展开了哪些仓、探失败的条目是什么构成。缺了这两块，
+        # 「池子换手」就只能靠复跑猜（详见 select_repos / unreachable_stats 的说明）
+        "expanded_repos": expand_repos,
+        "unreachable": unreach,
     }
     os.makedirs(os.path.dirname(args.out) or ".", exist_ok=True)
     with open(args.out, "w", encoding="utf-8") as f:

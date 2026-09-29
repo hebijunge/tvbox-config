@@ -176,6 +176,115 @@ class TestProbeWindow(unittest.TestCase):
         self.assertEqual(du.probe_window(urls, 8, day=9), du.probe_window(urls, 8, day=9))
 
 
+class TestSelectRepos(unittest.TestCase):
+    """仓库展开的抽样也必须确定性——与 probe_window 同一类 bug，但影响更大：
+    它在 L0 之前，决定「哪些仓库有机会被列文件树」。
+
+    2026-09-29 查「J 轮池 45→29」时定位到旧写法 `fresh_repos[:max_repos]` 切的是 set
+    派生列表（顺序随 PYTHONHASHSEED 每进程洗牌），43 个新仓里随机抽 15 个展开，
+    18 条高分候选（含 509/348/152 站的配置）所在仓库整仓没被看到。
+    """
+
+    def _repos(self, n):
+        return [f"o{i % 7}/r{i:03d}" for i in range(n)]
+
+    def test_same_batch_different_set_order_gives_same_selection(self):
+        a, b = set(self._repos(40)), set(reversed(self._repos(40)))
+        self.assertEqual(du.select_repos(a, 15, day=3), du.select_repos(b, 15, day=3),
+                         "同一批仓、不同 set 顺序，抽出来的必须是同一批")
+
+    def test_selection_is_capped_and_unique(self):
+        sel = du.select_repos(self._repos(40), 15, day=9)
+        self.assertEqual(len(sel), 15)
+        self.assertEqual(len(set(sel)), 15)
+
+    def test_rotation_covers_all_repos_across_days(self):
+        repos = self._repos(30)
+        seen = set()
+        for day in range(1, 7):
+            seen |= set(du.select_repos(repos, 10, day=day))
+        self.assertEqual(seen, set(repos), "跨几天要把全部仓库轮到，不能永远饿死尾巴")
+
+    def test_no_rotation_when_within_cap(self):
+        self.assertEqual(du.select_repos(["b/x", "a/x"], 15), ["a/x", "b/x"])
+
+
+class TestUnreachableStats(unittest.TestCase):
+    """探测失败要留构成，否则「这一轮池子为什么缩」只能靠复跑猜。"""
+
+    def test_histogram_and_sample(self):
+        failed = [{"url": f"https://a/{i}.json", "error": "timeout"} for i in range(3)]
+        failed += [{"url": "https://b/x.json", "error": "HTTP 404"},
+                   {"url": "https://c/x.json"}]
+        st = du.unreachable_stats(failed, sample=2)
+        self.assertEqual(st["count"], 5)
+        self.assertEqual(st["by_error"]["timeout"], 3)
+        self.assertEqual(list(st["by_error"])[0], "timeout", "按数量降序")
+        self.assertEqual(len(st["sample"]), 2, "明细只留样本，全量进直方图")
+        self.assertEqual(st["sample"][0]["url"], "https://a/0.json", "样本按 URL 定序")
+
+    def test_empty(self):
+        st = du.unreachable_stats([])
+        self.assertEqual(st["count"], 0)
+        self.assertEqual(st["by_error"], {})
+        self.assertEqual(st["sample"], [])
+
+
+class TestRequestable(unittest.TestCase):
+    """非 ASCII 的候选地址必须先变成 urllib 发得出去的形态。
+
+    K 轮 115 条 L0 失败里 31 条是 UnicodeEncodeError：`http://miqk.cc/小蒙/DEMO.json`
+    这类中文路径根本没发出去过就被记成死源。
+    """
+
+    def test_ascii_url_unchanged(self):
+        u = "https://raw.githubusercontent.com/a/b/main/x.json?sign=Ab_1"
+        self.assertEqual(du._requestable(u), u, "纯 ASCII 不该被改写出任何字节")
+
+    def test_non_ascii_path_is_percent_encoded(self):
+        out = du._requestable("http://miqk.cc/小蒙/DEMO.json")
+        self.assertTrue(out.isascii(), out)
+        self.assertIn("%E5%B0%8F%E8%92%99", out)
+        self.assertIn("/DEMO.json", out)
+
+    def test_existing_percent_encoding_not_double_encoded(self):
+        u = "http://a.test/%E5%90%BE%E7%88%B1.m3u"
+        self.assertEqual(du._requestable(u), u, "% 在 safe 集里，不能被二次编码成 %25")
+
+    def test_non_ascii_host_becomes_punycode(self):
+        out = du._requestable("http://jin.动漫.love/x.json")
+        self.assertTrue(out.isascii(), out)
+        self.assertIn("xn--", out.split("/")[2])
+        self.assertTrue(out.startswith("http://xn--") or ".xn--" in out, out)
+
+    def test_host_with_port_keeps_port(self):
+        out = du._requestable("http://影视.例.com:8080/a.json")
+        self.assertIn(":8080/", out)
+
+    def test_broken_idna_host_returns_unchanged_not_crash(self):
+        # 编码不出来就原样返回，让上层按普通失败处理，不能抛出去打断整轮探测
+        self.assertIsInstance(du._requestable("http://xn--/a.json"), str)
+
+
+class TestCandidateFilters(unittest.TestCase):
+    def test_backtick_not_glued_into_url(self):
+        text = "接口见 `http://a.test/x.json`，备用 `http://b.test/y.json`"
+        found = du.URL_RE.findall(text)
+        self.assertEqual(found, ["http://a.test/x.json", "http://b.test/y.json"],
+                         "结尾反引号粘进地址会让同一份配置变成两条候选")
+
+    def test_local_and_lan_addresses_dropped(self):
+        for u in ["http://127.0.0.1:18765/live.m3u", "http://localhost/x.json",
+                  "http://192.168.1.100:18765/live.m3u", "http://[::1]:8080/a.json",
+                  "http://10.1.2.3/a.json"]:
+            self.assertTrue(du.DROP_RE.search(u), f"本机/局域网地址必须出池：{u}")
+
+    def test_public_addresses_kept(self):
+        for u in ["http://120.79.4.185/dc.json", "http://8.210.232.168/xc.json",
+                  "https://szyyds.cn/tv/x.json", "http://10.24hours.example/a.json"]:
+            self.assertIsNone(du.DROP_RE.search(u), f"公网地址不该被误杀：{u}")
+
+
 class TestRank(unittest.TestCase):
     def test_tie_break_prefers_tvbox_then_bigger_then_url(self):
         rows = [
