@@ -1,15 +1,15 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-09-29T07:55:54
+生成时间：2026-09-30T02:21:42
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 4259 | 248 | 929 | 2010 | 1072 |
-| 直播 | 396 | 79 | 120 | 179 | 18 |
+| 点播 | 6603 | 290 | 937 | 4287 | 1089 |
+| 直播 | 523 | 106 | 183 | 217 | 17 |
 
-较上轮变化：新增 10｜掉线 190｜恢复 166｜移除 0（点播）；新增 8｜掉线 1｜恢复 0｜移除 0（直播）
+较上轮变化：新增 1185｜掉线 195｜恢复 174｜移除 0（点播）；新增 127｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
@@ -26,6 +26,9 @@
 
 ## 点播恢复（前 10）
 
+- ❤百度（dead → healthy）
+- 💝分享百度（dead → healthy）
+- iqiyi资源（dead → degraded）
 - 苏苏🛰️臻享4K（dead → degraded）
 - 💖玩偶影视4K-备1（dead → degraded）
 - 奴娜丨APP（dead → healthy）
@@ -33,23 +36,16 @@
 - [448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 麦田┃1080P（dead → degraded）
 - ❤️‍分享官采（dead → healthy）
 - 推荐┃龙门影视（dead → degraded）
-- 飞飞┃APP（dead → healthy）
-- [367ms|直播] 🦔刺猬影视(优)（dead → degraded）
-- 2号币（dead → degraded）
 
 ## 点播新增（前 10）
 
-- 西瓜🍉（degraded）
-- 🎬红牛资源（degraded）
-- 非凡（degraded）
-- 🎬卧龙资源（dead）
-- 奶儿(18)（healthy）
-- 米色(18)（healthy）
-- 🕹️淘片┃采集（degraded）
-- 瓜子┃短剧①（unknown）
-- 4k｜专区二（unknown）
-- 梨园｜戏曲（unknown）
-
-## 直播掉线（前 10）
-
-- 天才直播1（degraded → dead）
+- 💥官源蓝光💥（unknown）
+- 4K狗(聚)（unknown）
+- 👖裤佬丨极速丨采集（healthy）
+- FFZY（degraded）
+- 金鹰资源（unknown）
+- ️天堂┃采集（unknown）
+- 💞大众影视💞（unknown）
+- ✈iKUN(聚)（unknown）
+- 豪华资源（unknown）
+- 👭幸福资源👭（unknown）

@@ -1,0 +1,1 @@
+{"class":[{"type_id":"hot","type_name":"最热"},{"type_id":"new","type_name":"最新"},{"type_id":"score","type_name":"好评"},{"type_id":"discuss","type_name":"讨论最多"},{"type_id":"season_new","type_name":"即将上线"}]}
