@@ -64,6 +64,10 @@ jobs:
           [ -f exports/health_index.json ] && cp exports/health_index.json site/exports/ || true
           [ -f exports/health_report.json ] && cp exports/health_report.json site/exports/ || true
           [ -f exports/SUMMARY.md ] && cp exports/SUMMARY.md site/exports/ || true
+          # 导航页「国内快线」与 CI 每日测速同源（只有前缀与延迟数据，无内容字段）
+          if [ -f state/mirror_ranking.json ]; then
+            mkdir -p site/state && cp state/mirror_ranking.json site/state/
+          fi
           # 直播分类 txt
           for f in live.txt live_cctv.txt live_weishi.txt live_gangtai.txt live_other.txt; do
             [ -f "lives/$f" ] && cp "lives/$f" site/lives/ || true
