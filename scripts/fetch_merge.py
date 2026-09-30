@@ -6116,11 +6116,15 @@ def main() -> int:
         )[:15],
     }
     # P1-6：详细上游状态迁 exports/upstream_status.json（status.json 只留摘要）
+    # 公开账本同「不声明」口径：interfaces 用已过滤的 _pub_interfaces，removed 记录同规则再过一遍
     try:
         os.makedirs("exports", exist_ok=True)
-        _upstream_detail = {"interfaces": interfaces, "removed_sites": removed,
-                            "upstreams_health": status.get("upstreams_health", {}),
-                            "generated_at": generated_at}
+        _removed_pub, _rm_hidden = public_list_filter(removed)
+        if _rm_hidden:
+            print(f"    [adult] upstream_status removed_sites 剥除 {len(_rm_hidden)} 条", flush=True)
+        _upstream_detail = {"interfaces": _pub_interfaces, "removed_sites": _removed_pub,
+                             "upstreams_health": status.get("upstreams_health", {}),
+                             "generated_at": generated_at}
         with open("exports/upstream_status.json", "w", encoding="utf-8") as _uf:
             json.dump(_upstream_detail, _uf, ensure_ascii=False, indent=1)
     except OSError:
