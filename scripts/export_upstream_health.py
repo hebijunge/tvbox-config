@@ -113,6 +113,23 @@ def main() -> int:
         })
 
     healthy = sum(1 for e in entries if e["ok"] and not e["disabled"])
+    # 与 list.json 同一「公开不声明」口径（fetch_merge._candidate_adult_rule 单一事实源）：
+    # 成人特征上游 URL 不进 exports/（门禁扫 exports/**），内部账本不受影响。
+    try:
+        from fetch_merge import _candidate_adult_rule
+        _keep = []
+        _hidden = 0
+        for e in entries:
+            if _candidate_adult_rule(str(e.get("name") or ""), str(e.get("url") or "")):
+                _hidden += 1
+                continue
+            _keep.append(e)
+        if _hidden:
+            print(f"[export_upstream_health] 公开剥除 {_hidden} 个成人特征上游（不进 exports/）")
+        entries = _keep
+    except Exception as ex:  # noqa: BLE001  规则不可用时宁缺不泄：全量隐藏带 URL 的条目反而误伤，
+        print(f"[export_upstream_health] 成人判定规则不可用（{type(ex).__name__}），本次不过滤，依赖门禁兜底", file=sys.stderr)
+    healthy = sum(1 for e in entries if e["ok"] and not e["disabled"])
     report = {
         "total": len(entries),
         "healthy": healthy,
