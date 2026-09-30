@@ -710,6 +710,21 @@ def _candidate_adult_rule(name: str, url: str):
     return None
 
 
+def public_list_filter(interfaces: list):
+    """公开清单「不声明」口径（同 adult.json 的"产出但不声明"决策）：成人特征上游的
+    URL 绝不进 list.json/list_min.json——真成人仓（jigedos/1024）与用户名子串误报区
+    （javyou/saulxxx）用同一条三重判定（_candidate_adult_rule）一并剥除，内部账本与
+    成人池不受影响。门禁因此不需要每次发现新仓都补白名单——白名单只兜"已评审要保留"
+    的例外，不该当橡皮图章。返回 (保留列表, 被剥 URL 列表)。"""
+    def _hide(_e):
+        _n = str(_e.get("name") or _e.get("origin") or "")
+        return bool(_candidate_adult_rule(_n, str(_e.get("url") or ""))
+                    or _candidate_adult_rule(_n, str(_e.get("success_url") or "")))
+    kept = [e for e in interfaces if not _hide(e)]
+    hidden = [str(e.get("url") or e.get("name") or "?") for e in interfaces if _hide(e)]
+    return kept, hidden
+
+
 # ==================== 短剧/成人分类（独立收录 short.json / adult.json） ====================
 # 关键词来源：现有 tvbox.json 22 条短剧站点 + 39 条成人站点的 name/key/api 关键字汇总（2026-09-18 扫描）
 # 命中规则：name 或 key 含任一关键词则归入；name/key 均不命中时扫描 api 主机/路径作为兜底
@@ -5962,11 +5977,19 @@ def main() -> int:
           f" / {adult_out}"
           f" / live.json（{len(live['lives'])} 条直播源 / 聚合精选：单接口·分类全在文件内分组）/ list.json", flush=True)
 
+    # 公开清单「不声明」口径见 public_list_filter()：成人特征上游 URL 不进 list.json
+    _pub_interfaces, _hidden_upstreams = public_list_filter(interfaces)
+    if _hidden_upstreams:
+        print(f"    [adult] 公开清单剥除 {len(_hidden_upstreams)} 个成人特征上游（不进 list.json，"
+              f"内部账本与成人池不受影响）：", flush=True)
+        for _h in _hidden_upstreams[:5]:
+            print(f"      - {_h[:72]}", flush=True)
+
     with open("list.json", "w", encoding="utf-8") as f:
-        json.dump(interfaces, f, ensure_ascii=False, indent=1)
+        json.dump(_pub_interfaces, f, ensure_ascii=False, indent=1)
     # P0-2：list.json 补紧凑版
     with open("list_min.json", "w", encoding="utf-8") as f:
-        f.write(json.dumps(interfaces, ensure_ascii=False, separators=(",", ":")))
+        f.write(json.dumps(_pub_interfaces, ensure_ascii=False, separators=(",", ":")))
 
     checks_doc = write_checks(checks, generated_at)
     update_readme_availability(checks)
