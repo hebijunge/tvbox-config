@@ -96,7 +96,8 @@ def run_one(job, kw):
     try:
         p = subprocess.run(
             [NODE, HOST, "--rule", full, "--op", "all", "--kw", kw],
-            capture_output=True, text=True, timeout=90, cwd=HERE,
+            capture_output=True, text=True, encoding="utf-8", errors="replace",
+            timeout=90, cwd=HERE,
         )
         lines = [l for l in p.stdout.splitlines() if l.strip().startswith("{")]
         if not lines:
