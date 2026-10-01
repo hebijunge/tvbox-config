@@ -166,9 +166,10 @@ def _migrate(conn) -> None:
 # unknown  = 没测过，或超时/本机不可达（不妄下结论）
 _HEALTHY = {"L3", "C3", "C4", "C5", "D3", "D4", "D5"}
 # P* = 5f py 插件静态判定：只有"文件在手且语法真坏"才算 dead；取不到/认不出是 unknown
-_DEGRADED = {"L1", "L2", "C1", "C2", "D1", "D2", "S1", "S2", "S3", "P3", "P4"}
-_DEAD = {"L0", "C0", "D0", "P1"}
-_UNKNOWN = {"L?", "C?", "D?", "S?", "P0", "P2", "P?"}
+# E* = 5g type4 推送/解析端点：非空 JSON 结构才算在工作；404/410 与 DoH 复核过的无解析才判死
+_DEGRADED = {"L1", "L2", "C1", "C2", "D1", "D2", "S1", "S2", "S3", "P3", "P4", "E2"}
+_DEAD = {"L0", "C0", "D0", "P1", "E0"}
+_UNKNOWN = {"L?", "C?", "D?", "S?", "P0", "P2", "P?", "E1", "E?"}
 
 
 def classify(level, ok=None) -> str:
@@ -197,6 +198,7 @@ PROBE_PRIORITY = {
     "sites_probe.json": 3,   # HTTP L1-L3 采集接口实测
     "js_probe.json": 2,      # JS 分类页实测
     "py_probe.json": 2,      # py 插件静态结构判定（只证明可加载性，不证明能播）
+    "endpoint_probe.json": 2,  # type4 推送/解析端点应答（只证明端点在应答，不证明能取到片）
     "spider_probe.json": 1,  # type3 连通性（只能证明通不通）
 }
 _HEALTH_ORDER = {"healthy": 3, "degraded": 2, "unknown": 1, "dead": 0}

@@ -1,0 +1,1221 @@
+{
+ "generated_at": "2026-10-01 14:49:34",
+ "summary": {
+  "total": 133,
+  "levels": {
+   "E?": 26,
+   "E1": 15,
+   "E2": 18,
+   "E0": 74
+  },
+  "verdict_rate": 0.863,
+  "note": "type4 推送/解析端点实测：E2=应答有结构化内容(degraded)，E0=404/410 路径失效(dead)，E1/E?=形态不符或本机不可达(unknown)；不测内容能否播放"
+ },
+ "sites": [
+  {
+   "key": "10-2",
+   "name": "👖T4",
+   "kind": "endpoint",
+   "api": "https://banyeomni.780420.xyz:17777/api/tvbox/source/2097848348508688384?token=banye666",
+   "level": "E?",
+   "reason": "TimeoutError: The read operation timed out"
+  },
+  {
+   "key": "123-3",
+   "name": "123|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=123",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 286,
+   "bytes": 12
+  },
+  {
+   "key": "123推送",
+   "name": "[4727ms|2] 123┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=123",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 1418,
+   "bytes": 12
+  },
+  {
+   "key": "2070335664787820544",
+   "name": "💝分享热播",
+   "kind": "endpoint",
+   "api": "https://banyeomni.780420.xyz:17777/api/tvbox/source/2070335664787820544?token=banye666",
+   "level": "E?",
+   "reason": "HTTP 500 服务端错误",
+   "status": 500,
+   "ms": 137,
+   "bytes": 115
+  },
+  {
+   "key": "9-2",
+   "name": "👖PHP",
+   "kind": "endpoint",
+   "api": "http://jiduo.3116598.xyz/PHP/pkty.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/179 字节）",
+   "status": 200,
+   "ms": 560,
+   "bytes": 227
+  },
+  {
+   "key": "AcFuns",
+   "name": "[322ms|我的] AcFuns",
+   "kind": "endpoint",
+   "api": "https://www.acfuns.net/api.php/provide/vod",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 950,
+   "bytes": 5262
+  },
+  {
+   "key": "T4-2024热门",
+   "name": "[313ms|00000] 音乐-热门MV(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=2024",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-Blixs",
+   "name": "[313ms|00000] B站-相声(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=Blixs",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-aha",
+   "name": "[313ms|00000] 音乐-啊哈(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/aha.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-aiying",
+   "name": "[313ms|00000] 影视-爱盈APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/爱盈APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-bili",
+   "name": "[313ms|00000] B站-哔哩(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-bili4",
+   "name": "[313ms|00000] B站-高中(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=高中课堂",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-blh",
+   "name": "[313ms|00000] 儿童-贝乐虎(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/beilehu.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-bmtv",
+   "name": "[313ms|00000] B站-MTV(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=bMTV",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-caiji",
+   "name": "[313ms|00000] 影视-采集(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/caiji.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-cntv",
+   "name": "[313ms|00000] 其他-央视2(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/cntv.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-douyu",
+   "name": "[313ms|00000] 直播-斗鱼(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/斗鱼直播.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-duanyou",
+   "name": "[313ms|00000] 影视-段友APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/段友APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-feiliu",
+   "name": "[313ms|00000] 直播-飞流(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/飞流影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-guipian360",
+   "name": "[313ms|00000] 影视-鬼片之家(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/guipian360.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-heimao",
+   "name": "[313ms|00000] 影视-黑猫APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/黑猫APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-hg",
+   "name": "[313ms|00000] 影视-HG(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/hg.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-huaxiaozhu111",
+   "name": "[313ms|00000] 影视-花小猪(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/huaxiaozhu.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-huomao",
+   "name": "[313ms|00000] 影视-火猫APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/火猫APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-huya",
+   "name": "[313ms|00000] 影视-虎牙经典(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/huya.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-jianpian2",
+   "name": "[313ms|00000] 影视-荐片2(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/jianpian2.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-jijiu",
+   "name": "[313ms|00000] 其他-急救(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/jijiu.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-jinpai",
+   "name": "[313ms|00000] 影视-金牌APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/金牌APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-jinpai111",
+   "name": "[313ms|00000] 影视-金牌(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/jinpai.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-juzi",
+   "name": "[313ms|00000] 影视-橘子APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/橘子APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-lanying",
+   "name": "[313ms|00000] 影视-蓝鹰APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/蓝鹰APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-laoying",
+   "name": "[313ms|00000] 影视-老鹰APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/老鹰APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-linghu",
+   "name": "[313ms|00000] 影视-灵虎APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/灵虎APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-lunbo",
+   "name": "[313ms|00000] 影视-YY轮播(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/yylb.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-mifun",
+   "name": "[313ms|00000] 影视-米饭(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/mifun.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-mvzb",
+   "name": "[313ms|00000] 音乐-MV(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/mvzb.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-mybili",
+   "name": "[313ms|00000] B站-mybili(",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=我的哔哩",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-qingting",
+   "name": "[313ms|00000] 音乐-蜻蜓-点我切换",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/qingting.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-qiyi",
+   "name": "[313ms|00000] 影视-七壹APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/七壹APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-shuzi",
+   "name": "[313ms|00000] 影视-数字APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/数字APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-suishenting",
+   "name": "[313ms|00000] 其他-随身听(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/suishenting.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-tangdou",
+   "name": "[313ms|00000] 音乐-糖豆(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/tangdou.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-waiyu",
+   "name": "[313ms|00000] B站-外语(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=waiyu",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-wangzi",
+   "name": "[313ms|00000] 影视-王子APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/王子APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-xiaozhu",
+   "name": "[313ms|00000] 影视-小猪APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/小猪APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-yizhan",
+   "name": "[313ms|00000] 影视-驿站APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/驿站APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-youtu",
+   "name": "[313ms|00000] 影视-优兔APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/优兔APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-yuanmeng",
+   "name": "[313ms|00000] 影视-缘梦APP(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/缘梦APP.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-中医",
+   "name": "[313ms|00000] B站-中医(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=中医",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-儿童思维",
+   "name": "[313ms|00000] B站-儿童思维(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=儿童思维",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-儿童拼音",
+   "name": "[313ms|00000] B站-儿童拼音(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=儿童拼音",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-儿童硬笔",
+   "name": "[313ms|00000] B站-儿童硬笔(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=儿童硬笔",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-合集",
+   "name": "[313ms|00000] B站-合集(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=合集",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-哇哇",
+   "name": "[313ms|00000] 影视-哇哇(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/哇哇影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-哔哩套餐1",
+   "name": "[313ms|00000] B站-哔哩套餐1(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=哔哩套餐1",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-小灯塔科学",
+   "name": "[313ms|00000] B站-小灯塔科学(T",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=小灯塔科学",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-球类合集",
+   "name": "[313ms|00000] B站-球类合集(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=球类合集",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-美食",
+   "name": "[313ms|00000] B站-美食(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=美食",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-软件教程",
+   "name": "[313ms|00000] B站-软件教程(T4",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/bili.php?id=软件教程",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-金牌影视",
+   "name": "[313ms|00000] 影视-金牌(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/金牌影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4-黑狐",
+   "name": "[1416ms|金鹰] 🐻黑狐┃影视",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t4/heihu.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "T4Backup",
+   "name": "🔍T4 Backup‍",
+   "kind": "endpoint",
+   "api": "https://t4.run.goorm.io/vod",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 361,
+   "bytes": 26398
+  },
+  {
+   "key": "T4Demo",
+   "name": "🔍T4 Demo‍",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "T4a",
+   "name": " 🎑T4聚合",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&ali_token=a60a9387a6124e47ac78c726a02dba6d&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "T4a-2",
+   "name": "🔍聚合(T4)",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&ali_token=4acb3ad2f2254ba1b566279f7cd98ba3&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "T4聚合",
+   "name": "🔍T4聚合",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&ali_token=8f0b3f0dc1834f309f077ea5549e99a8&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "UC推送",
+   "name": "[4727ms|2] UC┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=uc",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 1810,
+   "bytes": 12
+  },
+  {
+   "key": "douban-2",
+   "name": "🅱豆瓣荐片",
+   "kind": "endpoint",
+   "api": "https://service-la7b1xlw-1308372858.gz.apigw.tencentcs.com/release/vod?",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1000)>"
+  },
+  {
+   "key": "js集合",
+   "name": "js集合",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/js.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/620 字节）",
+   "status": 200,
+   "ms": 2411,
+   "bytes": 800
+  },
+  {
+   "key": "pansou",
+   "name": "盘搜|集合",
+   "kind": "endpoint",
+   "api": "http://tvbox.zling.vip/wanpan.php?type=quark|uc|baidu|tianyi|xunlei|123",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（2 项/11358 字节）",
+   "status": 200,
+   "ms": 936,
+   "bytes": 11972
+  },
+  {
+   "key": "php_官方资源",
+   "name": "🍎 官方资源(PHP)",
+   "kind": "endpoint",
+   "api": "https://php.doube.eu.org/spider/php/官方资源.php",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 1299,
+   "bytes": 1179
+  },
+  {
+   "key": "php_电影天堂",
+   "name": "🍎 电影天堂(PHP)",
+   "kind": "endpoint",
+   "api": "https://php.doube.eu.org/spider/php/电影天堂.php",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 1246,
+   "bytes": 1179
+  },
+  {
+   "key": "php_非凡资源",
+   "name": "🍎 非凡资源(PHP)",
+   "kind": "endpoint",
+   "api": "https://php.doube.eu.org/spider/php/非凡资源.php",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 2025,
+   "bytes": 1179
+  },
+  {
+   "key": "php集合",
+   "name": "php集合",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/php.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/11 字节）",
+   "status": 200,
+   "ms": 2345,
+   "bytes": 11
+  },
+  {
+   "key": "py_DianYingTanTang",
+   "name": "🫐电影天堂(T4)",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/spider?site=DianYingTanTang",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 10952,
+   "bytes": 173
+  },
+  {
+   "key": "py_Dm84",
+   "name": "动漫巴士(T4)",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/spider?site=Dm84",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 831,
+   "bytes": 173
+  },
+  {
+   "key": "py_OleVod",
+   "name": "欧乐影院(T4)",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/spider?site=OleVod",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 961,
+   "bytes": 173
+  },
+  {
+   "key": "py_动漫巴士",
+   "name": "动漫巴士M",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/v2/spider?site=6b5899d243816bacb8712de7ab6ceb89",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 1072,
+   "bytes": 173
+  },
+  {
+   "key": "py_官方采集789",
+   "name": "官方采集M",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/v2/spider?site=006849a2c19a6be413be5017be468c63",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 726,
+   "bytes": 173
+  },
+  {
+   "key": "py_新韩剧网",
+   "name": "新韩剧网M",
+   "kind": "endpoint",
+   "api": "https://py.doube.eu.org/v2/spider?site=2a7cc0edf96108c9d57420ff57c654c6",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 8762,
+   "bytes": 173
+  },
+  {
+   "key": "python集合",
+   "name": "python集合",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/py.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1077 字节）",
+   "status": 200,
+   "ms": 2313,
+   "bytes": 1349
+  },
+  {
+   "key": "rrys",
+   "name": "[313ms|00000] 人人影视",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/18/人人影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "t4AnLao",
+   "name": "🔍T4搜索",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=voflix,gitcafe,onelist&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "t4_公共",
+   "name": "🔍公共(T4)",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&ali_token=阿里token&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "t4_搜片",
+   "name": "🔍搜片(T4)",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "t4public",
+   "name": "🔍豆瓣榜单2〔不要勾选〕",
+   "kind": "endpoint",
+   "api": "http://drpy.ganggang.live:5705/vod?rule=drpy",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>"
+  },
+  {
+   "key": "t4public-2",
+   "name": "🔍T4公共",
+   "kind": "endpoint",
+   "api": "https://t4.secan.icu/vod?sites=all&ali_token=https://ju990c.i996.me/TS/token.json&timeout=5",
+   "level": "E?",
+   "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "t4直播转点播",
+   "name": "💝分享教育",
+   "kind": "endpoint",
+   "api": "http://120.53.102.254/dsp16",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 32,
+   "bytes": 153
+  },
+  {
+   "key": "vv001",
+   "name": "️💃女優💃",
+   "kind": "endpoint",
+   "api": "https://ghproxy.com/https://raw.githubusercontent.com/c120487/00/main/api/00title05151.json",
+   "level": "E?",
+   "reason": "URLError: <urlopen error _ssl.c:983: The handshake operation timed out>"
+  },
+  {
+   "key": "vv002",
+   "name": "️👠番號👠",
+   "kind": "endpoint",
+   "api": "https://ghproxy.com/https://raw.githubusercontent.com/c120487/00/main/api/00title05152.json",
+   "level": "E?",
+   "reason": "URLError: <urlopen error timed out>"
+  },
+  {
+   "key": "vv003",
+   "name": "️👙主題👙",
+   "kind": "endpoint",
+   "api": "https://ghproxy.com/https://raw.githubusercontent.com/c120487/00/main/api/00title05153.json",
+   "level": "E?",
+   "reason": "URLError: <urlopen error _ssl.c:983: The handshake operation timed out>"
+  },
+  {
+   "key": "xuexi",
+   "name": "[313ms|00000] 线路|学习(T4)",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/t9/xuexi.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "xunlei",
+   "name": "迅雷|推送",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=xunlei",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 479,
+   "bytes": 12
+  },
+  {
+   "key": "xunlei-2",
+   "name": "迅雷|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=xunlei",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 318,
+   "bytes": 12
+  },
+  {
+   "key": "yangshi",
+   "name": "[313ms|00000] 央视影视",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/18/央视影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "yingtan",
+   "name": "[313ms|00000] 影探影视",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/18/影探影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "克隆合集",
+   "name": "克隆合集",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/klhj.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/355 字节）",
+   "status": 200,
+   "ms": 649,
+   "bytes": 403
+  },
+  {
+   "key": "全网",
+   "name": "全网|短剧",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/duanju.php?type=dquark",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 1303,
+   "bytes": 12
+  },
+  {
+   "key": "全网短",
+   "name": "🔍短剧影音阁🔍",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/duanju.php?type=dquark",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 430,
+   "bytes": 12
+  },
+  {
+   "key": "其他清单播放",
+   "name": "其他清单播放",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=9",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "听书go",
+   "name": "听书go",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=11",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "呜剧",
+   "name": "嗷呜剧(坏了)",
+   "kind": "endpoint",
+   "api": "https://newtv.ggff.net/jubaba?token=fhJadO1R",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（3 项/8878 字节）",
+   "status": 200,
+   "ms": 10452,
+   "bytes": 8879
+  },
+  {
+   "key": "哔哩go",
+   "name": "哔哩go",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=10",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "喜福短剧",
+   "name": "[313ms|00000] 喜福短剧",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/喜福短剧.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "天翼",
+   "name": "天翼|推送",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=tianyi",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 411,
+   "bytes": 12
+  },
+  {
+   "key": "天翼-2",
+   "name": "天翼|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=tianyi",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 320,
+   "bytes": 12
+  },
+  {
+   "key": "夸克推送",
+   "name": "夸克|推送",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=quark",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 680,
+   "bytes": 12
+  },
+  {
+   "key": "夸克推送-2",
+   "name": "夸克|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=quark",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 306,
+   "bytes": 12
+  },
+  {
+   "key": "小纸条_cli",
+   "name": "小纸条[俊.T4]",
+   "kind": "endpoint",
+   "api": "http://home.jundie.top:9520/spider/cli_gitCafe",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>"
+  },
+  {
+   "key": "影视单播放",
+   "name": "影视播放",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/zh/2243.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1647 字节）",
+   "status": 200,
+   "ms": 743,
+   "bytes": 1855
+  },
+  {
+   "key": "影视播放",
+   "name": "老张影视",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/zh/2242.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/871 字节）",
+   "status": 200,
+   "ms": 5837,
+   "bytes": 1019
+  },
+  {
+   "key": "影视文件播放",
+   "name": "影视文件播放",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/zh/2242.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/871 字节）",
+   "status": 200,
+   "ms": 7323,
+   "bytes": 1019
+  },
+  {
+   "key": "影视清单播放",
+   "name": "影视清单播放",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=9",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "服务器油管",
+   "name": "服务器油管",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/yt/yt0021.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1477 字节）",
+   "status": 200,
+   "ms": 4523,
+   "bytes": 1721
+  },
+  {
+   "key": "服务器油管go",
+   "name": "服务器油管go",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "欧乐影院",
+   "name": "欧乐影院",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=4",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "油管播放列表1",
+   "name": "油管播放列表1",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/ytlb.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/2595 字节）",
+   "status": 200,
+   "ms": 4552,
+   "bytes": 2888
+  },
+  {
+   "key": "油管播放列表2",
+   "name": "油管播放列表2",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/ytlb1.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/3491 字节）",
+   "status": 200,
+   "ms": 3976,
+   "bytes": 3983
+  },
+  {
+   "key": "油管文件播放",
+   "name": "油管文件播放",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=8",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "油管清单播放",
+   "name": "油管清单播放",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/zh/yt/2243.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1653 字节）",
+   "status": 200,
+   "ms": 1051,
+   "bytes": 2009
+  },
+  {
+   "key": "清单播放",
+   "name": "清单播放",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/zh/2243.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1647 字节）",
+   "status": 200,
+   "ms": 1004,
+   "bytes": 1855
+  },
+  {
+   "key": "爱瓜TV",
+   "name": "爱瓜TV",
+   "kind": "endpoint",
+   "api": "https://zhangqun1818.serv00.net/aigua1.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（2 项/6936 字节）",
+   "status": 200,
+   "ms": 4671,
+   "bytes": 7802
+  },
+  {
+   "key": "瓜子影视-2",
+   "name": "[313ms|00000] 瓜子影视",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/瓜子影视.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "甜圈短剧-3",
+   "name": "[313ms|00000] 甜圈短剧",
+   "kind": "endpoint",
+   "api": "https://catbox.n13.club/ai/甜圈短剧.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "百度-4",
+   "name": "百度|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=baidu",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 1572,
+   "bytes": 12
+  },
+  {
+   "key": "百度推送",
+   "name": "[4727ms|2] 百度┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=baidu",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 3594,
+   "bytes": 12
+  },
+  {
+   "key": "直播文件播放",
+   "name": "直播文件播放",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=8",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  },
+  {
+   "key": "移动推送",
+   "name": "[4727ms|2] 移动┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=mobile",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 677,
+   "bytes": 12
+  },
+  {
+   "key": "索尼音乐",
+   "name": "👖裤佬丨索尼丨音乐",
+   "kind": "endpoint",
+   "api": "https://banyeomni.780420.xyz:17777/api/tvbox/source/2070335669707739136?token=banye666",
+   "level": "E?",
+   "reason": "HTTP 500 服务端错误",
+   "status": 500,
+   "ms": 139,
+   "bytes": 115
+  },
+  {
+   "key": "裤佬JS聚合",
+   "name": "采集┃聚合",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/cj/cjjh.php?ac=list",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（8 项/5401 字节）",
+   "status": 200,
+   "ms": 4304,
+   "bytes": 6169
+  },
+  {
+   "key": "采集集合",
+   "name": "采集集合+",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/cj/cjjh.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/11 字节）",
+   "status": 200,
+   "ms": 669,
+   "bytes": 11
+  },
+  {
+   "key": "阿里推送",
+   "name": "[4727ms|2] 阿里┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=aliyun",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 788,
+   "bytes": 12
+  },
+  {
+   "key": "音乐文件播放",
+   "name": "音乐文件播放",
+   "kind": "endpoint",
+   "api": "http://127.0.0.1:1988/lb?lb=8",
+   "level": "E?",
+   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+  }
+ ]
+}
