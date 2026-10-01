@@ -1,17 +1,20 @@
 {
- "generated_at": "2026-09-28 15:35:12",
+ "generated_at": "2026-10-01T07:48:50",
  "note": "root 真机 DexClassLoader 实测 csp 爬虫源五关（首页/分类/搜索/详情/播放）",
  "summary": {
-  "total": 1569,
+  "total": 1579,
   "levels": {
    "C2": 64,
    "C3": 47,
    "C5": 81,
-   "C0": 802,
+   "C0": 812,
    "C?": 274,
    "C1": 296,
    "C4": 5
-  }
+  },
+  "static_jars_parsed": 242,
+  "static_added": 10,
+  "note": "root 真机五关 + 静态 C0（类在本机可读 jar 全池里都不存在，且该站自带 jar 确实读到过）；重跑见 scripts/csp_jar_scan.py"
  },
  "sites": [
   {
@@ -21240,6 +21243,206 @@
    "evidence": {
     "home_classes": 4
    }
+  },
+  {
+   "key": "次元城",
+   "name": "次元城",
+   "kind": "csp",
+   "cls": "Cycdm",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "tu",
+   "name": "📚少儿┃兔兔┃教育",
+   "kind": "csp",
+   "cls": "WebRabbit",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "WOJH",
+   "name": "玩偶聚合",
+   "kind": "csp",
+   "cls": "wojh",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "cctv-2",
+   "name": "🇨🇳央视┃能量┃合集",
+   "kind": "csp",
+   "cls": "AuthCCTV",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "思源",
+   "name": "思源┃App",
+   "kind": "csp",
+   "cls": "Syys",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "繁荣",
+   "name": "繁荣┃App",
+   "kind": "csp",
+   "cls": "Frong",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "移动盘搜",
+   "name": "🔍移动｜盘搜",
+   "kind": "csp",
+   "cls": "PanSou139",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "HonHon",
+   "name": "🍅┆红红┆短剧",
+   "kind": "csp",
+   "cls": "HonHon",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "笒鬼短剧",
+   "name": "笒鬼┃短剧",
+   "kind": "csp",
+   "cls": "CenguiDJ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
+  },
+  {
+   "key": "短剧one",
+   "name": "🥰┃短剧┃视频",
+   "kind": "csp",
+   "cls": "Panda",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "static": "class-absent-in-local-jar-pool",
+    "jars_parsed": 242,
+    "scanned_at": "2026-10-01T07:48:48"
+   },
+   "err": "static-c0:pool-absent",
+   "probed_at": "2026-10-01T07:48:50"
   }
  ]
 }
