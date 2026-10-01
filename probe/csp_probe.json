@@ -1,21 +1,21 @@
 {
- "generated_at": "2026-10-01T17:23:10",
+ "generated_at": "2026-10-01T21:24:35",
  "note": "root 真机 DexClassLoader 实测 csp 爬虫源五关（首页/分类/搜索/详情/播放）",
  "summary": {
-  "total": 1183,
+  "total": 1350,
   "levels": {
-   "C2": 127,
-   "C3": 57,
+   "C2": 183,
+   "C3": 62,
    "C5": 81,
-   "C?": 227,
-   "C1": 676,
+   "C?": 215,
+   "C1": 794,
    "C4": 5,
    "C0": 10
   },
   "static_jars_parsed": 242,
   "static_added": 10,
   "note": "真机只证明「能跑到第几关」（C1-C5）；判死 C0 一律出自静态口径（全池类缺席 + 该站自带 jar 确实读到过）。2026-10-01 起 app_process runner 挂宿主 apk，CLASSPATH 齐全",
-  "purged_untrusted_c0": 807
+  "purged_untrusted_c0": 0
  },
  "sites": [
   {
@@ -6628,14 +6628,28 @@
   },
   {
    "key": "在线之家-2",
+   "name": "✅在线┃之家",
    "kind": "csp",
-   "cls": "csp_Wexzxzj",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "Wexzxzj",
+   "level": "C1",
+   "ms": 6731,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Wexzxzj\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirect"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "腐剧视频",
@@ -7599,14 +7613,28 @@
   },
   {
    "key": "csp_AiWanMusic",
+   "name": "🎵爱玩┃[音乐]",
    "kind": "csp",
-   "cls": "csp_AiWanMusic",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "AiWanMusic",
+   "level": "C3",
+   "ms": 1767,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.AiWanMusic\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDir"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 33,
+    "searchHit": 1,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 3
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "闪闪音乐网",
@@ -7758,36 +7786,78 @@
   },
   {
    "key": "小熊",
+   "name": "🐞小熊TV",
    "kind": "csp",
-   "cls": "csp_Xxys",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "Xxys",
+   "level": "C1",
+   "ms": 514,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Xxys\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirectori"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_IKan",
+   "name": "🐞爱看",
    "kind": "csp",
-   "cls": "csp_IKan",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "Xxys",
+   "level": "C1",
+   "ms": 82,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.IKan\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirectori"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "KanSJ_spider",
+   "name": "🐞看视界",
    "kind": "csp",
-   "cls": "csp_KanSJ",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "KanSJ",
+   "level": "C1",
+   "ms": 170,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.KanSJ\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirector"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_Kmys",
@@ -7872,14 +7942,28 @@
   },
   {
    "key": "虎牙-3",
+   "name": "🐯虎牙",
    "kind": "csp",
-   "cls": "csp_Huya",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "Huya",
+   "level": "C2",
+   "ms": 1002,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Huya\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirectori"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 120,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "追剧TU",
@@ -7982,14 +8066,28 @@
   },
   {
    "key": "csp_xq",
+   "name": "👹戏曲┃[听看]",
    "kind": "csp",
-   "cls": "csp_Lyxq",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "Lyxq",
+   "level": "C2",
+   "ms": 724,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.Lyxq\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirectori"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 50,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "美奇影视",
@@ -8008,36 +8106,78 @@
   },
   {
    "key": "csp_NongMing",
+   "name": "💕农民影视",
    "kind": "csp",
-   "cls": "csp_NongMing",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "NongMing",
+   "level": "C2",
+   "ms": 1535,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.NongMing\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirec"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_BTPiaoHua",
+   "name": "💕新飘花电影网(磁力)",
    "kind": "csp",
-   "cls": "csp_BTPiaoHua",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "BTPiaoHua",
+   "level": "C2",
+   "ms": 3386,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.BTPiaoHua\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDire"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_CandyMuj_cokemv",
+   "name": "💖Cokemv",
    "kind": "csp",
-   "cls": "csp_CandyMuj_cokemv",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "CandyMuj_cokemv",
+   "level": "C1",
+   "ms": 13520,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.CandyMuj_cokemv\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibra"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_CandyMuj_freeok",
@@ -8052,14 +8192,28 @@
   },
   {
    "key": "csp_CandyMuj_yzzy",
+   "name": "💖优质资源",
    "kind": "csp",
-   "cls": "csp_CandyMuj_yzzy",
-   "level": "C?",
-   "ms": 0,
-   "flags": {},
+   "cls": "CandyMuj_yzzy",
+   "level": "C1",
+   "ms": 2246,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.CandyMuj_yzzy\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibrary"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_XBPQ_fxzcjy",
@@ -8078,14 +8232,28 @@
   },
   {
    "key": "fxzYD",
+   "name": "💖分享移动",
    "kind": "csp",
-   "cls": "csp_YDjisu",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "YDjisu",
+   "level": "C1",
+   "ms": 289,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.YDjisu\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirecto"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_fxzwj",
@@ -8119,25 +8287,53 @@
   },
   {
    "key": "csp_CandyMuj_haokongbu",
+   "name": "💖好恐怖",
    "kind": "csp",
-   "cls": "csp_CandyMuj_haokongbu",
-   "level": "C?",
-   "ms": 2,
-   "flags": {},
+   "cls": "CandyMuj_haokongbu",
+   "level": "C1",
+   "ms": 401,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.CandyMuj_haokongbu\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLi"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_CandyMuj_lm5",
+   "name": "💖星辰影院",
    "kind": "csp",
-   "cls": "csp_CandyMuj_lm5",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "CandyMuj_lm5",
+   "level": "C1",
+   "ms": 32162,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.CandyMuj_lm5\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryD"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "csp_CandyMuj_dmxq",
@@ -11503,14 +11699,28 @@
   },
   {
    "key": "LeiJing",
+   "name": "[3080ms|接口] 雷鲸|189Pan",
    "kind": "csp",
-   "cls": "csp_LeiJing",
-   "level": "C?",
-   "ms": 1,
-   "flags": {},
+   "cls": "LeiJing",
+   "level": "C1",
+   "ms": 7334,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
    "evidence": {
-    "err": "ClassNotFoundException: Didn't find class \"com.github.catvod.spider.LeiJing\" on path: DexPathList[[zip file \"/data/user/0/com.tvtest/files/cl_spider.jar\"],nativeLibraryDirect"
-   }
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
   },
   {
    "key": "PSfish",
@@ -22011,6 +22221,4181 @@
    },
    "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:IllegalArgumentException:Expected URL scheme 'http' or 'https' but no colon was found;",
    "probed_at": "2026-10-01T17:23:10"
+  },
+  {
+   "key": "4K影院",
+   "name": "🧿影院┃蓝光",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 50195,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/35-196s/tvbox-master-doki/json/4kvm.json",
+    "cfg_note": "内联(./deps/auto/35-196s/tvbox-master-doki/json/4kvm.json:2703字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "素白白影视",
+   "name": "🧿素白┃蓝光",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 50203,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/28-270s/tvbox-master-doki/json/subaibai.json",
+    "cfg_note": "内联(./deps/auto/28-270s/tvbox-master-doki/json/subaibai.json:1294字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "晴空",
+   "name": "蓝光┃超清",
+   "kind": "csp",
+   "cls": "Xdai",
+   "level": "C1",
+   "ms": 3554,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "AI3",
+   "name": "AI3┃仅搜索",
+   "kind": "csp",
+   "cls": "AI",
+   "level": "C1",
+   "ms": 311,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 7,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "玩偶gg",
+   "name": "玩偶 | 饭",
+   "kind": "csp",
+   "cls": "Wogg",
+   "level": "C2",
+   "ms": 6456,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 6,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "素白白",
+   "name": "素白白✨蓝光影视",
+   "kind": "csp",
+   "cls": "Subaibai",
+   "level": "C1",
+   "ms": 40226,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "老鹰",
+   "name": "老鹰｜APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C1",
+   "ms": 20266,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "耐看影视",
+   "name": "耐看｜影视",
+   "kind": "csp",
+   "cls": "WebNK",
+   "level": "C1",
+   "ms": 1184,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xbpq_lgyy",
+   "name": "蓝光影院(XBPQ)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 425,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xb_lgyys",
+   "name": "蓝光影院(XBiu)",
+   "kind": "csp",
+   "cls": "XBiu",
+   "level": "C2",
+   "ms": 67,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Qiwei-2",
+   "name": "🌈┆七味┆4K",
+   "kind": "csp",
+   "cls": "Qiwei",
+   "level": "C?",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": null,
+    "searchHit": null,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 0
+   },
+   "err": "watchdog120s:TimeoutException:null",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Lib",
+   "name": "🌟┃Lib┃秒播",
+   "kind": "csp",
+   "cls": "Libvio",
+   "level": "C1",
+   "ms": 20774,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NullPointerException:Attempt to invoke virtual method 'java.io.File android.content.Context",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "huaisang",
+   "name": "🎄┆怀桑┆4K",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 121,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "免扫4K",
+   "name": "♻┃高清┃秒播",
+   "kind": "csp",
+   "cls": "AppV6",
+   "level": "C1",
+   "ms": 821,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "大师兄",
+   "name": "大师兄┃App",
+   "kind": "csp",
+   "cls": "AppV6",
+   "level": "C2",
+   "ms": 1341,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 20,
+    "searchHit": 11,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "小黄人",
+   "name": "小黄人┃App",
+   "kind": "csp",
+   "cls": "AppV6",
+   "level": "C1",
+   "ms": 30914,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "kafeiys",
+   "name": "狂风┃APP",
+   "kind": "csp",
+   "cls": "Xdai",
+   "level": "C1",
+   "ms": 11157,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "若雪",
+   "name": "若雪丨APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 181,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Kanqiu",
+   "name": "⚽┆看球┆体育",
+   "kind": "csp",
+   "cls": "Kanqiu",
+   "level": "C2",
+   "ms": 1715,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 60,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_555",
+   "name": "5️⃣555影视〔SP〕",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 6263,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/83cad9d263-555.json",
+    "cfg_note": "内联(./deps/localized/83cad9d263-555.json:729字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "If101",
+   "name": "If101",
+   "kind": "csp",
+   "cls": "If101",
+   "level": "C1",
+   "ms": 336,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_BBB",
+   "name": "🅱️哔哩套餐",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 869,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiu555影視",
+   "name": "🇹 555電影網(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 36593,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiu華人影視CC",
+   "name": "🇹 華人影視CC(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 14731,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiu94i影城",
+   "name": "🇹🇼94i影城(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 4535,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiuAG動漫",
+   "name": "🇹🇼AG動漫(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 4274,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_干饭影视",
+   "name": "🍚干饭影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20074,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xb_huix",
+   "name": "💠回响影视",
+   "kind": "csp",
+   "cls": "XBiu",
+   "level": "C2",
+   "ms": 245,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xb_aikan",
+   "name": "💠爱看影视",
+   "kind": "csp",
+   "cls": "XBiu",
+   "level": "C2",
+   "ms": 1936,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "金漫影视",
+   "name": "💥金漫┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 5988,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/28-270s/tvbox-master-doki/json/JMAN3.json",
+    "cfg_note": "内联(./deps/auto/28-270s/tvbox-master-doki/json/JMAN3.json:983字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_AppTT",
+   "name": "🖼图图影视",
+   "kind": "csp",
+   "cls": "AppTT",
+   "level": "C1",
+   "ms": 108,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "七点影视",
+   "name": "七点影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 259,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/js/s/7点.json",
+    "cfg_note": "内联(./deps/auto/60-140s/js/s/7点.json:875字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "和友",
+   "name": "和友｜APP",
+   "kind": "csp",
+   "cls": "AppSy",
+   "level": "C2",
+   "ms": 12493,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "哆啦",
+   "name": "哆啦｜新番社",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 376,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/XBPQ/哆啦新番社.json",
+    "cfg_note": "内联(./deps/auto/60-140s/XBPQ/哆啦新番社.json:1291字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "小红",
+   "name": "小红影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 2384,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/js/s/小红.json",
+    "cfg_note": "内联(./deps/auto/60-140s/js/s/小红.json:676字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "WOSS",
+   "name": "玩偶叔叔",
+   "kind": "csp",
+   "cls": "Wobg",
+   "level": "C1",
+   "ms": 2535,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/lib/tokenm.json$$$https://woss.fenwe.eu.org/$$$noproxy$$$1$$$./deps/auto/60-",
+    "cfg_note": "内联(./deps/auto/60-140s/lib/tokenm.json:2686字);内联(./deps/auto/60-140s/lib/wogg.json:26549字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "白嫖3",
+   "name": "白嫖影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 50227,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/js/s/白嫖3.json",
+    "cfg_note": "内联(./deps/auto/60-140s/js/s/白嫖3.json:271字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "百思",
+   "name": "百思影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 2894,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/js/s/百思.json",
+    "cfg_note": "内联(./deps/auto/60-140s/js/s/百思.json:159字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "随客",
+   "name": "随客影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 26416,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/60-140s/js/s/随客.json",
+    "cfg_note": "内联(./deps/auto/60-140s/js/s/随客.json:932字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "555yingshi",
+   "name": "🌠555┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 6487,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_mgtva",
+   "name": "🌠木瓜┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 1835,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_ipianba",
+   "name": "🌠片吧┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C2",
+   "ms": 8725,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 8,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "美食",
+   "name": "🍔美食合集 B站",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 979,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "热舞",
+   "name": "💃女团热舞 B站",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 885,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "学习",
+   "name": "📝学习园地 B站",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 987,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:SecurityException:callingPackage does not match UID;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xpath_gimy2",
+   "name": " 🌾GIMY(XPF)",
+   "kind": "csp",
+   "cls": "XPathFilter",
+   "level": "C2",
+   "ms": 11341,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/939a4e054a-Gimy2.json",
+    "cfg_note": "内联(./deps/localized/939a4e054a-Gimy2.json:13007字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xpath_zx",
+   "name": " 🌾在线电影(XP)",
+   "kind": "csp",
+   "cls": "XPath",
+   "level": "C2",
+   "ms": 702,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/80afa35c85-zaixiandianying8.json",
+    "cfg_note": "内联(./deps/localized/80afa35c85-zaixiandianying8.json:3060字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "AvTime",
+   "name": "AvTime",
+   "kind": "csp",
+   "cls": "AvTime",
+   "level": "C1",
+   "ms": 3946,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Top888",
+   "name": "Top888",
+   "kind": "csp",
+   "cls": "Top888",
+   "level": "C1",
+   "ms": 7232,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "QxiTv",
+   "name": "[3080ms|接口] 七喜影视",
+   "kind": "csp",
+   "cls": "QxiTv",
+   "level": "C1",
+   "ms": 367,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Ddrk",
+   "name": "[3080ms|接口] 低端影视",
+   "kind": "csp",
+   "cls": "Ddrk",
+   "level": "C1",
+   "ms": 180,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "NCat",
+   "name": "[3080ms|接口] 网飞猫影视",
+   "kind": "csp",
+   "cls": "NCat",
+   "level": "C2",
+   "ms": 1089,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Bttoo",
+   "name": "✌两个BT〔SP〕",
+   "kind": "csp",
+   "cls": "Bttoo",
+   "level": "C1",
+   "ms": 4129,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "七味",
+   "name": "七味｜磁力",
+   "kind": "csp",
+   "cls": "QnMp4",
+   "level": "C2",
+   "ms": 3469,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xb_lez",
+   "name": "乐猪(XBiu)",
+   "kind": "csp",
+   "cls": "XBiu",
+   "level": "C2",
+   "ms": 1108,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "xifan",
+   "name": "动漫|稀饭",
+   "kind": "csp",
+   "cls": "Xifan",
+   "level": "C1",
+   "ms": 2676,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBPQ_南瓜影视",
+   "name": "南瓜影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 691,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_NewCz",
+   "name": "厂长",
+   "kind": "csp",
+   "cls": "NewCz",
+   "level": "C1",
+   "ms": 4485,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Kekys",
+   "name": "可可",
+   "kind": "csp",
+   "cls": "Kekys",
+   "level": "C1",
+   "ms": 1095,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "ZXZJ",
+   "name": "在线┃直连",
+   "kind": "csp",
+   "cls": "Zxzj",
+   "level": "C2",
+   "ms": 3824,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "奇奇",
+   "name": "奇奇 • APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 255,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Ysgc",
+   "name": "工厂",
+   "kind": "csp",
+   "cls": "Ysgc",
+   "level": "C1",
+   "ms": 8636,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Ysj",
+   "name": "异界动漫",
+   "kind": "csp",
+   "cls": "Ysj",
+   "level": "C2",
+   "ms": 45425,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Jpys",
+   "name": "金牌影视",
+   "kind": "csp",
+   "cls": "Jpys",
+   "level": "C1",
+   "ms": 64,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "顾我",
+   "name": "顾我｜APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 257,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_fantuan",
+   "name": "饭团",
+   "kind": "csp",
+   "cls": "Fantuan",
+   "level": "C1",
+   "ms": 544,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "饭团影视",
+   "name": "饭团｜影视",
+   "kind": "csp",
+   "cls": "Fantuan",
+   "level": "C1",
+   "ms": 180,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "首发",
+   "name": "首发｜APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 84,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "高清",
+   "name": "高清┃APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 130,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "FreeOK",
+   "name": "️️👌┃Fre┃影视",
+   "kind": "csp",
+   "cls": "FreeOK",
+   "level": "C1",
+   "ms": 10578,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NullPointerException:Attempt to invoke virtual method 'int java.lang.String.length()' on a ",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "片库",
+   "name": "🅿七味",
+   "kind": "csp",
+   "cls": "Qiwei",
+   "level": "C?",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": null,
+    "searchHit": null,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 0
+   },
+   "err": "watchdog120s:TimeoutException:null",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "zxzj",
+   "name": "🍊┃在线┃外剧",
+   "kind": "csp",
+   "cls": "Zxzj",
+   "level": "C2",
+   "ms": 29505,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:StringIndexOutOfBoundsException:length=23; index=23;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Cs1369",
+   "name": "🎀九六",
+   "kind": "csp",
+   "cls": "Cs1369",
+   "level": "C2",
+   "ms": 714,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Jianying",
+   "name": "🐞简影(SP)",
+   "kind": "csp",
+   "cls": "JianYing",
+   "level": "C1",
+   "ms": 30475,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "追剧喵",
+   "name": "🐞追剧喵",
+   "kind": "csp",
+   "cls": "ZJMiao",
+   "level": "C1",
+   "ms": 4432,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Zjdr",
+   "name": "👓追剧达人┃SP",
+   "kind": "csp",
+   "cls": "Zjdr",
+   "level": "C1",
+   "ms": 3719,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "龙伊影视",
+   "name": "👺龙伊┃专线",
+   "kind": "csp",
+   "cls": "AppYsV2",
+   "level": "C2",
+   "ms": 847,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_IQIYI",
+   "name": "💕IQIYI",
+   "kind": "csp",
+   "cls": "IQIYI",
+   "level": "C3",
+   "ms": 1722,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 14,
+    "searchHit": 19,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 3
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_MGTV",
+   "name": "💕MGTV",
+   "kind": "csp",
+   "cls": "MGTV",
+   "level": "C2",
+   "ms": 609,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 36,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Voflix",
+   "name": "💕Voflix",
+   "kind": "csp",
+   "cls": "Voflix",
+   "level": "C2",
+   "ms": 5144,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_AppYsV2_4",
+   "name": "💕迪迪",
+   "kind": "csp",
+   "cls": "AppYsV2",
+   "level": "C2",
+   "ms": 1619,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_biubiu_voflix",
+   "name": "💢vo fl ix〔XB〕",
+   "kind": "csp",
+   "cls": "XBiubiu",
+   "level": "C1",
+   "ms": 40084,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/92fa298034-vo_fl_ix.json",
+    "cfg_note": "内联(./deps/localized/92fa298034-vo_fl_ix.json:1944字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "厂长",
+   "name": "📔┃厂长┃不卡",
+   "kind": "csp",
+   "cls": "NewCz",
+   "level": "C1",
+   "ms": 5512,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Lib-2",
+   "name": "🔷LibVio",
+   "kind": "csp",
+   "cls": "Libvio",
+   "level": "C1",
+   "ms": 4593,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NullPointerException:Attempt to invoke virtual method 'java.io.File android.content.Context",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_QnMp4",
+   "name": "🧲七妹",
+   "kind": "csp",
+   "cls": "QnMp4",
+   "level": "C2",
+   "ms": 6798,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_DyGod",
+   "name": "🧲电影天堂",
+   "kind": "csp",
+   "cls": "DyGod",
+   "level": "C3",
+   "ms": 5041,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 3,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 3
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "88看球-3",
+   "name": "88｜看球",
+   "kind": "csp",
+   "cls": "Kanqiu",
+   "level": "C2",
+   "ms": 1490,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 60,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "living",
+   "name": "[906ms|https://www.ls660",
+   "kind": "csp",
+   "cls": "Living",
+   "level": "C1",
+   "ms": 244,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "зұіжҗң",
+   "name": "рҹҢ–в”ғзұіжҗңв”ғзҪ‘зӣҳ",
+   "kind": "csp",
+   "cls": "MiSou",
+   "level": "C2",
+   "ms": 250,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "е…үзӣҳ",
+   "name": "рҹ“Җв”ғе…үзӣҳв”ғAPP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 12797,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 30,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method getKeywordsMap()Ljava/util/Map; in class Lcom/github/cat",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Juqq",
+   "name": "⭕┃剧圈┃影视",
+   "kind": "csp",
+   "cls": "Juqq",
+   "level": "C2",
+   "ms": 2627,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "云播影视-2",
+   "name": "云播｜影视",
+   "kind": "csp",
+   "cls": "Tvyb",
+   "level": "C2",
+   "ms": 4662,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "小猪",
+   "name": "小猪丨APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 238,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "huban",
+   "name": "弹幕|小窗",
+   "kind": "csp",
+   "cls": "Huban",
+   "level": "C1",
+   "ms": 84,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "漫国",
+   "name": "漫国丨动漫",
+   "kind": "csp",
+   "cls": "AppSy",
+   "level": "C2",
+   "ms": 12977,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "热剧",
+   "name": "热剧丨APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 217,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_KmeiJu",
+   "name": "🌎┃美剧┃影视",
+   "kind": "csp",
+   "cls": "KmeiJu",
+   "level": "C2",
+   "ms": 3540,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_FengGo",
+   "name": "🐕┃疯狗┃影视",
+   "kind": "csp",
+   "cls": "FengGo",
+   "level": "C2",
+   "ms": 1738,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "萌米",
+   "name": "👀┃萌米┃多线",
+   "kind": "csp",
+   "cls": "AppTT",
+   "level": "C1",
+   "ms": 97,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Ikan",
+   "name": "💕┃爱看┃影视",
+   "kind": "csp",
+   "cls": "Ikan",
+   "level": "C2",
+   "ms": 2673,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiu口袋影院",
+   "name": "💢口袋影视(XB)",
+   "kind": "csp",
+   "cls": "XBiu",
+   "level": "C2",
+   "ms": 2431,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "光盘",
+   "name": "📀┃光盘┃APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 965,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 30,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method getKeywordsMap()Ljava/util/Map; in class Lcom/github/cat",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "W55Movie",
+   "name": "[3080ms|接口] 555电影",
+   "kind": "csp",
+   "cls": "W55Movie",
+   "level": "C1",
+   "ms": 1873,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "HkTv",
+   "name": "[3080ms|接口] TVB云播影视",
+   "kind": "csp",
+   "cls": "HkTv",
+   "level": "C1",
+   "ms": 14205,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "lzxw_豆瓣",
+   "name": "⁽⁽ଘ😇ଓ⁾⁾公众号:林中的小屋丨豆瓣影视推荐",
+   "kind": "csp",
+   "cls": "Douban",
+   "level": "C1",
+   "ms": 594,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "无优",
+   "name": "云星无优",
+   "kind": "csp",
+   "cls": "Market",
+   "level": "C2",
+   "ms": 99,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 7,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/fd3794fc98-bdgx.txt",
+    "cfg_note": "内联(./deps/localized/fd3794fc98-bdgx.txt:7494字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "3",
+   "name": "应用市场1",
+   "kind": "csp",
+   "cls": "Market",
+   "level": "C2",
+   "ms": 69,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 4,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/f5814b3453-market.json",
+    "cfg_note": "内联(./deps/localized/f5814b3453-market.json:12807字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "奇奇2",
+   "name": "💞奇奇副本",
+   "kind": "csp",
+   "cls": "Market",
+   "level": "C2",
+   "ms": 85,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 2,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/fd8bc83b93-666.json",
+    "cfg_note": "内联(./deps/localized/fd8bc83b93-666.json:1232字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "本地包更新",
+   "name": "💞本地包｜1128",
+   "kind": "csp",
+   "cls": "Market",
+   "level": "C2",
+   "ms": 87,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 2,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/8c3ed7328e-666.json",
+    "cfg_note": "内联(./deps/localized/8c3ed7328e-666.json:1292字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "X4本地包",
+   "name": "📦菠菜园下载",
+   "kind": "csp",
+   "cls": "Market",
+   "level": "C2",
+   "ms": 152,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 2,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/c2ed530b5b-3.json",
+    "cfg_note": "内联(./deps/localized/c2ed530b5b-3.json:4547字)",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "GuaziTY",
+   "name": "🥜┆瓜子┆体育",
+   "kind": "csp",
+   "cls": "GuaziTY",
+   "level": "C1",
+   "ms": 112,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "追剧达人",
+   "name": "追剧达人┃App",
+   "kind": "csp",
+   "cls": "AppV6",
+   "level": "C2",
+   "ms": 17354,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 9,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Netfixtv2",
+   "name": "🛸指南┃网盘4K",
+   "kind": "csp",
+   "cls": "Duopan",
+   "level": "C3",
+   "ms": 3357,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 72,
+    "searchHit": 7,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 3
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_COKEMV",
+   "name": " 🎀COKEMV",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20101,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "盼她",
+   "name": "盼她｜免扫",
+   "kind": "csp",
+   "cls": "PanTa",
+   "level": "C1",
+   "ms": 1535,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_大米星球",
+   "name": "️🌏大米星球",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 5725,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_在线之家",
+   "name": "️🏠在线之家",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20043,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_FREEOK",
+   "name": "️🥕FREEOK",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 930,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_黑洞",
+   "name": "🌑黑洞网",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 2858,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_555dy",
+   "name": "🌕555电影 ",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 10206,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_番茄影视",
+   "name": "🍅番茄影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20040,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_瓜皮TV",
+   "name": "🍉瓜皮TV ",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 34398,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_皮皮泡",
+   "name": "🍗皮皮泡 ",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 5731,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_app影院",
+   "name": "🍬app影院",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C2",
+   "ms": 2134,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 53,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_极品影视",
+   "name": "🍹极品影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 19287,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_爱酷影视",
+   "name": "🎩爱酷影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 3127,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_影视工厂",
+   "name": "🏭影视工厂",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20038,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_看戏影视",
+   "name": "👘看戏影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C2",
+   "ms": 1340,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 59,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_巨人影院",
+   "name": "👣巨人影院",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20094,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "高考",
+   "name": "💙高考",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 10924,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_热播酷",
+   "name": "💽热播酷 ",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20109,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "夜貓_csp_aote",
+   "name": "😾奥特影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 54281,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "夜貓_csp_xc",
+   "name": "😾星辰影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 4065,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "夜貓_小镇",
+   "name": "😾电影小镇",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 1329,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "夜貓_黑狐",
+   "name": "😾黑狐影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 6048,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_唐人街影院",
+   "name": "🛫唐人街影院(海外推荐)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 50206,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_核桃影院",
+   "name": "🥯核桃影院",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 1299,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_嗷呜视频",
+   "name": "🦁嗷呜视频",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 3807,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_鸭奈飞",
+   "name": "🦆鸭奈飞 ",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 20056,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_UM影视",
+   "name": "🦋UM影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 8600,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_师兄影院",
+   "name": "🧥师兄影院",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C2",
+   "ms": 1088,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 1,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "d'd",
+   "name": "修罗|弹幕",
+   "kind": "csp",
+   "cls": "HBPQ",
+   "level": "C1",
+   "ms": 20199,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "AppQi1",
+   "name": "🎴爱盈┃小米",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 2186,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method getKeywordsMap()Ljava/util/Map; in class Lcom/github/cat",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "PS",
+   "name": "🐼PS",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 849,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:SecurityException:callingPackage does not match UID;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "足球",
+   "name": "💕足球",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 886,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:SecurityException:callingPackage does not match UID;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "户外",
+   "name": "💛户外",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 698,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "EXCEL",
+   "name": "💜Excel",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 858,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:SecurityException:callingPackage does not match UID;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "运动",
+   "name": "💜阿修维护",
+   "kind": "csp",
+   "cls": "Bili",
+   "level": "C1",
+   "ms": 827,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 20,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:RemoteException:Remote stack trace:\n\tat com.android.server.StorageManagerService.getVolumeL",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "PanTa",
+   "name": "[3080ms|接口] 盘他|139Pan",
+   "kind": "csp",
+   "cls": "PanTa",
+   "level": "C1",
+   "ms": 286,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "土豆网盘",
+   "name": "《土豆💿网盘》",
+   "kind": "csp",
+   "cls": "Wobg",
+   "level": "C1",
+   "ms": 3242,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "小雅",
+   "name": "小雅(云盘)🔗云盘",
+   "kind": "csp",
+   "cls": "AList",
+   "level": "C1",
+   "ms": 76,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/dec6d93875-alist.json",
+    "cfg_note": "内联(./deps/localized/dec6d93875-alist.json:533字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:IllegalStateException:Expected BEGIN_ARRAY but was BEGIN_OBJECT at line 1 column 2 path $;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "小雷",
+   "name": "网盘 | 小雷",
+   "kind": "csp",
+   "cls": "PanTa",
+   "level": "C1",
+   "ms": 1431,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method checkPermission()V in class Lcom/github/catvod/spider/In",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "网盘 | 片库",
+   "name": "网盘 | 片库",
+   "kind": "csp",
+   "cls": "Qiwei",
+   "level": "C?",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": null,
+    "searchHit": null,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 0
+   },
+   "err": "watchdog120s:TimeoutException:null",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_biubiu_短视频",
+   "name": "️短视频(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 1242,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "P115Share",
+   "name": "🅿️115分享",
+   "kind": "csp",
+   "cls": "P115Share",
+   "level": "C1",
+   "ms": 241,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/dc0e3473d2-115share.txt$$$db$$$1",
+    "cfg_note": "内联(./deps/localized/dc0e3473d2-115share.txt:50547字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method initAliProxy(Ljava/lang/String;)V in class Lcom/github/c",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_Duopan",
+   "name": "🖍︎┃蜡笔┃云盘",
+   "kind": "csp",
+   "cls": "Duopan",
+   "level": "C3",
+   "ms": 3738,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": true
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 72,
+    "searchHit": 7,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 3
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "行动-2",
+   "name": "😌┃行动┃APP",
+   "kind": "csp",
+   "cls": "AppQi",
+   "level": "C2",
+   "ms": 25182,
+   "flags": {
+    "home": true,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 30,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 2
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NoSuchMethodError:No static method getKeywordsMap()Ljava/util/Map; in class Lcom/github/cat",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "Alist",
+   "name": "🌐AList",
+   "kind": "csp",
+   "cls": "AList",
+   "level": "C1",
+   "ms": 39,
+   "flags": {
+    "home": false,
+    "cat": true,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/localized/f4fc1ee86d-alist05155.txt",
+    "cfg_note": "内联(./deps/localized/f4fc1ee86d-alist05155.txt:731字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:IllegalStateException:Expected BEGIN_ARRAY but was BEGIN_OBJECT at line 1 column 2 path $;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "我的阿里",
+   "name": "🌐我的｜阿里网盘",
+   "kind": "csp",
+   "cls": "MyAli",
+   "level": "C1",
+   "ms": 40,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;init:NullPointerException:Attempt to invoke virtual method 'java.lang.String android.content.Con",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBiuDYDY",
+   "name": "🇹 DY-DY.COM(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 26591,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBPQ_农民影视",
+   "name": "🇹 农民影视(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 4310,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_XBPQ_凯奇追剧",
+   "name": "🇹 凯奇影视(XB)",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 189,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_xBPQ_好看影视",
+   "name": "👛好看影视",
+   "kind": "csp",
+   "cls": "xBPQ",
+   "level": "C1",
+   "ms": 1328,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "榜一短剧",
+   "name": "💻榜一┃短剧",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 4805,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "./deps/auto/28-270s/tvbox-master-doki/json/duanjuu.json",
+    "cfg_note": "内联(./deps/auto/28-270s/tvbox-master-doki/json/duanjuu.json:1199字)",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "测试磁力",
+   "name": "🧲测试|磁力",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 31460,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "橙汁",
+   "name": "🌠橙汁┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 2859,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
+  },
+  {
+   "key": "csp_hmhd",
+   "name": "🌠河马┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C1",
+   "ms": 1671,
+   "flags": {
+    "home": true,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "device": "app-process-five-gate",
+    "detail": false,
+    "play": false,
+    "catCount": 0,
+    "searchHit": 0,
+    "cfg_ref": "",
+    "cfg_note": "",
+    "gates": 1
+   },
+   "err": "hostInit=com.github.catvod.spider.Init.init/2url:ok;hostInit=com.github.catvod.spider.Init.init/1url:ok;",
+   "probed_at": "2026-10-01T21:24:35"
   }
  ]
 }
