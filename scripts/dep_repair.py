@@ -97,14 +97,35 @@ def http_get(url, timeout=25, max_bytes=200_000_000):
     raise last
 
 
+DEP_RX = re.compile(r"((?:\./)?deps/[^\s\"'\\;)+]+)")
+
+
+def dep_refs(value):
+    """从配置值里取 deps/ 引用。
+
+    两处坑（2026-10-01 实测）：
+      * 旧正则字符类是 [A-Za-z0-9_\\-./%?&]，**不含非 ASCII**——中文文件名在第一个汉字处
+        被截断（`…/XBPQ/80S电影.json` 收成 `…/XBPQ/80S`），导致 98 条引用压根没被扫到、
+        还造出 11 条「磁盘缺失」幻影，补下自然全失败（was_missing 16 / repaired 0）；
+      * 多值字段用 `$$$` 拼接（ext 里 `./deps/a.json$$$url$$$key` 这种），不先分段就会把
+        后半段一起吃进来。
+    """
+    out = []
+    for seg in str(value).split("$$$"):
+        for m in DEP_RX.finditer(seg):
+            p = m.group(1).lstrip("./").split(";")[0].strip()
+            if p:
+                out.append(p)
+    return out
+
+
 def scan_refs():
     """扫 tvbox.json 里所有 deps/ 引用（ext/jar/parses）。"""
     tv = json.load(open(TVBOX, encoding="utf-8"))
     refs = set()
 
     def add(r):
-        for m in re.finditer(r"((?:\./)?deps/[A-Za-z0-9_\-./%?&]+)", str(r)):
-            refs.add(m.group(1))
+        refs.update(dep_refs(r))
 
     for s in tv["sites"]:
         for f in ("ext", "jar"):
@@ -131,13 +152,20 @@ def main():
 
     man = json.load(open(MANIFEST, encoding="utf-8"))
     by_loc = {}
+    by_base = {}
     for k, v in man.items():
         loc = (v.get("local") or "").lstrip("./")
         if loc:
             by_loc.setdefault(loc, k)
+            by_base.setdefault(os.path.basename(loc), k)
     tasks = []
     for loc in sorted(missing):
-        k = by_loc.get(loc)
+        # 账本路径可能因去重改名而悬空（实测 17 条：内容还在，只是换了目录/文件名）。
+        # 精确查不到时按文件名、再按前缀兜底——只要能还原下载地址就补得回来。
+        k = by_loc.get(loc) or by_base.get(os.path.basename(loc))
+        if not k:
+            cand = [lk for lp, lk in by_loc.items() if lp.startswith(loc) or loc.startswith(lp)]
+            k = cand[0] if cand else None
         if k and man[k].get("url"):
             v = man[k]
             tasks.append({"key": k, "local": loc, "url": v["url"],
@@ -205,8 +233,8 @@ def main():
         blob = " ".join(str(x) for f in ("ext", "jar")
                         for x in ([s.get(f)] if isinstance(s.get(f), str)
                                   else (list(s.get(f).values()) if isinstance(s.get(f), dict) else [])))
-        for m in re.finditer(r"((?:\./)?deps/[A-Za-z0-9_\-./%?&]+)", blob):
-            if m.group(1).lstrip("./") in still:
+        for p in dep_refs(blob):
+            if p in still:
                 aff.append(s.get("key"))
                 break
     report = {
