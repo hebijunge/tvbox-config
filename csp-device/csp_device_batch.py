@@ -122,7 +122,7 @@ def build_jobs():
     tv = json.load(open("tvbox.json", encoding="utf-8"))
     probe = json.load(open("probe/csp_probe.json", encoding="utf-8"))
     done = {s["key"]: s for s in probe["sites"] if s.get("level") not in (None, "C?")}
-    jobs, skipped_guard, seen = [], 0, set()
+    jobs, skipped_guard, skipped_missing, seen = [], 0, 0, set()
     for s in tv.get("sites", []):
         api = str(s.get("api") or "")
         if not api.startswith("csp_"):
@@ -137,6 +137,12 @@ def build_jobs():
         if tiers.get(jar) == "native":
             skipped_guard += 1          # 自载 .so 的壳：不在设备上执行原生代码
             continue
+        if not os.path.exists(jar):
+            # 扫描报告里说类在池里，但当前 deps/ 里文件没了：push 推不上设备，
+            # 白占槽位还跑不出结论（CNFE→C0→被 merge 当 load 丢弃）。诚实处理：
+            # 本地没这个 jar = 判不了，直接跳过，等重拉后下一轮再测。
+            skipped_missing += 1
+            continue
         seen.add(key)
         ext = s.get("ext")
         cfg = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False)
@@ -148,15 +154,15 @@ def build_jobs():
                      "src": jar, "cfg": cfg, "url": url,
                      "cfg_ref": cfg0 if cfg != cfg0 else "", "cfg_note": cfg_note,
                      "tier": tiers.get(jar, "clean"), "name": (s.get("name") or "")[:24]})
-    return jobs, skipped_guard, len(done)
+    return jobs, skipped_guard, skipped_missing, len(done)
 
 
 def cmd_plan():
-    jobs, guard, done = build_jobs()
+    jobs, guard, missing, done = build_jobs()
     jars = sorted(set(j["src"] for j in jobs))
     tiers = collections.Counter(j["tier"] for j in jobs)
-    out("已有结论 %d；native 壳跳过 %d；本轮可测站 %d（clean %d / exec-only 壳 %d），"
-        "涉及 jar %d 个，分块 %d" % (done, guard, len(jobs), tiers["clean"],
+    out("已有结论 %d；native 壳跳过 %d；本地缺 jar 跳过 %d；本轮可测站 %d（clean %d / exec-only 壳 %d），"
+        "涉及 jar %d 个，分块 %d" % (done, guard, missing, len(jobs), tiers["clean"],
                                     tiers["exec-only"], len(jars),
                                     (len(jobs) + CHUNK - 1) // CHUNK))
     json.dump(jobs, open(os.path.join(WORK, "device_jobs.json"), "w", encoding="utf-8"),
@@ -166,7 +172,7 @@ def cmd_plan():
 
 
 def cmd_push():
-    jobs, _, _ = build_jobs()
+    jobs, *_ = build_jobs()
     jars = sorted(set(j["src"] for j in jobs))
     adb(["mkdir", "-p", DEV_JAR])
     pushed = miss = 0
@@ -218,6 +224,40 @@ def cmd_run(nblocks):
         adb(["mv", "-f", outjson, "/data/local/tmp/done_%s.jsonl" % idx])
 
 
+def device_verdict(row, cls):
+    """→ (可写入的等级 或 None, 不收的原因)。
+
+    真机只证明「能跑到第几关」：
+      * stub（Amns/Guard 这类转发壳）真身在宿主运行时里解密，app_process 复现不了注入链；
+      * 类没加载起来（C0）区分不了「真没这个类」和「我们的 DexClassLoader 用不了它」
+        ——能进 jobs 的类都是全池扫描说找得到的；
+      * 装上但一关没过（G0）多半是 ext/依赖没喂到位，留给下一轮。
+    三者都不构成站点判定；判死留给静态口径（csp_static_merge：全池缺席 + 自带 jar 读到过）。
+    """
+    if cls.endswith("Amns") or "Guard" in cls:
+        return None, "stub"
+    lvl = row.get("level")
+    if lvl == "C0":
+        return None, "load"
+    if lvl and lvl.startswith("G"):
+        gates = int(row.get("gates") or 0)
+        return ("C%d" % gates, "") if gates >= 1 else (None, "g0")
+    return (lvl or "C?"), ""
+
+
+def untrusted_c0(row):
+    """证据不足的判死：C0 只认静态口径（全池缺席 + 自带 jar 确实读到过）。
+
+    v1 runner 的 CLASSPATH 里没挂宿主 apk，spider 接口找不到 → 整批 ClassNotFoundException
+    → 802 个 C0 就这么进了产物（其中一半连 evidence 都是空的）。设备侧的 C0 同样只说明
+    "我们这套工装没能把类跑起来"，判不起死。证据不足的判死一律退回未测，下一轮要么被真机
+    跑实、要么由 csp_static_merge 重新判。
+    """
+    if row.get("level") != "C0":
+        return False
+    return not (row.get("evidence") or {}).get("static")
+
+
 def cmd_merge():
     rc, o = adb(["ls", "/data/local/tmp/"])
     parts = sorted(f for f in re.split(r"\s+", o) if f.startswith("done_"))
@@ -237,10 +277,13 @@ def cmd_merge():
             if line.startswith("{"):
                 rows.append(json.loads(line))
     probe = json.load(open("probe/csp_probe.json", encoding="utf-8"))
-    by_key = {s["key"]: s for s in probe["sites"]}
+    kept = [s for s in probe["sites"] if not untrusted_c0(s)]
+    purged = len(probe["sites"]) - len(kept)
+    by_key = {s["key"]: s for s in kept}
     from datetime import datetime
     now = datetime.now().isoformat(timespec="seconds")
-    upd = skipped_stub = skipped_g0 = 0
+    upd = 0
+    skipped = collections.Counter()
     for r in rows:
         key = r.get("id")
         if not key:
@@ -249,24 +292,13 @@ def cmd_merge():
         cls = job.get("cls") or ""
         r.setdefault("cls", cls)
         r.setdefault("name", job.get("name", key))
-        lvl = r.get("level")
-        stub = cls.endswith("Amns") or "Guard" in cls
-        gates = int(r.get("gates") or 0)
-        # 只收可信结论：关卡过了才写等级；load 失败只在"非 stub 家族"才写 C0
-        # （Amns/Guard 这类 stub 转发到运行时解密的真身，app_process 复现不了宿主注入链，
-        #   对它判 C0 就是工装能力问题冒充站点死——824 事故的真机版）
-        if stub:
-            skipped_stub += 1
+        lvl, skip = device_verdict(r, cls)
+        if lvl is None:
+            skipped[skip] += 1
             continue
-        if lvl == "C0":
-            pass
-        elif lvl and lvl.startswith("G"):
-            if gates < 1:
-                skipped_g0 += 1
-                continue
-            lvl = "C%d" % gates          # 与产物里 9-28 真机同口径：等级=通过的关卡数
+        gates = int(r.get("gates") or 0)
         by_key[key] = {"key": key, "name": r.get("name", "")[:24], "kind": "csp",
-                       "cls": (r.get("cls") or ""), "level": lvl or "C?",
+                       "cls": (r.get("cls") or ""), "level": lvl,
                        "ms": r.get("ms"),
                        "flags": {"home": bool(r.get("home")), "cat": bool(r.get("cat")),
                                  "search": bool(r.get("search"))},
@@ -284,12 +316,16 @@ def cmd_merge():
     from collections import Counter
     lv = Counter(x.get("level") for x in probe["sites"])
     probe["summary"] = dict(probe.get("summary") or {}, total=len(probe["sites"]), levels=dict(lv),
-                            note="root 真机五关 + 静态 C0；2026-10-01 起 app_process runner "
-                                 "（CLASSPATH 挂宿主 apk）可复现加载")
+                            purged_untrusted_c0=purged,
+                            note="真机只证明「能跑到第几关」（C1-C5）；判死 C0 一律出自静态口径"
+                                 "（全池类缺席 + 该站自带 jar 确实读到过）。2026-10-01 起 "
+                                 "app_process runner 挂宿主 apk，CLASSPATH 齐全")
     json.dump(probe, open("probe/csp_probe.json", "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
-    out("合并 %d 条；stub 家族不收 %d；装上但零关通过不收 %d；csp_probe 总 %d，分布 %s" % (
-        upd, skipped_stub, skipped_g0, len(probe["sites"]), dict(lv)))
+    out("合并 %d 条；不收 stub %d / 类没加载起来 %d / 零关通过 %d；"
+        "清掉无证据旧 C0 %d；csp_probe 总 %d，分布 %s" % (
+            upd, skipped["stub"], skipped["load"], skipped["g0"], purged,
+            len(probe["sites"]), dict(lv)))
 
 
 if __name__ == "__main__":
