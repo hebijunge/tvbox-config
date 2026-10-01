@@ -1,15 +1,15 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-01T02:53:37
+生成时间：2026-10-01T03:35:23
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 8023 | 296 | 981 | 5655 | 1091 |
-| 直播 | 582 | 118 | 208 | 233 | 23 |
+| 点播 | 8046 | 296 | 981 | 5678 | 1091 |
+| 直播 | 589 | 120 | 211 | 235 | 23 |
 
-较上轮变化：新增 525｜掉线 208｜恢复 163｜移除 0（点播）；新增 2｜掉线 0｜恢复 0｜移除 0（直播）
+较上轮变化：新增 11｜掉线 208｜恢复 165｜移除 0（点播）；新增 7｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
@@ -39,13 +39,13 @@
 
 ## 点播新增（前 10）
 
-- 豆瓣资源3（unknown）
-- 豆瓣资源2（unknown）
-- 💎Pandalivezhibo┃[PY]（unknown）
-- 💎Pandalive┃[PY]（unknown）
-- 💎maitianyingyuan┃[PY]（unknown）
-- 💎米盘搜┃[PY]（unknown）
-- 💎51duanju┃[PY]（unknown）
-- 💎99duanjuwang┃[PY]（unknown）
-- 💎canchiduanjuwang┃[PY]（unknown）
-- 💎dijiuduanjuwang┃[PY]（unknown）
+- 奶香（unknown）
+- 好片资源（unknown）
+- 流光4K┃MY（unknown）
+- 海绵4K┃MY（unknown）
+- 资源搜索4K┃MY（unknown）
+- 🎠好盘┃综合🎠（unknown）
+- 配置中心┃PZ（unknown）
+- 鸭社 • 4K（unknown）
+- 丝袜（unknown）
+- 天美AV（unknown）

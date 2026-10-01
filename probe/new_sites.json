@@ -1,26 +1,28 @@
 {
- "checked_at": "2026-10-01 10:27:19",
+ "checked_at": "2026-10-01 11:07:54",
  "sampled": 3,
- "healthy": 0,
- "verdict": "dead",
+ "healthy": 2,
+ "verdict": "healthy",
  "sites": {
-  "快看影视": {
-   "name": "😍快看影视 ",
+  "qiletv": {
+   "name": "奇乐影视",
    "api": "csp_XBPQ",
    "ok": null,
    "reason": "non-http-api"
   },
-  "csp_xml_fox": {
-   "name": "❤fox",
-   "api": "https://api.foxzyapi.com/api.php/provide/vod/?ac=list",
-   "ok": false,
-   "reason": "HTTPError"
+  "yutu_json": {
+   "name": "玉兔",
+   "api": "https://apiyutu.com/api.php/provide/vod/?ac=list",
+   "ok": true,
+   "ms": 233,
+   "status": 200
   },
-  "蓝光官采": {
-   "name": "❤猫咪",
-   "api": "http://zy.xiaomaomi.vip/api.php/provide/vod/?ac=list",
-   "ok": false,
-   "reason": "URLError"
+  "semao_json": {
+   "name": "色猫",
+   "api": "https://caiji.semaozy.net/inc/apijson_vod.php",
+   "ok": true,
+   "ms": 400,
+   "status": 200
   }
  }
 }
