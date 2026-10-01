@@ -1,51 +1,51 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-01T08:24:41
+生成时间：2026-10-01T23:16:32
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 8116 | 301 | 1242 | 5410 | 1163 |
-| 直播 | 610 | 127 | 217 | 244 | 22 |
+| 点播 | 8135 | 312 | 1656 | 5112 | 1055 |
+| 直播 | 773 | 181 | 293 | 273 | 26 |
 
-较上轮变化：新增 12｜掉线 209｜恢复 176｜移除 0（点播）；新增 9｜掉线 0｜恢复 0｜移除 0（直播）
+较上轮变化：新增 17｜掉线 182｜恢复 282｜移除 0（点播）；新增 163｜掉线 0｜恢复 1｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
 - ♨️蓝鸟｜4K线路（healthy → dead）
 - 布布┃直连（degraded → dead）
 - 文才✨蓝光影视（healthy → dead）
-- 老鹰｜APP（healthy → dead）
-- 蓝光影院(XBPQ)（degraded → dead）
 - 🍁┆枫眠┆4K（degraded → dead）
-- 🎄┆怀桑┆4K（healthy → dead）
 - 🧿即看┃蓝光（degraded → dead）
 - 🧿影院┃蓝光（degraded → dead）
-- 🧿影院┃蓝光（degraded → dead）
+- рҹҗјв”ғиӮҘзҢ«в”ғAPP（degraded → dead）
+- 布雷丨APP（degraded → dead）
+- 🌀沐风┃蓝光┃无广（degraded → dead）
+- 🧲Mp4电影（degraded → dead）
 
 ## 点播恢复（前 10）
 
+- 素白白✨蓝光影视（dead → degraded）
+- 📔┃厂长┃不卡（dead → degraded）
+- ⚽┆看球┆体育（dead → degraded）
+- AI3┃仅搜索（dead → degraded）
+- 玩偶 | 饭（dead → degraded）
+- 耐看｜影视（dead → degraded）
 - 苏苏🛰️臻享4K（dead → degraded）
-- 💖玩偶影视4K-备1（dead → degraded）
-- 🫣耐看┃蓝光┃无广（dead → degraded）
-- 奴娜丨APP（dead → healthy）
-- 💝分享剧匣（dead → degraded）
-- [448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 麦田┃1080P（dead → degraded）
-- ❤️‍分享官采（dead → healthy）
-- 推荐┃龙门影视（dead → degraded）
-- 飞飞┃APP（dead → healthy）
-- [367ms|直播] 🦔刺猬影视(优)（dead → degraded）
+- 蓝光影院(XBiu)（dead → degraded）
+- 🌟┃Lib┃秒播（dead → degraded）
+- 玩偶（dead → healthy）
 
 ## 点播新增（前 10）
 
-- 量子（unknown）
-- 非凡（unknown）
-- ️快看🌀采集（unknown）
-- 老虎三┃QD4K（unknown）
-- 驿站┃无搜索（unknown）
-- 阿里雲（unknown）
-- ㊣｜夸克｜TG搜（unknown）
-- 云云┃无搜索（unknown）
-- ㊣｜123｜TG搜（unknown）
-- ㊣｜天翼｜TG搜（unknown）
+- 极速2（unknown）
+- 极速资源（unknown）
+- 非凡资源（unknown）
+- 豪华资源（unknown）
+- dd资源（unknown）
+- 配置接口完全免费（unknown）
+- mb资源（unknown）
+- 🍟┃红果┃影视（unknown）
+- 🎉┃多多┃影视（unknown）
+- 🏄‍♂️┃心跳┃影视（unknown）
