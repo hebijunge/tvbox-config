@@ -17,6 +17,7 @@ import os
 import re
 import subprocess
 import sys
+import urllib.parse
 
 WORK = os.environ.get("CSP_WORKDIR") or os.path.join(
     os.environ.get("TEMP", "/tmp"), "csp-harness")
@@ -75,6 +76,44 @@ def jar_tiers(rep):
     return tiers
 
 
+MAX_INLINE = 200_000          # 单条规则文件内联上限；再大的进 jobs.json 会把块撑爆
+
+
+def inline_ext(cfg):
+    """把 `./deps/x.json` 这类相对路径 ext 换成文件内容本身，返回 (新 cfg, 备注)。
+
+    为什么必须换：宿主 app 在加载站点前会用 AssetManager 把相对路径读成规则文本再喂给 spider，
+    app_process 复现不了这一步。直接把路径串交给 init，xBPQ/XYQHiker 这一类就把它当 JSON 解析，
+    报 `JSONException: End of input`——那是工装没喂到位，不是站点死（824 假死事故的同一族）。
+    本机真机对照：同样 8 个 G0 站，内联规则内容后 7 个变 G1（首页出结构）。
+
+    备注里写清每段的结果（内联了多少字 / 文件缺失 / 超限），合并判级时能复盘证据链。
+    """
+    if not isinstance(cfg, str) or not cfg.strip():
+        return cfg, ""
+    parts, notes = [], []
+    for seg in cfg.split("$$$"):
+        head = seg.strip().split(";md5;")[0]
+        if not head.startswith(("./", "assets://")):
+            parts.append(seg)
+            continue
+        rel = urllib.parse.unquote(head[2:] if head.startswith("./") else head[len("assets://"):])
+        try:
+            with open(rel, "rb") as fh:
+                raw = fh.read()
+        except OSError as e:
+            parts.append(seg)
+            notes.append("未内联(%s:%s)" % (head, type(e).__name__))
+            continue
+        if not (20 < len(raw) < MAX_INLINE):
+            parts.append(seg)
+            notes.append("未内联(%s:大小%s)" % (head, len(raw)))
+            continue
+        parts.append(raw.decode("utf-8", "replace"))
+        notes.append("内联(%s:%d字)" % (head, len(raw)))
+    return "$$$".join(parts), ";".join(notes)
+
+
 def build_jobs():
     rep = json.load(open(os.path.join(WORK, "csp_jar_scan.json"), encoding="utf-8"))
     present = {c: (v["jar"] or "").replace("\\", "/") for c, v in rep["classes"].items()}
@@ -103,8 +142,11 @@ def build_jobs():
         cfg = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False)
                                                 if isinstance(ext, dict) else "")
         url = urls.get(jar) or bare(tv.get("spider") or "")
+        cfg0 = cfg
+        cfg, cfg_note = inline_ext(cfg)
         jobs.append({"id": key, "cls": cls, "jar": DEV_JAR + "/" + safe_name(jar),
                      "src": jar, "cfg": cfg, "url": url,
+                     "cfg_ref": cfg0 if cfg != cfg0 else "", "cfg_note": cfg_note,
                      "tier": tiers.get(jar, "clean"), "name": (s.get("name") or "")[:24]})
     return jobs, skipped_guard, len(done)
 
@@ -231,6 +273,9 @@ def cmd_merge():
                        "evidence": {"device": "app-process-five-gate",
                                     "detail": bool(r.get("detail")), "play": bool(r.get("play")),
                                     "catCount": r.get("catCount"), "searchHit": r.get("searchHit"),
+                                    # ext 是相对路径的站，喂进去的是内联后的规则内容；留出处供复盘
+                                    "cfg_ref": (job.get("cfg_ref") or "")[:96],
+                                    "cfg_note": (job.get("cfg_note") or "")[:96],
                                     "gates": gates},
                        "err": (r.get("err") or "")[:240], "probed_at": now}
         upd += 1
