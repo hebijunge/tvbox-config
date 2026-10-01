@@ -121,9 +121,11 @@ jobs:
       - name: 探针判定来自国内（所有者 2026-09-30 拍板：口径=国内经镜像真实可达）
         # CI runner 在国外：国外直连 raw 全通、国内被掐的站判不出、国内 CDN 对外国 IP 的
         # 拒绝/高延迟会误杀——"可用性"结论必须由国内出口生产（本机 run_all --from 5 跑
-        # 5a/5b/5c/5e 后提交 probe/*.json），与 csp_probe（真机生产、CI 只消费）同模式。
-        # CI 这里不再重跑 4 路探针；store --ingest-probes 吃仓内已提交的国内判定，
+        # 5a/5b/5c/5e/5f 后提交 probe/*.json），与 csp_probe（真机生产、CI 只消费）同模式。
+        # CI 这里不再重跑 5 路探针；store --ingest-probes 吃仓内已提交的国内判定，
         # 超 7 天由 PROBE_STALE_DAYS 时效降权自动兜底（诚实降级，不拿国外乐观数据冒充）。
+        # 5f（py 静态）虽与出口环境无关，仍保持单一生产方：若在 CI 执行，CI 的 deps/ 树当轮
+        # 拉取失败时会把已有好判定重写成全 P0（drpy 沙箱缺失覆写事故的同类），故只消费不执行。
         run: echo "domestic probes only — CI skips region-sensitive verdicts"
 
       - name: 同库镜像去重（内容比对，与出口环境无关，保留在 CI）
@@ -159,7 +161,7 @@ jobs:
         run: |
           python scripts/store.py --ingest-sites tvbox.json --ingest-lives tvbox.json \
             --ingest-probes probe/sites_probe.json probe/spider_probe.json probe/js_probe.json \
-                            probe/csp_probe.json probe/drpy_probe.json \
+                            probe/csp_probe.json probe/drpy_probe.json probe/py_probe.json \
             --ingest-upstreams status.json --prune --probe-lives --stats || true
 
       - name: 导出接口清单
