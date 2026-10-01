@@ -1,15 +1,15 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-01T01:17:10
+生成时间：2026-10-01T02:53:37
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 7496 | 296 | 949 | 5160 | 1091 |
-| 直播 | 580 | 118 | 205 | 235 | 22 |
+| 点播 | 8023 | 296 | 981 | 5655 | 1091 |
+| 直播 | 582 | 118 | 208 | 233 | 23 |
 
-较上轮变化：新增 271｜掉线 208｜恢复 164｜移除 0（点播）；新增 32｜掉线 0｜恢复 0｜移除 0（直播）
+较上轮变化：新增 525｜掉线 208｜恢复 163｜移除 0（点播）；新增 2｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
@@ -33,19 +33,19 @@
 - [448ms|【8月8日】最新【影视仓】高清【1080P】高速接口地址【支持弹幕】] 麦田┃1080P（dead → degraded）
 - ❤️‍分享官采（dead → healthy）
 - 推荐┃龙门影视（dead → degraded）
-- 🎬┃荐片┃影视（dead → healthy）
 - 飞飞┃APP（dead → healthy）
 - [367ms|直播] 🦔刺猬影视(优)（dead → degraded）
+- 2号币（dead → degraded）
 
 ## 点播新增（前 10）
 
-- 👠滴滴资源（unknown）
-- 💥┃火狐2K┃有广（unknown）
-- 18精品资源 （unknown）
-- 🦄免费短视频分享大全（unknown）
-- 东资源（unknown）
-- c榴（直连）（unknown）
-- ♠️木耳┃影视（unknown）
-- 奶茶资源(已修复)（unknown）
-- 影趣影视（unknown）
-- 木子看剧（unknown）
+- 豆瓣资源3（unknown）
+- 豆瓣资源2（unknown）
+- 💎Pandalivezhibo┃[PY]（unknown）
+- 💎Pandalive┃[PY]（unknown）
+- 💎maitianyingyuan┃[PY]（unknown）
+- 💎米盘搜┃[PY]（unknown）
+- 💎51duanju┃[PY]（unknown）
+- 💎99duanjuwang┃[PY]（unknown）
+- 💎canchiduanjuwang┃[PY]（unknown）
+- 💎dijiuduanjuwang┃[PY]（unknown）
