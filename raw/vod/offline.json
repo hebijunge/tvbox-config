@@ -1,5 +1,5 @@
 {
-  "spider": "file://Download/custom_spider.jar",
+  "spider": "https://github.com/custom_spider.jar",
   "sites": [
     {
       "key": "one",
@@ -8,7 +8,7 @@
       "api": "csp_Csp",
       "searchable": 1,
       "changeable": 1,
-      "ext": "file://Download/one.json"
+      "ext": "https://github.com/one.json"
     },
     {
       "key": "two",
@@ -17,7 +17,7 @@
       "api": "csp_Csp",
       "searchable": 1,
       "changeable": 1,
-      "ext": "file://Download/two.json"
+      "ext": "https://github.com/two.json"
     },
     {
       "key": "extend",
@@ -26,8 +26,45 @@
       "api": "csp_Csp",
       "searchable": 1,
       "changeable": 1,
-      "ext": "file://Download/extend.json",
-      "jar": "file://Download/extend.jar"
+      "ext": "https://github.com/extend.json",
+      "jar": "https://github.com/extend.jar"
     }
+  ],
+  "parses": [
+    {
+      "name": "官方",
+      "type": 1,
+      "url": "https://google.com/api/?url="
+    }
+  ],
+  "doh": [
+    {
+      "name": "Google",
+      "url": "https://dns.google/dns-query",
+      "ips": [
+        "8.8.4.4",
+        "8.8.8.8"
+      ]
+    }
+  ],
+  "headers": [
+    {
+      "host": "gslbserv.itv.cmvideo.cn",
+      "header": {
+        "User-Agent": "okhttp/3.12.13"
+      }
+    }
+  ],
+  "proxy": [
+    "raw.githubusercontent.com"
+  ],
+  "hosts": [
+    "cache.ott.ystenlive.itv.cmvideo.cn=base-v4-free-mghy.e.cdn.chinamobile.com"
+  ],
+  "flags": [
+    "qq"
+  ],
+  "ads": [
+    "static-mozai.4gtv.tv"
   ]
 }
