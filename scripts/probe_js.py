@@ -37,6 +37,7 @@ import shutil
 import ssl
 import subprocess
 import sys
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -162,6 +163,61 @@ def build_url(host, template, cate=None, page=1, keyword=None):
     return host.rstrip("/") + "/" + u.lstrip("/")
 
 
+def _abs(repo, loc):
+    return loc if os.path.isabs(loc) else os.path.join(repo, loc)
+
+
+def local_rule_file(site, repo, man_idx):
+    """这个 JS 源的解释文件在本地哪儿？
+
+    tvbox.json 的本地化约定是把 api/ext 的远程地址改写成一串指纹，真正的下载记录在
+    deps/manifest.json 的 key（"origin|url"）里——按指纹回查，再退到 api/ext 的原始形态。
+    """
+    cands = []
+    for v in (site.get("api"), site.get("ext")):
+        if isinstance(v, str) and v.strip():
+            cands.append(v.strip().split(";")[0])
+    for c in cands:
+        if c.startswith("./") or c.startswith("deps/"):
+            p = os.path.join(repo, c[2:] if c.startswith("./") else c)
+            if os.path.isfile(p):
+                return p
+        if c.startswith("http"):
+            for key in (c, gh_inner(c)):
+                loc = man_idx.get(key)
+                if loc and os.path.isfile(_abs(repo, loc)):
+                    return _abs(repo, loc)
+        else:
+            loc = man_idx.get(c)          # api 被改写成指纹（deps 本地化的形态）
+            if loc and os.path.isfile(_abs(repo, loc)):
+                return _abs(repo, loc)
+    return None
+
+
+def manifest_index(repo):
+    idx = {}
+    p = os.path.join(repo, "deps", "manifest.json")
+    if not os.path.exists(p):
+        return idx
+    try:
+        with open(p, encoding="utf-8") as f:
+            data = json.load(f)
+    except (OSError, ValueError):
+        return idx
+    for key, v in data.items():
+        if not isinstance(v, dict):
+            continue
+        loc = (v.get("local") or "").replace("\\", "/")
+        if not loc:
+            continue
+        url = v.get("url") or ""
+        orig = key.split("|", 1)[1] if "|" in key else url
+        for k in filter(None, (url, orig, gh_inner(orig), loc, loc[len("deps/"):] if
+                               loc.startswith("deps/") else loc)):
+            idx.setdefault(k, loc)
+    return idx
+
+
 def parse_rule(text):
     out = {}
     for k, rx in RX.items():
@@ -172,30 +228,90 @@ def parse_rule(text):
     return out
 
 
+def gh_inner(url):
+    """去掉镜像前缀，还原被包住的真实地址（deps 账本按真实地址记）。
+
+    先认 github raw（产出改写的主形态），再兜一般的 "https://镜像/<http 内层>" 结构，
+    不然 gitcode/agit 这类被 gh-proxy 包起来的引用查不到账本。
+    """
+    u = str(url or "").split(";md5")[0]
+    m = re.search(r"(https?://raw\.githubusercontent\.com/\S+)", u)
+    if m:
+        return m.group(1)
+    m = re.search(r"https?://[^/]+/(https?://.*)$", u)
+    return m.group(1) if m else u
+
+
+def is_engine_file(fp, text):
+    """是不是 drpy **引擎**文件（几百个站共用一个，host 不在文件里而在远端规则里）。
+
+    引擎定义 `function main(...)`、并从 assets://js/lib/* 引依赖；规则文件是 `var rule={host…}`。
+    """
+    name = os.path.basename(fp).lower()
+    if name.startswith("drpy") or name.endswith(".min.js"):
+        return True
+    head = text[:200000]
+    return "assets://js/lib" in head or bool(re.search(r"\bfunction\s+main\s*\(", head))
+
+
+def is_js_site(s):
+    api, ext = str(s.get("api") or ""), str(s.get("ext") or "")
+    return (api.startswith("./") and api.endswith(".js")) or api.endswith(".js") or \
+        (ext.startswith("./") and ext.endswith(".js")) or s.get("kind") == "js"
+
+
 def node_check(fp):
-    """规则文件语法校验（加载即失败的文件直接判死）。node 不存在时返回 None。"""
+    """规则文件语法校验（加载即失败的文件直接判死）。node 不存在时返回 None。
+
+    drpy 规则本身是 ES 模块（`import cheerio from "assets://..."`、还有中文标识符），
+    `node --check x.js` 按 CommonJS 解析会报 "Cannot use import statement outside a
+    module"，把正常的 drpy2.min.js 判成"语法错误"（2026-10-01 实测 9 个 S0 全是误判）。
+    所以含 import/export 的内容先复制成 .mjs 再校验。
+    """
     node = shutil.which("node") or r"C:\Users\ajun\.workbuddy\binaries\node\versions\22.22.2-3\node.exe"
     if not node or not os.path.exists(node):
         return None
+    target = fp
+    tmp = None
     try:
-        r = subprocess.run([node, "--check", fp], capture_output=True, timeout=20)
-        return r.returncode == 0
-    except (OSError, subprocess.SubprocessError):
-        return None
+        with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+            head = f.read(60000)
+    except OSError:
+        head = ""
+    if re.search(r"^\s*(import|export)\b", head, re.M) or "assets://" in head:
+        # 临时副本必须唯一：几百个站共享同一个 drpy2.min.js，用固定名字会 A 删 B 用，
+        # 制造出一片假"语法错误"（2026-10-01 实测 38 例）。
+        try:
+            fd, tmp = tempfile.mkstemp(suffix=".mjs")
+            os.close(fd)
+            shutil.copyfile(fp, tmp)
+            target = tmp
+        except OSError:
+            tmp = None
+    try:
+        try:
+            r = subprocess.run([node, "--check", target], capture_output=True, timeout=20)
+            return r.returncode == 0
+        except (OSError, subprocess.SubprocessError):
+            return None
+    finally:
+        if tmp:
+            try:
+                os.remove(tmp)
+            except OSError:
+                pass
 
 
-def probe_one(site, repo, keywords):
+def probe_one(site, repo, keywords, man_idx=None):
     r = {"key": site.get("key"), "name": site.get("name"), "kind": "js"}
-    ext = site.get("ext")
-    if not isinstance(ext, str) or not ext.strip().startswith("./"):
-        r.update({"level": "S0", "reason": "无本地规则文件"})
+    fp = local_rule_file(site, repo, man_idx or {})
+    if not fp:
+        # 不是"没去下"：deps 清单收了 api 的 .js，实测这些地址 241/242 取不到
+        # （裸 IP 超时、gitcode.net 迁站 418/SPA 壳、agit.ai 关站 lander、DNS 不存在、401 私有仓）
+        r.update({"level": "S0", "reason": "规则源取不到（deps 无本地副本，域名失效/不可达）"})
         return r
-    rel = ext.strip().split(";")[0][2:]
-    fp = os.path.join(repo, rel)
+    rel = os.path.relpath(fp, repo).replace("\\", "/")
     r["rule"] = rel
-    if not os.path.isfile(fp):
-        r.update({"level": "S0", "reason": "规则文件缺失"})
-        return r
     try:
         with open(fp, "rb") as f:
             text = f.read(400_000).decode("utf-8", "ignore")
@@ -211,6 +327,11 @@ def probe_one(site, repo, keywords):
         r.update({"level": "S0", "reason": "规则文件语法错误"})
         return r
     if not rule.get("host"):
+        if is_engine_file(fp, text):
+            # drpy2.min.js 这类是**引擎**，host 在各站远端规则里，5c 用正则拿不到证据；
+            # 判 S1（入库即 degraded）是拿工装能力冒充站点质量结论——留 S?，交 5e 沙箱真解释。
+            r.update({"level": "S?", "reason": "引擎文件，规则未随包（待 5e 沙箱判）"})
+            return r
         r.update({"level": "S1", "reason": "规则未声明 host"})
         return r
 
@@ -280,15 +401,15 @@ def main() -> int:
     repo = os.path.abspath(args.repo)
     with open(os.path.join(repo, args.input), encoding="utf-8") as f:
         doc = json.load(f)
-    sites = [s for s in (doc.get("sites") or [])
-             if isinstance(s.get("api"), str) and s["api"].startswith("./")]
+    sites = [s for s in (doc.get("sites") or []) if is_js_site(s)]
+    man_idx = manifest_index(repo)
     keywords = [k.strip() for k in args.keywords.split(",") if k.strip()]
     print(f"[js] 待测 JS 源 {len(sites)} 个（并发 {args.concurrency}）", flush=True)
 
     results = []
     t0 = time.time()
     with cf.ThreadPoolExecutor(args.concurrency) as ex:
-        futs = {ex.submit(probe_one, s, repo, keywords): s for s in sites}
+        futs = {ex.submit(probe_one, s, repo, keywords, man_idx): s for s in sites}
         done = 0
         for fut in cf.as_completed(futs):
             try:
