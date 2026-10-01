@@ -31,19 +31,8 @@
   "cnzz.com"
  ],
  "version": "2026-10-02-b1",
- "updated_at": "2026-10-02T06:50:16+08:00",
+ "updated_at": "2026-10-02T07:21:13+08:00",
  "sites": [
-  {
-   "key": "yutu",
-   "name": "鱼兔资源",
-   "type": 1,
-   "api": "https://apiyutu.com/api.php/provide/vod",
-   "playUrl": "",
-   "ext": "",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1
-  },
   {
    "key": "玉兔",
    "name": "玉兔 | 采集",
@@ -56,10 +45,26 @@
    "ext": "proxy"
   },
   {
+   "key": "dddCMS",
+   "name": "👭豆豆资源👭",
+   "type": 1,
+   "api": "https://api.douapi.cc/api.php/provide/vod/",
+   "changeable": 1
+  },
+  {
    "key": "senlin_json",
    "name": "森林",
    "type": 1,
    "api": "https://slapibf.com/api.php/provide/vod/?ac=list",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1
+  },
+  {
+   "key": "yutu_json",
+   "name": "玉兔",
+   "type": 1,
+   "api": "https://apiyutu.com/api.php/provide/vod/?ac=list",
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 1
@@ -76,10 +81,20 @@
    "ext": "proxy"
   },
   {
-   "key": "dddCMS",
-   "name": "👭豆豆资源👭",
+   "key": "乐播",
+   "name": "乐播 | 采集",
    "type": 1,
-   "api": "https://api.douapi.cc/api.php/provide/vod/",
+   "api": "https://lbapi9.com/api.php/provide/vod/",
+   "quickSearch": 1,
+   "searchable": 1,
+   "changeable": 1,
+   "ext": "proxy"
+  },
+  {
+   "key": "slapibfCMS",
+   "name": "👭森林资源👭",
+   "type": 1,
+   "api": "https://slapibf.com/api.php/provide/vod/",
    "changeable": 1
   },
   {
@@ -95,30 +110,6 @@
    "changeable": 1
   },
   {
-   "key": "slapibfCMS",
-   "name": "👭森林资源👭",
-   "type": 1,
-   "api": "https://slapibf.com/api.php/provide/vod/",
-   "changeable": 1
-  },
-  {
-   "key": "乐播",
-   "name": "乐播 | 采集",
-   "type": 1,
-   "api": "https://lbapi9.com/api.php/provide/vod/",
-   "quickSearch": 1,
-   "searchable": 1,
-   "changeable": 1,
-   "ext": "proxy"
-  },
-  {
-   "key": "看资源",
-   "name": "💞看资源💞",
-   "type": 1,
-   "api": "https://www.pgxdy.com/api/json.php",
-   "changeable": 1
-  },
-  {
    "key": "lebozy.com",
    "name": "💕乐播(直连)",
    "type": 1,
@@ -127,62 +118,11 @@
    "filterable": 1
   },
   {
-   "key": "yutu_json",
-   "name": "玉兔",
+   "key": "看资源",
+   "name": "💞看资源💞",
    "type": 1,
-   "api": "https://apiyutu.com/api.php/provide/vod/?ac=list",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1
-  },
-  {
-   "key": "番号",
-   "name": "番号 | 采集",
-   "type": 1,
-   "api": "http://fhapi9.com/api.php/provide/vod/",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0,
-   "ext": "proxy"
-  },
-  {
-   "key": "fhapi9.com",
-   "name": "★废柴(直连)",
-   "type": 1,
-   "api": "http://fhapi9.com/api.php/provide/vod/?ac=list",
-   "searchable": 1,
-   "filterable": 1
-  },
-  {
-   "key": "番号资源",
-   "name": "番号资源(卡切)",
-   "type": 1,
-   "api": "http://fhapi9.com/api.php/provide/vod/at/json",
-   "searchable": 1,
-   "quickSearch": 1
-  },
-  {
-   "key": "*番号",
-   "name": "*番号",
-   "type": 1,
-   "api": "http://fhapi9.com/api.php/provide/vod/"
-  },
-  {
-   "key": "91md",
-   "name": "🐞91麻豆",
-   "type": 1,
-   "api": "https://91md.me/api.php/provide/vod/from/mdm3u8/",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 0
-  },
-  {
-   "key": "*91麻豆②",
-   "name": "*91麻豆②",
-   "type": 1,
-   "api": "http://bt4.cc/api.php/provide/vod/from/mdm3u8/",
-   "tag": "qb,tj,rm",
-   "categories": []
+   "api": "https://www.pgxdy.com/api/json.php",
+   "changeable": 1
   },
   {
    "key": "apilj.com",
@@ -202,40 +142,36 @@
    }
   },
   {
-   "key": "91md.me",
-   "name": "成人07",
+   "key": "fhapi9.com",
+   "name": "★废柴(直连)",
    "type": 1,
-   "api": "http://91md.me/api.php/provide/vod/",
-   "playUrl": "json:http://127.0.0.1:10079/parse/?thread=0&proxy=&url=",
+   "api": "http://fhapi9.com/api.php/provide/vod/?ac=list",
    "searchable": 1,
-   "recordable": 0,
-   "style": {
-    "type": "rect",
-    "ratio": 1.33
-   },
-   "header": {
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
-    "User-Agent": "Mozilla/5.0(WindowsNT10.0;Win64;x64)AppleWebKit/537.36(KHTML,likeGecko)Chrome/117.0.0.0Safari/537.36"
-   }
+   "filterable": 1
   },
   {
-   "key": "*乐播资源",
-   "name": "🔞乐播资源",
+   "key": "番号",
+   "name": "番号 | 采集",
    "type": 1,
-   "api": "https://lbapi9.com/api.php/provide/vod/",
-   "searchable": 1,
-   "quickSearch": 0,
-   "filterable": 0
-  },
-  {
-   "key": "麻豆视频",
-   "name": "麻豆 | 采集",
-   "type": 1,
-   "api": "https://91md.me/api.php/provide/vod/",
+   "api": "http://fhapi9.com/api.php/provide/vod/",
    "searchable": 1,
    "quickSearch": 1,
-   "filterable": 1,
+   "filterable": 0,
    "ext": "proxy"
+  },
+  {
+   "key": "番号资源",
+   "name": "番号资源(卡切)",
+   "type": 1,
+   "api": "http://fhapi9.com/api.php/provide/vod/at/json",
+   "searchable": 1,
+   "quickSearch": 1
+  },
+  {
+   "key": "*番号",
+   "name": "*番号",
+   "type": 1,
+   "api": "http://fhapi9.com/api.php/provide/vod/"
   },
   {
    "key": "1仓库",
@@ -247,29 +183,13 @@
    "filterable": 0
   },
   {
-   "key": "*91麻豆",
-   "name": "*91麻豆",
+   "key": "*乐播资源",
+   "name": "🔞乐播资源",
    "type": 1,
-   "api": "https://91md.me/api.php/provide/vod/",
-   "searchable": 0,
-   "quickSearch": 0
-  },
-  {
-   "key": "*鲨鱼资源",
-   "name": "🔞鲨鱼资源",
-   "type": 1,
-   "api": "https://shayuapi.com/api.php/provide/vod/",
+   "api": "https://lbapi9.com/api.php/provide/vod/",
    "searchable": 1,
-   "quickSearch": 1,
+   "quickSearch": 0,
    "filterable": 0
-  },
-  {
-   "key": "madouse.la",
-   "name": "★魔法(直连)",
-   "type": 1,
-   "api": "http://madouse.la/api.php/provide/vod/",
-   "searchable": 1,
-   "filterable": 1
   },
   {
    "key": "aidan",
@@ -281,6 +201,15 @@
    "filterable": 1,
    "ext": "",
    "category": "福利"
+  },
+  {
+   "key": "*鲨鱼资源",
+   "name": "🔞鲨鱼资源",
+   "type": 1,
+   "api": "https://shayuapi.com/api.php/provide/vod/",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 0
   },
   {
    "key": "四虎影院",
