@@ -577,6 +577,43 @@ def probe_lives(conn, timeout: int = 12, workers: int = 8) -> dict:
     return out
 
 
+PRUNE_GRACE_DAYS = int(os.environ.get("INTERFACE_PRUNE_GRACE_DAYS", "7"))
+
+
+def prune_interfaces(conn, grace_days: int = PRUNE_GRACE_DAYS, absent=None) -> int:
+    """删掉"当前产物里已经没有"的接口行（含其检测历史）。
+
+    --prune 以前只清 checks 历史，interfaces **只进不出**：main 库 8023 行里 3739 行
+    （46%）早就不在 tvbox.json 里了——多是 key 规范化前带前后空格的老名
+    （' bili_哔哩'、' drpy_88看球' 这种），其中 2553 行挂着 unknown。后果是日报的
+    "unknown 5655"里将近一半是幽灵：看着像"测不过来"，其实是"根本没这个站"。
+    按 last_seen 判 stale（ingest_sites 每轮都会刷新在场站的 last_seen），留 7 天宽限
+    避免上游 key 抖动来回删建。absent 给出本轮产物的 key 集合时，顺带报出"已消失但还在
+    宽限期内"的行数——不然库刚重建没几天，这个规模在日志里完全看不见。
+    """
+    cutoff = (datetime.now() - timedelta(days=grace_days)).isoformat(timespec="seconds")
+    if absent:
+        have = {r[0] for r in conn.execute("SELECT key FROM interfaces")}
+        log(f"接口台账 {len(have)} 行，其中 {len(have - set(absent))} 行已不在本轮产物里"
+            f"（宽限 {grace_days} 天内暂留，过期即删）")
+    stale = [r[0] for r in conn.execute(
+        "SELECT key FROM interfaces WHERE last_seen <> '' AND last_seen < ?", (cutoff,))]
+    if absent:                                   # 只删"既过期又确实不在产物里"的行
+        stale = [k for k in stale if k not in absent]
+    if not stale:
+        log(f"接口清理 0 条（没有 last_seen 早于 {grace_days} 天且不在产物中的行）")
+        return 0
+    gone = 0
+    for i in range(0, len(stale), 400):          # SQLite 变量上限，分批
+        chunk = stale[i:i + 400]
+        ph = ",".join("?" * len(chunk))
+        conn.execute(f"DELETE FROM checks WHERE key IN ({ph})", chunk)
+        gone += conn.execute(f"DELETE FROM interfaces WHERE key IN ({ph})", chunk).rowcount
+    conn.commit()
+    log(f"接口清理 {gone} 条产物里已不存在的幽灵行（连带其检测历史）")
+    return gone
+
+
 def prune_checks(conn, keep_days: int = KEEP_DAYS) -> int:
     """清理过期检测历史，避免库无限膨胀。"""
     cutoff = (datetime.now() - timedelta(days=keep_days)).isoformat(timespec="seconds")
@@ -589,6 +626,10 @@ def prune_checks(conn, keep_days: int = KEEP_DAYS) -> int:
 def stats(conn) -> dict:
     out = {}
     out["interfaces"] = conn.execute("SELECT COUNT(*) FROM interfaces").fetchone()[0]
+    out["interfaces_stale"] = conn.execute(
+        "SELECT COUNT(*) FROM interfaces WHERE last_seen <> '' AND last_seen < ?",
+        ((datetime.now() - timedelta(days=PRUNE_GRACE_DAYS)).isoformat(timespec="seconds"),)
+    ).fetchone()[0]
     for row in conn.execute("SELECT health, COUNT(*) c FROM interfaces GROUP BY health"):
         out[f"health:{row['health']}"] = row["c"]
     out["checks"] = conn.execute("SELECT COUNT(*) FROM checks").fetchone()[0]
@@ -628,6 +669,18 @@ def main() -> int:
         probe_lives(conn)
     if args.prune:
         prune_checks(conn)
+        absent = None
+        if args.ingest_sites and os.path.isfile(args.ingest_sites):
+            try:
+                with open(args.ingest_sites, encoding="utf-8") as f:
+                    doc = json.load(f)
+                absent = {str(s.get("key")) for s in (doc.get("sites") or []) if s.get("key")}
+                for coll in ("lives", "parses"):
+                    absent |= {str(x.get("key") or x.get("name")) for x in (doc.get(coll) or [])
+                               if (x.get("key") or x.get("name"))}
+            except (OSError, ValueError):
+                absent = None                   # 读不到就退回纯 last_seen 判据，不误删
+        prune_interfaces(conn, absent=absent)
     if args.stats or not any([args.ingest_sites, args.ingest_probes,
                               args.ingest_upstreams, args.prune, args.init]):
         for k, v in stats(conn).items():
