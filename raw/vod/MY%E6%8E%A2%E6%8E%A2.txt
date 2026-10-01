@@ -1,144 +1,150 @@
+{
+ "spider": "https://ghp.ci/https://raw.githubusercontent.com/vbskycn/tvbox/main/jar/MY探探.jar",
+  "wallpaper": "http://饭太硬.top/深色壁纸/api.php",
+  "sites": [
 
-        <!DOCTYPE html>
-<html lang="zh-Hans">
-<style>
-    html, body {
-        width: 100%;
-        margin: 0;
-    }
 
-    html {
-        height: 100%;
-    }
 
-    body {
-        min-height: 100%;
-        padding: 20px;
-        box-sizing: border-box;
-    }
+   {"key": "csp_appys_影盒","name": "影探4K","type": 3,"api": "csp_AppYsV2","searchable": 1,"quickSearch": 1,"filterable": 1,"ext": "http://cms-vip.lyyytv.cn/api.php/app/"},     
 
-    p {
-        word-break: break-all;
-    }
 
-    @media (max-width: 500px) {
-        h1 {
-            margin-top: 80px;
-        }
-    }
 
-    .flex {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-    }
 
-    .block {
-        display: block;
-        position: relative;
-    }
 
-    .url {
-        font-size: 18px;
-        padding: 10px 10px 10px 5px;
-        position: relative;
-        width: 600px;
-        border: none;
-        border-bottom: 1px solid #bfbfbf;
-    }
+{
+            "key": "哔哩音乐",
+            "name": "🎧┃音乐鉴赏",
+            "type": 3,
+            "api": "csp_Bili",
+            "searchable": 0,
+            "quickSearch": 1,
+            "filterable": 1,
+            "ext": "http://www.lyyytv.cn/yt/json/哔哩音乐.json"
+        },
 
-    input:focus {
-        outline: none;
-    }
+ 
+ 
+    {
+            "key": "drpy_哔哩",
+            "name": "🅱┃B站合集",
+            "type": 3,
+            "api": "http://www.lyyytv.cn/yt/api/drpy2.min.js",
+            "playerType": 1,
+            "ext": "http://www.lyyytv.cn/yt/js/B站.js"
+        },
 
-    .bar {
-        content: '';
-        height: 2px;
-        width: 100%;
-        bottom: 0;
-        position: absolute;
-        background: #00bfb3;
-        transition: 0.2s ease transform;
-        -moz-transition: 0.2s ease transform;
-        -webkit-transition: 0.2s ease transform;
-        transform: scaleX(0);
-    }
+   
+{
+            "key": "csp_FirstAid",
+            "name": "🚑┃急救教学",
+            "type": 3,
+            "api": "csp_FirstAid",
+            "searchable": 0,
+            "quickSearch": 0,
+            "style": {
+                "type": "rect",
+                "ratio": 3.8
+            },
+            "gridview": "0-0-4.1"
+        },
 
-    .url:focus ~ .bar {
-        transform: scaleX(1);
-    }
 
-    .btn {
-        line-height: 38px;
-        background-color: #00bfb3;
-        color: #fff;
-        white-space: nowrap;
-        text-align: center;
-        font-size: 14px;
-        border: none;
-        border-radius: 2px;
-        cursor: pointer;
-        padding: 5px;
-        width: 160px;
-        margin: 30px 0;
-    }
-
-    .tips, .example {
-        color: #7b7b7b;
-        position: relative;
-        align-self: flex-start;
-        margin-left: 7.5em;
-    }
-
-    .tips > p:first-child::before {
-        position: absolute;
-        left: -3em;
-        content: 'PS：';
-        color: #7b7b7b
-    }
-
-    .example > p:first-child::before {
-        position: absolute;
-        left: -7.5em;
-        content: '合法输入示例：';
-        color: #7b7b7b
-    }
-</style>
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width,initial-scale=1.0">
-    <script>
-        function toSubmit(e) {
-            e.preventDefault()
-            window.open(location.href.substr(0, location.href.lastIndexOf('/') + 1) + document.getElementsByName('q')[0].value);
-            return false
-        }
-    </script>
-    <title>GitHub 文件加速</title>
-</head>
-<body class="flex">
-<h1 style="margin-bottom: 10px">GitHub 文件加速</h1>
-<div style="margin-bottom: 40px">GitHub 文件 , Releases , archive , gist , raw.githubusercontent.com 文件代理加速下载服务.</div>
-<form action="./" method="get" style="padding-bottom: 40px" target="_blank" class="flex" onsubmit="toSubmit(event)">
-    <label class="block" style="width: fit-content">
-        <input class="block url" name="q" type="text" placeholder="键入Github文件链接"
-               pattern="^((https|http)://)?(github.com/.+?/.+?/(?:releases|archive|blob|raw|suites)|((?:raw|gist).(?:githubusercontent|github).com))/.+$" required>
-        <div class="bar"></div>
-    </label>
-    <input class="block btn" type="submit" value="下载">
-
-<section id="main" class="container"><header><div>
-  <header>
-    <h2>使用说明</h2>
-  </header>
-</div></header><div class="row"><div class="col-12"><section class="box">
-<h3>终端命令行</h3><p> 支持终端命令行 git clone , wget , curl 等工具下载. <br> 支持 <font color="red">raw.githubusercontent.com</font> , <font color="red">gist.github.com </font> , <font color="red">gist.githubusercontent.com</font> 文件下载. <br><b>注意：</b>不支持 SSH Key 方式 git clone 下载. </p><hr><header><h4><b>git clone</b></h4></header><p><b>git clone</b> <font color="red">https://gh.xmly.dev/</font><font color="green">https://github.com/stilleshan/ServerStatus</font></p><header><h4><b>git clone 私有仓库</b></h4></header><p> Clone 私有仓库需要用户在 <a href="https://github.com/settings/tokens" target="_blank">Personal access tokens</a> 申请 Token 配合使用. <br><b>git clone</b> <font color="red">https://</font><b>user:your_token</b><font color="red">@gh.xmly.dev/</font><font color="green">https://github.com/your_name/your_private_repo</font></p><header><h4><b>wget &amp; curl</b></h4></header><p><b>wget</b>&nbsp;<font color="red">https://gh.xmly.dev/</font><font color="green">https://github.com/stilleshan/ServerStatus/archive/master.zip</font><br><b>wget</b>&nbsp;<font color="red">https://gh.xmly.dev/</font><font color="green">https://raw.githubusercontent.com/stilleshan/ServerStatus/master/Dockerfile</font><br><b>curl -O</b>&nbsp;<font color="red">https://gh.xmly.dev/</font><font color="green">https://github.com/stilleshan/ServerStatus/archive/master.zip</font><br><b>curl -O</b>&nbsp;<font color="red">https://gh.xmly.dev/</font><font color="green">https://raw.githubusercontent.com/stilleshan/ServerStatus/master/Dockerfile</font></p></section><section class="box">
-<br/>
-<h3>首页下载</h3><p> 在本页地址栏输入合规链接（参考以下链接）点击下载按钮 <br> 支持 <font color="red">raw.githubusercontent.com</font> , <font color="red">gist.github.com </font> , <font color="red">gist.githubusercontent.com</font> 文件下载. </p><hr><header><h4><b>Raw 文件</b></h4></header><p> https://raw.githubusercontent.com/stilleshan/ServerStatus/master/Dockerfile </p><header><h4><b>分支源码</b></h4></header><p>https://github.com/stilleshan/ServerStatus/archive/master.zip</p><header><h4><b>Releases 源码</b></h4></header><p>https://github.com/stilleshan/ServerStatus/archive/v1.0.tar.gz</p><header><h4><b>Releases 文件</b></h4></header><p> https://github.com/fatedier/frp/releases/download/v0.33.0/frp_0.33.0_linux_amd64.tar.gz </p></section></div></div></section>
-<br/>
-<p>Built by <a href="https://jasonzeng.dev">JasonZeng</a></p>
-</body>
-</html>
+  
+  
+   {
+            "key": "少儿",
+            "name": "📚┃少儿教育",
+            "type": 3,
+            "api": "csp_Bili",
+            "searchable": 0,
+            "quickSearch": 0,
+            "changeable": 0,
+            "style": {
+                "type": "rect",
+                "ratio": 1.597
+            },
+            "ext": "http://www.lyyytv.cn/yt/json/少儿教育.json"
+        },
+   
+   
+   {
+            "key": "小学",
+            "name": "📚┃小学课堂",
+            "type": 3,
+            "api": "csp_Bili",
+            "searchable": 0,
+            "quickSearch": 0,
+            "changeable": 0,
+            "style": {
+                "type": "rect",
+                "ratio": 1.597
+            },
+            "ext": "http://www.lyyytv.cn/yt/json/小学课堂.json"
+        },
+        {
+            "key": "初中",
+            "name": "📚┃初中课堂",
+            "type": 3,
+            "api": "csp_Bili",
+            "searchable": 0,
+            "quickSearch": 0,
+            "changeable": 0,
+            "style": {
+                "type": "rect",
+                "ratio": 1.597
+            },
+            "ext": "http://www.lyyytv.cn/yt/json/初中课堂.json"
+        },
         
+        
+        
+        
+        {
+            "key": "高中",
+            "name": "📚┃高中课堂",
+            "type": 3,
+            "api": "csp_Bili",
+            "searchable": 0,
+            "quickSearch": 0,
+            "changeable": 0,
+            "style": {
+                "type": "rect",
+                "ratio": 1.597
+            },
+            "ext": "http://www.lyyytv.cn/yt/json/高中课堂.json"
+        },
+   
+
+ {      "key": "local3",      "name": "",      "type": 3,      "api": "",      "searchable": 0,      "quickSearch": 0,      "filterable": 0    }  ],  "parses": [    {      "name": "聚合1",      "type": 3,      "url": "Demo"    },  
+
+  
+
+
+ 
+   {   "name": "影探A",      "type": 1,      "url": "http://pan.qiaoji8.com/tvbox/gouzi.php?url=",      "ext": {        "flag": [          "qq",          "腾讯",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "优酷",          "sohu",          "搜狐",          "letv",          "乐视",          "mgtv",          "芒果",          "rx",          "ltnb",          "bilibili",          "1905",          "xigua"        ]      }    },  
+  
+ 
+ 
+  
+  {   "name": "影探C",      "type": 1,      "url": "https://jx.bhs6.com/api/?key=b0227c1e257c83f68ca14644aebda8c1&url=",      "ext": {        "flag": [          "qq",          "腾讯",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "优酷",          "sohu",          "搜狐",          "letv",          "乐视",          "mgtv",          "芒果",          "rx",          "ltnb",          "bilibili",          "1905",          "xigua"        ]      }    },  
+  
+ 
+
+ 
+ 
+    
+  {   "name": "影探E",      "type": 1,      "url": "http://jf.yingshidao.cn/api/?key=oovDE5yLVzOj7bFD2i&url=",      "ext": {        "flag": [          "qq",          "腾讯",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "优酷",          "sohu",          "搜狐",          "letv",          "乐视",          "mgtv",          "芒果",          "rx",          "ltnb",          "bilibili",          "1905",          "xigua"        ]      }    },  
+  
+ 
+ 
+     
+  {   "name": "影探F",      "type": 1,      "url": "https://jx.hls.one/?url=",      "ext": {        "flag": [          "qq",          "腾讯",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "优酷",          "sohu",          "搜狐",          "letv",          "乐视",          "mgtv",          "芒果",          "rx",          "ltnb",          "bilibili",          "1905",          "xigua"        ]      }    },  
+ 
+ 
+ 
+ 
+ 
+  {   "name": "影探B",      "type": 1,      "url": "https://api.qljson.xyz/api/?key=e5c343a10886e360454aa6b9ce35fadf&url=",      "ext": {        "flag": [          "qq",          "腾讯",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "优酷",          "sohu",          "搜狐",          "letv",          "乐视",          "mgtv",          "芒果",          "rx",          "ltnb",          "bilibili",          "1905",          "xigua"        ]      }    },  
+
+
+ {      "name": "影探D",      "type": 1,      "url": "http://jf.yingshidao.cn/api/?key=wObsAPs6A80pXdQM92&url=",      "ext": {        "flag": [          "qq",          "腾讯",          "企鹅",          "IQiYi",          "qiyi",          "爱奇艺",          "奇艺",          "youku",          "YouKu",          "优酷",          "sohu",          "SoHu",          "搜狐",          "letv",          "LeShi",          "乐视",          "imgo",          "mgtv",          "MangGuo",          "芒果",          "SLYS4k",          "BYGA",          "luanzi",          "AliS",          "dxzy",          "bilibili",          "QEYSS",          "xigua",          "西瓜视频",          "腾讯视频",          "奇艺视频",          "优酷视频",          "芒果视频",          "乐视视频"        ]      }    }  ],  "rules": [    {      "host": "*",      "rule": [        "default.365yg.com"      ]    },    {      "host": "dyxs20.com",      "rule": [        ".m3u8"      ]    },    {      "host": "www.agemys.cc",      "rule": [        "cdn-tos",        "obj/tos-cn"      ]    },    {      "host": "www.sharenice.net",      "rule": [        "http.*?/play.{0,3}\\?[^url]{2,8}=.*"      ]    },    {      "host": "www.sharenice.net",      "rule": [        "qianpailive.com",        "vid="      ]    },    {      "host": "*",      "rule": [        "douyin.com/aweme",        "video_id="      ]    },    {      "host": "*",      "rule": [        "huoshan.com",        "/item/video/"      ]    },    {      "host": "*",      "rule": [        "http((?!http).){12,}?\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a)\\?.*"      ]    },    {      "host": "*",      "rule": [        "http((?!http).){12,}\\.(m3u8|mp4|flv|avi|mkv|rm|wmv|mpg|m4a)"      ]    }  ],  "lives": [    {      "name": "live",      "type": 0,      "url": "http://www.lyyytv.cn/yt/live.txt",      "playerType": 1,      "epg": "http://epg.112114.xyz/?ch={name}&date={date}",      "logo": "https://epg.112114.xyz/logo/{name}.png"    },    {      "name": "TV",      "type": 0,      "url": "https://agit.ai/fantaiying/fmm/raw/branch/main/tv/m3u/global.m3u",      "epg": "http://epg.112114.xyz/?ch={name}&date={date}",      "logo": "https://epg.112114.xyz/logo/{name}.png"    }  ],  "flags": [    "youku",    "优酷",    "优 酷",    "优酷视频",    "qq",    "腾讯",    "腾 讯",    "腾讯视频",    "iqiyi",    "qiyi",    "奇艺",    "爱奇艺",    "爱 奇 艺",    "m1905",    "xigua",    "letv",    "leshi",    "乐视",    "乐 视",    "sohu",    "搜狐",    "搜 狐",    "搜狐视频",    "tudou",    "pptv",    "mgtv",    "芒果",    "imgo",    "芒果TV",    "芒 果 T V",    "bilibili",    "哔 哩",    "哔 哩 哔 哩"  ],  "ijk": [    {      "group": "软解码",      "options": [        {          "category": 4,          "name": "opensles",          "value": "0"        },        {          "category": 4,          "name": "overlay-format",          "value": "842225234"        },        {          "category": 4,          "name": "framedrop",          "value": "1"        },        {          "category": 4,          "name": "soundtouch",          "value": "1"        },        {          "category": 4,          "name": "start-on-prepared",          "value": "1"        },        {          "category": 1,          "name": "http-detect-range-support",          "value": "0"        },        {          "category": 1,          "name": "fflags",          "value": "fastseek"        },        {          "category": 2,          "name": "skip_loop_filter",          "value": "48"        },        {          "category": 4,          "name": "reconnect",          "value": "1"        },        {          "category": 4,          "name": "max-buffer-size",          "value": "5242880"        },        {          "category": 4,          "name": "enable-accurate-seek",          "value": "0"        },        {          "category": 4,          "name": "mediacodec",          "value": "0"        },        {          "category": 4,          "name": "mediacodec-auto-rotate",          "value": "0"        },        {          "category": 4,          "name": "mediacodec-handle-resolution-change",          "value": "0"        },        {          "category": 4,          "name": "mediacodec-hevc",          "value": "0"        },        {          "category": 1,          "name": "dns_cache_timeout",          "value": "600000000"        }      ]    },    {      "group": "硬解码",      "options": [        {          "category": 4,          "name": "opensles",          "value": "0"        },        {          "category": 4,          "name": "overlay-format",          "value": "842225234"        },        {          "category": 4,          "name": "framedrop",          "value": "1"        },        {          "category": 4,          "name": "soundtouch",          "value": "1"        },        {          "category": 4,          "name": "start-on-prepared",          "value": "1"        },        {          "category": 1,          "name": "http-detect-range-support",          "value": "0"        },        {          "category": 1,          "name": "fflags",          "value": "fastseek"        },        {          "category": 2,          "name": "skip_loop_filter",          "value": "48"        },        {          "category": 4,          "name": "reconnect",          "value": "1"        },        {          "category": 4,          "name": "max-buffer-size",          "value": "5242880"        },        {          "category": 4,          "name": "enable-accurate-seek",          "value": "0"        },        {          "category": 4,          "name": "mediacodec",          "value": "1"        },        {          "category": 4,          "name": "mediacodec-auto-rotate",          "value": "1"        },        {          "category": 4,          "name": "mediacodec-handle-resolution-change",          "value": "1"        },        {          "category": 4,          "name": "mediacodec-hevc",          "value": "1"        },        {          "category": 1,          "name": "dns_cache_timeout",          "value": "600000000"        }      ]    }  ],  "ads": [    "wan.51img1.com",    "iqiyi.hbuioo.com",    "vip.ffzyad.com",    "https://lf1-cdn-tos.bytegoofy.com/obj/tos-cn-i-dy/455ccf9e8ae744378118e4bd289288dd"  ]}
