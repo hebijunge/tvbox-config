@@ -223,6 +223,14 @@ public class Main2 {
             put(r, "level", "G" + n);
             put(r, "gates", String.valueOf(n));
             put(r, "gateErr", clip(gerr, 260));
+            if (n == 0) {
+                // 关卡全没过但不一定抛异常：也可能是返回了内容却不像列表。
+                // 不记返回形态就只能干猜「站点真空」还是「looks() 判据太窄」
+                // （本轮 734 个 G0 里 261 个连 gateErr 都是空的，正是这一类）。
+                put(r, "homeLen", String.valueOf(home == null ? -1 : home.length()));
+                put(r, "homeHead", clip(home, 140));
+                put(r, "catLen", String.valueOf(cat == null ? -1 : cat.length()));
+            }
             if (!err.isEmpty()) put(r, "err", clip(err, 200));
         } catch (Throwable t) {
             put(r, "level", "C?"); put(r, "err", clip("" + root(t), 260));
