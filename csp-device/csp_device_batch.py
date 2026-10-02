@@ -27,6 +27,10 @@ CHUNK = 40
 CALL_MS = os.environ.get("CSP_CALL_MS", "20000")   # 单关调用上限(ms)；慢站复测可临时调大
 PKG = "com.tvtest"          # 宿主包名：提供 catvod 接口与 Context
 HOST_APK = os.environ.get("TVBOX_APK") or ""
+# quickjs 补 dex：TVBoxOSC 宿主 apk（官方 github release）里有 com.whl.quickjs.wrapper.*
+# 共 28 个类，com.tvtest 宿主里没有——那批 js 型 spider 站就此解掉 ClassNotFoundException。
+JS_APK = os.environ.get("TVBOX_JS_APK", "/data/local/tmp/tvbox.apk")
+JS_SO = os.environ.get("TVBOX_JS_SO", "/data/local/tmp/libquickjs-android-wrapper.so")
 
 
 def out(msg):
@@ -98,24 +102,21 @@ def is_rule(text):
 def remote_exts(cfg):
     """cfg 里需要联网取的远程 ext 段（本机/内网端点排除：那是设备侧服务）。
 
-    逗号也切：不少 csp 站的 ext 是 `https://a,https://b,https://c` 形式的**备用域名列表**，
-    spider 会挨个试。只取第一个就判死 = 假死（wencai 就是这么被误判的：首域已撤，
-    后面两个域还活着）。
+    按字符类抓而不是切逗号：ext 既可能是 `https://a,https://b,https://c` 形式的**备用域名列表**
+    （spider 会挨个试，只取第一个就判死 = 假死，wencai 就是这么被误判的：首域已撤，
+    后面两个域还活着），也可能是 JSON 数组/对象形态（`["https://a/x.js",""]`）——
+    切逗号会把带引号括号的头一个元素整个丢掉。
     """
     got = []
-    for seg in str(cfg or "").split("$$$"):
-        for head in seg.strip().split(";md5;")[0].split(","):
-            head = head.strip()
-            if not head.startswith(("http://", "https://")):
-                continue
-            try:
-                host = urllib.parse.urlparse(head).hostname or ""
-            except ValueError:
-                continue
-            if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
-                continue
-            got.append(head)
-    return got
+    for u in re.findall(r"https?://[^\s\"'(),;}\]$]+", str(cfg or "")):
+        try:
+            host = urllib.parse.urlparse(u).hostname or ""
+        except ValueError:
+            continue
+        if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
+            continue
+        got.append(u)
+    return list(dict.fromkeys(got))
 
 
 RULE_SUFFIX = (".json", ".txt", ".xml", ".js")
@@ -424,6 +425,40 @@ def cmd_push():
     out("jobs 分块推送 %d 块" % ((len(jobs) + CHUNK - 1) // CHUNK))
 
 
+def done_ids(text):
+    """从 jsonl 文本里取出已产出的 id 集合。"""
+    ids = set()
+    for line in (text or "").splitlines():
+        m = re.search(r'"id"\s*:\s*"((?:[^"\\]|\\.)*)"', line)
+        if m:
+            try:
+                ids.add(json.loads('"%s"' % m.group(1)))
+            except ValueError:
+                pass
+    return ids
+
+
+def missing_jobs(jobs, text):
+    """这一块里没跑出结果的站。
+
+    必须显式查：设备上的 app_process 会被低内存杀掉（实测某轮 block 000 只写 3/40 行
+    就 rc=0 退出），而 done_ 标记只看"有没有这个文件"，残缺块会被当成已完成——
+    一次静默丢掉 90% 的槽位。
+    """
+    got = done_ids(text)
+    return [j for j in (jobs or []) if j.get("id") not in got]
+
+
+def js_apk():
+    """quickjs 补 dex 在设备上就回路径，没有就回空串。
+
+    挂在宿主 apk 之后（不是替换）：宿主没有 com.whl.quickjs.wrapper.*，
+    那 22 站是 ClassNotFoundException 而不是站点本身坏——工具缺件不能算站死。
+    """
+    rc, o = adb(["su", "-c", "test -f %s && echo yes" % JS_APK])
+    return JS_APK if "yes" in o else ""
+
+
 def cmd_run(nblocks):
     rc, o = adb(["ls", "/data/local/tmp/"])
     listed = re.split(r"\s+", o)
@@ -439,16 +474,37 @@ def cmd_run(nblocks):
         rc2, o2 = adb(["pm path com.tvtest"])
         host = next((l.split(":", 1)[1].strip() for l in o2.splitlines()
                      if l.startswith("package:")), "")
-    out("宿主 apk=%s；本轮跑 %d 块" % (host[:60], len(blocks)))
+    extra = js_apk()
+    out("宿主 apk=%s；补 dex=%s；本轮跑 %d 块" % (host[:60], extra or "无", len(blocks)))
+
+    def run_block(jname, tag):
+        inner = ("cd /data/local/tmp; CSP_EXTRA_DEX=%s CSP_LIB_PATH=%s "
+                 "CLASSPATH=/data/local/tmp/runner2.jar:%s "
+                 "app_process / Main2 /data/local/tmp/%s /data/local/tmp/res_%s.jsonl "
+                 "%s %s 2>&1 | tail -3" % (extra, os.path.dirname(JS_SO), host,
+                                           jname, tag, PKG, CALL_MS))
+        rc2, o2 = adb(["su", "-c", inner])
+        adb(["mv", "-f", "/data/local/tmp/res_%s.jsonl" % tag,
+             "/data/local/tmp/done_%s.jsonl" % tag])
+        return rc2, o2
+
     for f in blocks:
         idx = f.replace("jobs_", "").replace(".json", "")
-        outjson = "/data/local/tmp/res_%s.jsonl" % idx
-        inner = ("cd /data/local/tmp; CLASSPATH=/data/local/tmp/runner2.jar:%s "
-                 "app_process / Main2 /data/local/tmp/%s %s %s %s 2>&1 | tail -3"
-                 % (host, f, outjson, PKG, CALL_MS))
-        rc, o = adb(["su", "-c", inner])
+        rc, o = run_block(f, idx)
         out("[%s] rc=%s %s" % (idx, rc, o.strip().replace("\n", " | ")[:220]))
-        adb(["mv", "-f", outjson, "/data/local/tmp/done_%s.jsonl" % idx])
+        try:
+            want = json.load(open(os.path.join(WORK, f), encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        _rc, txt = adb(["cat", "/data/local/tmp/done_%s.jsonl" % idx])
+        miss = missing_jobs(want, txt)
+        if not miss:
+            continue
+        out("[%s] 残缺 %d/%d，补跑 r1" % (idx, len(miss), len(want)))
+        rp = os.path.join(WORK, "jobs_%sr1.json" % idx)
+        json.dump(miss, open(rp, "w", encoding="utf-8"), ensure_ascii=False)
+        sh(["adb", "push", rp, "/data/local/tmp/jobs_%sr1.json" % idx])
+        run_block("jobs_%sr1.json" % idx, "%sr1" % idx)
 
 
 def device_verdict(row, cls):

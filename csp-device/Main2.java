@@ -38,6 +38,15 @@ public class Main2 {
     };
     static final String KW = "庆余年";
     static final int DEFAULT_CALL_MS = 20000;
+    // 宿主 apk 里没有 com.whl.quickjs.wrapper.*（js 型 spider 需要）：把补 dex 的 apk 追加进
+    // 站点自己的 DexClassLoader 搜索链，并给出 native 库目录让 System.loadLibrary 找得到 .so。
+    static String extraDex = envOf("CSP_EXTRA_DEX");
+    static String libPath = envOf("CSP_LIB_PATH");
+
+    static String envOf(String k) {
+        String v = System.getenv(k);
+        return (v == null || v.length() == 0) ? null : v;
+    }
     // 单次关卡调用上限。20s 对慢接口（尤其海外源/首屏要拉规则的站）不够：
     // 实测 75 站三关全 TimeoutException，拿不到"慢"与"死"的区分。第 4 个参数可覆盖。
     static int CALL_MS = DEFAULT_CALL_MS;
@@ -160,7 +169,8 @@ public class Main2 {
         long t0 = System.currentTimeMillis();
         String jar = j.optString("jar"), cls = j.optString("cls");
         try {
-            DexClassLoader dl = new DexClassLoader(jar, "/data/local/tmp/dexopt", null, parent);
+            String dp = extraDex == null ? jar : (jar + ":" + extraDex);
+            DexClassLoader dl = new DexClassLoader(dp, "/data/local/tmp/dexopt", libPath, parent);
             Class<?> sp = null;
             String loadErr = "";
             for (String p : PKGS) {
