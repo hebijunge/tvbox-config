@@ -214,5 +214,18 @@ class StoreMapping(unittest.TestCase):
         self.assertEqual(self.store.health_of(None, False, 2), "unknown")
 
 
+class JsSiteScope(unittest.TestCase):
+    """带 query 的 .js 直链以前分不到 5c 手里（产物里 3 个站谁都没测）。"""
+
+    def test_query_suffixed_js_counts(self):
+        self.assertTrue(mod.is_js_site({"api": "https://zoe.im/tvbox/sites/ddys/spider.js?v=3"}))
+        self.assertTrue(mod.is_js_site({"api": "./cat.js", "ext": ""}))
+        self.assertTrue(mod.is_js_site({"api": "http://x/y.js;md5;abc", "ext": ""}))
+
+    def test_csp_is_not_js(self):
+        self.assertFalse(mod.is_js_site({"api": "csp_AppYsV2", "ext": "x"}))
+        self.assertFalse(mod.is_js_site({"api": "https://a/b.json", "ext": ""}))
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)
