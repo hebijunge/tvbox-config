@@ -22,6 +22,7 @@ import urllib.parse
 WORK = os.environ.get("CSP_WORKDIR") or os.path.join(
     os.environ.get("TEMP", "/tmp"), "csp-harness")
 REPO = os.getcwd()      # cwd=仓库根：plan|push|run|merge
+os.makedirs(WORK, exist_ok=True)   # 目录不在就建：否则 adb pull/写 jobs 会静默失败（踩过：误删 WORK 后 merge 会一行不收）
 DEV_JAR = "/data/local/tmp/cspjars"
 CHUNK = 40
 CALL_MS = os.environ.get("CSP_CALL_MS", "20000")   # 单关调用上限(ms)；慢站复测可临时调大
@@ -262,6 +263,36 @@ def inline_ext(cfg, fetched=None):
     return "$$$".join(parts), ";".join(notes)
 
 
+def scan_age_h(now=None):
+    """jar 扫描报告距今几小时（没有报告/读不动回 9999）。"""
+    import datetime
+    try:
+        rep = json.load(open(os.path.join(WORK, "csp_jar_scan.json"), encoding="utf-8"))
+        gen = datetime.datetime.strptime(rep["generated_at"], "%Y-%m-%dT%H:%M:%S")
+    except (OSError, ValueError, KeyError):
+        return 9999.0
+    ref = now or datetime.datetime.now()
+    return max(0.0, (ref - gen).total_seconds() / 3600.0)
+
+
+def ensure_scan(max_age_h=12):
+    """plan/push 前按需刷新 jar 扫描报告。
+
+    这步以前不在任何自动链路里，报告比 deps 树旧一天都不稀奇——而 `deps/auto/<随机>/jar/*`
+    这类本地化路径**每天都在换目录**，报告里的老路径在盘上已经不存在，于是 90 个站被
+    build_jobs 当"本地缺 jar"跳过（实测 3 个漂移路径，同类 jar 当天就在别的目录里）。
+    扫描要 dexdump（本机 Android SDK），CI 上没有：跑不动就沿用上轮报告并说清楚。
+    """
+    age = scan_age_h()
+    if age <= max_age_h:
+        return "新鲜（%.1fh）" % age
+    rc, o = sh([sys.executable, "scripts/csp_jar_scan.py"])
+    tail = [l for l in o.splitlines() if l.strip()][-1:] or [""]
+    if rc == 0:
+        return "已刷新（原报告 %.1fh 前）" % age
+    return "刷新失败(rc=%s)沿用上轮报告（%.1fh 前）：%s" % (rc, age, tail[0][:90])
+
+
 def build_jobs(prefetch=True):
     rep = json.load(open(os.path.join(WORK, "csp_jar_scan.json"), encoding="utf-8"))
     present = {c: (v["jar"] or "").replace("\\", "/") for c, v in rep["classes"].items()}
@@ -386,6 +417,7 @@ def cmd_ext():
 
 
 def cmd_plan():
+    out("jar 扫描报告：%s" % ensure_scan())
     jobs, guard, missing, done = build_jobs()
     jars = sorted(set(j["src"] for j in jobs))
     tiers = collections.Counter(j["tier"] for j in jobs)
@@ -400,6 +432,7 @@ def cmd_plan():
 
 
 def cmd_push():
+    out("jar 扫描报告：%s" % ensure_scan())
     jobs, *_ = build_jobs()
     jars = sorted(set(j["src"] for j in jobs))
     adb(["mkdir", "-p", DEV_JAR])
