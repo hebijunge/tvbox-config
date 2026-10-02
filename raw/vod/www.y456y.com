@@ -1,5 +1,5 @@
 {
-  "spider": "https://qiniu.gongxueyun.com/upload/5695330/2026-09-18/leave/466454997_2_1789736334293.jar;md5;835b242eab0da4d3402724dd4705a9e8",
+  "spider": "https://qiniu.gongxueyun.com/upload/4312160/2026-10-02/report/350167968_3_1790963314413.jar;md5;ee6abbb5a1e86ef53796034163175aac",
   "logo": "https://modelscope-resouces.oss-cn-zhangjiakou.aliyuncs.com/avatar%2Ff5309172-1af6-4c4f-a1c5-a4773a1cc718.gif",
   "wallpaper": "http://127.0.0.1:9978/proxy?do=wallpaper",
   "danmaku": "http://127.0.0.1:5266/danmu/webhtv?name={name}&episode={episode}",
@@ -183,24 +183,6 @@
       }
     },
     {
-      "key": "huaisang",
-      "name": "🎄┆怀桑┆4K",
-      "type": 3,
-      "api": "csp_AppQi",
-      "searchable": 1,
-      "changeable": 1,
-      "ext": "AdYEovlEKsDy77+R58YGahWCxrDZyBxExcQNC2NSeH0n1b5mu6tvh8b4Eh0RCpoPF6eivKdrR1Hsb8X4sSVBS8zF6jkwLW+wze9yh+hSY5iimm4gM9mAtmt0obTi+6Iox/Jp4GCsN4MQyFebMK162SKnILklpXc1UMiJv9gnPOe5aOPUxCftL+x7/UGhBdFYWIegpiHvKeavUtCUkhxtDyC8KqVVPPW0StI5GdmUA3WBbnnrNiKqNc5GBmrffd6pDN+Cf9IIjzNNvos/5KXJmBbe/baAzTLkoafeIoDhO451"
-    },
-    {
-      "key": "枫眠",
-      "name": "🍁┆枫眠┆4K",
-      "type": 3,
-      "api": "csp_AppGet",
-      "searchable": 1,
-      "changeable": 1,
-      "ext": "AWdPh5PnFxq1XZ1+qPrYSqER0/V56CsPtyhgchXfwuAECyRqGnmaLDChTlIn6qwjfE0Hr9d1et+8HEB6MOa6J+NFI/q9jj1dLRTXdE2kKzczaxo6/yaY9q8jEfksZElPK2hPF0UlOPg3Dy5xjGlHXKPA4p5WFet29QlPbubxC6L1"
-    },
-    {
       "key": "长泽",
       "name": "😗┆长泽┆4K",
       "type": 3,
@@ -283,14 +265,17 @@
       "ext": "https://max.moyu666666.top/app3q.php?site=mh"
     },
     {
-      "key": "云朵影视",
-      "name": "☁️┆云朵┆APP",
+      "key": "星澜",
+      "name": "🌌┆星澜┆APP",
       "type": 3,
-      "api": "csp_App3Q",
+      "api": "csp_NiuLai",
       "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 0,
-      "ext": "https://max.moyu666666.top/app3q.php?site=yd"
+      "filterable": 1,
+      "changeable": 0,
+      "ext": {
+        "php": "https://max.moyu666666.top/niulai.php",
+        "site": "xinglan"
+      }
     },
     {
       "key": "茶寮",
@@ -662,19 +647,6 @@
       "changeable": 1
     },
     {
-      "key": "Time1080",
-      "name": "⏳┆时光┆1080",
-      "type": 3,
-      "api": "csp_Time1080",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1,
-      "ext": {
-        "site": "https://v.time1080.xyz"
-      }
-    },
-    {
       "key": "WoNiu",
       "name": "🐌┆蜗牛┆4K",
       "type": 3,
@@ -727,41 +699,6 @@
       }
     },
     {
-      "key": "FishLabi",
-      "name": "🖍️┆蜡笔┆4K",
-      "type": 3,
-      "api": "csp_FishCloud",
-      "searchable": 1,
-      "ext": {
-        "site": [
-          "https://feimao666.fun",
-          "http://xiaocge.fun",
-          "http://feimo.fun",
-          "https://feimao666.fun",
-          "http://fmao.site",
-          "http://fmao.shop",
-          "http://xiaocgege.shop"
-        ]
-      }
-    },
-    {
-      "key": "FishZhizhen",
-      "name": "💫┆至臻┆4K",
-      "type": 3,
-      "api": "csp_FishCloud",
-      "searchable": 1,
-      "ext": {
-        "site": [
-          "https://mihdr.top",
-          "https://www.mihdr.top",
-          "https://www.miqk.cc",
-          "https://zhizhenpan.com/",
-          "https://zhizhen8.click",
-          "https://www.zhizhen8.click"
-        ]
-      }
-    },
-    {
       "key": "FishDuoduo",
       "name": "🍀┆多多┆4K",
       "type": 3,
@@ -776,18 +713,15 @@
       }
     },
     {
-      "key": "FishErxiao",
-      "name": "🐂┆二小┆4K",
+      "key": "Fishhuajuan",
+      "name": "🌸┆花卷┆4K",
       "type": 3,
       "api": "csp_FishCloud",
       "searchable": 1,
       "ext": {
         "site": [
-          "https://www.erixaopan.fun",
-          "https://www.wexwp.cc",
-          "https://wexwp.cc",
-          "https://2xiaopan.top",
-          "https://www.2xiaopan.top"
+          "https://www.hjzhencai.top",
+          "https://www.huanjuanwp.shop"
         ]
       }
     },
@@ -817,26 +751,20 @@
         ]
       }
     },
-    {
-      "key": "夸父",
-      "name": "☀️┆夸父┆4K",
-      "type": 3,
-      "api": "csp_FishKF",
-      "searchable": 1,
-      "quickSearch": 1,
-      "filterable": 1,
-      "changeable": 1,
-      "style": {
-        "type": "list",
-        "ratio": 1.433
-      },
-      "ext": {
-        "site": [
-          "https://www.kfjwzz.com"
-        ],
-        "cookie": ""
-      }
-    },
+        {
+            "key": "Fishgege",
+            "name": "💫┆八零┆4K",
+            "type": 3,
+            "api": "csp_FishCloud",
+            "searchable": 1,
+            "ext": {
+                "site": [
+                    "https://woog.nxog.eu.org",
+                    "https://ogkk.nxog.eu.org",
+                    "https://woog.430520.xyz"
+                ]
+            }
+        },
     {
       "key": "ShuangXing",
       "name": "🌟┆双星┆4K",
