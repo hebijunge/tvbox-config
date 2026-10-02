@@ -101,7 +101,9 @@ def run_one(job, kw):
         )
         lines = [l for l in p.stdout.splitlines() if l.strip().startswith("{")]
         if not lines:
-            return {"name": name, "rule": rule, "ok": False,
+            # 这条早退以前漏了 key：产物里整批行没有 key，store 按 key 入库会全部跳过，
+            # 而撤回逻辑反过来把它们当成「本轮不再报」清掉——一次沙箱故障会连带抹掉历史判定。
+            return {"key": job["key"], "name": name, "rule": rule, "ok": False,
                     "err": "no-json:" + (p.stderr or "")[-240:]}
         r = json.loads(lines[-1])
         r["key"] = job["key"]
@@ -114,6 +116,24 @@ def run_one(job, kw):
         return {"key": job["key"], "name": name, "rule": rule, "ok": False, "err": "timeout>90s"}
     except Exception as e:
         return {"key": job["key"], "name": name, "rule": rule, "ok": False, "err": str(e)[:240]}
+
+
+SANDBOX_BROKEN_HINTS = ("MODULE_NOT_FOUND", "Cannot find", "no-json")
+
+
+def sandbox_broken(results):
+    """这一轮的 drpy 结果是不是「沙箱坏掉」而不是「站点都死了」。
+
+    真实站点不会 100% 在同一轮里同时失败；全 D0 且错误信息里带模块缺失/no-json，
+    只能是工装自己出问题（依赖没装、node 版本、host.mjs 报错）。这种情况必须拒绝覆写，
+    否则一次环境缺失就会把真实的五关历史抹成一片死。
+    """
+    total = len(results)
+    if not total or sum(1 for r in results if r.get("grade") != "D0") > 0:
+        return False
+    brk = sum(1 for r in results
+              if any(t in (r.get("err") or "") for t in SANDBOX_BROKEN_HINTS))
+    return brk >= max(1, int(total * 0.9))
 
 
 def grade(r):
@@ -150,6 +170,14 @@ def main():
         return 0
     if not (NODE and os.path.exists(NODE)):
         print(f"[!] node 不可用（NODE={NODE}），跳过 drpy 实测，不覆写产物", flush=True)
+        return 0
+    # 只查 host.mjs / node 在不在是不够的：新 worktree 里源码齐、node 也在，缺的只是
+    # node_modules（.gitignore 忽略它，要 npm ci 现装）。这时每个源都以
+    # ERR_MODULE_NOT_FOUND 失败 → 整份产物刷成 D0，比"没跑"更糟（2026-10-02 就这么
+    # 合进过 main 一次）。所以依赖缺失也必须当沙箱缺位处理。
+    if not os.path.isdir(os.path.join(REPO, "drpy-sandbox", "node_modules")):
+        print("[!] 沙箱依赖未安装（缺 drpy-sandbox/node_modules），跳过 drpy 实测，"
+              "不覆写产物。先跑：cd drpy-sandbox && npm ci", flush=True)
         return 0
 
     jobs = collect_jobs()
@@ -198,6 +226,11 @@ def main():
         "summary": summary,
         "sites": results,
     }
+    # 兜底闸门：见 sandbox_broken 的判据说明。
+    if sandbox_broken(results):
+        print(f"[!] {total}/{total} 源全 D0 且错误形态像沙箱故障（模块缺失/no-json）"
+              f"——判定为工装问题，跳过覆写 {out}", flush=True)
+        return 0
     os.makedirs(os.path.dirname(out), exist_ok=True)
     json.dump(doc, open(out, "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
