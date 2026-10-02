@@ -1,46 +1,36 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-02T01:08:31
+生成时间：2026-10-02T02:10:21
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 8127 | 285 | 1662 | 5961 | 219 |
-| 直播 | 621 | 130 | 228 | 241 | 22 |
+| 点播 | 8127 | 285 | 1647 | 5719 | 476 |
+| 直播 | 627 | 131 | 230 | 244 | 22 |
 
-较上轮变化：新增 1｜掉线 33｜恢复 214｜移除 0（点播）；新增 1｜掉线 1｜恢复 0｜移除 0（直播）
+较上轮变化：新增 0｜掉线 250｜恢复 8｜移除 0（点播）；新增 6｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
+- 🌾┃农民┃直连（degraded → dead）
 - 🧿即看┃蓝光（degraded → dead）
 - 🧿影院┃蓝光（degraded → dead）
-- ✨九一┃追番（degraded → dead）
-- ✨动漫┃之家（degraded → dead）
-- 🌠布卡┃影视（degraded → dead）
-- 🌰石榴┃影院（degraded → dead）
-- 🍋速映┃追剧（degraded → dead）
-- 🍚稀饭┃影视（degraded → dead）
-- 🎞️Bilfun┃影库（degraded → dead）
-- 🐘大象┃影音（degraded → dead）
+- рҹҗјв”ғиӮҘзҢ«в”ғAPP（degraded → dead）
+- 🌐白菜┃嗅探（degraded → dead）
+- 🔰特狗（degraded → dead）
+- 💣焦炭影视（degraded → dead）
+- 🦊茶杯狐（degraded → dead）
+-  💠测试(R)（degraded → dead）
+- LIB（degraded → dead）
 
 ## 点播恢复（前 10）
 
-- 丫丫点播（dead → degraded）
-- 🌾┃农民┃直连（dead → degraded）
-- 😎酷影┃蓝光┃纯净（dead → degraded）
-- 酷影✨蓝光影视（dead → degraded）
-- 🐌┆蜗牛┆4K（dead → degraded）
-- 🚀首发（dead → degraded）
-- 🍟王子（dead → degraded）
-- 🐵师兄（dead → degraded）
 - 苏苏🛰️臻享4K（dead → degraded）
-- ♻┃高清┃秒播（dead → degraded）
-
-## 点播新增（前 10）
-
-- 讴歌（unknown）
-
-## 直播掉线（前 10）
-
-- 天才直播1（degraded → dead）
+- 📀玩偶哥哥(优)（dead → healthy）
+- 📀云盘资源(搜索)（dead → degraded）
+- 《快手🖐️直播》（dead → degraded）
+- 恰恰｜影视（dead → healthy）
+- 碟调｜影视（dead → degraded）
+- 小熊｜弹幕（dead → degraded）
+- 巨人｜弹幕（dead → degraded）
