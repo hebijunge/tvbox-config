@@ -48,6 +48,7 @@ import zlib
 
 UA = {"User-Agent": "okhttp/3.15", "Accept": "*/*", "Accept-Encoding": "gzip, deflate"}
 TIMEOUT = 12
+RULE_TIMEOUT = int(os.environ.get("JS_RULE_TIMEOUT", "25"))   # 远程规则常在慢盘/镜像上
 MAX_BODY = 400_000
 SSL_CTX = ssl.create_default_context()
 SSL_CTX.check_hostname = False
@@ -257,9 +258,14 @@ def is_engine_file(fp, text):
 
 
 def is_js_site(s):
-    api, ext = str(s.get("api") or ""), str(s.get("ext") or "")
-    return (api.startswith("./") and api.endswith(".js")) or api.endswith(".js") or \
-        (ext.startswith("./") and ext.endswith(".js")) or s.get("kind") == "js"
+    """是不是 JS 源。
+
+    先剥掉 query 与 `;md5;` 尾：`https://zoe.im/tvbox/sites/ddys/spider.js?v=3` 这类带版本号
+    的直链以前匹配不到 `.js`，产物里 3 个站因此谁都没测（5a/5c/5e 都按后缀分流）。
+    """
+    api = str(s.get("api") or "").split("?")[0].split(";md5")[0].strip()
+    ext = str(s.get("ext") or "").split("?")[0].strip()
+    return api.endswith(".js") or ext.endswith(".js") or s.get("kind") == "js"
 
 
 RULE_SUFFIX = (".js", ".txt", ".json", ".xml")
@@ -357,7 +363,7 @@ def fetch_remote_rule(site):
         why = ""
         for cand in [u] + list(gh_retry_candidates(u))[:3]:
             try:
-                st, raw, _ms, _ct = http_get(cand, TIMEOUT)
+                st, raw, _ms, _ct = http_get(cand, RULE_TIMEOUT)
                 text = raw.decode("utf-8", "ignore")
             except urllib.error.HTTPError as e:
                 why = why or miss_kind(cand, e.code, "")
@@ -368,7 +374,7 @@ def fetch_remote_rule(site):
                     if doh_cached is None:
                         env.append("DNS未复核")
                         continue
-                    verdict, detail = doh_cached(host, TIMEOUT)
+                    verdict, detail = doh_cached(host, RULE_TIMEOUT)
                     if verdict is False:
                         why = why or "域名无解析记录(DoH一致)"
                         break
@@ -463,7 +469,9 @@ def probe_one(site, repo, keywords, man_idx=None):
     syn = node_check(fp)
     r["syntax_ok"] = syn
     if syn is False:
-        r.update({"level": "S0", "reason": "规则文件语法错误"})
+        # 文件在手且 node --check 真报错：这是规则自身的结构性失效，带证据入库
+        r.update({"level": "S0", "reason": "规则文件语法错误",
+                  "evidence": {"static": "rule-syntax-error", "checker": "node --check"}})
         return r
     if not rule.get("host"):
         if is_engine_file(fp, text):
