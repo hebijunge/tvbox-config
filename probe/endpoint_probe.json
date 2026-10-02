@@ -1,14 +1,14 @@
 {
- "generated_at": "2026-10-01 14:49:34",
+ "generated_at": "2026-10-02 10:22:45",
  "summary": {
-  "total": 133,
+  "total": 144,
   "levels": {
-   "E?": 26,
-   "E1": 15,
-   "E2": 18,
-   "E0": 74
+   "E1": 17,
+   "E?": 25,
+   "E2": 27,
+   "E0": 75
   },
-  "verdict_rate": 0.863,
+  "verdict_rate": 0.826,
   "note": "type4 推送/解析端点实测：E2=应答有结构化内容(degraded)，E0=404/410 路径失效(dead)，E1/E?=形态不符或本机不可达(unknown)；不测内容能否播放"
  },
  "sites": [
@@ -17,8 +17,11 @@
    "name": "👖T4",
    "kind": "endpoint",
    "api": "https://banyeomni.780420.xyz:17777/api/tvbox/source/2097848348508688384?token=banye666",
-   "level": "E?",
-   "reason": "TimeoutError: The read operation timed out"
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'{\"class\":[{\"type_id\":\"1\"'）",
+   "status": 200,
+   "ms": 3525,
+   "bytes": 60000
   },
   {
    "key": "123-3",
@@ -28,7 +31,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 286,
+   "ms": 262,
    "bytes": 12
   },
   {
@@ -39,7 +42,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 1418,
+   "ms": 787,
    "bytes": 12
   },
   {
@@ -50,8 +53,16 @@
    "level": "E?",
    "reason": "HTTP 500 服务端错误",
    "status": 500,
-   "ms": 137,
+   "ms": 363,
    "bytes": 115
+  },
+  {
+   "key": "55影视",
+   "name": "👭55影视👭",
+   "kind": "endpoint",
+   "api": "http://192.129.140.23:5757/api/55影视?pwd=dzyyds",
+   "level": "E?",
+   "reason": "URLError: <urlopen error timed out>"
   },
   {
    "key": "9-2",
@@ -61,7 +72,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/179 字节）",
    "status": 200,
-   "ms": 560,
+   "ms": 1343,
    "bytes": 227
   },
   {
@@ -72,8 +83,19 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 950,
+   "ms": 978,
    "bytes": 5262
+  },
+  {
+   "key": "PHPPHP",
+   "name": "👭PHP聚合👭",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/php.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/11 字节）",
+   "status": 200,
+   "ms": 2901,
+   "bytes": 11
   },
   {
    "key": "T4-2024热门",
@@ -523,7 +545,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 361,
+   "ms": 592,
    "bytes": 26398
   },
   {
@@ -533,6 +555,22 @@
    "api": "https://t4.secan.icu/vod",
    "level": "E?",
    "reason": "RemoteDisconnected: Remote end closed connection without response"
+  },
+  {
+   "key": "T4_玩偶哥哥",
+   "name": "码上👓玉-👽玩偶哥哥",
+   "kind": "endpoint",
+   "api": "http://home.jundie.top:9520/spider/csp_Wogg?sort=原画,蓝光,超清,高清&token=342a28053dd54cf2b0246c6b33c74013",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>"
+  },
+  {
+   "key": "T4_荐片",
+   "name": "码上👓玉-👽荐片",
+   "kind": "endpoint",
+   "api": "http://home.jundie.top:9520/spider/csp_JP",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>"
   },
   {
    "key": "T4a",
@@ -566,8 +604,16 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 1810,
+   "ms": 811,
    "bytes": 12
+  },
+  {
+   "key": "douban",
+   "name": "🔍豆瓣榜单1〔不要勾选〕",
+   "kind": "endpoint",
+   "api": "https://t4.xn--sss604efuw.ml/vod",
+   "level": "E0",
+   "reason": "域名无解析记录（t4.xn--sss604efuw.ml；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
   },
   {
    "key": "douban-2",
@@ -578,6 +624,25 @@
    "reason": "URLError: <urlopen error [SSL: TLSV1_ALERT_INTERNAL_ERROR] tlsv1 alert internal error (_ssl.c:1000)>"
   },
   {
+   "key": "drpyS_采王",
+   "name": "💥采王💥",
+   "kind": "endpoint",
+   "api": "http://192.129.140.23:5757/api/采集之王[合]?pwd=dzyyds",
+   "level": "E?",
+   "reason": "TimeoutError: timed out"
+  },
+  {
+   "key": "jsPHP",
+   "name": "👭js聚合👭",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/js.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/620 字节）",
+   "status": 200,
+   "ms": 2748,
+   "bytes": 800
+  },
+  {
    "key": "js集合",
    "name": "js集合",
    "kind": "endpoint",
@@ -585,7 +650,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/620 字节）",
    "status": 200,
-   "ms": 2411,
+   "ms": 992,
    "bytes": 800
   },
   {
@@ -594,10 +659,21 @@
    "kind": "endpoint",
    "api": "http://tvbox.zling.vip/wanpan.php?type=quark|uc|baidu|tianyi|xunlei|123",
    "level": "E2",
-   "reason": "应答非空 JSON 结构（2 项/11358 字节）",
+   "reason": "应答非空 JSON 结构（2 项/11350 字节）",
    "status": 200,
-   "ms": 936,
-   "bytes": 11972
+   "ms": 963,
+   "bytes": 11952
+  },
+  {
+   "key": "php_hmezy",
+   "name": "黑木耳克隆(切)",
+   "kind": "endpoint",
+   "api": "https://demobe.serv00.net/heimuer.php",
+   "level": "E0",
+   "reason": "HTTP 404 路径失效",
+   "status": 404,
+   "ms": 1466,
+   "bytes": 2645
   },
   {
    "key": "php_官方资源",
@@ -607,7 +683,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 1299,
+   "ms": 2641,
    "bytes": 1179
   },
   {
@@ -618,7 +694,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 1246,
+   "ms": 2621,
    "bytes": 1179
   },
   {
@@ -629,7 +705,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 2025,
+   "ms": 2418,
    "bytes": 1179
   },
   {
@@ -640,41 +716,27 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/11 字节）",
    "status": 200,
-   "ms": 2345,
+   "ms": 1010,
    "bytes": 11
   },
   {
-   "key": "py_DianYingTanTang",
-   "name": "🫐电影天堂(T4)",
+   "key": "ppnix",
+   "name": "👭ppnix👭",
    "kind": "endpoint",
-   "api": "https://py.doube.eu.org/spider?site=DianYingTanTang",
-   "level": "E0",
-   "reason": "HTTP 404 路径失效",
-   "status": 404,
-   "ms": 10952,
-   "bytes": 173
+   "api": "http://zhangqun1818.serv00.net:6628/?spider=ppnix",
+   "level": "E?",
+   "reason": "URLError: <urlopen error [WinError 10061] 由于目标计算机积极拒绝，无法连接。>"
   },
   {
-   "key": "py_Dm84",
-   "name": "动漫巴士(T4)",
+   "key": "pyPHP",
+   "name": "👭py聚合👭",
    "kind": "endpoint",
-   "api": "https://py.doube.eu.org/spider?site=Dm84",
-   "level": "E0",
-   "reason": "HTTP 404 路径失效",
-   "status": 404,
-   "ms": 831,
-   "bytes": 173
-  },
-  {
-   "key": "py_OleVod",
-   "name": "欧乐影院(T4)",
-   "kind": "endpoint",
-   "api": "https://py.doube.eu.org/spider?site=OleVod",
-   "level": "E0",
-   "reason": "HTTP 404 路径失效",
-   "status": 404,
-   "ms": 961,
-   "bytes": 173
+   "api": "http://zhangqun1818.serv00.net/py.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1077 字节）",
+   "status": 200,
+   "ms": 2646,
+   "bytes": 1349
   },
   {
    "key": "py_动漫巴士",
@@ -684,7 +746,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 1072,
+   "ms": 1101,
    "bytes": 173
   },
   {
@@ -695,7 +757,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 726,
+   "ms": 898,
    "bytes": 173
   },
   {
@@ -706,7 +768,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 8762,
+   "ms": 1240,
    "bytes": 173
   },
   {
@@ -717,7 +779,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/1077 字节）",
    "status": 200,
-   "ms": 2313,
+   "ms": 998,
    "bytes": 1349
   },
   {
@@ -727,6 +789,17 @@
    "api": "https://catbox.n13.club/18/人人影视.php",
    "level": "E0",
    "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "spider_2050160339265261568",
+   "name": "👭玩偶聚合👭",
+   "kind": "endpoint",
+   "api": "http://101.42.104.195:7123/api/tvbox/source/2050160339265261568?token=OLFNw46CpJpG9fP2Y2zBW0tvbcLJ9Si2",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（3 项/30789 字节）",
+   "status": 200,
+   "ms": 2939,
+   "bytes": 37865
   },
   {
    "key": "t4AnLao",
@@ -776,7 +849,7 @@
    "level": "E0",
    "reason": "HTTP 404 路径失效",
    "status": 404,
-   "ms": 32,
+   "ms": 57,
    "bytes": 153
   },
   {
@@ -793,7 +866,7 @@
    "kind": "endpoint",
    "api": "https://ghproxy.com/https://raw.githubusercontent.com/c120487/00/main/api/00title05152.json",
    "level": "E?",
-   "reason": "URLError: <urlopen error timed out>"
+   "reason": "URLError: <urlopen error _ssl.c:983: The handshake operation timed out>"
   },
   {
    "key": "vv003",
@@ -812,17 +885,6 @@
    "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
   },
   {
-   "key": "xunlei",
-   "name": "迅雷|推送",
-   "kind": "endpoint",
-   "api": "https://so.yinpai.xyz/api.php?type=xunlei",
-   "level": "E1",
-   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
-   "status": 200,
-   "ms": 479,
-   "bytes": 12
-  },
-  {
    "key": "xunlei-2",
    "name": "迅雷|推送",
    "kind": "endpoint",
@@ -830,7 +892,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 318,
+   "ms": 304,
    "bytes": 12
   },
   {
@@ -850,14 +912,55 @@
    "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
   },
   {
-   "key": "克隆合集",
-   "name": "克隆合集",
+   "key": "yyzx333",
+   "name": "👭音乐在线1👭",
+   "kind": "endpoint",
+   "api": "http://jiduo.3116598.xyz/PHP/fytg.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（6 项/2513 字节）",
+   "status": 200,
+   "ms": 1645,
+   "bytes": 3049
+  },
+  {
+   "key": "世界杯直播",
+   "name": "👭世界杯直播👭",
+   "kind": "endpoint",
+   "api": "https://jsnzkpg.us.ci",
+   "level": "E0",
+   "reason": "域名无解析记录（jsnzkpg.us.ci；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
+  },
+  {
+   "key": "人人2PHP",
+   "name": "👭人人2👭",
+   "kind": "endpoint",
+   "api": "http://jiduo.3116598.xyz/PHP/rrsp.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/203 字节）",
+   "status": 200,
+   "ms": 1969,
+   "bytes": 231
+  },
+  {
+   "key": "优惜",
+   "name": "优惜|推送",
+   "kind": "endpoint",
+   "api": "http://38.76.197.172:15151/api.php?type=uc",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 268,
+   "bytes": 12
+  },
+  {
+   "key": "克隆PHP",
+   "name": "👭克隆👭",
    "kind": "endpoint",
    "api": "http://zhangqun1818.serv00.net/klhj.php",
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/355 字节）",
    "status": 200,
-   "ms": 649,
+   "ms": 2426,
    "bytes": 403
   },
   {
@@ -868,7 +971,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 1303,
+   "ms": 266,
    "bytes": 12
   },
   {
@@ -879,24 +982,16 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 430,
+   "ms": 481,
    "bytes": 12
   },
   {
-   "key": "其他清单播放",
-   "name": "其他清单播放",
+   "key": "可视PHP",
+   "name": "👭可视👭",
    "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=9",
+   "api": "http://192.129.140.23:5757/api/可视影院?pwd=dzyyds",
    "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
-  },
-  {
-   "key": "听书go",
-   "name": "听书go",
-   "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=11",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+   "reason": "TimeoutError: timed out"
   },
   {
    "key": "呜剧",
@@ -906,16 +1001,8 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（3 项/8878 字节）",
    "status": 200,
-   "ms": 10452,
+   "ms": 1550,
    "bytes": 8879
-  },
-  {
-   "key": "哔哩go",
-   "name": "哔哩go",
-   "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=10",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
   },
   {
    "key": "喜福短剧",
@@ -926,17 +1013,6 @@
    "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
   },
   {
-   "key": "天翼",
-   "name": "天翼|推送",
-   "kind": "endpoint",
-   "api": "https://so.yinpai.xyz/api.php?type=tianyi",
-   "level": "E1",
-   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
-   "status": 200,
-   "ms": 411,
-   "bytes": 12
-  },
-  {
    "key": "天翼-2",
    "name": "天翼|推送",
    "kind": "endpoint",
@@ -944,18 +1020,29 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 320,
+   "ms": 297,
+   "bytes": 12
+  },
+  {
+   "key": "天翼推送",
+   "name": "[4727ms|2] 天翼┃网盘推送",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=tianyi",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 790,
    "bytes": 12
   },
   {
    "key": "夸克推送",
-   "name": "夸克|推送",
+   "name": "[4727ms|2] 夸克┃网盘搜索",
    "kind": "endpoint",
    "api": "https://so.yinpai.xyz/api.php?type=quark",
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 680,
+   "ms": 791,
    "bytes": 12
   },
   {
@@ -966,7 +1053,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 306,
+   "ms": 330,
    "bytes": 12
   },
   {
@@ -979,24 +1066,24 @@
   },
   {
    "key": "影视单播放",
-   "name": "影视播放",
+   "name": "[367ms|直播] 影视播放",
    "kind": "endpoint",
    "api": "http://zhangqun1818.serv00.net/zh/2243.php",
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/1647 字节）",
    "status": 200,
-   "ms": 743,
+   "ms": 2451,
    "bytes": 1855
   },
   {
    "key": "影视播放",
-   "name": "老张影视",
+   "name": "[367ms|直播] 老张影视",
    "kind": "endpoint",
    "api": "http://zhangqun1818.serv00.net/zh/2242.php",
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/871 字节）",
    "status": 200,
-   "ms": 5837,
+   "ms": 7613,
    "bytes": 1019
   },
   {
@@ -1007,16 +1094,38 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/871 字节）",
    "status": 200,
-   "ms": 7323,
+   "ms": 6200,
    "bytes": 1019
   },
   {
-   "key": "影视清单播放",
-   "name": "影视清单播放",
+   "key": "新浪PHP",
+   "name": "👭新浪👭",
    "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=9",
+   "api": "http://192.129.140.23:5757/api/新浪资源?do=py&pwd=dzyyds",
    "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+   "reason": "TimeoutError: timed out"
+  },
+  {
+   "key": "新韩剧网PHP",
+   "name": "👭新韩剧网👭",
+   "kind": "endpoint",
+   "api": "http://192.129.140.23:5757/api/新韩剧网?do=py&pwd=dzyyds",
+   "level": "E?",
+   "reason": "HTTP 500 服务端错误",
+   "status": 500,
+   "ms": 3047,
+   "bytes": 87
+  },
+  {
+   "key": "旺旺PHP",
+   "name": "👭旺旺短剧👭",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/ww.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（1 项/1311 字节）",
+   "status": 200,
+   "ms": 660,
+   "bytes": 1693
   },
   {
    "key": "服务器油管",
@@ -1026,24 +1135,24 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/1477 字节）",
    "status": 200,
-   "ms": 4523,
+   "ms": 1046,
    "bytes": 1721
   },
   {
-   "key": "服务器油管go",
-   "name": "服务器油管go",
+   "key": "枫叶音乐",
+   "name": "[313ms|00000] 枫叶音乐",
    "kind": "endpoint",
-   "api": "http://127.0.0.1:1988",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+   "api": "https://catbox.n13.club/ai/枫叶音乐.php",
+   "level": "E0",
+   "reason": "域名无解析记录（catbox.n13.club；DoH 复核 ali:NOERROR/空 google:无应答(URLError)）"
   },
   {
-   "key": "欧乐影院",
-   "name": "欧乐影院",
+   "key": "枫林影视PHP",
+   "name": "👭枫林影视👭",
    "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=4",
+   "api": "http://192.129.140.23:5757/api/枫林影视?pwd=dzyyds",
    "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
+   "reason": "TimeoutError: timed out"
   },
   {
    "key": "油管播放列表1",
@@ -1053,7 +1162,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/2595 字节）",
    "status": 200,
-   "ms": 4552,
+   "ms": 992,
    "bytes": 2888
   },
   {
@@ -1064,16 +1173,8 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/3491 字节）",
    "status": 200,
-   "ms": 3976,
+   "ms": 1015,
    "bytes": 3983
-  },
-  {
-   "key": "油管文件播放",
-   "name": "油管文件播放",
-   "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=8",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
   },
   {
    "key": "油管清单播放",
@@ -1083,8 +1184,16 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/1653 字节）",
    "status": 200,
-   "ms": 1051,
+   "ms": 3290,
    "bytes": 2009
+  },
+  {
+   "key": "泥视频PHP",
+   "name": "👭泥视频👭",
+   "kind": "endpoint",
+   "api": "http://192.129.140.23:5757/api/泥视频?pwd=dzyyds",
+   "level": "E?",
+   "reason": "TimeoutError: timed out"
   },
   {
    "key": "清单播放",
@@ -1094,7 +1203,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/1647 字节）",
    "status": 200,
-   "ms": 1004,
+   "ms": 2490,
    "bytes": 1855
   },
   {
@@ -1105,7 +1214,7 @@
    "level": "E2",
    "reason": "应答非空 JSON 结构（2 项/6936 字节）",
    "status": 200,
-   "ms": 4671,
+   "ms": 1836,
    "bytes": 7802
   },
   {
@@ -1132,7 +1241,7 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 1572,
+   "ms": 280,
    "bytes": 12
   },
   {
@@ -1143,16 +1252,8 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 3594,
+   "ms": 830,
    "bytes": 12
-  },
-  {
-   "key": "直播文件播放",
-   "name": "直播文件播放",
-   "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=8",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
   },
   {
    "key": "移动推送",
@@ -1162,40 +1263,62 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 677,
+   "ms": 782,
    "bytes": 12
   },
   {
-   "key": "索尼音乐",
-   "name": "👖裤佬丨索尼丨音乐",
+   "key": "苹果PHP",
+   "name": "👭苹果视频👭",
    "kind": "endpoint",
-   "api": "https://banyeomni.780420.xyz:17777/api/tvbox/source/2070335669707739136?token=banye666",
-   "level": "E?",
-   "reason": "HTTP 500 服务端错误",
-   "status": 500,
-   "ms": 139,
-   "bytes": 115
+   "api": "https://zhangqun19.serv00.net/pingguo.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（2 项/4630 字节）",
+   "status": 200,
+   "ms": 2038,
+   "bytes": 5356
+  },
+  {
+   "key": "荐片33333",
+   "name": "👭荐片33333👭",
+   "kind": "endpoint",
+   "api": "http://zhangqun1818.serv00.net/jianpian.php",
+   "level": "E2",
+   "reason": "应答非空 JSON 结构（2 项/1783 字节）",
+   "status": 200,
+   "ms": 4232,
+   "bytes": 1889
   },
   {
    "key": "裤佬JS聚合",
-   "name": "采集┃聚合",
+   "name": "[367ms|直播] 采集┃聚合",
    "kind": "endpoint",
    "api": "http://zhangqun1818.serv00.net/cj/cjjh.php?ac=list",
    "level": "E2",
-   "reason": "应答非空 JSON 结构（8 项/5401 字节）",
+   "reason": "应答非空 JSON 结构（8 项/5296 字节）",
    "status": 200,
-   "ms": 4304,
-   "bytes": 6169
+   "ms": 1077,
+   "bytes": 6068
+  },
+  {
+   "key": "迅雷",
+   "name": "[4727ms|2] 迅雷┃网盘搜索",
+   "kind": "endpoint",
+   "api": "https://so.yinpai.xyz/api.php?type=xunlei",
+   "level": "E1",
+   "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
+   "status": 200,
+   "ms": 802,
+   "bytes": 12
   },
   {
    "key": "采集集合",
-   "name": "采集集合+",
+   "name": "[367ms|直播] 采集集合+",
    "kind": "endpoint",
    "api": "http://zhangqun1818.serv00.net/cj/cjjh.php",
    "level": "E2",
    "reason": "应答非空 JSON 结构（1 项/11 字节）",
    "status": 200,
-   "ms": 669,
+   "ms": 2412,
    "bytes": 11
   },
   {
@@ -1206,16 +1329,8 @@
    "level": "E1",
    "reason": "HTTP 200 声称 JSON 但无结构（'参数错误'）",
    "status": 200,
-   "ms": 788,
+   "ms": 802,
    "bytes": 12
-  },
-  {
-   "key": "音乐文件播放",
-   "name": "音乐文件播放",
-   "kind": "endpoint",
-   "api": "http://127.0.0.1:1988/lb?lb=8",
-   "level": "E?",
-   "reason": "本地/内网端点，不适用远端实测（手机上是本机助手）"
   }
  ]
 }
