@@ -424,6 +424,30 @@ def cmd_push():
     out("jobs 分块推送 %d 块" % ((len(jobs) + CHUNK - 1) // CHUNK))
 
 
+def done_ids(text):
+    """从 jsonl 文本里取出已产出的 id 集合。"""
+    ids = set()
+    for line in (text or "").splitlines():
+        m = re.search(r'"id"\s*:\s*"((?:[^"\\]|\\.)*)"', line)
+        if m:
+            try:
+                ids.add(json.loads('"%s"' % m.group(1)))
+            except ValueError:
+                pass
+    return ids
+
+
+def missing_jobs(jobs, text):
+    """这一块里没跑出结果的站。
+
+    必须显式查：设备上的 app_process 会被低内存杀掉（实测某轮 block 000 只写 3/40 行
+    就 rc=0 退出），而 done_ 标记只看"有没有这个文件"，残缺块会被当成已完成——
+    一次静默丢掉 90% 的槽位。
+    """
+    got = done_ids(text)
+    return [j for j in (jobs or []) if j.get("id") not in got]
+
+
 def cmd_run(nblocks):
     rc, o = adb(["ls", "/data/local/tmp/"])
     listed = re.split(r"\s+", o)
@@ -440,15 +464,33 @@ def cmd_run(nblocks):
         host = next((l.split(":", 1)[1].strip() for l in o2.splitlines()
                      if l.startswith("package:")), "")
     out("宿主 apk=%s；本轮跑 %d 块" % (host[:60], len(blocks)))
+
+    def run_block(jname, tag):
+        inner = ("cd /data/local/tmp; CLASSPATH=/data/local/tmp/runner2.jar:%s "
+                 "app_process / Main2 /data/local/tmp/%s /data/local/tmp/res_%s.jsonl "
+                 "%s %s 2>&1 | tail -3" % (host, jname, tag, PKG, CALL_MS))
+        rc2, o2 = adb(["su", "-c", inner])
+        adb(["mv", "-f", "/data/local/tmp/res_%s.jsonl" % tag,
+             "/data/local/tmp/done_%s.jsonl" % tag])
+        return rc2, o2
+
     for f in blocks:
         idx = f.replace("jobs_", "").replace(".json", "")
-        outjson = "/data/local/tmp/res_%s.jsonl" % idx
-        inner = ("cd /data/local/tmp; CLASSPATH=/data/local/tmp/runner2.jar:%s "
-                 "app_process / Main2 /data/local/tmp/%s %s %s %s 2>&1 | tail -3"
-                 % (host, f, outjson, PKG, CALL_MS))
-        rc, o = adb(["su", "-c", inner])
+        rc, o = run_block(f, idx)
         out("[%s] rc=%s %s" % (idx, rc, o.strip().replace("\n", " | ")[:220]))
-        adb(["mv", "-f", outjson, "/data/local/tmp/done_%s.jsonl" % idx])
+        try:
+            want = json.load(open(os.path.join(WORK, f), encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        _rc, txt = adb(["cat", "/data/local/tmp/done_%s.jsonl" % idx])
+        miss = missing_jobs(want, txt)
+        if not miss:
+            continue
+        out("[%s] 残缺 %d/%d，补跑 r1" % (idx, len(miss), len(want)))
+        rp = os.path.join(WORK, "jobs_%sr1.json" % idx)
+        json.dump(miss, open(rp, "w", encoding="utf-8"), ensure_ascii=False)
+        sh(["adb", "push", rp, "/data/local/tmp/jobs_%sr1.json" % idx])
+        run_block("jobs_%sr1.json" % idx, "%sr1" % idx)
 
 
 def device_verdict(row, cls):
