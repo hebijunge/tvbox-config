@@ -644,6 +644,42 @@ def detect_source_anomaly(results: list, repo: str) -> list:
     return flagged
 
 
+def carry_foreign_rows(results, out_path: str) -> list:
+    """保住上一版产物里**本轮没重新产出**的行；同 key 时做字段级合并。
+
+    `probe/sites_probe.json` 是多个生产方共用的文件：本探针写 L*/S* 判定，直播测速/stage 8
+    那类只往同一个文件里写 `{key, check_ms, check_at}`。每轮各自只产出自己那部分，若不把
+    别人的行带下去，本地跑一次 5a 就抹掉 CI 的几百条测速记录，下一轮 CI 再抹掉我们的判定
+    ——谁后跑谁赢。
+
+    归属判据只用「本轮是否产出了这个 key」，**不用字段形态猜**：按"有没有 level"区分生产方
+    会漏（一条既有 level 又带 check_ms 的历史行会被当成本轮所有而丢掉，实测漏了 117 条）。
+    同 key 两边都有时也不能整行二选一：本轮判定优先，测速字段留下。
+    """
+    try:
+        with open(out_path, encoding="utf-8") as f:
+            prev = (json.load(f).get("sites") or [])
+    except (OSError, ValueError):
+        return results
+    mine = {r.get("key"): r for r in results}
+    extra = []
+    for p in prev:
+        k = p.get("key")
+        if not k:
+            continue
+        row = mine.get(k)
+        if row is None:
+            extra.append(p)
+            continue
+        for f in ("check_ms", "check_at"):
+            if p.get(f) is not None and row.get(f) is None:
+                row[f] = p[f]
+    if extra:
+        print(f"[probe] 保留本轮未产出的历史行 {len(extra)} 条（其它通路或另一类目写的）",
+              flush=True)
+    return results + extra
+
+
 def load_probe_cache(out_path: str) -> dict:
     """读上次 probe/sites_probe.json，返回 {api: result}。文件缺失/损坏返回空。"""
     try:
@@ -942,7 +978,7 @@ def main() -> int:
         "static_levels": {lv: sum(1 for r in results if r["level"] == lv and r.get("kind") != "http")
                           for lv in ("S1", "S0", "S?")},
     }
-    out = {"summary": summary, "sites": results}
+    out = {"summary": summary, "sites": carry_foreign_rows(results, out_path)}
     os.makedirs(os.path.dirname(os.path.join(repo, args.out)) or ".", exist_ok=True)
     with open(os.path.join(repo, args.out), "w", encoding="utf-8") as f:
         json.dump(out, f, ensure_ascii=False, indent=1)

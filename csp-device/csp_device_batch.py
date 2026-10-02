@@ -24,6 +24,7 @@ WORK = os.environ.get("CSP_WORKDIR") or os.path.join(
 REPO = os.getcwd()      # cwd=仓库根：plan|push|run|merge
 DEV_JAR = "/data/local/tmp/cspjars"
 CHUNK = 40
+CALL_MS = os.environ.get("CSP_CALL_MS", "20000")   # 单关调用上限(ms)；慢站复测可临时调大
 PKG = "com.tvtest"          # 宿主包名：提供 catvod 接口与 Context
 HOST_APK = os.environ.get("TVBOX_APK") or ""
 
@@ -443,8 +444,8 @@ def cmd_run(nblocks):
         idx = f.replace("jobs_", "").replace(".json", "")
         outjson = "/data/local/tmp/res_%s.jsonl" % idx
         inner = ("cd /data/local/tmp; CLASSPATH=/data/local/tmp/runner2.jar:%s "
-                 "app_process / Main2 /data/local/tmp/%s %s %s 2>&1 | tail -3"
-                 % (host, f, outjson, PKG))
+                 "app_process / Main2 /data/local/tmp/%s %s %s %s 2>&1 | tail -3"
+                 % (host, f, outjson, PKG, CALL_MS))
         rc, o = adb(["su", "-c", inner])
         out("[%s] rc=%s %s" % (idx, rc, o.strip().replace("\n", " | ")[:220]))
         adb(["mv", "-f", outjson, "/data/local/tmp/done_%s.jsonl" % idx])

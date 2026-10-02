@@ -36,14 +36,18 @@ public class Main2 {
         "", "com.github.catvod.spider.", "com.spider.", "com.github.catvod.jar.",
         "com.okxjar.", "io.github.", "com.fongmi.android.tv.api.init."
     };
-    static final int CALL_MS = 20000;
     static final String KW = "庆余年";
+    static final int DEFAULT_CALL_MS = 20000;
+    // 单次关卡调用上限。20s 对慢接口（尤其海外源/首屏要拉规则的站）不够：
+    // 实测 75 站三关全 TimeoutException，拿不到"慢"与"死"的区分。第 4 个参数可覆盖。
+    static int CALL_MS = DEFAULT_CALL_MS;
     static Object ctx;
     static ClassLoader parent = Main2.class.getClassLoader();
 
     public static void main(String[] args) throws Exception {
         if (args.length < 2) { System.out.println("need jobs out"); return; }
         String host = args.length > 2 ? args[2] : System.getenv("CSP_HOST_PKG");
+        if (args.length > 3) { CALL_MS = Integer.parseInt(args[3]); }
         ctx = (host == null || host.length() == 0) ? systemContext() : hostContext(host);
         System.out.println("MODE host=" + host + " ctx=" + (ctx == null ? "NULL" : ctx.getClass().getName()));
         if (ctx != null) {
@@ -65,12 +69,12 @@ public class Main2 {
             try {
                 r = guard.submit(new Callable<JSONObject>() {
                     public JSONObject call() { return probe(ex, j); }
-                }).get(120, TimeUnit.SECONDS);
+                }).get(watchdogSec(), TimeUnit.SECONDS);
             } catch (Throwable t) {
                 r = new JSONObject();
                 put(r, "id", j.optString("id"));
                 put(r, "level", "C?");
-                put(r, "err", "watchdog120s:" + root(t));
+                put(r, "err", "watchdog" + watchdogSec() + "s:" + root(t));
                 put(r, "gates", "0");
             }
             out.write(r.toString() + "\n");
@@ -82,6 +86,12 @@ public class Main2 {
         ex.shutdownNow();
         guard.shutdownNow();
         System.exit(0);
+    }
+
+    static int watchdogSec() {
+        // 五关各自最多 CALL_MS，再加构造函数/Init 的余量；CALL_MS 调大时必须同步放大，
+        // 否则看门狗会先 kill，把"慢"记成 C? 反而更糟。
+        return Math.max(120, CALL_MS / 1000 * 5 + 30);
     }
 
     static Object systemContext() {

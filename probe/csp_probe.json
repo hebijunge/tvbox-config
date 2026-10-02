@@ -1,8 +1,8 @@
 {
- "generated_at": "2026-10-02T09:36:45",
+ "generated_at": "2026-10-02T10:25:07",
  "note": "root 真机 DexClassLoader 实测 csp 爬虫源五关（首页/分类/搜索/详情/播放）",
  "summary": {
-  "total": 1621,
+  "total": 1643,
   "levels": {
    "C2": 187,
    "C3": 62,
@@ -10,13 +10,13 @@
    "C?": 212,
    "C1": 807,
    "C4": 5,
-   "C0": 267
+   "C0": 289
   },
   "static_jars_parsed": 242,
   "static_added": 10,
   "note": "真机只证明「能跑到第几关」（C1-C5）；判死 C0 一律出自静态口径（全池类缺席 + 该站自带 jar 确实读到过）。2026-10-01 起 app_process runner 挂宿主 apk，CLASSPATH 齐全",
   "purged_untrusted_c0": 0,
-  "ext_dead_added": 257
+  "ext_dead_added": 22
  },
  "sites": [
   {
@@ -32186,6 +32186,468 @@
    },
    "err": "ext-dead:域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
    "probed_at": "2026-10-02T09:36:45"
+  },
+  {
+   "key": "XBPQ_石榴",
+   "name": "码上👓多-Ⓜ┃石榴┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/shiliu.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_XBPQ_haoxi",
+   "name": "码上👓多-⚡️┃好戏┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/好戏.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XBPQ_星辰",
+   "name": "码上👓多-🌟┃星辰┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/星辰影视.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "js_mogu",
+   "name": "码上👓多-🍄┃蘑菇┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/蘑菇.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XBPQ_九八",
+   "name": "码上👓多-🍸️┃九八┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/98影视.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_XBPQ_348z",
+   "name": "码上👓多-🎲┃348┃电影",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/348z.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_XBPQ_圣城",
+   "name": "码上👓多-🏯┃圣城┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/圣城.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XBPQ_蚂蚁",
+   "name": "码上👓多-🐜┃蚂蚁┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/mayi.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_dadagui",
+   "name": "码上👓多-🐢┃达龟┃影视",
+   "kind": "csp",
+   "cls": "XPathFilter",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/达达龟.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_FreeOK",
+   "name": "码上👓多-💰️┃富瑞┃影院",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/free.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_XBPQ_wanda",
+   "name": "码上👓多-🗽┃万达┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/万达.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_动漫巴士",
+   "name": "码上👓多-🤖┃动漫┃巴士",
+   "kind": "csp",
+   "cls": "XPath",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/动漫巴士.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_jbb",
+   "name": "码上👓多-🦢┃剧白┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/剧白白.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "俊俊",
+   "name": "码上👓玉-🌀瑞丰",
+   "kind": "csp",
+   "cls": "AppYsV2",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+    "url": "http://app.zhaifutvapp.com/ruifenglb_api.php/v1.vod",
+    "tried": 1
+   },
+   "err": "ext-dead:域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XYQH_在线之家",
+   "name": "码上👓玉-🏜在线",
+   "kind": "csp",
+   "cls": "XYQHiker",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/qi169/kankan/raw/branch/master/XYQHiker/在线之家.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XYQH_农民",
+   "name": "码上👓玉-🦄农民",
+   "kind": "csp",
+   "cls": "XYQHiker",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/qi169/kankan/raw/branch/master/XYQHiker/农民影视.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "emofun",
+   "name": "码上👓香-EmoFun",
+   "kind": "csp",
+   "cls": "AppYsV2",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+    "url": "http://one3.emofun.top/mogai_api.php/v1.vod",
+    "tried": 1
+   },
+   "err": "ext-dead:域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "蜗牛有广告",
+   "name": "码上👓多-🐌┃蜗牛┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/蜗牛.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "XBPQ_一只蜗",
+   "name": "码上👓多-🐮┃牛牛┃影视",
+   "kind": "csp",
+   "cls": "XBPQ",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/一只蜗.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_17看球",
+   "name": "码上👓多-⚽┃一起┃直播",
+   "kind": "csp",
+   "cls": "XYQBiu",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/看球.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "csp_鹅直播",
+   "name": "码上👓多-🏀┃企鹅┃直播",
+   "kind": "csp",
+   "cls": "XPath",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "lander-html",
+    "url": "https://agit.ai/leevi/duo/raw/branch/master/libs/qie.json",
+    "tried": 1
+   },
+   "err": "ext-dead:lander-html",
+   "probed_at": "2026-10-02T10:25:07"
+  },
+  {
+   "key": "Upso",
+   "name": "码上👓玉-🔍云搜",
+   "kind": "csp",
+   "cls": "UpYun",
+   "level": "C0",
+   "ms": null,
+   "flags": {
+    "home": false,
+    "cat": false,
+    "search": false
+   },
+   "evidence": {
+    "ext_dep": "remote-rule-unreachable",
+    "cause": "域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+    "url": "http://ali.饭太硬.ml/alitoken",
+    "tried": 1
+   },
+   "err": "ext-dead:域名无解析记录(DoH一致:ali:NOERROR/空 google:无应答(URLError))",
+   "probed_at": "2026-10-02T10:25:07"
   }
  ]
 }
