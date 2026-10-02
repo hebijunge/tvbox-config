@@ -32,6 +32,8 @@ import os
 import re
 import threading
 
+import pathutil  # 大小写冲突降级命名的唯一事实源
+
 RAW_DIR = os.environ.get("RAW_DIR", "raw")              # 上游原始文件（raw/live/ 直播、raw/vod/ 点播配置）
 RAW_VOD_DIR = os.environ.get("RAW_VOD_DIR", "raw-vod")  # 点播依赖原始文件（与 deps/ 镜像）
 HISTORY_KEEP = int(os.environ.get("RAW_HISTORY_KEEP", "60"))
@@ -74,8 +76,14 @@ def _safe_seg(seg: str) -> str:
 
 
 def safe_rel(rel: str) -> str:
-    """仓库相对路径整体清洗（保留 / 分隔）。"""
-    parts = [_safe_seg(p) for p in rel.split("/") if p not in ("", ".", "..")]
+    """仓库相对路径整体清洗（统一输出 ``/`` 分隔）。
+
+    历史账本里存在 ``history\\2026-09-29\\name`` 这种 Windows 反斜杠 path（由
+    ``os.path.relpath`` 直接写进 manifest 造成），只按 ``/`` 切分会把它当成一个
+    含非法字符的整段，跨平台读到的是另一个文件。两种分隔符都切，输出统一正斜杠。
+    """
+    parts = [_safe_seg(p) for p in rel.replace("\\", "/").split("/")
+             if p not in ("", ".", "..")]
     return "/".join(parts) or "_unnamed_"
 
 
@@ -133,6 +141,7 @@ def _ingest_impl(store: str, key: str, url: str, content: bytes, rel: str = None
     sha = sha256_hex(content)
     m = load_manifest(store)
     ent = m.get(key) if isinstance(m.get(key), dict) else {}
+    rel = _settle_case_rel(store, m, key, ent, rel)
     fs = os.path.join(store, rel)
     status = None
     archived = None
@@ -261,6 +270,46 @@ def _rel_from_url(url: str) -> str:
     return _safe_seg(name)
 
 
+def _settle_case_rel(store: str, m: dict, key: str, ent: dict, rel: str) -> str:
+    """消解 store 内仅大小写不同的同名文件，返回本轮实际使用的相对路径。
+
+    上游文件名常只差大小写（``IPTV.m3u`` / ``iptv.m3u``）。Linux 上两者共存，
+    Windows 上后写者直接盖掉前者，于是本地内容与 git 记录、与账本里各自登记的
+    sha256 三方错位，检出后 ``git status`` 还会永久显示该文件已修改。
+
+    先沿用该 key 已登记的名字（哪怕与本轮 URL 推导出的只差大小写），保证同一 key
+    跨轮、跨平台同名；被其它 key 占了同名时按 :func:`pathutil.demote_rel` 降级。
+
+    降级身份用 ``store/rel`` 整条路径，与 ``fix_case_collisions`` 和
+    ``fetch_merge.resolve_dep_paths`` 严格一致——否则迁移改好的名字会在下一轮
+    daily 被 ingest 改成另一个名字，账本再来一次整份漂移。
+    """
+    prev = ent.get("path") if isinstance(ent, dict) else None
+    if isinstance(prev, str) and prev:
+        prev = safe_rel(prev)
+        if prev.lower() == rel.lower():
+            return prev
+
+    def _taken(cand, exclude_key=True):
+        for k, v in m.items():
+            if exclude_key and k == key:
+                continue
+            p = v.get("path") if isinstance(v, dict) else None
+            if isinstance(p, str) and p and safe_rel(p).lower() == cand.lower():
+                return True
+        return False
+
+    if not _taken(rel):
+        return rel
+    full = f"{store}/{rel}"
+    cand = pathutil.demote_rel(full)
+    n = 0
+    while _taken(cand[len(store) + 1:]):
+        n += 1
+        cand = pathutil.demote_rel(full, identity=f"{full}#{n}")
+    return cand[len(store) + 1:]
+
+
 def _write(fs: str, content: bytes):
     os.makedirs(os.path.dirname(fs) or ".", exist_ok=True)
     with open(fs, "wb") as f:
@@ -279,7 +328,9 @@ def _archive_old(store: str, rel: str, day: str):
         dst = os.path.join(store, "history", day, rel)
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         os.replace(src, dst)
-        return os.path.relpath(dst, store)
+        # 账本必须与平台无关：os.path.relpath 在 Windows 上给出 history\日期\name，
+        # 写进 manifest.path 后 CI 与其它机器读不到同一文件，同一 key 会记出两份不同 sha256。
+        return os.path.relpath(dst, store).replace("\\", "/")
     except OSError:  # noqa: BLE001
         return None
 

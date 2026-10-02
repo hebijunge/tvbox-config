@@ -132,3 +132,58 @@ def sanitize_for_filename(name: str, max_len: int = 80) -> str:
         ext = os.path.splitext(s)[1]
         s = h + ext
     return s
+
+
+def case_collisions(paths) -> list:
+    """列出仅大小写不同的同目录路径组（Windows/macOS 上会互相覆盖）。
+
+    返回 [[p1, p2, ...], ...]，组内按字节序排序；无冲突时返回空列表。
+    """
+    groups = {}
+    for p in set(paths):
+        groups.setdefault(p.lower(), []).append(p)
+    return [sorted(v) for v in groups.values() if len(v) > 1]
+
+
+def demote_rel(rel: str, identity: str = None) -> str:
+    """给大小写互撞的路径生成唯一名：末段文件名追加 ``~<md5(标识)[:6]>``。
+
+    标识默认取整条路径，因此同一个 loser 在任何机器、任何一轮都得到同一个新名字；
+    调用方可显式传入更稳定的身份（如账本 key）来固定跨轮命名。
+    """
+    d, f = rel.rsplit("/", 1) if "/" in rel else ("", rel)
+    base, ext = os.path.splitext(f)
+    tag = hashlib.md5((identity or rel).encode()).hexdigest()[:6]
+    return f"{d}/{base}~{tag}{ext}" if d else f"{base}~{tag}{ext}"
+
+
+def resolve_case_collisions(paths) -> dict:
+    """为大小写互撞的路径分配唯一名，返回 {原路径: 消解后路径}。
+
+    落库路径由 URL 段原样派生，上游同名文件常只差大小写（``IPTV.m3u`` /
+    ``iptv.m3u``）。Linux CI 上两者共存无碍，Windows 上后写入者覆盖前者——本地
+    拿到的内容与 git 记录、与账本里各自登记的 sha256 全部错位，且检出后
+    ``git status`` 会永久显示该文件被修改，驱动 daily 反复重写同一份大文件。
+
+    消解规则必须与平台无关且可复现，否则本地与 CI 会各自造出不同文件名，
+    账本再也对不上：组内按字节序取第一个为胜者保留原名，其余交给
+    :func:`demote_rel` 降级，冲突时再追加序号。
+    """
+    out = {}
+    for group in case_collisions(paths):
+        claimed = set()
+        for i, p in enumerate(group):
+            if i == 0:
+                out[p] = p
+                claimed.add(p.lower())
+                continue
+            cand = demote_rel(p)
+            n = 0
+            while cand.lower() in claimed:
+                n += 1
+                cand = demote_rel(p, identity=f"{p}#{n}")
+            out[p] = cand
+            claimed.add(cand.lower())
+    for p in set(paths) - set(out):
+        out[p] = p
+    return out

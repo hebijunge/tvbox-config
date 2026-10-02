@@ -1886,6 +1886,20 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
+def resolve_dep_paths(pairs) -> dict:
+    """把 (origin, url) 批量解析为落库路径，并消解大小写冲突。
+
+    返回 ``{"{origin}|{url}": 相对路径}``。路径本身由 :func:`dep_local_path`
+    决定，这里只额外做一层平台无关的冲突消解，见
+    :func:`pathutil.resolve_case_collisions`。
+    """
+    keys = {}
+    for origin, url in pairs:
+        keys.setdefault(f"{origin}|{url}", dep_local_path(origin, url))
+    resolved = pathutil.resolve_case_collisions(keys.values())
+    return {k: resolved.get(v, v) for k, v in keys.items()}
+
+
 # ---- codeload 整仓 tarball 兜底（2026-09-29）----
 # 依赖收集是「每文件 × 镜像轮换」，同一个仓的几十个文件就是几十次握手；raw 被掐时成片
 # 失败（本地 deps 收集 878/2811 的根因之一）。实测 codeload.github.com 的整仓 tar.gz
@@ -2492,11 +2506,15 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                     add_ref("live", _lu, _g_origin, _g_base)
 
     # ---- 2. 并发下载/校验/入库 ----
+    # 先一次性算好全部落库路径：大小写冲突必须在并发下载前消解，否则两个线程
+    # 各自 mkdir 同名不同大小写的目录/文件，Windows 上后写者直接盖掉前者。
+    _lp_map = resolve_dep_paths([(o, u) for _h, u, o in entries])
+
     def work(e):
         kind_hint, url, origin = e
-        lp = dep_local_path(origin, url)
-        fp = os.path.join(lp)
         rkey = f"{origin}|{url}"
+        lp = _lp_map.get(rkey) or dep_local_path(origin, url)
+        fp = os.path.join(lp)
         # P1-9：manifest 扩展字段 fail_count/last_error/ref_count（供后续缓存校验/去重/清理消费）
         rec = {"key": rkey, "url": url, "origin": origin, "local": lp,
                "ok": False, "kind": "", "md5": "", "size": 0, "err": "", "channel": "",
@@ -2782,7 +2800,7 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
               f"超预算停 {_tb_st['budget_cut']}）", flush=True)
     for (origin, url), (data, channel) in _tb_got.items():
         rkey = f"{origin}|{url}"
-        lp = dep_local_path(origin, url)
+        lp = _lp_map.get(rkey) or dep_local_path(origin, url)
         hint = {"jar": "jar", "zip": "jar", "js": "js", "json": "json",
                 "php": "jar"}.get(url.lower().split("?")[0].rsplit(".", 1)[-1], "")
         kind = dep_classify(hint, data)
