@@ -95,19 +95,25 @@ def is_rule(text):
 
 
 def remote_exts(cfg):
-    """cfg 里需要联网取的远程 ext 段（本机/内网端点排除：那是设备侧服务）。"""
+    """cfg 里需要联网取的远程 ext 段（本机/内网端点排除：那是设备侧服务）。
+
+    逗号也切：不少 csp 站的 ext 是 `https://a,https://b,https://c` 形式的**备用域名列表**，
+    spider 会挨个试。只取第一个就判死 = 假死（wencai 就是这么被误判的：首域已撤，
+    后面两个域还活着）。
+    """
     got = []
     for seg in str(cfg or "").split("$$$"):
-        head = seg.strip().split(";md5;")[0]
-        if not head.startswith(("http://", "https://")):
-            continue
-        try:
-            host = urllib.parse.urlparse(head).hostname or ""
-        except ValueError:
-            continue
-        if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
-            continue
-        got.append(head)
+        for head in seg.strip().split(";md5;")[0].split(","):
+            head = head.strip()
+            if not head.startswith(("http://", "https://")):
+                continue
+            try:
+                host = urllib.parse.urlparse(head).hostname or ""
+            except ValueError:
+                continue
+            if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
+                continue
+            got.append(head)
     return got
 
 
@@ -218,7 +224,10 @@ def inline_ext(cfg, fetched=None):
     for seg in cfg.split("$$$"):
         head = seg.strip().split(";md5;")[0]
         if head.startswith(("http://", "https://")):
-            if not fetched:
+            if "," in head:
+                parts.append(seg)          # 备用域列表：spider 自己挨个试，改写反而破坏语义
+                notes.append("未内联(备用域列表)")
+            elif not fetched:
                 parts.append(seg)
                 notes.append("未内联(远程未取数)")
             elif head in fetched and fetched[head]:
@@ -310,20 +319,24 @@ def apply_ext_dead(sites_by_key, pending, dead, now):
 
     只动没有结论的站：真机跑实过（C1-C5）说明它并不依赖这个 ext（或 ext 只是可选参数），
     不能因为 URL 死了就降级——与 csp_static_merge「真机结论冲突不降级」同一条规矩。
-    pending: [(key, name, cls, ext_url)]；dead: {url: 死因}（prefetch_remote 已把环境性
-    失败剔在外面，进这里的都是域名无记录(DoH 一致)/404/HTML 壳这类结构性死亡）。
+    pending: [(key, name, cls, [ext_url, ...])]；dead: {url: 死因}（prefetch_remote 已把
+    环境性失败剔在外面，进这里的都是域名无记录(DoH 一致)/规则文件 404/规则变 HTML 壳）。
+    多域名 ext 要**全部**候选都确认亡才判死：spider 自己会挨个试备用域。
     """
     n = 0
-    for key, name, cls, url in pending:
-        why = dead.get(url)
+    for key, name, cls, urls in pending:
+        urls = list(urls)
+        causes = [dead.get(u) for u in urls]
+        why = ";".join([c for c in causes if c])
         has_verdict = key in sites_by_key and sites_by_key[key].get("level") not in (None, "C?")
-        if not why or has_verdict:
+        if not urls or len(causes) != len([c for c in causes if c]) or has_verdict:
             continue
         sites_by_key[key] = {"key": key, "name": name[:24], "kind": "csp", "cls": cls,
                              "level": "C0", "ms": None,
                              "flags": {"home": False, "cat": False, "search": False},
                              "evidence": {"ext_dep": "remote-rule-unreachable",
-                                          "cause": why[:120], "url": url[:120]},
+                                          "cause": why[:120], "url": urls[0][:120],
+                                          "tried": len(urls)},
                              "err": "ext-dead:" + why[:80], "probed_at": now}
         n += 1
     return n
@@ -353,8 +366,9 @@ def cmd_ext():
         urls = remote_exts(s.get("ext") if isinstance(s.get("ext"), str)
                            else json.dumps(s.get("ext") or "", ensure_ascii=False))
         if urls:
-            pending.append((key, (s.get("name") or "")[:24], api[4:], urls[0]))
-    _f, dead = prefetch_remote([u for _, _, _, u in pending])
+            pending.append((key, (s.get("name") or "")[:24], api[4:], urls))
+    need = [u for _, _, _, us in pending for u in us]
+    _f, dead = prefetch_remote(need)
     from datetime import datetime
     now = datetime.now().isoformat(timespec="seconds")
     n = apply_ext_dead(by_key, pending, dead, now)

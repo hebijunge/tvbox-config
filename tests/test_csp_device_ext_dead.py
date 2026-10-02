@@ -33,6 +33,12 @@ class RemoteExtsTest(unittest.TestCase):
         self.assertEqual(mod.remote_exts(U), [U])
         self.assertEqual(mod.remote_exts("./deps/x.json"), [])
 
+    def test_comma_separated_backup_domains_are_all_collected(self):
+        """spider 会挨个试备用域，只看第一个就判死 = 假死（wencai 踩过的坑）。"""
+        cfg = "https://a.com,https://b.com,https://c.com/x.json"
+        self.assertEqual(mod.remote_exts(cfg), ["https://a.com", "https://b.com",
+                                                "https://c.com/x.json"])
+
     def test_multi_segment_only_counts_url_segments(self):
         got = mod.remote_exts("http://a/x.json$$$./deps/y.json$$$key123")
         self.assertEqual(got, ["http://a/x.json"])
@@ -40,8 +46,9 @@ class RemoteExtsTest(unittest.TestCase):
 
 class ApplyExtDeadTest(unittest.TestCase):
     def setUp(self):
-        self.pending = [("蓝", "蓝", "XBPQ", U), ("影", "影", "XYQHiker", "http://b/y.json"),
-                        ("好", "好", "csp", "http://c/z.json")]
+        self.pending = [("蓝", "蓝", "XBPQ", [U]),
+                        ("影", "影", "XYQHiker", ["http://b/y.json"]),
+                        ("好", "好", "csp", ["http://c/z.json"])]
 
     def test_confirmed_dead_url_writes_c0(self):
         by = {}
@@ -70,6 +77,17 @@ class ApplyExtDeadTest(unittest.TestCase):
         dead = {"http://b/y.json": "lander-html"}
         n = mod.apply_ext_dead(by, self.pending, dead, "now")
         self.assertEqual((n, by["好"]["level"]), (1, "C3"), "有结论的站不动，其他照常判死")
+
+    def test_backup_domain_alive_means_not_dead(self):
+        """多域 ext：只要有一个候选没被证伪，就不能判死。"""
+        pend = [("文", "文", "WenCai", ["https://a.com", "https://b.com"])]
+        by = {}
+        n = mod.apply_ext_dead(by, pend, {"https://a.com": "域名无解析记录(DoH一致)"}, "now")
+        self.assertEqual((n, by), (0, {}), "备域 b.com 还活着")
+        n2 = mod.apply_ext_dead(by, pend, {"https://a.com": "域名无解析记录(DoH一致)",
+                                          "https://b.com": "gone-404"}, "now")
+        self.assertEqual(n2, 1, "全部候选都证伪了才判死")
+        self.assertEqual(by["文"]["evidence"]["tried"], 2)
 
 
 class IsRuleTest(unittest.TestCase):
@@ -104,6 +122,14 @@ class ClassifyMissTest(unittest.TestCase):
 
     def test_timeout_on_rule_file_is_environmental(self):
         self.assertEqual(mod.classify_miss("http://a/x.json", 502, ""), "")
+
+
+class CommaListFeedingTest(unittest.TestCase):
+    def test_backup_domain_list_is_not_rewritten_or_mislabeled(self):
+        cfg = "https://a.com,https://b.com"
+        got, note = mod.inline_ext(cfg, {u: None for u in mod.remote_exts(cfg)})
+        self.assertEqual(got, cfg, "备用域列表交给 spider 自己轮询")
+        self.assertIn("备用域列表", note, "备注要写清楚为什么没动")
 
 
 if __name__ == "__main__":
