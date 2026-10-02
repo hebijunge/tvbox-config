@@ -71,6 +71,17 @@ def check_paths(paths: List[str]) -> List[Tuple[str, str]]:
     return problems
 
 
+def check_case_collisions(paths: List[str]) -> List[Tuple[str, str]]:
+    """检查仅大小写不同的同名落库路径。
+
+    Linux CI 能并存、Windows 只能留一个，于是本地内容与 git 记录、账本 sha256
+    三方错位，且检出后 git status 永久显示该文件已修改，驱动 daily 反复重写。
+    """
+    return [("<->".join(g),
+             "同目录内仅大小写不同，Windows 上互相覆盖（应由 dep_local_path 消解命名）")
+            for g in pathutil.case_collisions(paths)]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Windows 路径兼容性检查")
     parser.add_argument(
@@ -87,9 +98,10 @@ def main() -> int:
 
     paths = collect_local_paths(manifest)
     problems = check_paths(paths)
+    collisions = check_case_collisions(paths)
 
     print(f"[windows_path_check] 共检查 {len(paths)} 条 local 路径，"
-          f"问题 {len(problems)} 条")
+          f"问题 {len(problems)} 条，大小写冲突 {len(collisions)} 组")
 
     if problems:
         print("[windows_path_check] 前 20 条问题路径：")
@@ -97,6 +109,13 @@ def main() -> int:
             print(f"  {i}. {p}  -- {reason}")
         if len(problems) > 20:
             print(f"  ... 其余 {len(problems) - 20} 条省略")
+
+    if collisions:
+        print("[windows_path_check] 大小写冲突组：")
+        for i, (p, reason) in enumerate(collisions[:20], 1):
+            print(f"  {i}. {p}  -- {reason}")
+
+    if problems or collisions:
         print("[windows_path_check] FAIL: 存在 Windows 不兼容路径")
         return 1
 
