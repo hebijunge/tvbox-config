@@ -217,9 +217,17 @@ SNAPSHOT_PROBES = {"csp_probe.json", "drpy_probe.json", "js_probe.json",
                    "py_probe.json", "endpoint_probe.json"}
 
 
-def health_of(level, ok, pri) -> str:
+# 需要出示证据才算死的等级：5c 的 S0 历史上被写过成「deps 无本地副本」这种无证据理由，
+# 直接算 dead 就是把工装缺件记成站点已死。2026-10-02 起 probe_js 只对结构性证据下 S0，
+# 库里再收到没证据的 S0（老产物、别的调用方）一律按未测处理。
+_EVIDENCE_LEVELS = {"S0"}
+
+
+def health_of(level, ok, pri, evidence=None) -> str:
     """等级 -> 健康结论。浅探针的「连不上」不等于「死」。"""
     h = classify(level, ok)
+    if h == "dead" and (level or "").strip() in _EVIDENCE_LEVELS and not evidence:
+        return "unknown"
     # P1 判级修正（2026-09-28）：浅探针（spider 连通性 pri≤1 / js 分类页 pri=2）
     # 在「没有等级字段 + 连通性失败」时，classify 会落到 dead。
     # 但浅探针只能证明「目标可达性」，连不上 ≠ 源已死（站可能只是换域名/防盗链/
@@ -268,7 +276,8 @@ def upsert_interface(conn, site: dict, source: str = None, seen_at: str = None) 
 
 
 def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
-                 level=None, reason=None, probe=None, checked_at=None) -> str:
+                 level=None, reason=None, probe=None, checked_at=None,
+                 evidence=None) -> str:
     """记录一次检测（历史追加），并按「探针权威性」决定是否回写健康结论。
 
     为什么不能直接覆盖：一个源会被多路探针各测一次，深度差别很大——
@@ -281,7 +290,7 @@ def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
     """
     at = checked_at or now()
     pri = probe_priority(probe)
-    health = health_of(level, ok, pri)
+    health = health_of(level, ok, pri, evidence)
     conn.execute("""
         INSERT INTO checks (key, checked_at, ok, status_code, latency_ms, level, reason, probe)
         VALUES (?,?,?,?,?,?,?,?)
@@ -296,7 +305,13 @@ def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
         if pri < old_rank:
             return old_h                       # 新证据更浅：只记历史，不改结论
         if pri == old_rank and _HEALTH_ORDER.get(health, 0) <= _HEALTH_ORDER.get(old_h, 0):
-            return old_h                       # 同级但不更优：保留原结论
+            if not evidence:
+                return old_h                   # 同级但不更优：保留原结论
+            # 例外：带结构性证据的结论可以改判。_HEALTH_ORDER 把 dead 排在 unknown 之后
+            # （防浅探针把好消息刷坏），但 2026-10-02 起 js 的 S0 只在"规则文件 404/410、
+            # DoH 一致无记录、本地副本语法坏"时才下——这类证据该能推翻既有的 unknown，
+            # 否则 26 个真有证据的站会永远挂在 unknown（实测 25/26 就是这么被闸门挡住的）。
+            pass
 
     conn.execute("""
         UPDATE interfaces SET
@@ -504,7 +519,7 @@ def ingest_probe(conn, path: str) -> int:
             reason = json.dumps(r["flags"], ensure_ascii=False)[:200]
         record_check(conn, r["key"], ok=ok, latency_ms=ms,
                      level=r.get("level"), reason=reason, probe=probe_name,
-                     checked_at=checked_at)
+                     checked_at=checked_at, evidence=r.get("evidence") or None)
         n += 1
     conn.commit()
     log(f"导入检测记录 {n} 条 <- {probe_name}")
