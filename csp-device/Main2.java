@@ -243,6 +243,12 @@ public class Main2 {
             put(r, "level", "G" + n);
             put(r, "gates", String.valueOf(n));
             put(r, "gateErr", clip(gerr, 260));
+            if (n == 0 && gerr.indexOf("null object reference") >= 0) {
+                // stub 壳的 null 代理有两种成因：远程 dex 没下来（站点自己够不到），
+                // 或我们的 app_process 复现不了宿主的注入链（工装够不到）。
+                // 让设备自己拉一次原始 jar 地址，把两种情况分开记——只记状态，不据此判死。
+                put(r, "jarFetch", clip(fetchStatus(url), 120));
+            }
             if (n == 0) {
                 // 关卡全没过但不一定抛异常：也可能是返回了内容却不像列表。
                 // 不记返回形态就只能干猜「站点真空」还是「looks() 判据太窄」
@@ -256,6 +262,27 @@ public class Main2 {
             put(r, "level", "C?"); put(r, "err", clip("" + root(t), 260));
         }
         return finish(r, t0);
+    }
+
+    /** 设备侧直接拉一次 jar 原始地址，只回状态串（证据采集，不作判定）。 */
+    static String fetchStatus(String u) {
+        java.net.HttpURLConnection c = null;
+        try {
+            c = (java.net.HttpURLConnection) new java.net.URL(u).openConnection();
+            c.setConnectTimeout(8000);
+            c.setReadTimeout(8000);
+            c.setRequestProperty("User-Agent", "okhttp/3.15");
+            int st = c.getResponseCode();
+            java.io.InputStream in = c.getInputStream();
+            int n = in.read(new byte[8192]);
+            in.close();
+            return "HTTP" + st + ":" + n;
+        } catch (Throwable t) {
+            String m = String.valueOf(t.getMessage());
+            return t.getClass().getSimpleName() + ":" + (m.length() > 70 ? m.substring(0, 70) : m);
+        } finally {
+            if (c != null) c.disconnect();
+        }
     }
 
     /** 按方法名找重载，形参按类型现场填值；返回字符串化结果，失败返回 null。 */

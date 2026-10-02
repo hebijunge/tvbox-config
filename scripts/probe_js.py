@@ -469,7 +469,9 @@ def probe_one(site, repo, keywords, man_idx=None):
     syn = node_check(fp)
     r["syntax_ok"] = syn
     if syn is False:
-        r.update({"level": "S0", "reason": "规则文件语法错误"})
+        # 文件在手且 node --check 真报错：这是规则自身的结构性失效，带证据入库
+        r.update({"level": "S0", "reason": "规则文件语法错误",
+                  "evidence": {"static": "rule-syntax-error", "checker": "node --check"}})
         return r
     if not rule.get("host"):
         if is_engine_file(fp, text):
