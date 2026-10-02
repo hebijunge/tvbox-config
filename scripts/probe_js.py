@@ -27,8 +27,10 @@ drpy 规则依赖引擎解释（中文函数名、fyclass/fypage 模板、$js.to
 """
 
 import argparse
+import atexit
 import concurrent.futures as cf
 import gzip
+import hashlib
 import io
 import json
 import os
@@ -260,6 +262,138 @@ def is_js_site(s):
         (ext.startswith("./") and ext.endswith(".js")) or s.get("kind") == "js"
 
 
+RULE_SUFFIX = (".js", ".txt", ".json", ".xml")
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "0.0.0.0", "::1")
+_TMP = {}
+
+
+def tmp_dir():
+    d = _TMP.get("d")
+    if not d:
+        d = tempfile.mkdtemp(prefix="jsrules-")
+        _TMP["d"] = d
+        atexit.register(shutil.rmtree, d, True)
+    return d
+
+
+def remote_rule_urls(site):
+    """配置里能联网取规则文件的地址（ext 是规则本体，api 也可能直接是 http .js）。
+
+    按字符类抓而不是切逗号：ext 既可能是 `https://a/x.js,https://b/x.js` 的**备用域列表**
+    （spider 会挨个试，只取首域判死就是假死——5h 的 wencai 踩过同一条），也可能是
+    JSON 数组/对象形态（`["https://a/r.js",""]`），切逗号会把带引号括号的头一个元素整个丢掉。
+    """
+    got = []
+    for v in (site.get("ext"), site.get("api")):
+        s = v if isinstance(v, str) else json.dumps(v or "", ensure_ascii=False)
+        for u in re.findall(r"https?://[^\s\"'(),;}\]$]+", s):
+            try:
+                host = urllib.parse.urlparse(u).hostname or ""
+            except ValueError:
+                continue
+            if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
+                continue
+            got.append(u)
+    return list(dict.fromkeys(got))
+
+
+def looks_like_rule_js(text):
+    t = (text or "").lstrip("\ufeff \t\r\n")
+    return len(t) >= 64 and "<html" not in t[:400].lower() and \
+        "<!doctype html" not in t[:400].lower()
+
+
+def miss_kind(url, status=None, text=""):
+    """只有「规则文件本身不在这个地址上了」才构成已亡。
+
+    与 5h 同一条规矩：drpy 站的 ext 也常直接是站点根 URL（引擎自己抓首页），返回整页
+    HTML 是正常形态，据此判死就是自己造假死（上一版误判 31 个站的同款）。
+    """
+    if not urllib.parse.urlparse(url).path.lower().endswith(RULE_SUFFIX):
+        return ""
+    if status in (404, 410):
+        return "gone-%s" % status
+    low = (text or "")[:300].lower()
+    return "lander-html" if ("<html" in low or "<!doctype" in low) else ""
+
+
+def _stash(url, text):
+    """把取回的规则落到临时文件，下游（node --check / 构造请求）按本地文件同一套走。"""
+    name = os.path.basename(urllib.parse.urlsplit(url).path) or "rule.js"
+    name = re.sub(r"[^\w.\-]", "_", name)[:60]
+    if not name.endswith(".js"):
+        name += ".js"
+    fp = os.path.join(tmp_dir(), hashlib.md5(url.encode("utf-8")).hexdigest()[:10] + "-" + name)
+    with open(fp, "w", encoding="utf-8") as f:
+        f.write(text)
+    return fp
+
+
+def fetch_remote_rule(site):
+    """本地无副本时在国内真取一次远程规则 → (路径|None, 结论|None)。
+
+    死刑只有拿到结构性证据才下（域名 DoH 一致无记录 / 规则文件 404·410 / .js 地址变 HTML 壳），
+    而且必须**每个备用域都**结构性失踪；超时、连接重置、TLS、DoH 说域名还在都算环境性 → S?。
+    为什么必须拆开：S0 会进产物算成「站点已死」，而"我们没把规则取到手"是工装的事——
+    2026-10-02 抽审 152 条「规则源取不到」，当场就能取回 7 条、DoH 确认已亡只有 7 条。
+    """
+    urls = remote_rule_urls(site)
+    if not urls:
+        return None, None
+    here = os.path.dirname(os.path.abspath(__file__))
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    try:
+        from probe_endpoints import doh_cached
+    except ImportError:
+        doh_cached = None
+    try:
+        from probe_sites import gh_retry_candidates
+    except ImportError:
+        gh_retry_candidates = lambda u: []
+    dead, env = [], []
+    for u in urls:
+        host = urllib.parse.urlparse(u).hostname or ""
+        why = ""
+        for cand in [u] + list(gh_retry_candidates(u))[:3]:
+            try:
+                st, raw, _ms, _ct = http_get(cand, TIMEOUT)
+                text = raw.decode("utf-8", "ignore")
+            except urllib.error.HTTPError as e:
+                why = why or miss_kind(cand, e.code, "")
+                continue
+            except Exception as e:  # noqa: BLE001
+                msg = str(e)
+                if "getaddrinfo" in msg or "11001" in msg:
+                    if doh_cached is None:
+                        env.append("DNS未复核")
+                        continue
+                    verdict, detail = doh_cached(host, TIMEOUT)
+                    if verdict is False:
+                        why = why or "域名无解析记录(DoH一致)"
+                        break
+                    env.append("DNS未确认")      # DoH 说域名还在：本机网络问题，不是站死
+                elif "timed out" in msg or "10054" in msg or "Unable to connect" in msg:
+                    env.append("env")
+                else:
+                    env.append(type(e).__name__)
+                continue
+            if st == 200 and looks_like_rule_js(text):
+                return _stash(cand, text), {"rule_src_url": cand}
+            why = why or miss_kind(cand, st, text)
+            if not why:
+                env.append("HTTP%s" % st)
+        if why:
+            dead.append(why)
+    if dead and len(dead) == len(urls):
+        return None, {"level": "S0", "reason": "远程规则已亡：" + dead[0][:60],
+                      "evidence": {"ext_dep": "remote-rule-unreachable",
+                                   "url": urls[0][:120], "tried": len(urls),
+                                   "cause": ";".join(dead)[:120]}}
+    return None, {"level": "S?", "reason": "远程规则未取到（环境性/未证实，不算站死）",
+                  "env_hints": ";".join(env[:4])}
+
+
 def node_check(fp):
     """规则文件语法校验（加载即失败的文件直接判死）。node 不存在时返回 None。
 
@@ -305,12 +439,17 @@ def node_check(fp):
 def probe_one(site, repo, keywords, man_idx=None):
     r = {"key": site.get("key"), "name": site.get("name"), "kind": "js"}
     fp = local_rule_file(site, repo, man_idx or {})
+    remote_from = ""
     if not fp:
-        # 不是"没去下"：deps 清单收了 api 的 .js，实测这些地址 241/242 取不到
-        # （裸 IP 超时、gitcode.net 迁站 418/SPA 壳、agit.ai 关站 lander、DNS 不存在、401 私有仓）
-        r.update({"level": "S0", "reason": "规则源取不到（deps 无本地副本，域名失效/不可达）"})
-        return r
-    rel = os.path.relpath(fp, repo).replace("\\", "/")
+        # 本地没副本不等于规则亡了：先在国内真取一次，取到就照原流程实测，取不到也只对
+        # 有结构性证据的下 S0，其余留 S?（旧版在这里一律写 S0，152 条死刑没一条带证据）。
+        fp, v = fetch_remote_rule(site)
+        if not fp:
+            r.update(v or {"level": "S?", "reason": "配置里既无本地副本也无远程规则地址"})
+            return r
+        remote_from = v["rule_src_url"]
+    rel = ("remote:" + remote_from) if remote_from else \
+        os.path.relpath(fp, repo).replace("\\", "/")
     r["rule"] = rel
     try:
         with open(fp, "rb") as f:
@@ -360,9 +499,13 @@ def probe_one(site, repo, keywords, man_idx=None):
             "Timeout", "WinError", "certificate"))
         if env_fail:
             r.update({"level": "S?", "reason": f"本机网络不可达：{cat_ev}"})
+        elif "构造" in cat_ev or "HTTP" in cat_ev:
+            # 5c 是浅探针：造不出请求 / 拿到错误状态只证明「这一关没验成」，不证明规则或站点坏。
+            # 判死必须有结构性证据（规则文件 404·410·变壳·DoH 一致无记录，或本地副本语法坏），
+            # 深浅之分与 store 的 PROBE_PRIORITY 同一条口径。
+            r.update({"level": "S?", "reason": f"分类页未验成：{cat_ev}"})
         else:
-            r.update({"level": "S0" if ("HTTP" in cat_ev or "构造" in cat_ev) else "S1",
-                      "reason": f"分类页无效：{cat_ev}"})
+            r.update({"level": "S1", "reason": f"分类页无效：{cat_ev}"})
         return r
     r["level"] = "S2"
 
