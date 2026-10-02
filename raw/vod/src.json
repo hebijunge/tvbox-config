@@ -1,0 +1,99 @@
+{
+	"spider": "https://ghfile.geekertao.top/https://raw.githubusercontent.com/hoheiya9527/TvboxSelf/main/spider_backup/fan_260418;md5;927158dd12133ed25e056d3659a6b3ca",
+	"wallpaper": "http://www.kf666888.cn/api/tvbox/img",
+	"lives": [
+		{
+			"name": "直播",
+			"type": 0,
+			"url": "https://github.tbedu.top/https://github.com/Kimentanm/aptv/blob/master/m3u/iptv.m3u",
+			"playerType": 1,
+			"ua": "okhttp/3.10.0",
+			"epg": "http://epg.51zmt.top:8000/api/diyp/?ch={name}&date={date}",
+			"logo": "https://live.fanmingming.com/tv/{name}.png"
+		}
+	],
+	"remove_string": "公众号|神秘的哥哥们|叨观荐影|WX|微信|分享|太硬|弹幕",
+	"filter": "饭|4K|臻彩",
+	"sites": [
+		{
+			"key": "豆豆",
+			"name": "豆瓣推荐",
+			"type": 3,
+			"api": "csp_DouDouGuard",
+			"indexs": 1,
+			"searchable": 0,
+			"quickSearch": 1,
+			"filterable": 0
+		},
+		{
+			"key": "文采",
+			"name": "解析-极影",
+			"type": 3,
+			"api": "csp_JpysGuard",
+			"timeout": 10,
+			"playerType": 1,
+			"searchable": 1,
+			"quickSearch": 1,
+			"changeable": 1
+		},
+		{
+			"key": "玩偶",
+			"name": "云盘-玩偶",
+			"type": 3,
+			"api": "csp_WoGGGuard",
+			"timeout": 30,
+			"searchable": 1,
+			"quickSearch": 1,
+			"changeable": 0,
+			"ext": {
+				"Cloud-drive": "tvfan/Cloud-drive.txt",
+				"from": "auto|4k",
+				"siteUrl": "https://www.wogg.com/",
+				"danMu": "弹"
+			}
+		},
+		{
+			"key": "UC",
+			"name": "云盘-UC",
+			"type": 3,
+			"api": "csp_UuSsGuard",
+			"searchable": 1,
+			"quickSearch": 1,
+			"changeable": 0,
+			"ext": {
+				"Cloud-drive": "tvfan/Cloud-drive.txt",
+				"from": "auto|4k"
+			}
+		},
+		{
+			"key": "糯米",
+			"name": "解析-糯米",
+			"type": 3,
+			"api": "csp_NmyswvGuard",
+			"timeout": 15,
+			"searchable": 1,
+			"quickSearch": 1,
+			"changeable": 1
+		},
+		{
+			"key": "荐片",
+			"name": "解析-荐片",
+			"type": 3,
+			"api": "csp_JPJGuard",
+			"timeout": 10,
+			"playerType": 1,
+			"searchable": 1,
+			"quickSearch": 1,
+			"changeable": 0
+		}
+	],
+		"rules": [{
+		"name": "cdn.ryplay",
+		"hosts": ["cdn.ryplay"],
+		"regex": ["5.480000",
+		"#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:5.480000,[\\s\\S]*?#EXT-X-DISCONTINUITY",
+		"#EXT-X-DISCONTINUITY\\s*\\r?\\n#EXTINF:5.320000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n(?:#EXTINF:[\\d.]+,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n)*?#EXTINF:3.360000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n#EXT-X-DISCONTINUITY",
+		"#EXT-X-DISCONTINUITY\\s*\\r?\\n#EXTINF:4.000000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n(?:#EXTINF:[\\d.]+,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n)*?#EXTINF:0.560000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n#EXT-X-DISCONTINUITY",
+		"#EXTINF.*?\\s+.*?1o.*?\\.ts\\s+"]
+	}]
+}

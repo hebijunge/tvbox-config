@@ -1,5 +1,5 @@
 {
- "spider": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/deps/feishu-sync/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/XB%E5%8C%85jar/LIBVIO.jar;md5;da018b4f9e93e66d29be9ff5013a2059",
+ "spider": "https://gh.felicity.ac.cn/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/deps/feishu-sync/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/XB%E5%8C%85jar/LIBVIO.jar;md5;da018b4f9e93e66d29be9ff5013a2059",
  "wallpaper": "https://t.alcy.cc/ys",
  "parses": [
   {
@@ -1017,38 +1017,6 @@
    }
   },
   {
-   "name": "直解",
-   "type": 1,
-   "url": "http://rxjx.kuanjv.com/allm3u8.php?url=",
-   "ext": {
-    "flag": [
-     "rx",
-     "ltnb",
-     "renrenmi",
-     "rongxing",
-     "bilibili",
-     "哔哩哔哩",
-     "哔哩",
-     "youku",
-     "优酷",
-     "qiyi",
-     "爱奇艺",
-     "奇艺",
-     "qq",
-     "腾讯",
-     "mgtv",
-     "芒果",
-     "sohu",
-     "搜狐",
-     "letv",
-     "乐视",
-     "xigua",
-     "CL4K",
-     "西瓜"
-    ]
-   }
-  },
-  {
    "name": "极速[②]",
    "type": 1,
    "url": "https://play.fuqizhishi.com/juhe/API.php?appkey=caijijuhe220902&url="
@@ -1863,29 +1831,38 @@
      "哔哩"
     ]
    }
+  },
+  {
+   "name": "五",
+   "type": 1,
+   "url": "http://xhww.fun/jx.php?id=1&url=",
+   "ext": {
+    "flag": [
+     "爱奇艺",
+     "奇艺",
+     "qq",
+     "腾讯",
+     "youku",
+     "优酷",
+     "pptv",
+     "PPTV",
+     "letv",
+     "乐视",
+     "leshi",
+     "bilibili",
+     "哔哩哔哩",
+     "哔哩",
+     "mgtv",
+     "芒果",
+     "芒果"
+    ],
+    "header": {
+     "User-Agent": "okhttp/4.1.0"
+    }
+   }
   }
  ],
  "sites": [
-  {
-   "key": "site_1",
-   "name": "我的片库",
-   "type": 1,
-   "api": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/DRjopper/tvbox/main/231016.json",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filter": 1,
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "site_4",
-   "name": "我的片库",
-   "type": 1,
-   "api": "https://gh-proxy.com/raw.githubusercontent.com/wxrjck/-YSC-/refs/heads/main/wx.json",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filter": 1,
-   "group": "综合-直连点播"
-  },
   {
    "key": "小湿妹",
    "name": "湿妹 | 采集",
@@ -1893,25 +1870,6 @@
    "api": "http://www.afasu.com/api/xml.php",
    "searchable": 0,
    "quickSearch": 1,
-   "ext": "proxy",
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "*白嫖",
-   "name": "*白嫖",
-   "type": 0,
-   "api": "https://www.kxgav.com/api/xml.php",
-   "group": "综合-直连点播",
-   "searchable": 1
-  },
-  {
-   "key": "白嫖",
-   "name": "白嫖 | 采集",
-   "type": 0,
-   "api": "https://www.kxgav.com/api/xml.php",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1,
    "ext": "proxy",
    "group": "综合-直连点播"
   },
@@ -1934,6 +1892,49 @@
    "group": "综合-直连点播"
   },
   {
+   "key": "小乐",
+   "name": "小乐｜星源",
+   "type": 1,
+   "api": "https://xy.183933.xyz/php/ls.php/vod",
+   "playUrl": "http://8.155.50.80/xiayexk.php?url=",
+   "changeable": 1,
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "group": "综合-直连点播"
+  },
+  {
+   "key": "*白嫖",
+   "name": "*白嫖",
+   "type": 0,
+   "api": "https://www.kxgav.com/api/xml.php",
+   "group": "综合-直连点播",
+   "searchable": 1
+  },
+  {
+   "key": "白嫖",
+   "name": "白嫖 | 采集",
+   "type": 0,
+   "api": "https://www.kxgav.com/api/xml.php",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
+   "ext": "proxy",
+   "group": "综合-直连点播"
+  },
+  {
+   "key": "CNTV低分辨",
+   "name": "CNTV低分辨",
+   "type": 1,
+   "api": "https://zhangqun1818.serv00.net/cctv.php",
+   "style": {
+    "type": "rect",
+    "ratio": 1.33
+   },
+   "changeable": 1,
+   "group": "综合-直连点播"
+  },
+  {
    "key": "美少女资源",
    "name": "💞美少女资源💞",
    "type": 1,
@@ -1952,40 +1953,6 @@
     "ratio": 1.33
    },
    "changeable": 1,
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "CNTV低分辨",
-   "name": "CNTV低分辨",
-   "type": 1,
-   "api": "https://zhangqun1818.serv00.net/cctv.php",
-   "style": {
-    "type": "rect",
-    "ratio": 1.33
-   },
-   "changeable": 1,
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "小乐",
-   "name": "小乐｜星源",
-   "type": 1,
-   "api": "https://xy.183933.xyz/php/ls.php/vod",
-   "playUrl": "http://8.155.50.80/xiayexk.php?url=",
-   "changeable": 1,
-   "searchable": 1,
-   "quickSearch": 1,
-   "filter": 1,
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "site_5",
-   "name": "我的片库",
-   "type": 1,
-   "api": "http://home.jundie.top:81/top98.json",
-   "searchable": 1,
-   "quickSearch": 1,
-   "filter": 1,
    "group": "综合-直连点播"
   }
  ]

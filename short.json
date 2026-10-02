@@ -1017,38 +1017,6 @@
    }
   },
   {
-   "name": "直解",
-   "type": 1,
-   "url": "http://rxjx.kuanjv.com/allm3u8.php?url=",
-   "ext": {
-    "flag": [
-     "rx",
-     "ltnb",
-     "renrenmi",
-     "rongxing",
-     "bilibili",
-     "哔哩哔哩",
-     "哔哩",
-     "youku",
-     "优酷",
-     "qiyi",
-     "爱奇艺",
-     "奇艺",
-     "qq",
-     "腾讯",
-     "mgtv",
-     "芒果",
-     "sohu",
-     "搜狐",
-     "letv",
-     "乐视",
-     "xigua",
-     "CL4K",
-     "西瓜"
-    ]
-   }
-  },
-  {
    "name": "极速[②]",
    "type": 1,
    "url": "https://play.fuqizhishi.com/juhe/API.php?appkey=caijijuhe220902&url="
@@ -1863,6 +1831,35 @@
      "哔哩"
     ]
    }
+  },
+  {
+   "name": "五",
+   "type": 1,
+   "url": "http://xhww.fun/jx.php?id=1&url=",
+   "ext": {
+    "flag": [
+     "爱奇艺",
+     "奇艺",
+     "qq",
+     "腾讯",
+     "youku",
+     "优酷",
+     "pptv",
+     "PPTV",
+     "letv",
+     "乐视",
+     "leshi",
+     "bilibili",
+     "哔哩哔哩",
+     "哔哩",
+     "mgtv",
+     "芒果",
+     "芒果"
+    ],
+    "header": {
+     "User-Agent": "okhttp/4.1.0"
+    }
+   }
   }
  ],
  "ad": [
@@ -1894,8 +1891,8 @@
  "tihuan": [
   "cnzz.com"
  ],
- "version": "2026-10-02-b4",
- "updated_at": "2026-10-02T11:10:37+08:00",
+ "version": "2026-10-02-b5",
+ "updated_at": "2026-10-02T11:46:33+08:00",
  "sites": [
   {
    "key": "围观短剧",
@@ -1914,20 +1911,6 @@
    "genre": "shortdrama",
    "group": "短剧",
    "searchable": 1
-  },
-  {
-   "key": "暴風短剧",
-   "name": "短剧大全(1.2万)⚡直连",
-   "type": 1,
-   "api": "https://bfzyapi.com/api.php/provide/vod/from/bfzym3u8",
-   "searchable": 1,
-   "quickSearch": 1,
-   "changeable": 1,
-   "categories": [
-    "短剧大全",
-    "影视解说"
-   ],
-   "group": "短剧"
   },
   {
    "key": "好看短剧",
@@ -2114,7 +2097,7 @@
     "分类": "抖音短剧$20#快手短剧$21#视频号短剧$22#热播短剧$23",
     "分类链接": "http://www.duanjutv.cc/vodtype/{cateId}-{catePg}.html;;m"
    },
-   "jar": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
+   "jar": "https://gh.felicity.ac.cn/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
    "group": "短剧",
    "searchable": 0
   },
@@ -2182,7 +2165,7 @@
     "搜索url": "https://www.duanjuxia.cn/index.php/vod/search.html?wd={wd}",
     "分类url": "https://www.duanjuxia.cn/index.php/vod/show/area/{area}/by/{by}/class/{class}/id/{cateId}/lang/{lang}/year/{year}/page/{catePg}.html"
    },
-   "jar": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
+   "jar": "https://gh.felicity.ac.cn/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
    "group": "短剧"
   },
   {
@@ -2529,6 +2512,17 @@
    "searchable": 0
   },
   {
+   "key": "Cat_聚合短剧",
+   "name": "🎦聚合🔹短剧",
+   "type": 3,
+   "api": "./deps/xingwei/kstore/xw/js/duanju_juhe.js",
+   "searchable": 1,
+   "quickSearch": 0,
+   "filterable": 1,
+   "jar": "./deps/xingwei/kstore/twvip/jarR/raw/master/kjtw.jar",
+   "group": "短剧"
+  },
+  {
    "key": "656",
    "name": "🧿梦想┃影视",
    "type": 3,
@@ -2568,17 +2562,6 @@
     "简介": "detail-desc\">&&</p>"
    },
    "jar": "./deps/sv/tiantiankaixin/%E5%A4%A9%E5%A4%A9%E5%BC%80%E5%BF%83/spider.jar",
-   "group": "短剧"
-  },
-  {
-   "key": "Cat_聚合短剧",
-   "name": "🎦聚合🔹短剧",
-   "type": 3,
-   "api": "./deps/xingwei/kstore/xw/js/duanju_juhe.js",
-   "searchable": 1,
-   "quickSearch": 0,
-   "filterable": 1,
-   "jar": "./deps/xingwei/kstore/twvip/jarR/raw/master/kjtw.jar",
    "group": "短剧"
   },
   {
@@ -2670,7 +2653,7 @@
     "分类url": "http://vip.zhuiying.cyou/index.php/vod/show/id/{cateId}/page/{catePg}/are/{are}/by/{by}/class/{class}/lang/{lang}/year/{year}.html",
     "分类": "電影$2#剧集$1#綜藝$3#動漫$4#短剧$20#體育$21"
    },
-   "jar": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
+   "jar": "https://gh.felicity.ac.cn/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
    "group": "短剧",
    "searchable": 0
   },
@@ -3339,19 +3322,6 @@
    "searchable": 0
   },
   {
-   "key": "XBPQ_葡萄",
-   "name": "🎦┃短剧┃葡萄",
-   "type": 3,
-   "api": "csp_XBPQ",
-   "ext": {
-    "数组": "class=\"stui-vodlist__box&&</li",
-    "分类url": "https://www.putaojuchang.com/show/{cateId}/area/{area}/class/{class}/by/{by}/page/{catePg}/year/{year}.html",
-    "分类": "微剧场$1#言情$6#逆袭$7#战神$8#异能$9#生活$10#重生$12#复仇$20#爱情$11"
-   },
-   "group": "短剧",
-   "searchable": 0
-  },
-  {
    "key": "裤佬短剧JS",
    "name": "☁云霄丨短剧丨JS",
    "type": 3,
@@ -3363,18 +3333,17 @@
    "group": "短剧"
   },
   {
-   "key": "csp_XBPQ_aoaotv",
-   "name": "🎦┃短剧┃嗷嗷",
+   "key": "XBPQ_葡萄",
+   "name": "🎦┃短剧┃葡萄",
    "type": 3,
    "api": "csp_XBPQ",
-   "searchable": 0,
-   "quickSearch": 1,
-   "filterable": 1,
    "ext": {
-    "分类url": "https://aoao.tv/vodshow/{cateId}--------{catePg}---.html",
-    "分类": "短剧$20#电视剧$21#电影$22#动漫$23#综艺$24"
+    "数组": "class=\"stui-vodlist__box&&</li",
+    "分类url": "https://www.putaojuchang.com/show/{cateId}/area/{area}/class/{class}/by/{by}/page/{catePg}/year/{year}.html",
+    "分类": "微剧场$1#言情$6#逆袭$7#战神$8#异能$9#生活$10#重生$12#复仇$20#爱情$11"
    },
-   "group": "短剧"
+   "group": "短剧",
+   "searchable": 0
   },
   {
    "key": "Tg豆瓣",
@@ -3393,17 +3362,16 @@
    "group": "短剧"
   },
   {
-   "key": "TgYunPan|本地",
-   "name": "🅿TgYunPan|本地",
+   "key": "csp_XBPQ_aoaotv",
+   "name": "🎦┃短剧┃嗷嗷",
    "type": 3,
-   "api": "csp_TgYunPanLocal",
-   "searchable": 1,
-   "filterable": 0,
-   "switchable": 0,
+   "api": "csp_XBPQ",
+   "searchable": 0,
+   "quickSearch": 1,
+   "filterable": 1,
    "ext": {
-    "count": 4,
-    "channelUsername": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6,peccxinpd,yunpan139,yggpan,yunpanuc,shareAliyun,yunpan189,BaiduCloudDisk,Channel_Shares_115,gimy115,ydypzyfx,dianying4K,sbsbsnsqq,Q_dongman,ysmffx,XiangxiuNBB,yoyokuakeduanju,yeqingjie_GJG666,TG654TG,PanjClub,guoman4K,alyp_1,kuake_yppan,Baidu_Netdisk,bdwpzhpd,baidu_yppan,zyfb123,xx123pan,zyzhpd123,yp123pan,cloudtianyi,txtyzy,tianyirigeng,tyypzhpd,zaihuayun,ali_yppan",
-    "commonConfig": "./deps/localized/679c3d78da-peizhi.json"
+    "分类url": "https://aoao.tv/vodshow/{cateId}--------{catePg}---.html",
+    "分类": "短剧$20#电视剧$21#电影$22#动漫$23#综艺$24"
    },
    "group": "短剧"
   },
@@ -3421,6 +3389,21 @@
    "group": "短剧"
   },
   {
+   "key": "TgYunPan|本地",
+   "name": "🅿TgYunPan|本地",
+   "type": 3,
+   "api": "csp_TgYunPanLocal",
+   "searchable": 1,
+   "filterable": 0,
+   "switchable": 0,
+   "ext": {
+    "count": 4,
+    "channelUsername": "https://ghproxy.monkeyray.net/raw.githubusercontent.com/yoursmile66/TVBox/main/Tgsearchers6,peccxinpd,yunpan139,yggpan,yunpanuc,shareAliyun,yunpan189,BaiduCloudDisk,Channel_Shares_115,gimy115,ydypzyfx,dianying4K,sbsbsnsqq,Q_dongman,ysmffx,XiangxiuNBB,yoyokuakeduanju,yeqingjie_GJG666,TG654TG,PanjClub,guoman4K,alyp_1,kuake_yppan,Baidu_Netdisk,bdwpzhpd,baidu_yppan,zyfb123,xx123pan,zyzhpd123,yp123pan,cloudtianyi,txtyzy,tianyirigeng,tyypzhpd,zaihuayun,ali_yppan",
+    "commonConfig": "./deps/localized/679c3d78da-peizhi.json"
+   },
+   "group": "短剧"
+  },
+  {
    "key": "西饭短剧.js",
    "name": "💥西饭短剧💥",
    "type": 3,
@@ -3432,17 +3415,6 @@
    "name": "💥锦鲤短剧💥",
    "type": 3,
    "api": "https://gh-proxy.org/https://raw.githubusercontent.com/wliqi495-create/jaychouqq/refs/heads/main/yingshi/js/锦鲤短剧.js",
-   "group": "短剧"
-  },
-  {
-   "key": "Cat_百度短剧",
-   "name": "🎦百度🔹短剧",
-   "type": 3,
-   "api": "./deps/xingwei/kstore/xw/js/baidu_dj.js",
-   "searchable": 1,
-   "quickSearch": 0,
-   "filterable": 1,
-   "jar": "./deps/xingwei/kstore/twvip/jarR/raw/master/kjtw.jar",
    "group": "短剧"
   },
   {
@@ -3505,38 +3477,6 @@
    "quickSearch": 1,
    "filterable": 1,
    "genre": "shortdrama",
-   "group": "短剧"
-  },
-  {
-   "key": "世界短剧",
-   "name": "🌏世界┃短剧",
-   "type": 3,
-   "api": "csp_AppYsV2",
-   "searchable": 1,
-   "changeable": 0,
-   "style": {
-    "type": "rect",
-    "ratio": 1.433
-   },
-   "timeout": 10,
-   "ext": "http://106.52.241.21:83/api.php/app/",
-   "jar": "https://jihulab.com/okcaptain/kko/-/raw/main/okpng.txt;md5;813dac753a6bc6555f8851b57c92b55d",
-   "group": "短剧"
-  },
-  {
-   "key": "种子短剧",
-   "name": "🌷种子┃短剧",
-   "type": 3,
-   "api": "csp_AppYsV2",
-   "searchable": 1,
-   "changeable": 0,
-   "style": {
-    "type": "rect",
-    "ratio": 1.433
-   },
-   "timeout": 10,
-   "ext": "http://122.228.84.103:6822/api.php/app/",
-   "jar": "https://jihulab.com/okcaptain/kko/-/raw/main/okpng.txt;md5;813dac753a6bc6555f8851b57c92b55d",
    "group": "短剧"
   },
   {
@@ -3709,7 +3649,7 @@
    "name": "😾夜猫短剧",
    "type": 3,
    "api": "csp_YMduanju",
-   "jar": "https://github.mxw.qzz.io/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
+   "jar": "https://gh.felicity.ac.cn/https://raw.githubusercontent.com/sqspot/tac/main/Xymz.jar",
    "searchable": 1,
    "quickSearch": 0,
    "filterable": 0,
@@ -3744,6 +3684,14 @@
    "name": "全网|短剧",
    "type": 4,
    "api": "http://38.76.197.172:15151/duanju.php?type=dquark",
+   "group": "短剧"
+  },
+  {
+   "key": "星芽短剧-2",
+   "name": "星芽 • 短剧",
+   "type": 3,
+   "api": "csp_ShortXingya",
+   "genre": "shortdrama",
    "group": "短剧"
   },
   {
@@ -4157,6 +4105,17 @@
     "quality": "1080p",
     "danmu": false
    },
+   "group": "短剧"
+  },
+  {
+   "key": "Cat_百度短剧",
+   "name": "🎦百度🔹短剧",
+   "type": 3,
+   "api": "./deps/xingwei/kstore/xw/js/baidu_dj.js",
+   "searchable": 1,
+   "quickSearch": 0,
+   "filterable": 1,
+   "jar": "./deps/xingwei/kstore/twvip/jarR/raw/master/kjtw.jar",
    "group": "短剧"
   },
   {
