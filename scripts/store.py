@@ -208,6 +208,27 @@ def probe_priority(probe) -> int:
     return PROBE_PRIORITY.get(os.path.basename(probe or ""), 0)
 
 
+# 哪些探针产物是「全量快照」：整轮覆盖自己的取景范围，没写进去就是本轮没结论。
+# 只有这些才允许撤回（ingest_probe 末尾那段）。sites_probe 走配额轮转、spider_probe
+# 只测 type3 子集——它们的 key 消失是「这轮没排到」，不是「结论作废」，绝不能撤。
+SNAPSHOT_PROBES = {"csp_probe.json", "drpy_probe.json", "js_probe.json",
+                   "py_probe.json", "endpoint_probe.json"}
+
+
+def health_of(level, ok, pri) -> str:
+    """等级 -> 健康结论。浅探针的「连不上」不等于「死」。"""
+    h = classify(level, ok)
+    # P1 判级修正（2026-09-28）：浅探针（spider 连通性 pri≤1 / js 分类页 pri=2）
+    # 在「没有等级字段 + 连通性失败」时，classify 会落到 dead。
+    # 但浅探针只能证明「目标可达性」，连不上 ≠ 源已死（站可能只是换域名/防盗链/
+    # 本机网络波动，或被真机五关才判得准）——把无深证据的浅失败降级为 unknown，
+    # 避免 1252 个从未被深探针覆盖的 type-3 源被误钉死而挡在 healthy/usable 之外。
+    # 深探针（sites L0 / csp C0 / drpy D0）带显式 level，health 已是 dead，不在此列。
+    if h == "dead" and pri < 3 and not level and ok is False:
+        return "unknown"
+    return h
+
+
 def _norm_ext(ext) -> str:
     if ext is None:
         return ""
@@ -257,16 +278,8 @@ def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
       * 低优先级只能记历史，不改结论。
     """
     at = checked_at or now()
-    health = classify(level, ok)
     pri = probe_priority(probe)
-    # P1 判级修正（2026-09-28）：浅探针（spider 连通性 pri≤1 / js 分类页 pri=2）
-    # 在「没有等级字段 + 连通性失败」时，classify 会落到 dead。
-    # 但浅探针只能证明「目标可达性」，连不上 ≠ 源已死（站可能只是换域名/防盗链/
-    # 本机网络波动，或被真机五关才判得准）——把无深证据的浅失败降级为 unknown，
-    # 避免 1252 个从未被深探针覆盖的 type-3 源被误钉死而挡在 healthy/usable 之外。
-    # 深探针（sites L0 / csp C0 / drpy D0）带显式 level，health 已是 dead，不在此列。
-    if health == "dead" and pri < 3 and not level and ok is False:
-        health = "unknown"
+    health = health_of(level, ok, pri)
     conn.execute("""
         INSERT INTO checks (key, checked_at, ok, status_code, latency_ms, level, reason, probe)
         VALUES (?,?,?,?,?,?,?,?)
@@ -298,6 +311,71 @@ def record_check(conn, key: str, ok=None, status_code=None, latency_ms=None,
     """, (at, health, pri, level, latency_ms, status_code,
           (reason or "")[:300] or None, health, now(), key))
     return health
+
+
+def recompute_health(conn, keys, cur_at=None) -> int:
+    """按「各探针最新一条记录」重算这些 key 的健康结论，返回改动数。
+
+    为什么需要：健康结论过去只会「变好」——record_check 用 MAX(health_rank) 且浅探针
+    不覆盖深探针，这套闸门在「证据还在」时是对的；一旦某路快照探针把某站的判定删掉
+    （洗假死、口径收紧、类不再缺席），库里那条 dead 就成了无主结论，再没有任何路径
+    能把它摘掉。本轮实测就是这个洞：csp_probe 的 C0 从 817 降到 10，CI 的 dead 却
+    纹丝不动（1054→1055），807 站还挂着 dead。
+
+    重算规则与 record_check 一致：同一 key 取每路探针的最新记录，比 (探针权威性, 健康序)，
+    高优先级胜出；证据全撤光则回 unknown。差别只是这里从头算，因此能往回降。
+
+    快照探针（SNAPSHOT_PROBES）只认**当前批次**那一批行：它整轮覆盖取景范围，
+    某站从这一轮消失就是撤回。当前批次时刻必须由调用方给（cur_at）——本轮产物若是空的，
+    checks 里就没有它的行，MAX(checked_at) 会退回上一批，把刚撤回的 dead 又当成现行结论。
+    配额轮转的探针（sites/spider）仍按 key+probe 取历史最新，否则「这轮没排到」会被当成
+    「结论作废」，把上周测出的 L2 白白刷掉。
+    """
+    todo = [k for k in dict.fromkeys(keys) if k]
+    snap_at = {r["probe"]: r["at"] for r in conn.execute(
+        "SELECT probe, MAX(checked_at) AS at FROM checks GROUP BY probe")}
+    snap_at.update({k: v for k, v in (cur_at or {}).items() if k})
+    changed = 0
+    for i in range(0, len(todo), 400):        # SQLite 变量上限
+        chunk = todo[i:i + 400]
+        ph = ",".join("?" * len(chunk))
+        rows = conn.execute(
+            "SELECT c.key, c.probe, c.ok, c.status_code, c.latency_ms, c.level,"
+            "       c.reason, c.checked_at"
+            "  FROM checks c"
+            "  JOIN (SELECT key, probe, MAX(checked_at) AS at FROM checks"
+            "        WHERE key IN (%s) GROUP BY key, probe) m"
+            "    ON c.key=m.key AND c.probe=m.probe AND c.checked_at=m.at"
+            % ph, chunk).fetchall()
+        best = {}
+        for r in rows:
+            if r["probe"] in SNAPSHOT_PROBES and r["checked_at"] != snap_at.get(r["probe"]):
+                continue                       # 快照探针的历史批次：已被本轮撤回，不再作证据
+            pri = probe_priority(r["probe"])
+            ok = None if r["ok"] is None else bool(r["ok"])
+            h = health_of(r["level"], ok, pri)
+            cur = best.get(r["key"])
+            if cur is None or (pri, _HEALTH_ORDER.get(h, 0)) > (cur[0], _HEALTH_ORDER.get(cur[1], 0)):
+                best[r["key"]] = (pri, h, r)
+        for key in chunk:
+            hit = best.get(key)
+            if hit:
+                pri, h, r = hit
+                new = (h, pri, r["level"], r["latency_ms"], r["status_code"], r["reason"], r["checked_at"])
+            else:                                    # 证据全撤：回到未判定
+                new = ("unknown", 0, None, None, None, "探针撤回：本轮无该站结论", None)
+            old = conn.execute("SELECT health, health_rank, level FROM interfaces WHERE key=?",
+                               (key,)).fetchone()
+            if old is None or (old["health"], old["health_rank"] or 0, old["level"]) == new[:3]:
+                continue
+            conn.execute("""
+                UPDATE interfaces SET health=?, health_rank=?, level=?, latency_ms=?,
+                       status_code=?, reason=?, last_check_at=COALESCE(?, last_check_at),
+                       updated_at=? WHERE key=?
+            """, (new[0], new[1], new[2], new[3], new[4], new[5], new[6], now(), key))
+            changed += 1
+    conn.commit()
+    return changed
 
 
 def upsert_dep(conn, key: str, dep_type: str, dep_ref: str,
@@ -428,6 +506,18 @@ def ingest_probe(conn, path: str) -> int:
         n += 1
     conn.commit()
     log(f"导入检测记录 {n} 条 <- {probe_name}")
+    if probe_name in SNAPSHOT_PROBES and checked_at:
+        # 全量快照探针：上一批报过、这一批不再报的 key，其结论已经作废，要主动撤回重算。
+        # 不做这一步，"把 802 条假死从 csp_probe 删掉"在产物上等于没发生——interfaces
+        # 只会因新证据变好，没人负责把没人认领的 dead 摘下来（本轮实测 CI dead 1054→1055）。
+        gone = [row["key"] for row in conn.execute(
+            "SELECT DISTINCT c.key FROM checks c"
+            " WHERE c.probe=? AND c.checked_at<>?"
+            "   AND c.key NOT IN (SELECT key FROM checks WHERE probe=? AND checked_at=?)",
+            (probe_name, checked_at, probe_name, checked_at))]
+        if gone:
+            back = recompute_health(conn, gone, cur_at={probe_name: checked_at})
+            log(f"[store] {probe_name} 撤回 {len(gone)} 站旧结论，重算后 {back} 条健康变化")
     return n
 
 
