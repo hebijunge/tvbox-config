@@ -52,6 +52,10 @@ STAGES = [
     ("5e", "drpy 沙箱五关", ["scripts/drpy_probe.py", "--workers", "5"], True, {}),
     ("5f", "探针: py 插件静态结构", ["scripts/probe_py.py"], True, {}),
     ("5g", "探针: type4 推送/解析端点", ["scripts/probe_endpoints.py", "--concurrency", "16"], True, {}),
+    # 5h 判的是「远程 ext 规则在国内到底取不到取不到」——真机侧这类站永远 homeContent 空串
+    # （spider 自己吞掉拉规则的失败），只有从国内直接证伪才拿得到结论。必须在带 root 真机的
+    # 本机跑，和 5a-5g 同一个出口口径；CI 只消费 csp_probe.json，不重跑这一步。
+    ("5h", "探针: csp 远程 ext 可达性", ["csp-device/csp_device_batch.py", "ext"], True, {}),
     ("6", "依赖完整性闸门", ["scripts/dep_repair.py", "--workers", "8"], True, {}),
     ("7a", "入库(接口/直播/检测/依赖)", ["scripts/store.py", "--ingest-sites", "tvbox.json",
                                     "--ingest-lives", "tvbox.json", "--probe-lives",

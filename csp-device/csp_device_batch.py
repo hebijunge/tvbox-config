@@ -77,9 +77,128 @@ def jar_tiers(rep):
 
 
 MAX_INLINE = 200_000          # 单条规则文件内联上限；再大的进 jobs.json 会把块撑爆
+REMOTE_TIMEOUT = 10           # 远程 ext 单个候选的取数上限
+LOCAL_HOSTS = ("127.0.0.1", "localhost", "0.0.0.0", "::1")
 
 
-def inline_ext(cfg):
+def is_rule(text):
+    """返回体像规则（JSON / maccms XML 模板）才值得内联；HTML 报错页不算。"""
+    t = (text or "").lstrip("﻿ \t\r\n")
+    if not t:
+        return False
+    if t[0] in "{[":
+        return True
+    low = t[:400].lower()
+    if "<html" in low or "<!doctype html" in low:
+        return False
+    return low.startswith("<?xml") or "<class" in low or "dd\"" in low
+
+
+def remote_exts(cfg):
+    """cfg 里需要联网取的远程 ext 段（本机/内网端点排除：那是设备侧服务）。"""
+    got = []
+    for seg in str(cfg or "").split("$$$"):
+        head = seg.strip().split(";md5;")[0]
+        if not head.startswith(("http://", "https://")):
+            continue
+        try:
+            host = urllib.parse.urlparse(head).hostname or ""
+        except ValueError:
+            continue
+        if host in LOCAL_HOSTS or host.startswith("192.168.") or host.startswith("10."):
+            continue
+        got.append(head)
+    return got
+
+
+RULE_SUFFIX = (".json", ".txt", ".xml", ".js")
+
+
+def classify_miss(url, status=None, text=""):
+    """远程 ext 取不到时，只有「规则文件本身不在了」才构成已亡。
+
+    为什么必须有这条：xyq/xp 系里大量站的 ext 就是**站点根 URL**（spider 自己抓首页解析），
+    返回整页 HTML 是正常形态。把它当「规则亡了」就是自己造假死——上一版就这么误判了
+    31 个站（www.mutefun.tv 返回 165KB 正常页面、www.czzy.site 是活的门户）。
+    域名解析不了（DoH 复核过）不受此限：站点自己都不存在了。
+    """
+    is_file = urllib.parse.urlparse(url).path.lower().endswith(RULE_SUFFIX)
+    if not is_file:
+        return ""
+    if status in (404, 410):
+        return "gone-%s" % status
+    low = (text or "")[:300].lower()
+    if "<html" in low or "<!doctype" in low:
+        return "lander-html"
+    return ""
+
+
+def prefetch_remote(urls, workers=8):
+    """在国内把这些远程 ext 各取一次 → (fetched, dead)。
+
+    fetched: {url: 规则文本 或 None}   None=取过但没拿到规则形态
+    dead:    {url: 死因}               只对「结构性已亡」下结论（见下）
+
+    为什么在本机取：xyq/xbpq 系 spider 在 init 里自己联网拉规则，而设备网络与本机不同，
+    拉不到就 homeContent 静默返回空串——采样 60 个「静默 G0」，57 个是空串，其中 44 个的
+    ext 就是远程规则 URL。不取回来内联，就是把工装没喂到位记成站点能力。
+
+    死因门槛（与 probe_endpoints 同一口径）：
+      * 域名解析失败必须过 DoH 复核（阿里+Google 都 NOERROR 且无答案）——只凭本机一台
+        解析器判死，就是 2026-09-29「本地网络误杀 adult.json 104 站」的同款事故；
+      * 404/410/返回 HTML 壳 = 规则文件确实不在这地址上了；
+      * 超时/连接重置/TLS = 环境性，不下结论（留未测）。
+    """
+    urls = list(dict.fromkeys([u for u in (urls or []) if remote_exts(u)]))
+    if not urls:
+        return {}, {}
+    sys.path.insert(0, os.path.join(REPO, "scripts"))
+    try:
+        from probe_endpoints import doh_cached
+        from probe_sites import gh_retry_candidates, http_get
+    except ImportError as e:
+        out("缺 scripts/probe_sites.py 或 probe_endpoints.py，远程 ext 不内联（%s）" % e)
+        return {}, {}
+
+    def one(u):
+        host = urllib.parse.urlparse(u).hostname or ""
+        why = []
+        for cand in [u] + list(gh_retry_candidates(u))[:3]:
+            try:
+                st, body, _ms, _ct = http_get(cand, REMOTE_TIMEOUT, MAX_INLINE)
+            except Exception as e:
+                msg = str(e)
+                if "getaddrinfo" in msg or "11001" in msg:
+                    verdict, detail = doh_cached(host, REMOTE_TIMEOUT)
+                    if verdict is False:
+                        return None, "域名无解析记录(DoH一致:%s)" % detail[:60]
+                    why.append("DNS未确认")        # 本机解析失败但 DoH 说还在：环境性
+                elif "timed out" in msg or "10054" in msg:
+                    why.append("env")
+                else:
+                    why.append(type(e).__name__)
+                continue
+            text = body.decode("utf-8", "replace") if st == 200 and body else ""
+            if st == 200 and is_rule(text) and 20 < len(text) < MAX_INLINE:
+                return text, ""
+            why.append(classify_miss(cand, st, text) or "env")
+        w = ";".join(why)
+        if "gone-" in w or "lander-html" in w:
+            return None, w[:60]
+        return None, ""                          # 环境性/未确认：不判
+
+    fetched, dead = {}, {}
+    import concurrent.futures as cf
+    with cf.ThreadPoolExecutor(max_workers=workers) as ex:
+        for u, (text, why) in zip(urls, ex.map(one, urls)):
+            fetched[u] = text
+            if why:
+                dead[u] = why
+    out("远程 ext %d 个：可内联 %d，确认已亡 %d" % (len(urls), sum(1 for v in fetched.values() if v), len(dead)))
+    return fetched, dead
+
+
+def inline_ext(cfg, fetched=None):
     """把 `./deps/x.json` 这类相对路径 ext 换成文件内容本身，返回 (新 cfg, 备注)。
 
     为什么必须换：宿主 app 在加载站点前会用 AssetManager 把相对路径读成规则文本再喂给 spider，
@@ -87,13 +206,31 @@ def inline_ext(cfg):
     报 `JSONException: End of input`——那是工装没喂到位，不是站点死（824 假死事故的同一族）。
     本机真机对照：同样 8 个 G0 站，内联规则内容后 7 个变 G1（首页出结构）。
 
+    远程 ext 走 fetched（prefetch_remote 的结果）：不在这里发网络请求，保证本函数可测、
+    也保证 plan/push 重复调用不会重复打网络。
+
     备注里写清每段的结果（内联了多少字 / 文件缺失 / 超限），合并判级时能复盘证据链。
     """
     if not isinstance(cfg, str) or not cfg.strip():
         return cfg, ""
+    fetched = fetched or {}
     parts, notes = [], []
     for seg in cfg.split("$$$"):
         head = seg.strip().split(";md5;")[0]
+        if head.startswith(("http://", "https://")):
+            if not fetched:
+                parts.append(seg)
+                notes.append("未内联(远程未取数)")
+            elif head in fetched and fetched[head]:
+                parts.append(fetched[head])
+                notes.append("内联远程(%s:%d字)" % (head[:40], len(fetched[head])))
+            elif head in fetched:
+                parts.append(seg)
+                notes.append("未内联(远程取不到:%s)" % head[:40])
+            else:
+                parts.append(seg)          # 设备侧服务（127.0.0.1 的 token 文件等）
+                notes.append("未内联(本机端点)")
+            continue
         if not head.startswith(("./", "assets://")):
             parts.append(seg)
             continue
@@ -114,7 +251,7 @@ def inline_ext(cfg):
     return "$$$".join(parts), ";".join(notes)
 
 
-def build_jobs():
+def build_jobs(prefetch=True):
     rep = json.load(open(os.path.join(WORK, "csp_jar_scan.json"), encoding="utf-8"))
     present = {c: (v["jar"] or "").replace("\\", "/") for c, v in rep["classes"].items()}
     tiers = jar_tiers(rep)
@@ -122,7 +259,7 @@ def build_jobs():
     tv = json.load(open("tvbox.json", encoding="utf-8"))
     probe = json.load(open("probe/csp_probe.json", encoding="utf-8"))
     done = {s["key"]: s for s in probe["sites"] if s.get("level") not in (None, "C?")}
-    jobs, skipped_guard, skipped_missing, seen = [], 0, 0, set()
+    cand, skipped_guard, skipped_missing, seen = [], 0, 0, set()
     for s in tv.get("sites", []):
         api = str(s.get("api") or "")
         if not api.startswith("csp_"):
@@ -147,14 +284,89 @@ def build_jobs():
         ext = s.get("ext")
         cfg = ext if isinstance(ext, str) else (json.dumps(ext, ensure_ascii=False)
                                                 if isinstance(ext, dict) else "")
-        url = urls.get(jar) or bare(tv.get("spider") or "")
-        cfg0 = cfg
-        cfg, cfg_note = inline_ext(cfg)
+        cand.append((key, cls, jar, cfg, urls.get(jar) or bare(tv.get("spider") or ""),
+                     (s.get("name") or "")[:24]))
+    # 远程 ext 一次并发取回（~416 个 URL，串行取会把 plan 拖成十几分钟）
+    fetched, dead = ({}, {})
+    if prefetch:
+        need = []
+        for _, _, _, cfg, _, _ in cand:
+            need.extend(remote_exts(cfg))
+        fetched, dead = prefetch_remote(need)
+        json.dump(dead, open(os.path.join(WORK, "ext_dead.json"), "w", encoding="utf-8"),
+                  ensure_ascii=False, indent=1)
+    jobs = []
+    for key, cls, jar, cfg0, url, name in cand:
+        cfg, cfg_note = inline_ext(cfg0, fetched)
         jobs.append({"id": key, "cls": cls, "jar": DEV_JAR + "/" + safe_name(jar),
                      "src": jar, "cfg": cfg, "url": url,
                      "cfg_ref": cfg0 if cfg != cfg0 else "", "cfg_note": cfg_note,
-                     "tier": tiers.get(jar, "clean"), "name": (s.get("name") or "")[:24]})
+                     "tier": tiers.get(jar, "clean"), "name": name})
     return jobs, skipped_guard, skipped_missing, len(done)
+
+
+def apply_ext_dead(sites_by_key, pending, dead, now):
+    """把「配置依赖确认已亡」的站写成 C0（证据 ext_dep），返回条数。
+
+    只动没有结论的站：真机跑实过（C1-C5）说明它并不依赖这个 ext（或 ext 只是可选参数），
+    不能因为 URL 死了就降级——与 csp_static_merge「真机结论冲突不降级」同一条规矩。
+    pending: [(key, name, cls, ext_url)]；dead: {url: 死因}（prefetch_remote 已把环境性
+    失败剔在外面，进这里的都是域名无记录(DoH 一致)/404/HTML 壳这类结构性死亡）。
+    """
+    n = 0
+    for key, name, cls, url in pending:
+        why = dead.get(url)
+        has_verdict = key in sites_by_key and sites_by_key[key].get("level") not in (None, "C?")
+        if not why or has_verdict:
+            continue
+        sites_by_key[key] = {"key": key, "name": name[:24], "kind": "csp", "cls": cls,
+                             "level": "C0", "ms": None,
+                             "flags": {"home": False, "cat": False, "search": False},
+                             "evidence": {"ext_dep": "remote-rule-unreachable",
+                                          "cause": why[:120], "url": url[:120]},
+                             "err": "ext-dead:" + why[:80], "probed_at": now}
+        n += 1
+    return n
+
+
+def cmd_ext():
+    """5h：csp 站的远程 ext（规则/接口）在国内到底取不取到——取不到就是配置层面已亡。
+
+    为什么单独一路：真机侧这类站一律 homeContent 返回空串（spider 自己吞了拉规则的失败），
+    工装既不能据此判死也不该永远挂着未测；而 ext URL 可达性是能在国内直接证伪的。
+    实测 416 个远程 ext 里只有 3 个还能取回规则形态，250 个域名解析不了。
+    """
+    tv = json.load(open("tvbox.json", encoding="utf-8"))
+    probe = json.load(open("probe/csp_probe.json", encoding="utf-8"))
+    by_key = {s["key"]: s for s in probe["sites"]}
+    pending, seen = [], set()
+    for s in tv.get("sites", []):
+        api = str(s.get("api") or "")
+        if not api.startswith("csp_"):
+            continue
+        key = s.get("key") or s.get("name")
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        if by_key.get(key, {}).get("level") not in (None, "C?"):
+            continue
+        urls = remote_exts(s.get("ext") if isinstance(s.get("ext"), str)
+                           else json.dumps(s.get("ext") or "", ensure_ascii=False))
+        if urls:
+            pending.append((key, (s.get("name") or "")[:24], api[4:], urls[0]))
+    _f, dead = prefetch_remote([u for _, _, _, u in pending])
+    from datetime import datetime
+    now = datetime.now().isoformat(timespec="seconds")
+    n = apply_ext_dead(by_key, pending, dead, now)
+    probe["sites"] = list(by_key.values())
+    probe["generated_at"] = now
+    lv = collections.Counter(x.get("level") for x in probe["sites"])
+    probe["summary"] = dict(probe.get("summary") or {}, total=len(probe["sites"]), levels=dict(lv),
+                            ext_dead_added=n)
+    json.dump(probe, open("probe/csp_probe.json", "w", encoding="utf-8"),
+              ensure_ascii=False, indent=1)
+    out("远程 ext 待判 %d 站，确认已亡 %d，写入 C0 %d 条；csp_probe 总 %d，分布 %s"
+        % (len(pending), len(dead), n, len(probe["sites"]), dict(lv)))
 
 
 def cmd_plan():
@@ -246,16 +458,20 @@ def device_verdict(row, cls):
 
 
 def untrusted_c0(row):
-    """证据不足的判死：C0 只认静态口径（全池缺席 + 自带 jar 确实读到过）。
+    """证据不足的判死：C0 只认两类结构化证据。
+
+    * `static`：csp_static_merge——类在全池可读 jar 里都不存在，且该站自带 jar 确实读到过；
+    * `ext_dep`：5h——远程规则/接口在国内确认已亡（域名无记录过 DoH 复核、404、HTML 壳）。
 
     v1 runner 的 CLASSPATH 里没挂宿主 apk，spider 接口找不到 → 整批 ClassNotFoundException
-    → 802 个 C0 就这么进了产物（其中一半连 evidence 都是空的）。设备侧的 C0 同样只说明
+    写成 C0，802 个假死就这么进了产物（一半连 evidence 都是空的）。设备侧的 C0 同样只说明
     "我们这套工装没能把类跑起来"，判不起死。证据不足的判死一律退回未测，下一轮要么被真机
     跑实、要么由 csp_static_merge 重新判。
     """
     if row.get("level") != "C0":
         return False
-    return not (row.get("evidence") or {}).get("static")
+    ev = row.get("evidence") or {}
+    return not (ev.get("static") or ev.get("ext_dep"))
 
 
 def cmd_merge():
@@ -338,5 +554,7 @@ if __name__ == "__main__":
         cmd_run(int(sys.argv[2]) if len(sys.argv) > 2 else 1)
     elif cmd == "merge":
         cmd_merge()
+    elif cmd == "ext":
+        cmd_ext()
     else:
-        out("用法: plan|push|run [块数]|merge")
+        out("用法: plan|push|run [块数]|merge|ext")

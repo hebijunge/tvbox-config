@@ -58,6 +58,15 @@ class UntrustedC0Test(unittest.TestCase):
         row = {"level": "C0", "evidence": {"static": "class-absent-in-local-jar-pool"}}
         self.assertFalse(mod.untrusted_c0(row))
 
+    def test_ext_dep_c0_survives(self):
+        """5h 写的「远程规则国内已亡」是真证据，不能被下一轮真机合并当无证据洗掉。"""
+        row = {"level": "C0", "evidence": {"ext_dep": "remote-rule-unreachable",
+                                           "cause": "域名无解析记录(DoH一致)"}}
+        self.assertFalse(mod.untrusted_c0(row))
+
+    def test_c0_with_unrelated_evidence_is_purged(self):
+        self.assertTrue(mod.untrusted_c0({"level": "C0", "evidence": {"cfg_note": "内联(x)"}}))
+
     def test_non_c0_rows_untouched(self):
         for lvl in ("C1", "C5", "C?"):
             self.assertFalse(mod.untrusted_c0({"level": lvl}), lvl)
