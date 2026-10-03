@@ -59,18 +59,45 @@ def _git(args, repo="."):
     ).stdout
 
 
+def _git_bytes(args, repo="."):
+    return subprocess.run(["git", *args], cwd=repo, check=True,
+                          stdout=subprocess.PIPE).stdout
+
+
 def tracked_deps(repo="."):
-    """git ls-files 拿 HEAD 索引里跟踪的 deps/**。返回 posix 相对仓库根路径集合。"""
-    out = _git(["ls-files", "--", "deps/"], repo=repo)
-    return {ln.strip().replace("\\", "/") for ln in out.splitlines() if ln.strip()}
+    """HEAD 索引里跟踪的 deps/**。返回 posix 相对仓库根路径集合。
+
+    必须 `-z`：`git ls-files` 的文本输出会按 core.quotepath 把非 ASCII 路径转成
+    `"deps/auto/.../\\347\\234\\213.js"` 这种 C-引号形式。2026-10-04 实测 HEAD 里
+    14716 个 deps 路径有 **6927 个是中文/非 ASCII 名**，全部被引号化——它们跟 dep_refs
+    的引用集（从产物文本里正则出来、是解码后的真路径）永远匹配不上，于是整批被算成
+    "无人引用"候选：候选数从真实 11391 虚高到 12821，其中约 1430 个是产物真在引用的
+    活文件。同族坑见 [[project-deps-localization-authority]] 里 dep_repair 正则截断
+    中文名那次。
+    """
+    out = _git_bytes(["ls-files", "-z", "--", "deps/"], repo=repo)
+    return {ln.decode("utf-8", "surrogateescape").replace("\\", "/")
+            for ln in out.split(b"\0") if ln.strip()}
 
 
 def recently_touched_deps(min_age_days, repo="."):
-    """最近 min_age_days 天内 git log 里出现过的 deps/**。"""
+    """最近 min_age_days 天内 git log 里出现过的 deps/**。
+
+    同样要 `-z`（否则中文名一律漏判成"没动过"）。`--pretty=format:` 的分隔符换行，
+    名字之间 NUL 分隔，所以先按 \\0 切、再按 \\n 清掉提交边界残留。
+    """
+    sentinel = "@@COMMIT@@"
     cutoff = f"{min_age_days}.days.ago"
-    out = _git(["log", f"--since={cutoff}", "--name-only", "--pretty=format:",
-                "--", "deps/"], repo=repo)
-    return {ln.strip().replace("\\", "/") for ln in out.splitlines() if ln.strip()}
+    out = _git_bytes(["log", f"--since={cutoff}", "--name-only", "-z",
+                      f"--pretty=format:{sentinel}", "--", "deps/"], repo=repo)
+    paths = set()
+    for tok in out.split(b"\0"):
+        for ln in tok.split(b"\n"):
+            s = ln.strip()
+            if not s or sentinel.encode() in s:
+                continue
+            paths.add(s.decode("utf-8", "surrogateescape").replace("\\", "/"))
+    return paths
 
 
 def build_candidates(repo=".", min_age_days=30, only_dir=None):
