@@ -11,7 +11,9 @@
   3. 体积分档（P2-3）：>1MB 留 7 天删；100KB~1MB 留 14 天删；<100KB 永久保留。
   4. 默认 dry-run（只报告）；``--execute`` 才真删——且是**移动**到
      ``deps/.trash/<日期>/``，不是 rm，回收站保留 30 天可回滚。
-  5. 引用收集覆盖 tvbox/vod/live/short/stores/*.json 里所有 ``./deps/`` 引用。
+  5. 引用收集 = 所有公开产物（tvbox/vod/live/short/status/adult/adult_live +
+     stores/*.json）里的 ``./deps/`` 路径，**并上** deps/manifest.json 账本 local
+     字段；与 dep_audit / dep_gc 走同一份 dep_refs.collect_all_refs（见 scripts/dep_refs.py）。
 
 为什么不能直接删
 ----------------
@@ -51,27 +53,15 @@ SMALL_PERMANENT = True         # <100KB 永久保留
 
 
 def collect_refs(repo):
-    """从所有公开产物收集 ./deps/ 引用集合（posix 风格，lstrip ./）。"""
-    refs = set()
-    product_files = ["tvbox.json", "vod.json", "live.json", "short.json",
-                     "status.json"]
-    stores_dir = os.path.join(repo, "stores")
-    if os.path.isdir(stores_dir):
-        for n in os.listdir(stores_dir):
-            if n.endswith(".json"):
-                product_files.append(os.path.join("stores", n))
-    for rel in product_files:
-        p = os.path.join(repo, rel)
-        if not os.path.isfile(p):
-            continue
-        try:
-            txt = open(p, encoding="utf-8", errors="replace").read()
-        except OSError:
-            continue
-        for m in DEP_RE.finditer(txt):
-            ref = posixpath.normpath(m.group(0).lstrip("./").replace("\\", "/"))
-            refs.add(ref)
-    return refs
+    """产物 ∪ deps/manifest.json 账本登记；权威口径见 scripts/dep_refs.py。
+
+    与 dep_audit / dep_gc 严格一致，避免"报告口径改了、真删还是旧口径"。
+    """
+    _here = os.path.dirname(os.path.abspath(__file__))
+    if _here not in sys.path:
+        sys.path.insert(0, _here)
+    import dep_refs
+    return dep_refs.collect_all_refs(repo)
 
 
 def scan_cleanable_files(repo):

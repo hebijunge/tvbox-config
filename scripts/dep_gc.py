@@ -87,14 +87,12 @@ def main() -> int:
     with open(args.audit, encoding="utf-8") as f:
         audit = json.load(f)
 
-    # dep_audit 里 unreferenced_top 只列了 TOP N；这里全量重扫 deps/ 以 refs 为准
-    refs = set()
-    base = "tvbox.json"
-    if os.path.isfile(base):
-        import re as _re
-        txt = open(base, encoding="utf-8", errors="replace").read()
-        for m in _re.finditer(r"\.?/?deps/[^\s\"'<>\\),;]+", txt):
-            refs.add(m.group(0).lstrip("./").replace("\\", "/"))
+    # 与 dep_audit / cleanup_deps 严格一致的引用口径：产物 ∪ manifest 账本
+    # （见 scripts/dep_refs.py）。之前本文件自己扫 tvbox.json，报告改了 GC 候选没改，
+    # 会让 manifest 里的 1377 条 fetch_merge 账本登记被反复误报成候选。
+    sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__))))
+    import dep_refs
+    refs = dep_refs.collect_all_refs(".", "deps")
 
     import time as _time
     now = _time.time()
