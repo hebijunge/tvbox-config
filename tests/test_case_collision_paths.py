@@ -202,5 +202,41 @@ class TestLedgerRewrite(unittest.TestCase):
                          "history/2026-09-29/iptv~abc123.m3u")
 
 
+class TestSkipRefreshUsesResolvedPath(unittest.TestCase):
+    """SKIP_REFRESH 分支必须优先用 resolve_dep_paths 消解后的名字，
+    否则 PR#35 迁移前留下的旧名（IPTV.m3u/iptv.m3u）会被 manifest-cache hit
+    直接落到 ok_map、Windows 上物理是同一文件、CI 又写回产物 → 冲突复活。
+    2026-10-03 PR#39/#40 CI 的 windows-path-check FAIL 就是这么产生的。"""
+
+    def test_prefers_lp_map_over_manifest_local(self):
+        lp_map = {"o|https://x/IPTV.m3u": "deps/o/iptv~1f1e8f.m3u"}
+        got = fm.pick_refresh_local("o|https://x/IPTV.m3u",
+                                     "deps/o/IPTV.m3u", lp_map)
+        self.assertEqual(got, "deps/o/iptv~1f1e8f.m3u")
+
+    def test_falls_back_to_manifest_local_when_unresolved(self):
+        # 无冲突、resolve 没生成消解名的正常路径要沿用 manifest 里的登记，
+        # 不能强行造一个新名。
+        got = fm.pick_refresh_local("o|https://x/normal.js",
+                                     "deps/o/normal.js", {})
+        self.assertEqual(got, "deps/o/normal.js")
+
+    def test_both_sides_of_collision_map_to_distinct_paths(self):
+        # 大小写两 URL 都过 resolve_dep_paths：一个保原名、一个降级，
+        # SKIP_REFRESH 阶段各自 hit 到自己的路径、产物里不再撞名。
+        pairs = [("wex/newwex", "https://a/IPTV.m3u"),
+                 ("wex/newwex", "https://b/iptv.m3u")]
+        lp_map = fm.resolve_dep_paths(pairs)
+        self.assertEqual(len(set(lp_map.values())), 2)
+        self.assertEqual(
+            fm.pick_refresh_local("wex/newwex|https://a/IPTV.m3u",
+                                    "deps/wex/newwex/IPTV.m3u", lp_map),
+            lp_map["wex/newwex|https://a/IPTV.m3u"])
+        self.assertEqual(
+            fm.pick_refresh_local("wex/newwex|https://b/iptv.m3u",
+                                    "deps/wex/newwex/iptv.m3u", lp_map),
+            lp_map["wex/newwex|https://b/iptv.m3u"])
+
+
 if __name__ == "__main__":
     unittest.main()
