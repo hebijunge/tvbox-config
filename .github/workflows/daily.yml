@@ -159,6 +159,16 @@ jobs:
         continue-on-error: true
         run: python scripts/dep_gc.py --prune-manifest --apply --min-idle-days 0 || true
 
+      - name: 同目录大小写冲突每日消解
+        # 环④ P1：PR#35 是一次性迁移，但 `fetch_merge.resolve_dep_paths` 只消解
+        # **本次 entries** 内的撞名；同 origin 下两个大小写只差 URL 若不同天被拉，
+        # 后落的那个仍会用原名 → 索引里 IPTV.m3u 与 iptv.m3u 并存、
+        # windows-path-check 每日复活（PR#42/#43 CI 就是这样 FAIL 的）。
+        # 每日在入库前扫一遍 HEAD 索引 + 磁盘文件、有冲突就走消解名。
+        # 由下一步 `git add -A` 把 rename 落到索引里（fix_case_collisions 依赖此收口）。
+        continue-on-error: true
+        run: python scripts/fix_case_collisions.py --apply || true
+
       - name: 入库（接口 / 检测历史 / 依赖关系 / 直播源级验活）
         # DB 不入库（二进制会让仓库膨胀），健康快照以 exports/health_index.json 文本留档：
         # 每天 diff 能直接看出哪些源从 healthy 掉成 dead，比二进制友好。
