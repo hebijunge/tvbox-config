@@ -1,0 +1,119 @@
+"""head_slim_deps 的 dry-run / git rm 边界测试（stdlib unittest + 真 git）。
+
+动机：head_slim_deps 是"从 HEAD 移除无引用 deps"的候选清单生成器，一旦
+--execute 就会真 git rm；这里钉死它的三条判据：
+  1) 引用口径完全走 dep_refs（7 主产物 ∪ stores ∪ manifest 账本），
+     不能自己另算一份；
+  2) 只有"未在 git log 最近 N 天出现过"的才进候选（活跃 dep 排除）；
+  3) --execute 才 git rm，dry-run 只写清单。
+"""
+
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import unittest
+
+_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.join(_ROOT, "scripts"))
+
+import head_slim_deps  # noqa: E402
+
+
+def _git(cwd, *args, **env):
+    e = os.environ.copy()
+    e.update({
+        "GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "t@t",
+        "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "t@t",
+    })
+    e.update(env)
+    subprocess.run(["git", *args], cwd=cwd, check=True, env=e)
+
+
+def _commit_with_date(cwd, date_iso):
+    """把 HEAD commit 的 author/committer date 强制设为 date_iso，
+    用来测 min_age_days 的时间闸门。"""
+    env = {"GIT_AUTHOR_DATE": date_iso, "GIT_COMMITTER_DATE": date_iso}
+    e = os.environ.copy()
+    e.update({"GIT_AUTHOR_NAME": "test", "GIT_AUTHOR_EMAIL": "t@t",
+              "GIT_COMMITTER_NAME": "test", "GIT_COMMITTER_EMAIL": "t@t"})
+    e.update(env)
+    subprocess.run(["git", "commit", "--amend", "--no-edit",
+                    "--date", date_iso], cwd=cwd, check=True, env=e)
+
+
+def _write(path, content="x"):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8") as f:
+        f.write(content)
+
+
+class TestHeadSlim(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.mkdtemp(prefix="head-slim-")
+        self.addCleanup(shutil.rmtree, self.tmp, True)
+        _git(self.tmp, "init", "-q", "-b", "main")
+
+    def _init_repo(self):
+        # 提交一批历史 deps，日期设为 60 天前（超过默认 30 天闸门）
+        _write(os.path.join(self.tmp, "deps", "old_a.js"), "old_a")
+        _write(os.path.join(self.tmp, "deps", "old_b.js"), "old_b")
+        _write(os.path.join(self.tmp, "deps", "old_orphan.js"), "orphan")
+        _write(os.path.join(self.tmp, "tvbox.json"),
+               json.dumps({"sites": [{"api": "./deps/old_a.js"}]}))
+        _write(os.path.join(self.tmp, "deps", "manifest.json"),
+               json.dumps({"u|b": {"url": "u", "origin": "u",
+                                    "local": "deps/old_b.js"}}))
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "old")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+
+    def test_default_dry_run_lists_only_orphan(self):
+        self._init_repo()
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertEqual(cand["paths"], ["deps/old_orphan.js"],
+                         "只有既无引用、又不最近活跃的文件才算候选")
+        self.assertFalse(cand["paths"] == [])
+        self.assertGreaterEqual(cand["tracked_total"], 4)
+
+    def test_recent_touch_excludes_from_candidates(self):
+        # 60 天前一批历史，然后 3 天前新增 old_orphan.js —— 即使 dep_refs 无引用，
+        # 也应因"最近有改动"被排除。
+        self._init_repo()
+        _write(os.path.join(self.tmp, "deps", "recent.js"), "new")
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "recent")
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertNotIn("deps/recent.js", cand["paths"])
+        self.assertIn("deps/old_orphan.js", cand["paths"])
+
+    def test_execute_does_not_run_without_flag(self):
+        # dry-run 绝不能改索引
+        self._init_repo()
+        before = head_slim_deps.tracked_deps(self.tmp)
+        old = sys.argv
+        sys.argv = ["head_slim_deps", "--repo", self.tmp]
+        try:
+            head_slim_deps.main()
+        finally:
+            sys.argv = old
+        after = head_slim_deps.tracked_deps(self.tmp)
+        self.assertEqual(before, after)
+
+    def test_refs_union_includes_adult_stores_and_manifest(self):
+        # 覆盖 PR#36 三处口径统一后 head_slim 也应看到 adult.json / stores 的引用
+        self._init_repo()
+        _write(os.path.join(self.tmp, "adult.json"),
+               json.dumps({"sites": [{"api": "./deps/old_orphan.js"}]}))
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "adult")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertEqual(cand["paths"], [],
+                         "adult.json 里引用的 dep 不能进候选")
+
+
+if __name__ == "__main__":
+    unittest.main()
