@@ -50,6 +50,18 @@ STORES_SUFFIX = ".json"
 
 DEP_RE = re.compile(r"\.?/?deps/[^\s\"'<>\\),;]+")
 
+# 账本 / 备份文件本身：既不会被产物引用，也不能被 dep_gc / cleanup_deps /
+# head_slim_deps 从 HEAD 或磁盘移除——否则 collect_manifest_refs 下轮直接读空、
+# 全仓 deps 会一夜之间被算成孤儿。
+LEDGER_PATHS = frozenset({
+    "deps/manifest.json",
+    "deps/manifest.json.pre_gc",
+})
+
+
+def collect_ledger_paths() -> frozenset:
+    return LEDGER_PATHS
+
 
 def _norm(raw: str) -> str:
     # Windows 反斜杠、前导 ./、双斜杠统一到 posix 相对仓库根
