@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="robots" content="noindex, nofollow">
+    <title></title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #0e1114;
+            color: #e8eaed;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        .main-content {
+            flex: 1;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .header {
+            padding: 32px 20px 24px;
+        }
+        .header-overline {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1.2px;
+            color: #8ab4f8;
+            margin-bottom: 8px;
+            display: block;
+            opacity: 0.8;
+        }
+        .header-title {
+            font-size: 28px;
+            font-weight: 700;
+            margin: 0;
+            line-height: 1.25;
+            color: #ffffff;
+            letter-spacing: -0.5px;
+        }
+        .list-container {
+            padding: 0 20px;
+            flex: 1;
+        }
+        .list_1 {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            counter-reset: result-counter;
+        }
+        .list-item {
+            margin: 0;
+            padding: 0;
+        }
+        .dir-link {
+            display: flex;
+            align-items: center;
+            background-color: #181b21;
+            border: 1px solid #2a2e37;
+            border-radius: 12px;
+            padding: 18px 16px;
+            text-decoration: none;
+            color: inherit;
+            min-height: 76px;
+            transition: transform 0.15s ease, background-color 0.15s ease;
+        }
+        .dir-link:active {
+            background-color: #20242c;
+            transform: scale(0.98);
+        }
+        .dir-link::before {
+            counter-increment: result-counter;
+            content: "0" counter(result-counter);
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: #5f6368;
+            align-self: flex-start;
+            margin-top: 4px;
+            margin-right: 16px;
+        }
+        .dir-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .kw-text {
+            font-size: 19px;
+            font-weight: 500;
+            line-height: 1.35;
+            color: #e8eaed;
+        }
+        .dir-icon {
+            color: #5f6368;
+            margin-left: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dir-icon svg {
+            width: 22px;
+            height: 22px;
+            fill: currentColor;
+        }
+        .list-item:first-child .dir-link {
+            background-color: #141f2e;
+            border-color: rgba(138, 180, 248, 0.4);
+            padding: 24px 16px;
+            min-height: 94px;
+        }
+        .list-item:first-child .dir-link::before {
+            color: #8ab4f8;
+            opacity: 0.9;
+        }
+        .list-item:first-child .dir-content::before {
+            content: "Top result";
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #8ab4f8;
+            background: rgba(138, 180, 248, 0.15);
+            align-self: flex-start;
+            padding: 4px 8px;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            letter-spacing: 0.5px;
+        }
+        .list-item:first-child .kw-text {
+            font-size: 22px;
+            font-weight: 600;
+            color: #ffffff;
+        }
+        .list-item:first-child .dir-icon {
+            color: #8ab4f8;
+        }
+        .no-results {
+            padding: 24px;
+            text-align: center;
+            color: #9aa0a6;
+            font-size: 16px;
+        }
+        .footer {
+            padding: 48px 20px 32px;
+            text-align: center;
+            font-size: 13px;
+            display: flex;
+            justify-content: center;
+            gap: 24px;
+        }
+        .footer a {
+            color: #5f6368;
+            text-decoration: none;
+        }
+        .footer a:active {
+            color: #9aa0a6;
+        }
+    </style>
+</head>
+<body>
+
+    <main class="main-content">
+        <header class="header">
+            <span class="header-overline">Directory Index</span>
+            <h1 class="header-title"></h1>
+        </header>
+
+        <div class="list-container">
+            <ul class="list_1">
+                    <li class="no-results">No results found for your search.</li>
+                            </ul>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <a href="/privacy?dmn=&testId=21" target="_blank">Privacy Policy</a>
+        <a href="/terms?dmn=&testId=21" target="_blank">Terms of Service</a>
+    </footer>
+
+    <script>
+        window.__cherami = {
+            sessionId: "55d7a98a-51b6-47a5-94f1-94858acb53b4",
+            source: "",
+            tkn: "19vnMT3S",
+            reportUrl: window.location.origin + '/cherami/report'
+        };
+    
+        // Report an event. `payload.wa` is sent to the legacy report, `payload.dmFeed`
+        // to the new dm-feed report; include only the destinations this event needs.
+        function report(action, payload) {
+            payload = payload || {};
+            const data = { action: action, _ts: String(Date.now()) };
+            const source = window.__cherami.source;
+            const sessionId = window.__cherami.sessionId;
+            const tkn = window.__cherami.tkn;
+    
+            // Carry the partner token so the server resolves the correct campaign
+            // instead of falling back to the default token.
+            if (tkn) data.tkn = tkn;
+    
+            if (payload.wa) {
+                const wa = Object.assign({}, payload.wa);
+                if (source) wa.cid = source;
+                if (sessionId) wa.sid = sessionId;
+                data.wa = JSON.stringify(wa);
+            }
+            if (payload.dmFeed) {
+                const dmFeed = Object.assign({}, payload.dmFeed);
+                if (source) dmFeed.source = source;
+                if (sessionId) dmFeed.session_id = sessionId;
+                data.dmFeed = JSON.stringify(dmFeed);
+            }
+    
+            const reportUrl = new URL(window.__cherami.reportUrl);
+            reportUrl.search = new URLSearchParams(data).toString();
+    
+            const img = new Image();
+            img.src = reportUrl.toString();
+        }
+    
+        function getCanvasFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                if (!ctx) return null;
+    
+                canvas.width = 200;
+                canvas.height = 50;
+                ctx.textBaseline = 'top';
+                ctx.font = '14px Arial';
+                ctx.textBaseline = 'alphabetic';
+                ctx.fillStyle = '#f60';
+                ctx.fillRect(125, 1, 62, 20);
+                ctx.fillStyle = '#069';
+                ctx.fillText('Cherami fingerprint', 2, 15);
+                ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+                ctx.fillText('Cherami fingerprint', 4, 17);
+    
+                return canvas.toDataURL().substring(0, 100);
+            } catch (e) {
+                return null;
+            }
+        }
+    
+        function getWebGLFingerprint() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return null;
+    
+                const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+                if (debugInfo) {
+                    return {
+                        vendor: gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '',
+                        renderer: gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '',
+                    };
+                }
+                return null;
+            } catch (e) {
+                return null;
+            }
+        }
+    
+        function reportClientAttestation() {
+            try {
+                const c = window.__cherami || {};
+                if (!c || !c.sessionId) {
+                    return;
+                }
+    
+                const canvasFp = getCanvasFingerprint();
+                const webglFp = getWebGLFingerprint();
+    
+                const attestation = JSON.stringify({
+                    jsExecuted: true,
+                    screenW: window.screen.width,
+                    screenH: window.screen.height,
+                    dpr: window.devicePixelRatio || 1,
+                    maxTouchPoints: navigator.maxTouchPoints || 0,
+                    webdriver: navigator.webdriver === true,
+                    tzOffset: new Date().getTimezoneOffset(),
+                    cookieEnabled: navigator.cookieEnabled,
+                    languagesCount: navigator.languages ? navigator.languages.length : 0,
+                    platform: navigator.platform || '',
+                    canvasFp: canvasFp,
+                    webglVendor: webglFp ? webglFp.vendor : null,
+                    webglRenderer: webglFp ? webglFp.renderer : null,
+                    hardwareConcurrency: navigator.hardwareConcurrency || 0,
+                    deviceMemory: navigator.deviceMemory || 0,
+                });
+    
+                const payload = {
+                    action: 'clientCheck',
+                    wa: { extraString1: attestation, sid: c.sessionId || null },
+                    dmFeed: { extra_string1: attestation, source: c.source || null, session_id: c.sessionId || null },
+                };
+    
+                if (navigator.sendBeacon) {
+                    const blob = new Blob([JSON.stringify({ action: payload.action, payload })], {
+                        type: 'application/json',
+                    });
+                    navigator.sendBeacon(c.reportUrl, blob);
+                    return;
+                }
+    
+                fetch(c.reportUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: payload.action, payload }),
+                    keepalive: true,
+                    credentials: 'include',
+                }).catch(function() {
+                    // Silent fail - don't break page
+                });
+            } catch (err) {
+                // Silent fail - don't break page
+            }
+        }
+    
+        window.addEventListener('load', function() {
+            reportClientAttestation();
+        });
+    
+        // ─── Funnel click tracking ────────────────────────────────────────────
+        var pageOpenedAt = Date.now();
+    
+        function msSincePageOpen() {
+            return Date.now() - pageOpenedAt;
+        }
+    
+        // Which part of the result the user clicked (stored as click_zone).
+        function keywordClickZone(clicked) {
+            if (clicked.closest('.arrow') || clicked.closest('.kw-arrow')) return 'arrow';
+            if (clicked.closest('.anchortext') || clicked.closest('.kw-text')) return 'text';
+            return 'row';
+        }
+    
+        function adClickZone(clicked) {
+            if (clicked.closest('.arrow_wrap')) return 'cta';
+            if (clicked.closest('.title')) return 'title';
+            if (clicked.closest('.desc')) return 'description';
+            if (clicked.closest('.url')) return 'domain';
+            return 'ad';
+        }
+    
+        // Assembled here rather than rendered into the page, so a scrape comes away with nothing to replay.
+        function armKeywordLink(link, clicked) {
+            link.href = '/kw-click?t=' + encodeURIComponent(link.dataset.ct)
+                + '&ttc=' + msSincePageOpen()
+                + '&zone=' + encodeURIComponent(keywordClickZone(clicked));
+        }
+    
+        function trackAdClick(link, clicked) {
+            var ads = document.querySelectorAll('a.content-wrap');
+            report('adClick', {
+                dmFeed: {
+                    page: 'ads',
+                    step: 'click',
+                    ads_variant: '',
+                    test_id: '21',
+                    root_domain: '',
+                    position: Array.prototype.indexOf.call(ads, link) + 1,
+                    click_zone: adClickZone(clicked),
+                    time_to_click_ms: msSincePageOpen()
+                }
+            });
+        }
+    
+        // pointerdown/keydown fire before the new tab's URL is locked in; middle- and ctrl-click reach
+        // only these two, plain click only the third.
+        function onKeywordIntent(event) {
+            try {
+                var clicked = event.target;
+                if (!clicked || !clicked.closest) return;
+                if (event.type === 'keydown' && event.key !== 'Enter') return;
+    
+                var keywordLink = clicked.closest('a[data-ct]');
+                if (keywordLink) armKeywordLink(keywordLink, clicked);
+            } catch (err) {}
+        }
+    
+        document.addEventListener('pointerdown', onKeywordIntent, true);
+        document.addEventListener('keydown', onKeywordIntent, true);
+        // Capture-phase click still precedes the default navigation, and catches the activations
+        // pointerdown never sees. Without it those hits reach /kw-click with no token and get a 400.
+        document.addEventListener('click', onKeywordIntent, true);
+    
+        document.addEventListener('click', function (event) {
+            try {
+                var clicked = event.target;
+                if (!clicked || !clicked.closest) return;
+    
+                var adLink = clicked.closest('a.content-wrap');
+                if (adLink) {
+                    trackAdClick(adLink, clicked);
+                }
+            } catch (err) {}
+        }, true);
+    </script>    <script>
+        (function () {
+            var props = null || {};
+            
+    
+            var startedAt = Date.now();
+            var called = false;
+            var reported = null;
+    
+            function send(step) {
+                try {
+                    if (typeof report !== 'function') return;
+                    report('yahooBeacon', {
+                        dmFeed: {
+                            page: 'keywords',
+                            step: step,
+                            test_id: '21',
+                            root_domain: '',
+                            
+                            kw_variant: 'keywords-test-9',
+                            extra_integer1: Date.now() - startedAt
+                        }
+                    });
+                } catch (e) {}
+            }
+    
+            function settle(step) {
+                if (reported) return;
+                reported = step;
+                send(step);
+            }
+    
+            function argument() {
+                props.ykws = Array.prototype.map.call(document.querySelectorAll('.list_1 a'), function (a) {
+                    return a.textContent ? a.textContent.trim() : '';
+                }).filter(Boolean).join(',');
+                return props;
+            }
+    
+            // Never gated on `reported`: the deadline gives up on measuring, not on billing.
+            function run() {
+                if (called) return true;
+                if (typeof window.initDMKeywords !== 'function') return false;
+    
+                called = true;
+                try {
+                    window.initDMKeywords(argument());
+                    reported ? send('late-ok') : settle('ok');
+                } catch (e) {
+                    settle('threw');
+                }
+                return true;
+            }
+    
+            function poll() {
+                if (run() || reported) return;
+                if (Date.now() - startedAt < 15000) setTimeout(poll, 50);
+                else settle('timeout');
+            }
+    
+            var script = document.createElement('script');
+            // Dated, not per-request: a unique query string made every impression a cache miss.
+            script.src = 'https://s.appreports.net/serenity.js?v=' + new Date().toISOString().slice(0, 10);
+            script.async = true;
+            script.onload = run;
+            script.onerror = function () { settle('load-failed'); };
+    
+            document.head.appendChild(script);
+            poll();
+        })();
+    </script>
+    <script>
+        window.addEventListener('load', function () {
+            try {
+                var anchors = document.querySelectorAll('.list_1 a');
+                var kws = Array.prototype.map.call(anchors, function (a) {
+                    var kwTextNode = a.querySelector('.kw-text');
+                    return (kwTextNode && kwTextNode.textContent ? kwTextNode.textContent.trim() : '');
+                }).filter(function (s) { return s.length > 0; }).join(',');
+                report('keywordsPageLoad', {
+                    wa: {
+                        extraString1: kws,
+                        extraString2: '',
+                        extraString3: '21'
+                    },
+                    dmFeed: {
+                        page: 'keywords',
+                        step: 'load',
+                        kw_variant: 'keywords-test-9',
+                        test_id: '21',
+                        root_domain: '',
+                        item_count: kws ? kws.split(',').length : 0
+                    }
+                });
+            } catch (e) {
+                report('keywordsPageLoad', {
+                    wa: {
+                        extraString1: '',
+                        extraString2: '',
+                        extraString3: '21'
+                    },
+                    dmFeed: {
+                        page: 'keywords',
+                        step: 'load',
+                        kw_variant: 'keywords-test-9',
+                        test_id: '21',
+                        root_domain: '',
+                        item_count: 0
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
