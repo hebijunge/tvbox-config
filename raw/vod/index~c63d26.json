@@ -1,0 +1,57 @@
+{
+  "spider": "https://fastly.jsdelivr.net/gh/qist/tvbox@main/jar/custom.jar;md5;1234567890abcdef1234567890abcdef",
+  "wallpaper": "https://picsum.photos/1920/1080",
+  "sites": [
+    {
+      "key": "csp_Douban",
+      "name": "豆瓣榜单 (推荐)",
+      "type": 3,
+      "api": "csp_Douban",
+      "searchable": 0,
+      "quickSearch": 0,
+      "filterable": 0
+    },
+    {
+      "key": "csp_AppYS",
+      "name": "影视主源 (稳定)",
+      "type": 3,
+      "api": "csp_AppYS",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "ext": "https://your-domain.com/api.php"
+    },
+    {
+      "key": "csp_Quanji",
+      "name": "备用影视",
+      "type": 1,
+      "api": "https://cj.lziapi.com/api.php/provide/vod/",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1
+    }
+  ],
+  "parses": [
+    {
+      "name": "并发解析",
+      "type": 2,
+      "url": "Parallel"
+    },
+    {
+      "name": "聚合解析",
+      "type": 3,
+      "url": "Demo"
+    }
+  ],
+  "flags": [
+    "youku",
+    "qq",
+    "iqiyi",
+    "qiyi",
+    "letv",
+    "sohu",
+    "tudou",
+    "pptv",
+    "mgtv"
+  ]
+}
