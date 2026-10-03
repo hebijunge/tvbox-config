@@ -1,0 +1,199 @@
+name: repo-slim
+# 一次性历史瘦身工装（2026-10-04）。
+#
+# 为什么必须在 Linux runner 上跑：本仓历史里有 485 个含 `:` 的路径
+# （`deps/.../https:/raw.githubusercontent.com/...`，早期本地化把 URL 直接拼成相对目录
+# 留下的残渣，HEAD 上已经归零，但 fast-import 要重放全部历史）。git-for-windows 按
+# core.protectNTFS 会在写 `M` 行时直接 `fatal: invalid path`，本机 filter-repo 跑不动
+# （实测崩在 OSError [Errno 22]，前置报 `fatal: invalid path '"deps/cluntop/..."'`）。
+#
+# 安全边界：
+#   - 默认 apply=false：只重写 + 校验 + 打印体积对照，**绝不推送**。
+#   - 重写前的全部分支/tag 打成 git bundle 传成 artifact 当回滚点；仓库内**不留 backup
+#     ref**——同仓的 backup ref 会把旧对象一直钉成可达，gc 收不掉，体积收益直接归零。
+#   - 推送前用 tree 校验断言"重写后 main 的 HEAD 内容与重写前逐字节一致"，不一致就退出。
+#
+# 剪掉的是历史副本，不是当前内容：产物、lives/、stores/、exports/ 的 tag 级历史
+# 保持在口径内（rollback.yml 靠它们回滚），只从历史里剥 deps/state/probe/snapshot/raw/
+# raw-vod/adult_live_channels/radar/.dualcheck 这些每日重写的机器产物副本。
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: "true = 重写后 force-push；false = 只试算并打印体积"
+        required: true
+        type: boolean
+        default: false
+      prune:
+        description: "从全部历史剥离的顶层目录（空格分隔）"
+        required: false
+        type: string
+        default: "deps state probe snapshot raw raw-vod adult_live_channels radar .dualcheck"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: repo-slim
+  cancel-in-progress: false
+
+jobs:
+  slim:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0              # 全历史——瘦身的意义就在历史上
+          persist-credentials: true
+
+      - name: 抓齐所有分支和 tag，把 remote-tracking 转成本地分支
+        run: |
+          set -e
+          git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+          git fetch --force origin "+refs/heads/*:refs/remotes/origin/*" --tags
+          n=0
+          for r in $(git for-each-ref --format='%(refname)' refs/remotes/origin); do
+            b="${r#refs/remotes/origin/}"
+            [ "$b" = "HEAD" ] && continue
+            git branch -f "$b" "$r" && n=$((n+1))
+          done
+          echo "本地分支 $n 个 / tag $(git tag -l | wc -l) 个" | tee -a "$GITHUB_STEP_SUMMARY"
+          git tag -l | sed 's/^/  tag: /'
+
+      - name: 装 git-filter-repo
+        run: |
+          python3 -m pip install --quiet git-filter-repo
+          git filter-repo --version
+
+      - name: 重写前体积
+        run: |
+          git count-objects -vH | tee /tmp/before.txt
+          du -sm .git/objects | tee -a /tmp/before.txt
+
+      - name: 打全量 bundle 当回滚点（只进 artifact，不进仓库 ref）
+        run: |
+          set -e
+          git bundle create /tmp/pre-slim.bundle --branches --tags
+          git bundle verify /tmp/pre-slim.bundle || true
+          ls -la /tmp/pre-slim.bundle
+
+      - name: 上传回滚 bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: pre-slim-bundle-${{ github.run_id }}
+          path: /tmp/pre-slim.bundle
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: filter-repo 剥离历史
+        env:
+          PRUNE: ${{ inputs.prune }}
+        run: |
+          set -e
+          ARGS=""
+          for p in $PRUNE; do ARGS="$ARGS --path $p"; done
+          echo "git filter-repo --invert-paths --force $ARGS"
+          git filter-repo --invert-paths --force $ARGS
+
+      - name: 从 bundle 放回重写前的 HEAD 内容
+        env:
+          PRUNE: ${{ inputs.prune }}
+        run: |
+          set -e
+          git fetch -q /tmp/pre-slim.bundle main:pre-slim
+          # 只把 pre-slim 的路径取进当前索引和工作树，绝不切分支——
+          # 切走再切回来会把刚恢复的内容当成"分支间差异"丢掉
+          for p in $PRUNE; do
+            if git rev-parse --verify -q "pre-slim:$p" >/dev/null; then
+              git checkout pre-slim -- "$p"
+            else
+              echo "  （pre-slim 里没有 $p，跳过）"
+            fi
+          done
+          git add -A
+          msg="chore(slim): 放回重写前的 HEAD 内容（历史副本已剥离）"
+          msg="$msg"$'\n\n'
+          msg="$msg"'filter-repo 把 prune 目录从全部历史剥掉时，重写后的 tip 也一起没了这些文件；'
+          msg="$msg"$'\n'
+          msg="$msg"'这一步把重写前 main 的当前内容原样放回，所以产物与剥离前逐字节一致——'
+          msg="$msg"$'\n'
+          msg="$msg"'下一步的 tree 校验就是对这个断言的机器验证。'
+          git commit -q -m "$msg"
+
+      - name: 校验 HEAD 树与重写前完全一致
+        run: |
+          set -e
+          a=$(git rev-parse 'pre-slim^{tree}')
+          b=$(git rev-parse 'HEAD^{tree}')
+          echo "pre-slim tree=$a"
+          echo "slimmed  tree=$b"
+          if [ "$a" != "$b" ]; then
+            echo "::error::重写后 HEAD 树与重写前不一致，拒绝推送"
+            git diff --stat pre-slim HEAD | tail -30
+            exit 1
+          fi
+          echo "OK: HEAD 内容零变化，只剪了历史"
+
+      - name: 删除临时 pre-slim 分支（留着会把旧对象钉住）
+        run: |
+          set -e
+          git branch -D pre-slim
+          git for-each-ref --format='%(refname)' refs/heads | sed 's/^/  保留分支: /'
+
+      - name: 重写后体积
+        run: |
+          git reflog expire --expire=now --all || true
+          git gc --prune=now -q || true
+          git count-objects -vH | tee /tmp/after.txt
+          du -sm .git/objects | tee -a /tmp/after.txt
+          {
+            echo "### 体积对照（objects）"
+            echo '```'
+            echo "--- before ---"; cat /tmp/before.txt
+            echo "--- after  ---"; cat /tmp/after.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: 产物里 ./deps 引用完整性冒烟（只报告，不门禁）
+        run: |
+          python3 - <<'PY'
+          import os, re
+          DEP = re.compile(r"\.?/?deps/[^\s\"'<>\\),;]+")
+          products = ("tvbox.json", "vod.json", "live.json", "short.json",
+                      "status.json", "adult.json", "adult_live.json")
+          miss, total = [], 0
+          for f in products:
+              if not os.path.isfile(f):
+                  continue
+              txt = open(f, encoding="utf-8", errors="replace").read()
+              for m in DEP.finditer(txt):
+                  total += 1
+                  rel = m.group(0).lstrip("./")
+                  if not os.path.isfile(rel):
+                      miss.append((f, rel))
+          print(f"deps 引用 {total} 条，缺失 {len(miss)} 条")
+          for f, rel in miss[:10]:
+              print("  ", f, rel)
+          print("（缺失条数是既有口径里的坏引用，由 P0-1 剥离逻辑处理，不在本工作流门禁）")
+          PY
+
+      - name: force-push（仅 apply=true）
+        if: ${{ inputs.apply }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -e
+          git remote remove origin 2>/dev/null || true
+          git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
+          # 分支全量强推 + tag 全量重打；不用 --mirror，避免误删远端独有 ref
+          git push --force origin --all
+          git push --force --tags origin
+          echo "已 force-push。GitHub 上报的仓库体积要等后台 gc 才会下降，不会当场变化。" | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: 试算提示（apply=false）
+        if: ${{ !inputs.apply }}
+        run: |
+          echo "试算完成：见上面的体积对照与 tree 一致性校验。确认后用 apply=true 重跑。" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
