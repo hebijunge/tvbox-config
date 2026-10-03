@@ -1915,6 +1915,18 @@ DEPS_TARBALL_REPOS_PER_ROUND = int(os.environ.get("DEPS_TARBALL_REPOS_PER_ROUND"
 DEPS_TARBALL_BUDGET_SEC = float(os.environ.get("DEPS_TARBALL_BUDGET_SEC", "300"))
 
 
+def pick_refresh_local(key: str, m_local: str, lp_map: dict) -> str:
+    """SKIP_REFRESH 命中 manifest-cache 时的落库路径。
+
+    优先 `resolve_dep_paths` 消解后的名字（`lp_map[key]`）；无消解结果再退回
+    manifest 里登记的 `m_local`。历史 bug（2026-10-03 PR#39/#40 CI 复现）：
+    PR#35 迁移前 manifest 里留着 IPTV.m3u / iptv.m3u 这类未消解的旧名；
+    若直接 hit 就绕过了 `resolve_dep_paths`，Windows 上 `os.path.exists` 又
+    大小写不敏感 → 冲突组被再次 add 进产物、`windows-path-check` job FAIL。
+    """
+    return lp_map.get(key) or m_local
+
+
 def _safe_rel_path(path: str) -> bool:
     """仓库内相对路径白名单：空、绝对、含 `..` 或 NUL 的一律拒。
 
@@ -2789,8 +2801,9 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
         key = f"{e[2]}|{e[1]}"
         if key not in ok_map and SKIP_REFRESH and key in manifest:
             m = manifest[key]
-            if os.path.exists(m["local"]):
-                ok_map[key] = {"key": key, "url": e[1], "origin": e[2], "local": m["local"],
+            resolved_local = pick_refresh_local(key, m["local"], _lp_map)
+            if os.path.exists(resolved_local):
+                ok_map[key] = {"key": key, "url": e[1], "origin": e[2], "local": resolved_local,
                                "ok": True, "kind": m["kind"], "md5": m["md5"],
                                "size": m.get("size", 0), "err": "", "channel": "manifest-cache"}
 
