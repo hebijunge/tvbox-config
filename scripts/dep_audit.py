@@ -30,6 +30,11 @@ import sys
 from collections import defaultdict
 from datetime import datetime
 
+_HERE = os.path.dirname(os.path.abspath(__file__))
+if _HERE not in sys.path:
+    sys.path.insert(0, _HERE)
+import dep_refs  # noqa: E402
+
 DEP_RE = re.compile(r"\.?/?deps/[^\s\"'<>\\),;]+")
 
 
@@ -129,18 +134,11 @@ def main() -> int:
     dup_bytes = sum(sum(s for _, s in v) - v[0][1] for v in dup_groups.values())
     print(f"[audit] 内容重复：{len(dup_groups)} 组，去重可省 {dup_bytes/1024/1024:.1f} MB")
 
-    # 3) 引用分析
-    refs = set()
-    base_path = os.path.join(repo, args.base)
-    if os.path.isfile(base_path):
-        txt = open(base_path, encoding="utf-8", errors="replace").read()
-        for m in DEP_RE.finditer(txt):
-            # 必须用 posixpath：os.path.normpath 在 Windows 会转出反斜杠，
-            # 与磁盘上的正斜杠相对路径永远匹配不上（曾导致「100% 未引用」的假结果——
-            # 照它清理会把全部依赖删光）。
-            ref = posixpath.normpath(m.group(0).lstrip("./").replace("\\", "/"))
-            refs.add(ref)
-    print(f"[audit] 产物中引用到的 deps 路径：{len(refs)} 条")
+    # 3) 引用分析（口径与 dep_gc / cleanup_deps 严格一致，见 scripts/dep_refs.py）
+    refs_product, refs_manifest = dep_refs.split_refs(repo, args.deps)
+    refs = refs_product | refs_manifest
+    print(f"[audit] 引用 deps 路径：产物 {len(refs_product)} 条 ∪ manifest {len(refs_manifest)} 条 "
+          f"= {len(refs)} 条")
 
     # P2-1：未引用文件 + 7 天保留期（mtime < 7 天的新文件不进清理候选，避免误删刚拉的）
     import time as _time
@@ -171,6 +169,9 @@ def main() -> int:
         "duplicate_savable_bytes": dup_bytes,
         "unreferenced_count": len(unreferenced),
         "unreferenced_bytes": un_bytes,
+        "refs_product": len(refs_product),
+        "refs_manifest": len(refs_manifest),
+        "refs_total": len(refs),
         "jar_suffix_mismatch": jar_findings[:args.max_list],
         "jar_suffix_mismatch_count": len(jar_findings),
         "jar_suffix_rewrite_suggestions": jar_rewrites[:args.max_list],
