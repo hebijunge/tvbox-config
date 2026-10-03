@@ -72,11 +72,12 @@ def recently_touched_deps(min_age_days, repo="."):
     return {ln.strip().replace("\\", "/") for ln in out.splitlines() if ln.strip()}
 
 
-def build_candidates(repo=".", min_age_days=30):
+def build_candidates(repo=".", min_age_days=30, only_dir=None):
     """返回 {paths: [...], bytes: int, by_dir: {top-dir: {count, bytes}}}。
 
     引用口径由 dep_refs 唯一提供；recently_touched 用 git log 拿，绕开 mtime
-    在 CI/多 worktree 下的漂移。
+    在 CI/多 worktree 下的漂移。only_dir 若非空则按前缀过滤（分批推进用：
+    先 `deps/external/` → `deps/localized/` → `deps/auto/`）。
     """
     refs = dep_refs.collect_all_refs(repo)
     # 账本 / 备份文件本身既不会被引用、也绝不能从 HEAD 移除（否则 dep_refs 下轮没账本可读）
@@ -84,7 +85,8 @@ def build_candidates(repo=".", min_age_days=30):
     tracked = tracked_deps(repo)
     touched = recently_touched_deps(min_age_days, repo)
     cand_paths = sorted(p for p in tracked
-                        if p not in refs and p not in touched and p not in keep)
+                        if p not in refs and p not in touched and p not in keep
+                        and (only_dir is None or p.startswith(only_dir)))
     by_dir = defaultdict(lambda: {"count": 0, "bytes": 0})
     total_bytes = 0
     sizes = {}
@@ -118,6 +120,8 @@ def main() -> int:
     ap.add_argument("--repo", default=".")
     ap.add_argument("--min-age-days", type=int, default=30,
                     help="git log 里最近 N 天出现过的 deps 视为活跃，不参与候选")
+    ap.add_argument("--only-dir", default=None,
+                    help="限定前缀（如 deps/external/），配合分批推进；默认全扫")
     ap.add_argument("--out", default="state/head_slim_candidates.json")
     ap.add_argument("--top", type=int, default=20, help="TOP N 大文件写进摘要")
     ap.add_argument("--execute", action="store_true",
@@ -125,10 +129,12 @@ def main() -> int:
     args = ap.parse_args()
 
     repo = os.path.abspath(args.repo)
-    cand = build_candidates(repo=repo, min_age_days=args.min_age_days)
+    cand = build_candidates(repo=repo, min_age_days=args.min_age_days,
+                             only_dir=args.only_dir)
+    scope = f" (only_dir={args.only_dir})" if args.only_dir else ""
     print(f"[head_slim] deps 跟踪 {cand['tracked_total']} 条，"
           f"引用 {cand['refs_total']} 条，"
-          f"最近 {args.min_age_days} 天有改动 {cand['recently_touched']} 条")
+          f"最近 {args.min_age_days} 天有改动 {cand['recently_touched']} 条{scope}")
     print(f"[head_slim] 候选：{len(cand['paths'])} 个 / {cand['bytes']/1024/1024:.1f} MB")
     print("[head_slim] 按目录分桶（前 10）：")
     for top, meta in sorted(cand["by_dir"].items(),
