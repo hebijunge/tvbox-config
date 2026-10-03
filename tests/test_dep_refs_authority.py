@@ -75,11 +75,51 @@ class TestDepRefsAuthority(unittest.TestCase):
         tmp = tempfile.mkdtemp(prefix="dep-refs-union-")
         self.addCleanup(shutil.rmtree, tmp, True)
         _make_repo(tmp)
-        prod, mf = dep_refs.split_refs(tmp)
+        prod, mf, consumer = dep_refs.split_refs(tmp)
         union = dep_refs.collect_all_refs(tmp)
-        self.assertEqual(union, prod | mf)
+        self.assertEqual(union, prod | mf | consumer)
         self.assertTrue({"deps/a.js", "deps/d.js"} <= prod)
         self.assertEqual(mf, {"deps/b.js"})
+
+    def test_consumer_files_outside_product_list_are_scanned(self):
+        """exports/ 与成人直播列表里的 deps 引用也要进权威口径。
+
+        2026-10-04 实测：HEAD 上除 7 主产物/stores/manifest 外还有 37 个文件提到
+        deps 路径，其中 exports/all.json 582 处、usable.json 344 处、spider.json
+        166 处、adult_live_channels/adult.m3u 36 处是**下游真拿去取文件**的引用；
+        旧口径看不见它们，照旧口径清理会把活 jar 判成孤儿删掉。
+        """
+        tmp = tempfile.mkdtemp(prefix="dep-refs-consumer-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        _write(os.path.join(tmp, "tvbox.json"), json.dumps({"sites": []}))
+        _write(os.path.join(tmp, "deps", "manifest.json"), json.dumps({}))
+        _write(os.path.join(tmp, "exports", "usable.json"),
+               json.dumps({"spider": "./deps/only_in_exports.jar"}, ensure_ascii=False))
+        _write(os.path.join(tmp, "adult_live_channels", "adult.m3u"),
+               "#EXTM3U\n./deps/only_in_adultm3u.jar\n")
+        _write(os.path.join(tmp, "config", "upstreams.json"),
+               json.dumps({"upstreams": [{"url": "./deps/only_in_config.txt"}]}))
+        # 台账类不算消费者：state/deps_broken_refs.json 记的就是坏引用
+        _write(os.path.join(tmp, "state", "deps_broken_refs.json"),
+               json.dumps([{"file": "tvbox.json", "ref": "deps/mentioned_in_ledger.js"}]))
+        for name in ("only_in_exports.jar", "only_in_adultm3u.jar",
+                     "only_in_config.txt", "mentioned_in_ledger.js"):
+            _write(os.path.join(tmp, "deps", name), "x" * 64)
+
+        refs = dep_refs.collect_all_refs(tmp)
+        self.assertIn("deps/only_in_exports.jar", refs)
+        self.assertIn("deps/only_in_adultm3u.jar", refs)
+        self.assertIn("deps/only_in_config.txt", refs)
+        self.assertNotIn("deps/mentioned_in_ledger.js", refs,
+                        "台账里出现的坏引用不能反过来保护文件")
+
+    def test_consumer_refs_ignore_missing_files(self):
+        """消费者引用了一个磁盘上不存在的路径 → 不进 refs（同 manifest 口径）。"""
+        tmp = tempfile.mkdtemp(prefix="dep-refs-consumer-ghost-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        _write(os.path.join(tmp, "exports", "all.json"),
+               json.dumps({"spider": "./deps/gone.jar"}))
+        self.assertEqual(dep_refs.collect_consumer_refs(tmp), set())
 
     def test_manifest_ghost_records_excluded_from_refs(self):
         """账本登记但磁盘上文件不存在 → 不算引用。
@@ -100,7 +140,7 @@ class TestDepRefsAuthority(unittest.TestCase):
         self.assertEqual(mf, {"deps/live.js"},
                         "ghost.js 不在磁盘上、不能进 refs")
         # split_refs 也要一致（dep_audit 报告分桶用）
-        prod, mf2 = dep_refs.split_refs(tmp)
+        prod, mf2, _consumer = dep_refs.split_refs(tmp)
         self.assertEqual(mf2, mf)
 
 

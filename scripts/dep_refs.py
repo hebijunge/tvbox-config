@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""deps 引用口径的**唯一权威**：产物显式引用 ∪ deps/manifest.json 账本登记。
+"""deps 引用口径的**唯一权威**：产物显式引用 ∪ deps/manifest.json 账本登记 ∪ 其余消费者文件引用。
 
 为什么要有这个模块
 ------------------
@@ -48,6 +48,27 @@ PRODUCT_FILES = (
 STORES_DIR = "stores"
 STORES_SUFFIX = ".json"
 
+# 7 主产物之外还会写 `./deps/...` 路径的**消费者**文件。2026-10-04 全仓实测：
+# HEAD 索引里除 deps/scripts/tests/docs 外有 37 个文件提到 deps 路径，其中真正
+# "下游拿去取文件"的只有这几类——`exports/*.json` 是对外导出包（all.json 582 处、
+# usable.json 344 处、spider.json 166 处引用），`adult_live_channels/*` 是成人
+# 直播列表（adult.m3u 36 处本地路径），`config/upstreams.json` / `list.json` /
+# `candidate_upstreams.json` 是入库上游清单（本地路径即抓取输入）。
+# 它们原来不在口径里：照旧口径清理会把**真被引用**的 dep 判成孤儿删掉。
+CONSUMER_GLOBS = (
+    "exports/*.json",
+    "adult_live_channels/*",
+    "config/upstreams.json",
+    "list.json",
+    "candidate_upstreams.json",
+)
+
+# 反过来，state/ probe/ snapshot/ raw/ 里同样大量出现 deps 路径，但它们是**台账**
+# 不是消费者：`state/deps_broken_refs.json` 记的正是"引用了但文件不存在"的 3918 条
+# 坏引用，`state/deps_redirect.json` 是 2900 条改名映射（老路径→新路径）。把它们
+# 算进引用集会反过来给死文件发放通行证，让 unreferenced 判定大幅虚低。
+NON_CONSUMER_DIRS = ("state", "probe", "snapshot", "raw", "raw-vod", "radar")
+
 DEP_RE = re.compile(r"\.?/?deps/[^\s\"'<>\\),;]+")
 
 # 账本 / 备份文件本身：既不会被产物引用，也不能被 dep_gc / cleanup_deps /
@@ -90,6 +111,32 @@ def collect_product_refs(repo: str) -> set[str]:
     return refs
 
 
+def collect_consumer_refs(repo: str, deps_dir: str = "deps") -> set[str]:
+    """CONSUMER_GLOBS 里提到、且磁盘上确实存在的 dep 路径。
+
+    存在性过滤与 `collect_manifest_refs` 同口径：产物引用一个不存在的路径，那是
+    要剥离的坏引用（P0-1），不该反过来保护什么。
+    """
+    import glob
+
+    refs: set[str] = set()
+    for pattern in CONSUMER_GLOBS:
+        full = os.path.join(repo, *pattern.split("/"))
+        for p in sorted(glob.glob(full)):
+            if not os.path.isfile(p):
+                continue
+            try:
+                with open(p, encoding="utf-8", errors="replace") as f:
+                    txt = f.read()
+            except OSError:
+                continue
+            for m in DEP_RE.finditer(txt):
+                norm = _norm(m.group(0))
+                if os.path.isfile(os.path.join(repo, norm)):
+                    refs.add(norm)
+    return refs
+
+
 def collect_manifest_refs(repo: str, deps_dir: str = "deps") -> set[str]:
     """deps/manifest.json 里 **磁盘上仍存在** 的 local 字段。
 
@@ -126,10 +173,14 @@ def collect_manifest_refs(repo: str, deps_dir: str = "deps") -> set[str]:
 
 
 def collect_all_refs(repo: str, deps_dir: str = "deps") -> set[str]:
-    """权威口径 = 产物显式引用 ∪ manifest 账本登记。"""
-    return collect_product_refs(repo) | collect_manifest_refs(repo, deps_dir)
+    """权威口径 = 产物显式引用 ∪ manifest 账本登记 ∪ 其余消费者文件引用。"""
+    return (collect_product_refs(repo)
+            | collect_manifest_refs(repo, deps_dir)
+            | collect_consumer_refs(repo, deps_dir))
 
 
-def split_refs(repo: str, deps_dir: str = "deps") -> tuple[set[str], set[str]]:
-    """给需要按来源分别统计的调用方（dep_audit 报告里要区分 product/manifest）。"""
-    return collect_product_refs(repo), collect_manifest_refs(repo, deps_dir)
+def split_refs(repo: str, deps_dir: str = "deps") -> tuple[set[str], set[str], set[str]]:
+    """给需要按来源分别统计的调用方（dep_audit 报告里要区分 product/manifest/consumer）。"""
+    return (collect_product_refs(repo),
+            collect_manifest_refs(repo, deps_dir),
+            collect_consumer_refs(repo, deps_dir))
