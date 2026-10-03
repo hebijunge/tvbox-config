@@ -62,8 +62,10 @@ class TestDepRefsAuthority(unittest.TestCase):
 
     def test_manifest_local_normalized(self):
         # 账本里存反斜杠路径也要匹配上磁盘 posix 相对路径。
+        # 磁盘上必须有对应文件（collect_manifest_refs 会过滤幽灵记录）。
         tmp = tempfile.mkdtemp(prefix="dep-refs-mf-")
         self.addCleanup(shutil.rmtree, tmp, True)
+        _write(os.path.join(tmp, "deps", "sub", "w.js"), "x")
         _write(os.path.join(tmp, "deps", "manifest.json"),
                json.dumps({"k": {"local": "deps\\sub\\w.js"}}))
         refs = dep_refs.collect_manifest_refs(tmp)
@@ -78,6 +80,28 @@ class TestDepRefsAuthority(unittest.TestCase):
         self.assertEqual(union, prod | mf)
         self.assertTrue({"deps/a.js", "deps/d.js"} <= prod)
         self.assertEqual(mf, {"deps/b.js"})
+
+    def test_manifest_ghost_records_excluded_from_refs(self):
+        """账本登记但磁盘上文件不存在 → 不算引用。
+
+        PR#41 CI 揭示：manifest 9017 unique local 里磁盘匹配只 ~2000，其余 6800
+        是历史幽灵；把幽灵算进 refs 会让 dep_audit 报的 unreferenced 大幅虚低、
+        cleanup 决策的分母是错的。"""
+        tmp = tempfile.mkdtemp(prefix="dep-refs-ghost-")
+        self.addCleanup(shutil.rmtree, tmp, True)
+        _write(os.path.join(tmp, "tvbox.json"),
+               json.dumps({"sites": [{"api": "./deps/live.js"}]}))
+        # 账本两条：live.js 磁盘上在、ghost.js 磁盘上没有
+        _write(os.path.join(tmp, "deps", "live.js"), "x")
+        _write(os.path.join(tmp, "deps", "manifest.json"),
+               json.dumps({"u1": {"url": "u1", "local": "deps/live.js"},
+                           "u2": {"url": "u2", "local": "deps/ghost.js"}}))
+        mf = dep_refs.collect_manifest_refs(tmp)
+        self.assertEqual(mf, {"deps/live.js"},
+                        "ghost.js 不在磁盘上、不能进 refs")
+        # split_refs 也要一致（dep_audit 报告分桶用）
+        prod, mf2 = dep_refs.split_refs(tmp)
+        self.assertEqual(mf2, mf)
 
 
 class TestThreeConsumersAligned(unittest.TestCase):

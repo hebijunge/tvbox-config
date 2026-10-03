@@ -91,8 +91,17 @@ def collect_product_refs(repo: str) -> set[str]:
 
 
 def collect_manifest_refs(repo: str, deps_dir: str = "deps") -> set[str]:
-    """deps/manifest.json 的账本 local 字段。缺账本 / JSON 坏都按空账本继续，
-    不阻塞审计（审计本来就是只报告）。"""
+    """deps/manifest.json 里 **磁盘上仍存在** 的 local 字段。
+
+    缺账本 / JSON 坏都按空账本继续，不阻塞审计（审计本来就是只报告）。
+
+    2026-10-03 PR#41 CI 揭示的口径漏账：manifest 9017 unique local 里磁盘匹配
+    只约 2000，其余 6800 是"URL 拉过 → 登记 → 上游删了/内容改了 → 老 md5 文件被
+    daily checkout 又检出 → 但当前 manifest 里的 local 路径已指向不存在的文件名"
+    的历史幽灵。把它们算成"引用"会让 dep_audit 报的 unreferenced 大幅虚低、
+    cleanup 决策拿到的分母是错的；`dep_gc.py --prune-manifest`（P1-2 已合）
+    负责剪账本自身，这里负责**读取侧**——账本登记 ≠ 文件仍在。
+    """
     mf_path = os.path.join(repo, deps_dir, "manifest.json")
     if not os.path.isfile(mf_path):
         return set()
@@ -108,8 +117,11 @@ def collect_manifest_refs(repo: str, deps_dir: str = "deps") -> set[str]:
         if not isinstance(rec, dict):
             continue
         lp = rec.get("local")
-        if isinstance(lp, str) and lp:
-            refs.add(_norm(lp))
+        if not (isinstance(lp, str) and lp):
+            continue
+        norm = _norm(lp)
+        if os.path.isfile(os.path.join(repo, norm)):
+            refs.add(norm)
     return refs
 
 
