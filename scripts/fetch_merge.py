@@ -2409,6 +2409,24 @@ def prune_unlocalized_jars(tvbox: dict) -> dict:
     return stats
 
 
+def localize_excluded_adult_sites(sites: list) -> dict:
+    """对已被剔出主 tvbox 的成人站点单独补跑一遍本地化 + 安全网。
+
+    历史 bug（2026-10-03 用户报出）：`adult_excluded_sites` 在主链
+    `collect_and_rewrite_deps` / `localize_external_refs` 之前就被摘走（line 5569-
+    5570），成人线 0 处 jar/ext 被本地化——`gitee.com/lwlxh/tvhome/raw/master/o.jar`
+    已在 `deps/localized/858cb4948d-o.jar` 落库、manifest 双登记（`localized|...`
+    和 `feishu-sync|...`），但站点字段仍是 abs URL。修复只需把已落库的路径回写
+    到 `sites[].jar`，不引入新下载（manifest-cache 会 hit）。
+    """
+    if not sites:
+        return {"skipped": True}
+    wrap = {"sites": sites}
+    stats = localize_external_refs(wrap)
+    prune_stats = prune_unlocalized_jars(wrap)
+    return {**stats, "pruned_unlocalized": prune_stats.get("pruned", 0)}
+
+
 def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict):
     """收集 tvbox 配置中的 jar/js/json 依赖到 deps/ 并把引用改写为仓库相对路径。
     site_origin: key -> origin 名；spider_origin: (origin 名, base url)
@@ -5737,6 +5755,11 @@ def main() -> int:
     loc_stats = localize_external_refs(tvbox)
     # 安全网：没能落库的 per-site jar 撤掉，避免留下客户端解析不了的相对路径
     prune_unlocalized_jars(tvbox)
+    # 2026-10-03 修复：成人专供线剔除发生在本地化之前（line 5569-5570），
+    # 若不给 `adult_excluded_sites` 补跑一遍，adult.json 里 jar/ext 全是原始远端
+    # URL——用户报出 `gitee.com/lwlxh/tvhome/raw/master/o.jar` 已在 deps/localized/
+    # 落库但站点字段未改写；主链 vod.sites 里 0 处、成人线 23 处。
+    localize_excluded_adult_sites(adult_excluded_sites)
     # 按「分类 → 搜索可用性 → 实测速度」重排站点（实现见 scripts/rank_sites.py）
     rank_stats = apply_rank(tvbox)
     # 任务8：产物版本号（YYYY-MM-DD-bN，同日多次构建自增）与北京时间更新时间。
