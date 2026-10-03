@@ -114,6 +114,22 @@ class TestHeadSlim(unittest.TestCase):
         self.assertEqual(cand["paths"], [],
                          "adult.json 里引用的 dep 不能进候选")
 
+    def test_only_dir_scopes_candidates(self):
+        # 分批推进用：--only-dir 应把结果限制到指定前缀，其他目录同类候选被排除。
+        self._init_repo()
+        _write(os.path.join(self.tmp, "deps", "external", "x.txt"), "x")
+        _write(os.path.join(self.tmp, "deps", "jar", "y.jar"), "y")
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "add more")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+        cand_ext = head_slim_deps.build_candidates(
+            self.tmp, min_age_days=30, only_dir="deps/external/")
+        self.assertEqual(cand_ext["paths"], ["deps/external/x.txt"])
+        cand_all = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertIn("deps/external/x.txt", cand_all["paths"])
+        self.assertIn("deps/jar/y.jar", cand_all["paths"])
+        self.assertIn("deps/old_orphan.js", cand_all["paths"])
+
 
 if __name__ == "__main__":
     unittest.main()
