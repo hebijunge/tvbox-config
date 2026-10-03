@@ -135,10 +135,10 @@ def main() -> int:
     print(f"[audit] 内容重复：{len(dup_groups)} 组，去重可省 {dup_bytes/1024/1024:.1f} MB")
 
     # 3) 引用分析（口径与 dep_gc / cleanup_deps 严格一致，见 scripts/dep_refs.py）
-    refs_product, refs_manifest = dep_refs.split_refs(repo, args.deps)
-    refs = refs_product | refs_manifest
+    refs_product, refs_manifest, refs_consumer = dep_refs.split_refs(repo, args.deps)
+    refs = refs_product | refs_manifest | refs_consumer
     print(f"[audit] 引用 deps 路径：产物 {len(refs_product)} 条 ∪ manifest {len(refs_manifest)} 条 "
-          f"= {len(refs)} 条")
+          f"∪ 消费者 {len(refs_consumer)} 条 = {len(refs)} 条")
 
     # P2-1：未引用文件 + 7 天保留期（mtime < 7 天的新文件不进清理候选，避免误删刚拉的）
     import time as _time
@@ -171,6 +171,7 @@ def main() -> int:
         "unreferenced_bytes": un_bytes,
         "refs_product": len(refs_product),
         "refs_manifest": len(refs_manifest),
+        "refs_consumer": len(refs_consumer),
         "refs_total": len(refs),
         "jar_suffix_mismatch": jar_findings[:args.max_list],
         "jar_suffix_mismatch_count": len(jar_findings),

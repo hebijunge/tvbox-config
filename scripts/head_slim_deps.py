@@ -19,7 +19,8 @@ manifest 里再登记 —— 但它仍然被 git 跟踪在 HEAD 里，CI 每次 
 安全模型（宁可不移，不可移错）
 --------------------------------
   1. 引用口径 = `dep_refs.collect_all_refs` = 7 主产物 + stores/*.json +
-     `deps/manifest.json` 账本，与 dep_audit / dep_gc / cleanup_deps 严格一致；
+     `deps/manifest.json` 账本 + exports/adult_live_channels/config 等消费者文件，
+     与 dep_audit / dep_gc / cleanup_deps 严格一致；
   2. 只挑"最近 `--min-age-days`（默认 30）天**未在 git log 里出现过**"的文件——
      这条把 fetch_merge 每天在改的活跃 dep 排除掉，也顺手排除了"上周刚剥离引用
      但按 7/14 天保留期还未到期"的一族；
