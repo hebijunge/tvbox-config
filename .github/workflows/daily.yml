@@ -147,10 +147,17 @@ jobs:
         run: python scripts/dep_repair.py --workers 8 || true
 
       - name: 依赖账本瘦身（manifest 孤儿记录剪除）
-        # 环④ P1：dep_repair 之后，ref_count=0 且本地文件缺失、闲置>=3天的记录
-        # 已无任何消费方（死域退避另有 state/dep_fail_backoff.json），不清会无界膨胀。
+        # 环④ P1：dep_repair 之后，ref_count=0 且本地文件缺失的记录已无任何消费方
+        # （死域退避另有 state/dep_fail_backoff.json），不清会无界膨胀。
+        # 2026-10-03 修：`--min-idle-days 0` — 原来默认 3 天的门槛拦住了所有剪除，
+        # 因为 fetch_merge 每次都会重写 rec 的 `updated_at`（`manifest[key] = {...,
+        # "updated_at": now, ...}`），idle_days 恒 <3；账本累积到 9000+ 剪不动。
+        # 剪的判据 = ref_count=0 ∧ 磁盘文件已不存在 ∧ updated_at[:10] 能解析；
+        # `--min-idle-days 0` 只撤掉时间门槛，"文件不存在"这条硬 AND 才是真判据。
+        # 时序安全：dep_repair 完整性闸门（step 141）已经跑完，manifest 是当前
+        # 状态；此时"文件不在磁盘上"就是真死、不是 fetch_merge 中间的瞬态。
         continue-on-error: true
-        run: python scripts/dep_gc.py --prune-manifest --apply || true
+        run: python scripts/dep_gc.py --prune-manifest --apply --min-idle-days 0 || true
 
       - name: 入库（接口 / 检测历史 / 依赖关系 / 直播源级验活）
         # DB 不入库（二进制会让仓库膨胀），健康快照以 exports/health_index.json 文本留档：
