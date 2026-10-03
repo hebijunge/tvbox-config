@@ -1,0 +1,253 @@
+{
+  "spider": "https://cdn.jsdelivr.net/npm/wkc0001-tvbox-independent@0.5.1/cfg.jpg;md5;342d65cfd61e754855528357bfa627f4",
+  "hosts": [],
+  "logo": "",
+  "rules": [
+    {
+      "name": "cdn.ryplay",
+      "hosts": [
+        "cdn.ryplay"
+      ],
+      "regex": [
+        "5.480000",
+        "#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:5.480000,[\\s\\S]*?#EXT-X-DISCONTINUITY",
+        "#EXT-X-DISCONTINUITY\\s*\\r?\\n#EXTINF:5.320000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n(?:#EXTINF:[\\d.]+,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n)*?#EXTINF:3.360000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n#EXT-X-DISCONTINUITY",
+        "#EXT-X-DISCONTINUITY\\s*\\r?\\n#EXTINF:4.000000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n(?:#EXTINF:[\\d.]+,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n)*?#EXTINF:0.560000,\\s*\\r?\\n.+\\.ts\\s*\\r?\\n#EXT-X-DISCONTINUITY",
+        "#EXTINF.*?\\s+.*?1o.*?\\.ts\\s+"
+      ]
+    }
+  ],
+  "sites": [
+    {
+      "key": "点我切源",
+      "name": "WKC┃片单",
+      "type": 3,
+      "api": "csp_WkcHome",
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "ext": {
+        "providers": [
+          {
+            "id": "cms_bfzyapicom",
+            "api": "https://bfzyapi.com/api.php/provide/vod/",
+            "media_hosts": [
+              "bfeng10.com",
+              "bfeng11.com",
+              "c1.ddbbffcdn.com",
+              "c1.rrcdnbf2.com",
+              "c1.rrcdnbf3.com",
+              "c1.rrcdnbf4.com",
+              "c1.rrcdnbf5.com",
+              "c1.rrcdnbf6.com",
+              "fengbao12.com",
+              "fengbao13.com",
+              "p.bvvvvvvvvv1f.com",
+              "v.baofeng9.com",
+              "v.fengbao8.com"
+            ],
+            "reviewed_at": 1791050803,
+            "policy": "normal-film-v1"
+          },
+          {
+            "id": "cms_cjffzyapicom",
+            "api": "https://cj.ffzyapi.com/api.php/provide/vod/",
+            "media_hosts": [
+              "super.ffzy-online6.com",
+              "svip.feifei-play.com",
+              "vip.ffzy-online1.com",
+              "vip.ffzy-online3.com",
+              "vip.ffzy-online5.com",
+              "vip.ffzy-play10.com",
+              "vip.ffzy-play5.com",
+              "vip.ffzy-play6.com",
+              "vip.ffzy-play7.com",
+              "vip.ffzy-play9.com",
+              "vip.ffzy-plays.com",
+              "vod.feifei-kan.com",
+              "vod.ffzy-bofang.com"
+            ],
+            "reviewed_at": 1791050805,
+            "policy": "normal-film-v1"
+          },
+          {
+            "id": "cms_caijidyttzyapicom",
+            "api": "https://caiji.dyttzyapi.com/api.php/provide/vod/",
+            "media_hosts": [
+              "play.phimgood.com",
+              "vip.dytt-cine.com",
+              "vip.dytt-cinema.com",
+              "vip.dytt-hot.com",
+              "vip.dytt-kan.com",
+              "vip.dytt-luck.com",
+              "vip.dytt-network.com",
+              "vip.dytt-see.com",
+              "vip.dytt-tv.com",
+              "vip.dytt-tvs.com"
+            ],
+            "reviewed_at": 1791050811,
+            "policy": "normal-film-v1"
+          }
+        ]
+      }
+    },
+    {
+      "key": "文采",
+      "name": "💮文采┃秒播",
+      "timeout": 30,
+      "playerType": 2,
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcNative",
+      "ext": {
+        "id": "文采",
+        "adapter": "JpysGuard",
+        "original_ext": ""
+      }
+    },
+    {
+      "key": "奶酪",
+      "name": "🧀奶酪┃秒播",
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcNative",
+      "ext": {
+        "id": "奶酪",
+        "adapter": "T4Guard",
+        "original_ext": "rfOIzPkSUkANv6AT2prC8en3+TzKx9TnlT8vaY37HhtYfAQe6C5xqrVuJPhQwYV6r3eRdMBGm3Qm6Th+BushR86B6KqJGXDsHazHw7alBG/7zUxkN1tK/NypRxnpBNoeUtpw4jcCGhytI75yO4g4zG6SOPA0RSwhksM0IF2friAkrHCWoW3v+0mdw6sjz4t4XB1Df7yL/R5cfaA/5LQYq3I8OkvMrJMU9Q1P7JXwx7NSF2zTyH/ANVmZ4u5m567DW1KVG7OuQjXPjZiOXTYk0+wjpfBRTf19yIq6q/C76k2Fs80joAMPw0ueDR+QHxtuDcTom2rmHkI1Fonkzi6BotbpUcbSi4PiIgmfdbvVwhG6Z+i4nvt+IYa48l5aLA7PLgDiERpuOs31aHaXlgFswT87XyTb8QaF4CuzKWJuXptwNTjvXAS9KHdxH49Ay+hfBAB2bCvUf4CMoldF2wZUv0mI2qY966erFpOFg+FOc7t88EUH8j8ACXQtHJiKC9RQ+SaLIF0="
+      },
+      "timeout": 30
+    },
+    {
+      "key": "视界",
+      "name": "🌸茉莉┃多线",
+      "timeout": 30,
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcNative",
+      "ext": {
+        "id": "视界",
+        "adapter": "App99Guard",
+        "original_ext": "rfOX1voDIQhH8epBwtCFsuby/mmdmIu8kGlnJc+7VkMRLQ1K+jMy+KN1MKQe0MZ6tmGSO5oFzD8/vWwiSqEpFczDqLrdGT3iH6fZmryrFzKijwYkJUMctdztE0O4CsgYZdBu8XhZSwuhSqqllQz4AZMa1l0sT+1NrbhNIxHkrY0upiYSTLNqEaledgZikMCviOXWr3cPBP4COOeoGUyJSJrrybmUppnWGeDAOHhHOVUSXjwSb+QQvcJIT2lmrf1Bk68myGs7qOqc19tD/rnzf2WOb2MzJZqtURBmUFgaW6ea2dL8OPSpSeVAvaGCAnqwuUNGE9hHpK8jfOs0bLJRdkFLnijAn5Q+ofVM5hgGb8c="
+      }
+    },
+    {
+      "key": "剧圈",
+      "name": "🐻剧圈┃多线",
+      "timeout": 30,
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcNative",
+      "ext": {
+        "id": "剧圈",
+        "adapter": "AppSxGuard",
+        "original_ext": "rfOX1voDIQhH8epBwpmIsuSluiuZl4+/lm1iJsy3HwNWMxpf9CY77fshI+kByoxy7DyPatUZ1jk0ty1p"
+      }
+    },
+    {
+      "name": "暴風 | 采集",
+      "key": "cms_bfzyapicom",
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcCms",
+      "ext": {
+        "id": "cms_bfzyapicom",
+        "api": "https://bfzyapi.com/api.php/provide/vod/",
+        "media_hosts": [
+          "bfeng10.com",
+          "bfeng11.com",
+          "c1.ddbbffcdn.com",
+          "c1.rrcdnbf2.com",
+          "c1.rrcdnbf3.com",
+          "c1.rrcdnbf4.com",
+          "c1.rrcdnbf5.com",
+          "c1.rrcdnbf6.com",
+          "fengbao12.com",
+          "fengbao13.com",
+          "p.bvvvvvvvvv1f.com",
+          "v.baofeng9.com",
+          "v.fengbao8.com"
+        ],
+        "reviewed_at": 1791050803,
+        "policy": "normal-film-v1"
+      }
+    },
+    {
+      "name": "非凡 | 采集",
+      "key": "cms_cjffzyapicom",
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcCms",
+      "ext": {
+        "id": "cms_cjffzyapicom",
+        "api": "https://cj.ffzyapi.com/api.php/provide/vod/",
+        "media_hosts": [
+          "super.ffzy-online6.com",
+          "svip.feifei-play.com",
+          "vip.ffzy-online1.com",
+          "vip.ffzy-online3.com",
+          "vip.ffzy-online5.com",
+          "vip.ffzy-play10.com",
+          "vip.ffzy-play5.com",
+          "vip.ffzy-play6.com",
+          "vip.ffzy-play7.com",
+          "vip.ffzy-play9.com",
+          "vip.ffzy-plays.com",
+          "vod.feifei-kan.com",
+          "vod.ffzy-bofang.com"
+        ],
+        "reviewed_at": 1791050805,
+        "policy": "normal-film-v1"
+      }
+    },
+    {
+      "name": "天堂 | 采集",
+      "key": "cms_caijidyttzyapicom",
+      "searchable": 1,
+      "quickSearch": 1,
+      "changeable": 1,
+      "type": 3,
+      "api": "csp_WkcCms",
+      "ext": {
+        "id": "cms_caijidyttzyapicom",
+        "api": "https://caiji.dyttzyapi.com/api.php/provide/vod/",
+        "media_hosts": [
+          "play.phimgood.com",
+          "vip.dytt-cine.com",
+          "vip.dytt-cinema.com",
+          "vip.dytt-hot.com",
+          "vip.dytt-kan.com",
+          "vip.dytt-luck.com",
+          "vip.dytt-network.com",
+          "vip.dytt-see.com",
+          "vip.dytt-tv.com",
+          "vip.dytt-tvs.com"
+        ],
+        "reviewed_at": 1791050811,
+        "policy": "normal-film-v1"
+      }
+    }
+  ],
+  "lives": [
+    {
+      "name": "WKC电视直播",
+      "type": 0,
+      "url": "https://cdn.jsdelivr.net/npm/wkc0001-tvbox-independent@0.5.1/live.m3u",
+      "epg": "http://epg.51zmt.top:8000/api/diyp/?ch={id}&date={date}",
+      "playerType": 2,
+      "timeout": 15
+    }
+  ]
+}
