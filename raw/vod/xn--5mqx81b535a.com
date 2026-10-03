@@ -1,5 +1,6 @@
 {
   "spider": "http://47.120.41.246:8025/vip/jar/lubin.php",
+    "wallpaper": "https://动态壁纸.饭.eu.org/",
   "lives": [
     {
       "name": "平台直播",
