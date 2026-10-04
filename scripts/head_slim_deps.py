@@ -122,9 +122,49 @@ def build_candidates(repo=".", min_age_days=30, only_dir=None):
     touched = recently_touched_deps(min_age_days, repo)
     casefold_protected = [p for p in tracked
                           if p not in refs and p not in keep and p.lower() in folded]
+
+    # 运行时拼接保护：dep_refs 只认产物文本里的 ./deps 直引，而站点 js 是按**自己的
+    # URL 相对路径**去加载 `./lib/xxx.js`、`./open/xxx.js` 这些兄弟文件的——这类路径里
+    # 没有 "deps/" 字样，静态扫描天生看不见。2026-10-04 实测：无任何运行时保护时候选
+    # 11386 个 / 可回收 261.2MB；加上本保护后删 8966 个 / 可回收 254.4MB——被保的 2420
+    # 个绝大多数是小 js，且内容与活文件共享 blob，所以只花 6.8MB 就换来"好站不会在
+    # 运行时报缺库、探针再把它们判死"。
+    live = {p for p in tracked if p in refs or p in keep or p.lower() in folded}
+    live_dirs = set()
+    reach = set()
+    for p in live:
+        if not p.endswith((".js", ".py")):
+            continue
+        d = os.path.dirname(p)
+        live_dirs.add(d)
+        # 站点 js 的相对加载只会落在这几类位置：它自己的目录及其子树（./x.js、
+        # ./open/x.js），以及沿路某级的 lib / libs 子目录（./lib/x.js、../lib/x.js）。
+        parts = d.split("/")
+        for i in range(1, len(parts) + 1):
+            prefix = "/".join(parts[:i])
+            reach.add(prefix + "/lib")
+            reach.add(prefix + "/libs")
+        reach.add(d)
+
+    def runtime_protected(rel: str) -> bool:
+        d = os.path.dirname(rel)
+        segs = [s.lower() for s in rel.split("/")[:-1]]
+        if "lib" in segs or "libs" in segs:
+            return True
+        if d in reach:
+            return True
+        # 祖先目录本身**不**并入 reach：实测那样会把 78% 的删除量吃掉（可回收从
+        # 256.0MB 掉到 57.6MB），因为 deps/<镜像>/ 的根下扁平文件正是主力。
+        # 这里只按"被引用脚本的子树"往下保，实测再花 1.6MB 保 ./open/x.js 这一族。
+        return any(d.startswith(ld + "/") for ld in live_dirs)
+
+    rp = [p for p in tracked
+          if p not in refs and p not in keep and p not in touched
+          and p.lower() not in folded and runtime_protected(p)]
     cand_paths = sorted(p for p in tracked
                         if p not in refs and p not in touched and p not in keep
                         and p.lower() not in folded
+                        and not runtime_protected(p)
                         and (only_dir is None or p.startswith(only_dir)))
     by_dir = defaultdict(lambda: {"count": 0, "bytes": 0})
     total_bytes = 0
@@ -151,6 +191,7 @@ def build_candidates(repo=".", min_age_days=30, only_dir=None):
         "tracked_total": len(tracked),
         "recently_touched": len(touched),
         "casefold_protected": sorted(casefold_protected),
+        "runtime_protected": sorted(rp),
         "min_age_days": min_age_days,
     }
 
@@ -182,6 +223,11 @@ def main() -> int:
               f"（产物引用与磁盘名仅大小写不同）：")
         for p in cand["casefold_protected"][:10]:
             print(f"        保留  {p}")
+    if cand.get("runtime_protected"):
+        print(f"[head_slim] 运行时拼接保险保留 {len(cand['runtime_protected'])} 个"
+              f"（lib/libs 共享库、或与仍被引用的 js/py 同目录）")
+        for p in cand["runtime_protected"][:10]:
+            print(f"        保留  {p}")
     print("[head_slim] 按目录分桶（前 10）：")
     for top, meta in sorted(cand["by_dir"].items(),
                              key=lambda kv: -kv[1]["bytes"])[:10]:
@@ -200,6 +246,7 @@ def main() -> int:
         "refs_total": cand["refs_total"],
         "tracked_total": cand["tracked_total"],
         "casefold_protected": cand.get("casefold_protected", []),
+        "runtime_protected": cand.get("runtime_protected", []),
         "by_dir": cand["by_dir"],
         "paths": cand["paths"],
         "note": "从 HEAD 移除不等于物理删除；下一轮 fetch_merge 只重下"
