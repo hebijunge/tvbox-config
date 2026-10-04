@@ -110,10 +110,21 @@ def build_candidates(repo=".", min_age_days=30, only_dir=None):
     refs = dep_refs.collect_all_refs(repo)
     # 账本 / 备份文件本身既不会被引用、也绝不能从 HEAD 移除（否则 dep_refs 下轮没账本可读）
     keep = set(getattr(dep_refs, "LEDGER_PATHS", ()))
+    # 大小写保险：产物写 `deps/jar/gm.jar`、磁盘上是 `deps/jar/GM.jar` 这一族，严格口径
+    # 把 GM.jar 算成"无人引用"。它在大小写敏感的 raw 上确实 404（属于 P0-1 该剥离的坏
+    # 引用，审计口径**不**因此放宽），但删除是单向动作：留着只占几个文件，删掉却把
+    # "把大小写改对就能救活"的内容彻底移走。
+    # 2026-10-04 在临时 worktree 真删一遍做删前/删后同口径对撞：不加这道保险会新增
+    # 1 条坏引用，命中的 3 个文件是 deps/jar/GM.jar、deps/js/anfuns.js、
+    # deps/feishu-sync/JS/3c16.js。
+    folded = {r.lower() for r in refs}
     tracked = tracked_deps(repo)
     touched = recently_touched_deps(min_age_days, repo)
+    casefold_protected = [p for p in tracked
+                          if p not in refs and p not in keep and p.lower() in folded]
     cand_paths = sorted(p for p in tracked
                         if p not in refs and p not in touched and p not in keep
+                        and p.lower() not in folded
                         and (only_dir is None or p.startswith(only_dir)))
     by_dir = defaultdict(lambda: {"count": 0, "bytes": 0})
     total_bytes = 0
@@ -139,6 +150,7 @@ def build_candidates(repo=".", min_age_days=30, only_dir=None):
         "refs_total": len(refs),
         "tracked_total": len(tracked),
         "recently_touched": len(touched),
+        "casefold_protected": sorted(casefold_protected),
         "min_age_days": min_age_days,
     }
 
@@ -164,6 +176,12 @@ def main() -> int:
           f"引用 {cand['refs_total']} 条，"
           f"最近 {args.min_age_days} 天有改动 {cand['recently_touched']} 条{scope}")
     print(f"[head_slim] 候选：{len(cand['paths'])} 个 / {cand['bytes']/1024/1024:.1f} MB")
+    # 大小写保险挡掉了什么必须可见，否则"为什么这个文件没进候选"没法复盘
+    if cand.get("casefold_protected"):
+        print(f"[head_slim] 大小写保险保留 {len(cand['casefold_protected'])} 个"
+              f"（产物引用与磁盘名仅大小写不同）：")
+        for p in cand["casefold_protected"][:10]:
+            print(f"        保留  {p}")
     print("[head_slim] 按目录分桶（前 10）：")
     for top, meta in sorted(cand["by_dir"].items(),
                              key=lambda kv: -kv[1]["bytes"])[:10]:
@@ -181,6 +199,7 @@ def main() -> int:
         "reclaimable_bytes": cand["bytes"],
         "refs_total": cand["refs_total"],
         "tracked_total": cand["tracked_total"],
+        "casefold_protected": cand.get("casefold_protected", []),
         "by_dir": cand["by_dir"],
         "paths": cand["paths"],
         "note": "从 HEAD 移除不等于物理删除；下一轮 fetch_merge 只重下"

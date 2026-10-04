@@ -123,6 +123,28 @@ class TestHeadSlim(unittest.TestCase):
         cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
         self.assertEqual(set(cand["paths"]), {"deps/孤儿.js"})
 
+    def test_casefold_only_refs_keep_file_in_head(self):
+        """产物引用与磁盘名仅大小写不同 -> 删除集要收这道保险。
+
+        2026-10-04 临时 worktree 真删实测：不加保险时删前/删后同口径对撞多出 1 条坏
+        引用，命中 deps/jar/GM.jar、deps/js/anfuns.js、deps/feishu-sync/JS/3c16.js
+        三个文件。这类引用在大小写敏感的 raw 上本来就 404（P0-1 该剥的是**那条引用**，
+        审计口径不放宽），但把文件从 HEAD 删掉是单向动作，改对大小写就能救活的内容
+        不该先被移走。
+        """
+        _write(os.path.join(self.tmp, "deps", "GM.jar"), "live")
+        _write(os.path.join(self.tmp, "tvbox.json"),
+               json.dumps({"sites": [{"api": "./deps/gm.jar"}]}))
+        _write(os.path.join(self.tmp, "deps", "manifest.json"), "{}")
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "case")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertEqual(cand["paths"], [], "大小写差异引用的文件不许进删除候选")
+        self.assertEqual(cand["casefold_protected"], ["deps/GM.jar"],
+                         "挡掉了什么必须写进报告，否则没法复盘")
+
     def test_execute_does_not_run_without_flag(self):
         # dry-run 绝不能改索引
         self._init_repo()
