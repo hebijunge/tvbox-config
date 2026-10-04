@@ -13,6 +13,11 @@ name: repo-slim
 #     ref**——同仓的 backup ref 会把旧对象一直钉成可达，gc 收不掉，体积收益直接归零。
 #   - 推送前用 tree 校验断言"重写后 main 的 HEAD 内容与重写前逐字节一致"，不一致就退出。
 #
+#   - 重写前把所有分支名记进 /tmp/branches.txt，并在重写前 `git remote remove origin`：
+#     filter-repo 会把 refs/remotes/origin/* 也当"要重写的 ref"转成同名本地分支，
+#     于是仓库里会同时出现 main 和 origin/main；推送按分支名逐条推并断言没有多余分支，
+#     就是为了不把 `origin/main` 这种名字推成远端正式分支。
+#
 # 剪掉的是历史副本，不是当前内容：产物、lives/、stores/、exports/ 的 tag 级历史
 # 保持在口径内（rollback.yml 靠它们回滚），只从历史里剥 deps/state/probe/snapshot/raw/
 # raw-vod/adult_live_channels/radar/.dualcheck 这些每日重写的机器产物副本。
@@ -54,13 +59,24 @@ jobs:
           git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
           git fetch --force origin "+refs/heads/*:refs/remotes/origin/*" --tags
           n=0
+          : > /tmp/branches.txt
           for r in $(git for-each-ref --format='%(refname)' refs/remotes/origin); do
             b="${r#refs/remotes/origin/}"
             [ "$b" = "HEAD" ] && continue
             git branch -f "$b" "$r" && n=$((n+1))
+            echo "$b" >> /tmp/branches.txt
           done
           echo "本地分支 $n 个 / tag $(git tag -l | wc -l) 个" | tee -a "$GITHUB_STEP_SUMMARY"
+          cat /tmp/branches.txt | sed 's/^/  branch: /' | tee -a "$GITHUB_STEP_SUMMARY"
           git tag -l | sed 's/^/  tag: /'
+          # 关键一步：filter-repo 会把 refs/remotes/origin/* 也当成"要重写的 ref"，
+          # 转成同名本地分支——于是仓库里会同时出现 main 和 origin/main 两条分支，
+          # 后面 --all 强推就会把 `origin/main` 这种名字推成远端正式分支。
+          # 上面已经把内容复制成真正的本地分支了，这里直接把 remote 摘掉，
+          # 让 filter-repo 只看得到本地分支（推送前再重新 add origin）。
+          git remote remove origin
+          test -z "$(git for-each-ref --format='%(refname)' refs/remotes)"
+          echo "OK refs/remotes 已清空，filter-repo 只会重写 $(wc -l < /tmp/branches.txt) 个本地分支"
 
       - name: 装 git-filter-repo
         run: |
@@ -185,12 +201,23 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -e
-          git remote remove origin 2>/dev/null || true
           git remote add origin "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git"
-          # 分支全量强推 + tag 全量重打；不用 --mirror，避免误删远端独有 ref
-          git push --force origin --all
+          # 逐个推重写前记下的分支名，不用 --all：--all 会把任何意外冒出来的本地分支
+          # （例如 filter-repo 转换 remote-tracking 生成的 `origin/main`）一起推成正式分支
+          bad=$(git for-each-ref --format='%(refname:lstrip=2)' refs/heads | grep -x -F -v -f /tmp/branches.txt || true)
+          if [ -n "$bad" ]; then
+            echo "::error::重写后多出预期之外的本地分支，拒绝推送："
+            echo "$bad" | sed 's/^/  /'
+            exit 1
+          fi
+          while read -r b; do
+            [ -n "$b" ] || continue
+            git push --force origin "refs/heads/$b:refs/heads/$b"
+            echo "  pushed $b"
+          done < /tmp/branches.txt
           git push --force --tags origin
-          echo "已 force-push。GitHub 上报的仓库体积要等后台 gc 才会下降，不会当场变化。" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "已 force-push $(wc -l < /tmp/branches.txt) 个分支 + $(git tag -l | wc -l) 个 tag。" \
+            "GitHub 上报的仓库体积要等后台 gc 才会下降，不会当场变化。" | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: 试算提示（apply=false）
         if: ${{ !inputs.apply }}
