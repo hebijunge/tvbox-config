@@ -57,15 +57,17 @@ class TestHeadSlim(unittest.TestCase):
         _git(self.tmp, "init", "-q", "-b", "main")
 
     def _init_repo(self):
-        # 提交一批历史 deps，日期设为 60 天前（超过默认 30 天闸门）
-        _write(os.path.join(self.tmp, "deps", "old_a.js"), "old_a")
-        _write(os.path.join(self.tmp, "deps", "old_b.js"), "old_b")
+        # 提交一批历史 deps，日期设为 60 天前（超过默认 30 天闸门）。
+        # 活文件放在 deps/src/ 子目录里（贴近真实的 deps/<镜像>/... 布局）：
+        # 若和被删文件同在 deps/ 根下，会被"被引用脚本的子树"这道运行时保护一并保住。
+        _write(os.path.join(self.tmp, "deps", "src", "old_a.js"), "old_a")
+        _write(os.path.join(self.tmp, "deps", "src", "old_b.js"), "old_b")
         _write(os.path.join(self.tmp, "deps", "old_orphan.js"), "orphan")
         _write(os.path.join(self.tmp, "tvbox.json"),
-               json.dumps({"sites": [{"api": "./deps/old_a.js"}]}))
+               json.dumps({"sites": [{"api": "./deps/src/old_a.js"}]}))
         _write(os.path.join(self.tmp, "deps", "manifest.json"),
                json.dumps({"u|b": {"url": "u", "origin": "u",
-                                    "local": "deps/old_b.js"}}))
+                                    "local": "deps/src/old_b.js"}}))
         _git(self.tmp, "add", ".")
         _git(self.tmp, "commit", "-q", "-m", "old")
         _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
@@ -99,29 +101,80 @@ class TestHeadSlim(unittest.TestCase):
         产物真在引用的活文件。照那个清单 --execute 就是删功能。
         `tracked_deps` / `recently_touched_deps` 都必须走 `-z`。
         """
-        _write(os.path.join(self.tmp, "deps", "看.js"), "live")
-        _write(os.path.join(self.tmp, "deps", "孤儿.js"), "dead")
+        _write(os.path.join(self.tmp, "deps", "sx", "看.js"), "live")
+        _write(os.path.join(self.tmp, "deps", "sy", "孤儿.js"), "dead")
         _write(os.path.join(self.tmp, "tvbox.json"),
-               json.dumps({"sites": [{"api": "./deps/看.js"}]}, ensure_ascii=False))
+               json.dumps({"sites": [{"api": "./deps/sx/看.js"}]}, ensure_ascii=False))
         _write(os.path.join(self.tmp, "deps", "manifest.json"), "{}")
         _git(self.tmp, "add", ".")
         _git(self.tmp, "commit", "-q", "-m", "nonascii")
         _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
 
         tracked = head_slim_deps.tracked_deps(self.tmp)
-        self.assertIn("deps/看.js", tracked, "中文名要以真路径出现")
+        self.assertIn("deps/sx/看.js", tracked, "中文名要以真路径出现")
         self.assertFalse([p for p in tracked if p.startswith('"')],
                          "不许出现 C-引号形式的路径")
 
         # 2020 那次提交在 3650 天内 -> 两个中文名都该被认成"最近动过"
         touched = head_slim_deps.recently_touched_deps(3650, self.tmp)
-        self.assertIn("deps/看.js", touched)
-        self.assertIn("deps/孤儿.js", touched)
+        self.assertIn("deps/sx/看.js", touched)
+        self.assertIn("deps/sy/孤儿.js", touched)
         self.assertEqual(head_slim_deps.build_candidates(self.tmp, min_age_days=3650)["paths"], [])
 
         # 闸门收紧到 30 天：2020 的提交出窗，只剩真孤儿
         cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
-        self.assertEqual(set(cand["paths"]), {"deps/孤儿.js"})
+        self.assertEqual(set(cand["paths"]), {"deps/sy/孤儿.js"})
+
+    def test_casefold_only_refs_keep_file_in_head(self):
+        """产物引用与磁盘名仅大小写不同 -> 删除集要收这道保险。
+
+        2026-10-04 临时 worktree 真删实测：不加保险时删前/删后同口径对撞多出 1 条坏
+        引用，命中 deps/jar/GM.jar、deps/js/anfuns.js、deps/feishu-sync/JS/3c16.js
+        三个文件。这类引用在大小写敏感的 raw 上本来就 404（P0-1 该剥的是**那条引用**，
+        审计口径不放宽），但把文件从 HEAD 删掉是单向动作，改对大小写就能救活的内容
+        不该先被移走。
+        """
+        _write(os.path.join(self.tmp, "deps", "GM.jar"), "live")
+        _write(os.path.join(self.tmp, "tvbox.json"),
+               json.dumps({"sites": [{"api": "./deps/gm.jar"}]}))
+        _write(os.path.join(self.tmp, "deps", "manifest.json"), "{}")
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "case")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertEqual(cand["paths"], [], "大小写差异引用的文件不许进删除候选")
+        self.assertEqual(cand["casefold_protected"], ["deps/GM.jar"],
+                         "挡掉了什么必须写进报告，否则没法复盘")
+
+    def test_runtime_lib_and_sibling_files_are_protected(self):
+        """站点 js 按相对路径加载的共享库/兄弟文件不许进删除候选。
+
+        dep_refs 只认产物文本里的 ./deps 直引；`./lib/drpy2.min.js` 这类路径不带
+        "deps/" 字样，静态扫描天生看不见。2026-10-04 实测候选里有 1369 个文件位于
+        lib/libs 目录、1029 个与被引用 js/py 同目录，照严格口径删会让好站在运行时
+        报缺库、探针再把它们判死。
+        """
+        _write(os.path.join(self.tmp, "deps", "auto", "m", "live.js"), "site")
+        _write(os.path.join(self.tmp, "deps", "auto", "m", "lib", "drpy2.min.js"), "lib")
+        _write(os.path.join(self.tmp, "deps", "auto", "m", "open", "sib.js"), "sib")
+        _write(os.path.join(self.tmp, "deps", "json", "unrelated.json"), "cfg")
+        _write(os.path.join(self.tmp, "tvbox.json"),
+               json.dumps({"sites": [{"api": "./deps/auto/m/live.js"}]}))
+        _write(os.path.join(self.tmp, "deps", "manifest.json"), "{}")
+        for p in ("deps/auto/m/live.js", "deps/auto/m/lib/drpy2.min.js",
+                  "deps/auto/m/open/sib.js", "deps/json/unrelated.json"):
+            self.assertTrue(os.path.isfile(os.path.join(self.tmp, p)), p)
+        _git(self.tmp, "add", ".")
+        _git(self.tmp, "commit", "-q", "-m", "runtime")
+        _commit_with_date(self.tmp, "2020-01-01T00:00:00+00:00")
+
+        cand = head_slim_deps.build_candidates(self.tmp, min_age_days=30)
+        self.assertEqual(cand["paths"], ["deps/json/unrelated.json"],
+                         "只该删扁平存放的无人引用配置，不碰运行时能加载到的 js")
+        prot = set(cand["runtime_protected"])
+        self.assertIn("deps/auto/m/lib/drpy2.min.js", prot, "lib 目录段的共享库要保留")
+        self.assertIn("deps/auto/m/open/sib.js", prot, "与被引用 js 同目录的兄弟要保留")
 
     def test_execute_does_not_run_without_flag(self):
         # dry-run 绝不能改索引
