@@ -37,11 +37,13 @@ import subprocess
 import sys
 
 SCRIPTS_DIR = os.path.dirname(os.path.abspath(__file__))
+REPO_ROOT = os.path.dirname(SCRIPTS_DIR)   # 仓库根：所有 git 调用与账本路径都以它为基准
 sys.path.insert(0, SCRIPTS_DIR)
+os.chdir(REPO_ROOT)                       # 账本/备份路径都是仓库相对，保证 cwd 一致
 
 import pathutil  # noqa: E402
 
-BACKUP_DIR = os.path.join(".qoder-tmp", "case_migration")
+BACKUP_DIR = os.path.join(REPO_ROOT, ".qoder-tmp", "case_migration")
 DEP_MANIFEST = os.path.join("deps", "manifest.json")
 # 各 raw store 的账本：entry 里的 path 是 store 内相对路径
 RAW_MANIFESTS = [os.path.join("raw", "live", "manifest.json"),
@@ -50,13 +52,21 @@ RAW_MANIFESTS = [os.path.join("raw", "live", "manifest.json"),
 
 
 def tracked_paths() -> list:
-    out = subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True)
+    """索引里全部跟踪路径（仓库相对、正斜杠）。
+
+    必须用 ``-C REPO_ROOT`` 锁工作目录：`git ls-files` 是相对当前 cwd 的，
+    在 scripts/ 下调用会少列几千条（实测 13059 → 76），导致冲突检不出来、
+    脚本「跑完说 0 组」却什么都没修——本工具已因此连续失效三次。
+    """
+    out = subprocess.run(["git", "-C", REPO_ROOT, "ls-files", "-z"],
+                         capture_output=True, check=True)
     return [p for p in out.stdout.decode("utf-8", "replace").split("\0") if p]
 
 
 def index_blob(path: str) -> str:
     """该路径在 index 里的 blob hash（找不到返回空串）。"""
-    out = subprocess.run(["git", "ls-files", "-s", "--", path], capture_output=True)
+    out = subprocess.run(["git", "-C", REPO_ROOT, "ls-files", "-s", "--", path],
+                     capture_output=True)
     line = out.stdout.decode("utf-8", "replace").strip()
     if not line:
         return ""
@@ -64,8 +74,8 @@ def index_blob(path: str) -> str:
 
 
 def blob_bytes(blob: str) -> bytes:
-    return subprocess.run(["git", "cat-file", "blob", blob], capture_output=True,
-                          check=True).stdout
+    return subprocess.run(["git", "-C", REPO_ROOT, "cat-file", "blob", blob],
+                          capture_output=True, check=True).stdout
 
 
 def ledgers_with_renames(renames: dict, apply: bool) -> list:
