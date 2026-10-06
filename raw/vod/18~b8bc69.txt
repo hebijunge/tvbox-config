@@ -1,215 +1,350 @@
 {
-  "spider": "file://E:\\Archives\\compose-mutiplatform-workspace\\My\\CatVodSpider\\jar\\spider.jar",
+  "spider": "./18.jar;md5;875ce871703d1c382e0498711b9d3ba0",
+  "logo": "./Q.jpg",
   "sites": [
     {
-      "key": "Douban",
-      "name": "豆瓣|首页",
+      "key": "stripchat",
+      "name": "stripchat",
       "type": 3,
-      "api": "csp_Douban",
-      "searchable": 0,
+      "api": "./drpy_js/stripchat.py",
+      "searchable": 1,
+      "filterable": 0,
+      "changeable": 0
+    },
+    {
+      "key": "jable",
+      "name": "Jable",
+      "type": 3,
+      "quickSearch": 1,
+      "searchable": 1,
       "changeable": 0,
+      "filterable": 1,
+      "timeout": 60,
+      "style": {
+        "type": "rect",
+        "ratio": 1.48
+      },
+      "api": "csp_GM",
       "ext": {
+        "userScript": "./drpy_js/jable.user.js",
+        "debug": false,
+        "webViewSettings": {
+          "blockNetworkImage": true,
+          "blockList": [
+            "*.ico*",
+            "*.png*",
+            "*.css*",
+            "https://*.adsco.re/*",
+            "https://*.googleapis.com/*",
+            "https://*.googlesyndication.com/*",
+            "https://*.googletagmanager.com/*",
+            "https://*.hpyjmp.com/*",
+            "https://*.magsrv.com/*",
+            "https://*.mnaspm.com/*",
+            "https://*.shukriya90.com/*",
+            "https://*.tapioni.com/*",
+            "https://*.tsyndicate.com/*",
+            "https://assets.jable.tv/assets/js/player.js"
+          ]
+        },
+        "spider": {
+          "homeContent": {
+            "loadUrl": "https://jable.tv/"
+          },
+          "categoryContent": {
+            "loadUrl": "https://jable.tv/${tid:-latest-updates}/?from=${pg:-1}${sort_by:-}"
+          },
+          "detailContent": {
+            "loadUrl": "https://jable.tv/videos/${id}/"
+          },
+          "searchContent": {
+            "loadUrl": "https://jable.tv/search/${key}/?from=${pg:-1}"
+          }
+        }
       }
     },
     {
-      "key": "玩偶",
-      "name": "玩偶",
+      "key": "MissAV",
+      "name": "MissAV",
       "type": 3,
-      "api": "csp_Wogg",
+      "quickSearch": 1,
       "searchable": 1,
-      "changeable": 1,
+      "changeable": 0,
+      "filterable": 1,
+      "timeout": 60,
+      "style": {
+        "type": "rect",
+        "ratio": 1.49
+      },
+      "api": "csp_GM",
       "ext": {
+        "userScript": "./drpy_js/missav.user.js",
+        "debug": false,
+        "webViewSettings": {
+          "blockNetworkImage": true,
+          "blockList": [
+            "*.ico",
+            "*.png",
+            "*.css",
+            "*.svg",
+            "https://*.cloudflareinsights.com/*",
+            "https://*.googletagmanager.com/*",
+            "https://*.ktkjmp.com/*",
+            "https://*.magsrv.com/*",
+            "https://*.mnaspm.com/*",
+            "https://*.myavlive.com/*",
+            "https://*.recombee.com/*",
+            "https://*.rmhfrtnd.com/*",
+            "https://*.trackwilltrk.com/*",
+            "https://*.tsyndicate.com/*",
+            "https://missav.com/fonts/*",
+            "https://tsyndicate.com/*",
+            "https://hartattenuate.com/*"
+          ]
+        },
+        "spider": {
+          "homeContent": {
+            "loadUrl": "https://missav.ws/cn/"
+          },
+          "categoryContent": {
+            "loadUrl": "https://missav.ws/cn/${tid}?page=${pg:-1}${filter:-}${sort:-}"
+          },
+          "detailContent": {
+            "loadUrl": "https://missav.ws/cn/${id}"
+          },
+          "searchContent": {
+            "loadUrl": "https://missav.ws/cn/search/${key}?page=${pg:-1}"
+          }
+        }
       }
     },
     {
-      "key": "ng",
-      "name": "南瓜",
+      "key": "xojav",
+      "name": "Xojav",
       "type": 3,
-      "api": "csp_NG",
+      "quickSearch": 1,
       "searchable": 1,
       "changeable": 0,
+      "filterable": 1,
+      "timeout": 60,
+      "style": {
+        "type": "rect",
+        "ratio": 1.78
+      },
+      "api": "csp_GM",
       "ext": {
+        "userScript": "./drpy_js/xojav.user.js",
+        "debug": false,
+        "webViewSettings": {
+          "blockNetworkImage": true,
+          "blockList": [
+            "*.css*",
+            "*.ico*",
+            "*.png*",
+            "*.svg",
+            "https://*.googleapis.com/*",
+            "https://*.googletagmanager.com/*",
+            "https://*.magsrv.com/*",
+            "https://*.pemsrv.com/*"
+          ]
+        },
+        "spider": {
+          "homeContent": {
+            "loadUrl": "https://xojav.tv/?lang=zh"
+          },
+          "categoryContent": {
+            "loadUrl": "https://xojav.tv/${tid}${sort_by:-}&mode=async&function=get_block&from=${pg:-1}"
+          },
+          "detailContent": {
+            "loadUrl": "https://xojav.tv/videos/${id}"
+          },
+          "searchContent": {
+            "loadUrl": "https://xojav.tv/search/${key}/?mode=async&function=get_block&sort_by=most_relevant&from_videos=${pg:-1}"
+          }
+        }
       }
     },
     {
-      "key": "ChangZhang",
-      "name": "厂长影视",
+      "key": "fullhd",
+      "name": "fullhd",
       "type": 3,
-      "api": "csp_ChangZhang",
-      "searchable": "1",
-      "filterable": "0",
+      "api": "./drpy_js/fullhd.py",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0
+    },
+    {
+      "key": "51吃瓜",
+      "name": "吃瓜",
+      "type": 3,
+      "api": "./drpy_js/吃瓜.py",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
       "changeable": 0,
       "ext": {
+        "http": "",
+        "https": ""
       }
     },
     {
-      "key": "Zxzj",
-      "name": "在线之家",
+      "key": "MissAV·嗷呜",
+      "name": "MissAV·嗷呜",
       "type": 3,
-      "api": "csp_Zxzj",
-      "searchable": "1",
-      "filterable": "0",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
       "changeable": 0,
+      "api": "./drpy_js/miss.py",
       "ext": {
+        "site": "https://missav.ai",
+        "cfgo": "./drpy_js/cf-proxy-linux-arm64",
+        "plp": "",
+        "proxy": {
+          "http": "",
+          "https": ""
+        }
       }
     },
     {
-      "key": "Mtyy",
-      "name": "麦田影院",
+      "key": "Pornhub·嗷呜",
+      "name": "Pornhub·嗷呜",
       "type": 3,
-      "api": "csp_Mtyy",
-      "searchable": "1",
-      "filterable": "0",
+      "api": "./drpy_js/Pornhub.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0,
       "changeable": 0,
       "ext": {
+        "proxy": {},
+        "plp": ""
       }
     },
     {
-      "key": "bili",
-      "name": "哔哩",
+      "key": "lav·嗷呜",
+      "name": "lav·嗷呜",
       "type": 3,
-      "api": "csp_Bili",
+      "api": "./drpy_js/lav.py",
       "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0,
       "changeable": 0,
       "ext": {
-        "type": "帕梅拉#太极拳#广场舞#演唱会",
-        "cookie": ""
+        "proxy": {},
+        "plp": ""
       }
     },
     {
-      "key": "Liangzi",
-      "name": "量子影视",
+      "key": "肉视频·嗷呜",
+      "name": "肉视频·嗷呜",
       "type": 3,
-      "api": "csp_Liangzi",
-      "searchable": "1",
-      "filterable": "0",
+      "api": "./drpy_js/rsp.py",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0,
       "changeable": 0,
       "ext": {
+        "proxy": {},
+        "plp": ""
       }
     },
     {
-      "key": "BD",
-      "name": "BD|首页",
+      "key": "Xhamster·嗷呜",
+      "name": "Xhamster·嗷呜",
       "type": 3,
-      "api": "csp_BD",
+      "api": "./drpy_js/Xhamster.py",
       "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0,
       "changeable": 0,
-      "ext": "aHR0cHM6Ly93d3cueWp5czAyLmNvbS8="
+      "playerType": 2
     },
     {
-      "key": "IkBot",
-      "name": "爱看|首页",
+      "key": "Xvideos·嗷呜",
+      "name": "Xvideos·嗷呜",
       "type": 3,
-      "api": "csp_IkBot",
+      "api": "./drpy_js/Xvideos.py",
       "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 0,
+      "changeable": 0
+    },
+    {
+      "key": "肉视频·沐辰",
+      "name": "肉视频·沐辰",
+      "type": 3,
+      "api": "./drpy_js/rou.py",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0
+    },
+    {
+      "key": "py_BadNews·沐辰",
+      "name": "BadNews·沐辰",
+      "type": 4,
+      "api": "https://py.doube.eu.org/spider?site=BadNews",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
       "changeable": 0,
-      "ext": {
+      "style": {
+        "type": "rect",
+        "ratio": 1.5
       }
     },
     {
-      "key": "haiwaikan",
-      "name": "海外看",
-      "type": 1,
-      "api": "https://haiwaikan.com/api.php/provide/vod",
+      "key": "py_Miss·沐辰",
+      "name": "MissAV·沐辰",
+      "type": 4,
+      "api": "https://py.doube.eu.org/spider?site=Miss",
       "searchable": 1,
-      "changeable": 1,
-      "categories": [
-        "日本动漫",
-        "国产动漫",
-        "欧美动漫",
-        "国产剧",
-        "韩剧",
-        "日剧",
-        "台剧",
-        "泰剧",
-        "港剧",
-        "欧美剧",
-        "动画电影",
-        "韩国综艺",
-        "国产综艺",
-        "日本综艺",
-        "欧美综艺",
-        "冒险片",
-        "剧情片",
-        "动作片",
-        "同性片",
-        "喜剧片",
-        "奇幻片",
-        "恐怖片",
-        "悬疑片",
-        "惊悚片",
-        "战争片",
-        "歌舞片",
-        "灾难片",
-        "爱情片",
-        "犯罪片",
-        "科幻片",
-        "纪录片",
-        "经典片"
-      ]
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0
     },
     {
-      "key": "csp_AList",
-      "name": "AList┃网盘",
-      "type": "3",
-      "api": "csp_AList",
-      "searchable": "0",
-      "filterable": "1",
+      "key": "py_AiDou·沐辰",
+      "name": "AiDou·沐辰",
+      "type": 4,
+      "api": "https://py.doube.eu.org/spider?site=AiDou",
+      "searchable": 1,
+      "quickSearch": 0,
+      "filterable": 0,
       "changeable": 0,
-      "ext": "https://gh-proxy.com/https://raw.githubusercontent.com/FongMi/CatVodSpider/main/json/alist.json"
+      "style": {
+        "type": "rect",
+        "ratio": 1.5
+      }
     },
     {
-      "key": "PanSou",
-      "name": "盘搜┃搜索",
-      "type": 3,
-      "api": "csp_PanSou",
+      "key": "py_MrJav·沐辰",
+      "name": "MRJav·沐辰",
+      "type": 4,
+      "api": "https://py.doube.eu.org/spider?site=MrJav",
       "searchable": 1,
-      "changeable": 1,
-      "timeout": 30
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0,
+      "style": {
+        "type": "rect",
+        "ratio": 1.5
+      }
     },
     {
-      "key": "PanSearch",
-      "name": "PanSearch┃搜索",
-      "type": 3,
-      "api": "csp_PanSearch",
+      "key": "php_madou·沐辰",
+      "name": "麻豆·沐辰",
+      "type": 4,
+      "api": "https://py.doube.eu.org/spider?site=MaDou",
       "searchable": 1,
-      "changeable": 1,
-      "timeout": 30
-    },
-    {
-      "key": "YiSo",
-      "name": "易搜┃搜索",
-      "type": 3,
-      "api": "csp_YiSo",
-      "searchable": 1,
-      "changeable": 1,
-      "ext": "http://127.0.0.1:9978/file/tvfan/token.txt+4k|auto|fhd",
-      "timeout": 30
-    },
-    {
-      "key": "找資源",
-      "name": "找資源",
-      "type": 3,
-      "api": "csp_Zhaozy",
-      "searchable": 1,
-      "changeable": 1,
-      "ext": "$$$fanty$$$qqq111"
-    },
-    {
-      "key": "Yingso",
-      "name": "影搜",
-      "type": 3,
-      "api": "csp_Yingso",
-      "searchable": 1,
-      "changeable": 1
-    },
-    {
-      "key": "yppan",
-      "name": "云盘盘",
-      "type": 3,
-      "api": "csp_YpPan",
-      "searchable": 1,
-      "changeable": 1
+      "quickSearch": 0,
+      "filterable": 0,
+      "changeable": 0,
+      "style": {
+        "type": "rect",
+        "ratio": 1.5
+      }
     }
   ]
 }
