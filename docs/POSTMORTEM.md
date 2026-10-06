@@ -29,3 +29,50 @@
 `UnicodeEncodeError` 根本没发过请求。现在 `http_get` 出口统一 `_requestable()`（非 ASCII 域名 punycode、路径
 百分号编码、`%` 保持不被二次编码），六路一起受益。
 实测连跑两轮（相隔 5 分钟）：候选池重合从 **18/80 → 60/80**，真配置重合 12/27 → 23/36，可达率 41%→44-50%。当时我把剩下的差异归给「真实来源在变＋网络抖动，不是我们制造的随机」——那句被上一段证伪了：里面还压着一层我们自己的抽样随机。四层抽样都改成确定性之后，残余差异才轮到源侧变动与网络抖动。
+
+## 产物是生成物：改 `live.json` 忘改生成器，修复被 nightly 静默回滚
+
+**现象**（2026-10-05 → 10-06）
+10-05 修了 `live.json` 指向停更的 `lives/live_all.txt`，本地全绿、CI 当轮通过；
+夜间 daily（`4e40c15f`）跑完后，10-06 早上 CI 又红在**同一个断言**上。
+
+**根因**
+`live.json` 是 `fetch_merge.py` 的**生成物**。那行 URL 是硬编码字面量：
+
+```python
+"url": _RAW + "lives/live_all.txt",   # 每次运行都会重新写回
+```
+
+改产物不改生成器 = 修复只活到下一次 daily。`lives/live_all.txt` 由
+`live_aggregate.write_group_txts` 在分组阶段写出，之后不再更新
+（实测最后更新停在 2026-09-27）；而 `lives/live.txt` 由
+`fetch_merge.write_live_group_txts` 每次运行重新拼接 4 个分组，是活文件。
+
+**为什么难自查**
+- 本地 `git status` 干净，产物内容也对，**只有跨天看 CI 才发现**；
+- 第一次修（`d7dad897`）只改了 `live.json`，测试也跟着改了断言，
+  于是 10-05 当轮 CI 是绿的 —— **测试和产物一起错，互相印证**。
+
+**修法**
+1. 生成器与产物一起改：`fetch_merge.py:886` 改指 `lives/live.txt`；
+2. 补一条**锁生成器代码**的测试
+   （`test_livejson_url_not_hardcoded_to_stale_file`：读源码、过滤注释行、
+   断言不再出现 `live_all`）——产物测试只能验证「此刻对不对」，
+   验证不了「明早会不会被改回去」；
+3. **反向验证**：故意把生成器改回 `live_all.txt`，确认测试真的报错。
+
+**通用规则**
+> 动 `live.json` / `tvbox.json` / `status.json` 这类产物前，
+> 先 `grep -rn "<产物名>" scripts/*.py` 找生成者，**代码与产物一起改**。
+> 判断某个依赖文件是否已死，看 `git log -1 -- <path>` 的最后提交时间，
+> 别只看它现在还在不在仓库里。
+
+### 附：大小写冲突为何反复复发
+
+`deps/wex/newwex/{IPTV,iptv}.m3u`、`raw/vod/{Box,box}.json` 已是第三次挡 CI。
+Linux 上仅大小写不同的路径是两个合法文件，Windows 上映射到同一个文件。
+写入侧（`fetch_merge.resolve_dep_paths` / `raw_store._settle_case_rel`）只消解
+**本轮** pairs 内的冲突；跨轮的陈旧台账记录（这几条 `updated_at` 停在 2026-09-28、
+`ref_count: 0`）不在本轮 pairs 里，于是每轮重写又造回来。
+处置仍是跑 `scripts/fix_case_collisions.py --apply`（它会同步改写
+`deps/manifest.json` 与各 raw store 账本），**不要手工 `git mv`**。
