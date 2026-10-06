@@ -192,6 +192,29 @@ class TestGovernance(unittest.TestCase):
         # 走镜像，raw.githubusercontent 直连在 CI 环境常被限流/404
         self.assertIn("gh.halonice.com", url)
 
+    def test_livejson_url_not_hardcoded_to_stale_file(self):
+        """防复发：生成器里的 live.json URL 不能再写死 live_all.txt。
+
+        2026-10-06 教训：d7dad897 只改了产物 live.json、没改 fetch_merge 的生成代码，
+        nightly daily（4e40c15f）每轮重生成 live.json 时把它写回 live_all.txt，
+        修复被 nightly 静默回滚、CI 连红两轮。产物测试只能验证「此刻对不对」，
+        验证不了「明早会不会被改回去」——必须同时锁住生成器。
+        """
+        src = os.path.join(REPO, "scripts", "fetch_merge.py")
+        with open(src, encoding="utf-8") as f:
+            code = [ln for ln in f.read().split("\n") if not ln.strip().startswith("#")]
+        offenders = [ln.strip() for ln in code if "live_all" in ln]
+        self.assertFalse(
+            offenders,
+            "fetch_merge 生成代码仍在引用已停更的 live_all.txt，"
+            "nightly daily 会把 live.json 写回死文件：%s" % offenders,
+        )
+        # 反向确认：生成器确实产出 live.txt
+        self.assertTrue(
+            any('"url": _RAW + "lives/live.txt"' in ln for ln in code),
+            "fetch_merge 应生成 live.json 指向 lives/live.txt",
+        )
+
     def test_jsdelivr_normalized(self):
         with open(os.path.join(REPO, "state", "extra_upstreams.json"), encoding="utf-8") as f:
             ex = json.load(f)

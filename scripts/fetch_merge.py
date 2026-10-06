@@ -872,18 +872,20 @@ def build_curated_lives(repo_dir: str):
     # 2026-09-26 用户指令「不要生成大文件，生成多个分组的 txt 和 m3u」：
     # 直播产物改为 lives/groups/<组>.txt（+同名 .m3u）；池子（live_cctv/weishi/
     # gangtai/other.txt 等供 tvbox.json Guovin 条目消费）与精准/组播/原始源保留。
-    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：live.json 单条目改指
-    # lives/live_all.txt（由 live_aggregate.write_group_txts 随分组一并写出）。
+    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：live.json 单条目。
+    # 2026-10-05 回归修复：原指 lives/live_all.txt，但那个文件由 live_aggregate
+    # 在**分组阶段**写出后就不再更新（实测最后更新停在 2026-09-27，已停更 9 天，
+    # 8167 行），daily 每轮重生成 live.json 都会把它写回去 → 修复被 nightly 回滚、
+    # CI test_livejson_single_entry 反复红。改为指 lives/live.txt：它由本函数
+    # write_live_group_txts 每次运行都重新拼接（央视/卫视/港台/其他 4 组），
+    # 内容等价但每日刷新，与 tvbox.json 的 lives 条目同步。
     _RAW = "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/"
     _GROUPS = ("央视", "卫视", "地方", "港台", "轮播", "直播", "其他")
     curated = []
-    # 2026-09-27 用户指令「live.json 只显示一个汇总的」：回到单仓——7 条分组入口
-    # 在播放器里显示成 7 个仓，改为单条目「聚合·分类直播」指向 lives/live_all.txt
-    # （全大组依序拼接的合并文件，组内 #genre# 分节即播放器内分类导航）。
     curated.append({
         "name": "聚合·分类直播",
         "type": 1,
-        "url": _RAW + "lives/live_all.txt",
+        "url": _RAW + "lives/live.txt",
         "ua": "TVBox",
         "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
     })
