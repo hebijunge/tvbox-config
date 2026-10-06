@@ -1,15 +1,15 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-05T07:46:56
+生成时间：2026-10-06T05:16:41
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 8865 | 316 | 2071 | 5933 | 545 |
-| 直播 | 706 | 165 | 270 | 249 | 22 |
+| 点播 | 8054 | 269 | 1748 | 5504 | 533 |
+| 直播 | 709 | 159 | 278 | 249 | 23 |
 
-较上轮变化：新增 26｜掉线 128｜恢复 47｜移除 12（点播）；新增 4｜掉线 0｜恢复 0｜移除 0（直播）
+较上轮变化：新增 106｜掉线 125｜恢复 23｜移除 802（点播）；新增 3｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
@@ -31,21 +31,21 @@
 - 🐰｜小贝｜儿歌（dead → degraded）
 - 🐰｜贝贝｜儿歌（dead → degraded）
 - 💢vo fl ix〔XB〕（dead → degraded）
-- 📀玩偶哥哥(优)（dead → healthy）
-- 🛳┃港口┃磁力（dead → healthy）
-- ⛈┃素白白┃影视（dead → degraded）
-- 七新影视(XYQH)（dead → degraded）
-- 可可影视(XYQH)（dead → degraded）
+- 🔥短剧网[影视]_HK（dead → degraded）
+- DRPY┃AGE动漫（dead → degraded）
+- 💎蓝光影院（dead → degraded）
+- ❄冷曦影视（dead → degraded）
+- 🌑氢视频（dead → degraded）
 
 ## 点播新增（前 10）
 
-- 影视•爬虫[直连]（unknown）
-- 无上┃采集（unknown）
-- 樱之空[直连]（unknown）
-- 🅱️┃哔哩┃合集2（unknown）
-- 🅱️┃哔哩┃合集3（unknown）
-- 🅱️┃哔哩┃直连（unknown）
-- 🅱️┃中医┃药区（unknown）
-- 🅱️┃体育┃健身（unknown）
-- 🅱️┃哔哩┃精简（unknown）
-- 🅱️┃戏曲┃合集（unknown）
+- 量子采集（unknown）
+- 金鹰（unknown）
+- 天涯（unknown）
+- 虎牙（unknown）
+- 快车（unknown）
+- 最大备用（unknown）
+- 电影天堂（unknown）
+- 天涯备用（unknown）
+- 金鹰主站（unknown）
+- 速播（unknown）
