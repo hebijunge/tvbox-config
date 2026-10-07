@@ -6,37 +6,37 @@
    "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 619,
+   "channels": 1124,
    "groups": [
     "其他",
     "卫视",
     "央视",
     "港台"
    ],
-   "bytes": 52566,
+   "bytes": 88820,
    "stream_tests": [
     {
-     "stream": "http://php.jdshipin.com/TVOD/iptv.php?id=rthk33",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://live-play-hls.cctvnews.cctv.com/CCTVChannel/channel_cctv4k_mbd.m3u8?auth_key=1791313200-1-b59134a2ead43d7f783f94",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://hls-gateway.vpstv.net/streams/476247.m3u8",
-     "ok": false,
-     "why": "http_403"
-    },
-    {
-     "stream": "http://42.94.210.22:7788/609154353",
+     "stream": "rtp://239.3.1.245:2000",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://t.freetv.fun/live/shang-yu-xin-shang-du-2.m3u8",
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://101.35.240.114:88/phenix.php?id=fhhk",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "https://cdn6.123.rr.kg/163189/ch5",
+     "ok": true,
+     "why": "ct:text/plain"
+    },
+    {
+     "stream": "http://mytv.cdn.com.mp/live/dsdy/stream.m3u8",
      "ok": false,
      "why": "no_response"
     }
@@ -45,22 +45,7 @@
    "status": "ok",
    "ffprobe": [
     {
-     "stream": "http://php.jdshipin.com/TVOD/iptv.php?id=rthk33",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "hevc",
-       "aac"
-      ],
-      "video": {
-       "codec": "hevc",
-       "w": 1920,
-       "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://live-play-hls.cctvnews.cctv.com/CCTVChannel/channel_cctv4k_mbd.m3u8?auth_key=1791313200-1-b59134a2ead43d7f783f94",
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
      "ok": true,
      "info": {
       "codecs": [
@@ -73,6 +58,11 @@
        "h": 1080
       }
      }
+    },
+    {
+     "stream": "https://cdn6.123.rr.kg/163189/ch5",
+     "ok": false,
+     "why": "probe_failed"
     }
    ]
   }
