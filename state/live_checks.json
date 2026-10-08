@@ -2,54 +2,50 @@
  "entries": [
   {
    "name": "聚合·分类直播",
-   "url_raw": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_all.txt",
-   "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live_all.txt",
+   "url_raw": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live.txt",
+   "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 8122,
+   "channels": 1124,
    "groups": [
     "其他",
     "卫视",
-    "地方-上海",
-    "地方-云南",
-    "地方-内蒙古",
-    "地方-北京",
-    "地方-吉林",
-    "地方-四川"
+    "央视",
+    "港台"
    ],
-   "bytes": 639233,
+   "bytes": 88820,
    "stream_tests": [
     {
-     "stream": "http://[2409:8087:1a01:df::7005]:80/ottrrs.hl.chinamobile.com/PLTV/88888888/224/3221226457/index.m3u8",
+     "stream": "rtp://239.3.1.245:2000",
      "ok": false,
      "why": "no_response"
     },
     {
-     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
-     "ok": true,
-     "why": "ct:audio/x-mpegurl"
-    },
-    {
-     "stream": "http://tvpull.dxhmt.cn:9081/tv/11221-1.m3u8?%E5%85%B3%E6%B3%A8%E5%BE%AE%E4%BF%A1%E5%85%AC%E4%BC%97%E5%8F%B7[%E6%99%B4%E5",
+     "stream": "http://101.35.240.114:88/phenix.php?id=fhhk",
      "ok": false,
-     "why": "http_403"
+     "why": "http_404"
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/8883122",
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
      "ok": true,
-     "why": "ct:video/x-flv"
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "http://139.129.231.228:50060/rtp/239.21.1.162:5002",
+     "stream": "http://mytv.cdn.com.mp/live/dsdy/stream.m3u8",
      "ok": false,
      "why": "no_response"
+    },
+    {
+     "stream": "https://cdn6.123.rr.kg/163189/ch5",
+     "ok": true,
+     "why": "ct:text/plain"
     }
    ],
    "streams_ok": 2,
    "status": "ok",
    "ffprobe": [
     {
-     "stream": "https://p2.bdstatic.com/rtmp.liveshow.lss-user.baidubce.com/live/stream_bduid_6488563992_8982723413/merged_1707497046297",
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
      "ok": true,
      "info": {
       "codecs": [
@@ -58,25 +54,15 @@
       ],
       "video": {
        "codec": "h264",
-       "w": 1920,
-       "h": 1080
+       "w": 1280,
+       "h": 720
       }
      }
     },
     {
-     "stream": "https://live.ottiptv.cc/douyu/8883122",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "aac",
-       "h264"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 0,
-       "h": 0
-      }
-     }
+     "stream": "https://cdn6.123.rr.kg/163189/ch5",
+     "ok": false,
+     "why": "probe_failed"
     }
    ]
   }
