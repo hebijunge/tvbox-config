@@ -1582,6 +1582,14 @@ def _split_gh_prefix(url: str):
     以 GH_MIRRORS 已知前缀 + 常见老镜像名判定停止。"""
     known = [m.rstrip("/") for m in GH_MIRRORS]
     known.append("https://ghproxy.com")  # 老镜像名（不在当前链里也见过）
+    # 静态默认清单里的镜像前缀必须始终可剥离：_RAW / live.json 硬编码
+    # gh.halonice.com 作主通道，而 GH_MIRRORS 运行时随当日实测漂移（mirror_probe
+    # 会把当日不达标的镜像移出 ranking），若某天 gh.halonice.com 被移出，解析层
+    # 仍要认得它，否则 gh_repo_ref_of 对带前缀 URL 返回 None（test_recognized
+    # 跨天飘红，2026-10-07 实测）。
+    known += [m.rstrip("/") for m in GH_MIRRORS_DEFAULT.split(",") if m.strip()]
+    _seen = set()
+    known = [x for x in known if not (x in _seen or _seen.add(x))]
     inner = url
     changed = True
     while changed:
@@ -1794,18 +1802,61 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
+_OCCUPIED_LOCAL_LOWERS = None
+
+
+def _occupied_local_lowers():
+    """manifest 已登记 local 的大小写不敏感集合（进程内缓存一次）。
+
+    resolve_dep_paths 生成新落库名时，要避开「与既有仅大小写不同」的名字，
+    否则 daily 重写又造回大写名（如 IPTV.m3u vs 既有 iptv.m3u），
+    windows-path-check 每轮 FAIL（2026-10-07 复发）。
+    """
+    global _OCCUPIED_LOCAL_LOWERS
+    if _OCCUPIED_LOCAL_LOWERS is not None:
+        return _OCCUPIED_LOCAL_LOWERS
+    s = set()
+    try:
+        m = load_manifest()
+    except Exception:  # noqa: BLE001 —— 读不到账本就不挡主流程
+        return s
+    for v in m.values():
+        if isinstance(v, dict):
+            loc = v.get("local") or ""
+            if loc:
+                s.add(loc.lower())
+    _OCCUPIED_LOCAL_LOWERS = s
+    return s
+
+
 def resolve_dep_paths(pairs) -> dict:
     """把 (origin, url) 批量解析为落库路径，并消解大小写冲突。
 
     返回 ``{"{origin}|{url}": 相对路径}``。路径本身由 :func:`dep_local_path`
     决定，这里只额外做一层平台无关的冲突消解，见
     :func:`pathutil.resolve_case_collisions`。
+
+    额外：当前批解析出的落库名若与「manifest 已登记的 local」仅大小写互撞
+    （典型：上游 URL 是大写 ``IPTV.m3u``，而同目录既有小写 ``iptv.m3u``），
+    则把当前批这个新名字降级为 ``<base>~<tag><ext>``，既有记录保持不动
+    （不动既有更安全，不破坏已落库文件）。否则 daily 每轮重写又造回大写名，
+    windows-path-check 每轮 FAIL（2026-10-07 复发）。
     """
     keys = {}
     for origin, url in pairs:
         keys.setdefault(f"{origin}|{url}", dep_local_path(origin, url))
-    resolved = pathutil.resolve_case_collisions(keys.values())
-    return {k: resolved.get(v, v) for k, v in keys.items()}
+    resolved = pathutil.resolve_case_collisions(list(keys.values()))
+    occupied = _occupied_local_lowers()
+    out = {}
+    for k, v in keys.items():
+        rv = resolved.get(v, v)
+        if rv != rv.lower() and rv.lower() in occupied:
+            cand = pathutil.demote_rel(rv, identity=k)
+            while cand.lower() in occupied:
+                cand = pathutil.demote_rel(rv, identity=f"{k}#{cand}")
+            rv = cand
+        out[k] = rv
+    return out
 
 
 # ---- codeload 整仓 tarball 兜底（2026-09-29）----

@@ -42,6 +42,40 @@ class TestRepoRef(unittest.TestCase):
         self.assertEqual(fm.gh_repo_ref_of("https://github.com/a/b/blob/v1/dir/x.js"),
                          ("a", "b", "v1", "dir/x.js"))
 
+    def test_static_default_mirror_prefix_always_strippable(self):
+        # 不管 GH_MIRRORS 当日怎么漂移（mirror_probe 会把当日不达标的镜像移出
+        # ranking），代码承诺用的静态默认镜像前缀必须始终能被 _split_gh_prefix 剥离：
+        # _RAW / live.json 硬编码 gh.halonice.com 作主通道，若解析层只认运行时
+        # GH_MIRRORS，某天它被移出 ranking 时 gh_repo_ref_of 返回 None，本断言跨天飘红
+        # （2026-10-07 实测）。这里锁住「静态默认清单里的每个前缀都认得」。
+        defaults = [m.strip() for m in fm.GH_MIRRORS_DEFAULT.split(",") if m.strip()]
+        self.assertIn("https://gh.halonice.com/", defaults)
+        inner_ok = "https://raw.githubusercontent.com/o/r/main/f.js"
+        for pre in defaults:
+            got, had = fm._split_gh_prefix(pre + inner_ok)
+            self.assertTrue(had, pre)
+            self.assertEqual(got, inner_ok, pre)
+
+    def test_resolve_dep_paths_avoids_case_clash_with_existing(self):
+        # 上游 URL 是大写 IPTV.m3u，而同目录既有小写 iptv.m3u：当前批生成的大写名
+        # 必须被降级，否则 daily 每轮重写又造回大写名，windows-path-check 每轮 FAIL。
+        # 2026-10-07 复发实证。
+        fake = {"wex/newwex|http://x/iptv.m3u": {"local": "deps/wex/newwex/iptv.m3u"}}
+        orig_load = fm.load_manifest
+        fm.load_manifest = lambda: fake
+        fm._OCCUPIED_LOCAL_LOWERS = None  # 重置缓存，强制读 mock
+        key = "wex/newwex|https://gh.halonice.com/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u"
+        try:
+            out = fm.resolve_dep_paths([("wex/newwex", "https://gh.halonice.com/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u")])
+        finally:
+            fm.load_manifest = orig_load
+            fm._OCCUPIED_LOCAL_LOWERS = None  # 避免污染后续测试缓存
+        got = out[key]
+        self.assertNotEqual(got.lower(), "deps/wex/newwex/iptv.m3u",
+                             "不应与既有仅大小写相同，否则 Windows 冲突：%s" % got)
+        # demote 后仍应是合法落库路径（含 deps/wex/newwex 前缀）
+        self.assertTrue(got.startswith("deps/wex/newwex/"), got)
+
     def test_path_traversal_rejected(self):
         # 上游 URL 可控，`..` 必须在解析阶段就拒（两条兜底路都拿它拼过文件系统路径）
         for u in ["https://raw.githubusercontent.com/a/b/main/../../../../etc/passwd",
