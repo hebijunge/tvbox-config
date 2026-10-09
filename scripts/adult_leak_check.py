@@ -80,6 +80,11 @@ _AUDIT_CTX_RES = _audit_context_res()
 # ISO8601 时间戳值（updated_at/checked_at 等元数据）不含消费内容；
 # 其时区偏移形如 "...:55:18+08:00" 会让子串 "18+" 误命中成人词，扫描时整值跳过。
 _ISO_TS_RE = re.compile(r"^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}")
+# 完整 ISO8601（含时区偏移）：文本扫描路径须跳过整段时间戳，覆盖 "+08:00" 前的
+# "18"。与 JSON 路径 _iter_strings 的整值跳过语义一致（#170 成人门禁 FAIL 根因：
+# exports/changelog.md 头部的 时间：...18+08:00 被 ADULT_SOURCE_RE 的 "18\+" 误判）。
+_ISO_FULL_RE = re.compile(
+    r"\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?")
 
 
 _SITE_NAME_KEYS = ("name",)
@@ -186,7 +191,12 @@ def scan_text(path, hits, re_only=False):
     except OSError as e:
         hits.append({"file": path, "where": "<read>", "err": str(e)[:80]})
         return
+    # 跳过 ISO 时间戳内的子串，避免 "+08:00" 偏移前的 "18" 被 ADULT_SOURCE_RE
+    # 的 "18\+" 误判（与 JSON 路径 _iter_strings 的 _ISO_TS_RE 跳过对齐）。
+    iso_spans = [(m.start(), m.end()) for m in _ISO_FULL_RE.finditer(txt)]
     for m in la.ADULT_SOURCE_RE.finditer(txt):
+        if any(s <= m.start() and m.end() <= e for s, e in iso_spans):
+            continue
         s = max(0, m.start() - 40)
         hits.append({"file": path, "where": "@%d" % m.start(),
                      "kind": "text", "value": txt[s:m.end() + 40].replace("\n", " "),

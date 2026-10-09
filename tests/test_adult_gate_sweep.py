@@ -117,6 +117,55 @@ class AdultGateSweepTest(unittest.TestCase):
         for kw in ("玉兔", "madouse", "jable"):
             self.assertIn(kw, la.PORN_KW, "门禁词表缺 %s" % kw)
 
+    def test_scan_text_skips_iso_timestamp_pseudohit(self):
+        """回归（#170 成人零泄漏门禁 FAIL 根因）：文本扫描路径须跳过 ISO 时间戳，
+        否则 exports/changelog.md 头部的 时间：...18+08:00 会被 ADULT_SOURCE_RE
+        的 "18\\+" 误判为成人词。与 JSON 路径 _iter_strings 的 _ISO_TS_RE 跳过对齐。
+
+        构造含 18+ 时间戳的 changelog 类文本（LF 行尾，模拟 CI 生成的产物），
+        断言不产生 source_pattern 误报。"""
+        import adult_leak_check as alc
+        content = (
+            "# 更新日志\n\n"
+            "时间：2026-10-09T00:40:18+08:00\n\n"   # 触发 18+ 误报的时间戳
+            "## 站点\n\n"
+            "- 新增：373\n"
+        )
+        with tempfile.NamedTemporaryFile("wb", suffix=".md", delete=False) as f:
+            f.write(content.encode("utf-8"))   # LF 行尾，忠实模拟 CI 产物
+            path = f.name
+        try:
+            hits = []
+            alc.scan_text(path, hits)
+            ts_hits = [h for h in hits
+                       if h.get("rule") == "source_pattern" and "18+" in (h.get("value") or "")]
+            self.assertEqual(ts_hits, [],
+                             "ISO 时间戳 18+ 被误判为 source_pattern：%s" % ts_hits)
+        finally:
+            os.unlink(path)
+
+    def test_scan_text_still_catches_real_adult_outside_timestamp(self):
+        """反向验证：时戳跳过不能过度抑制——时戳之外的真实成人词仍须命中。
+
+        用非行尾锚定的 jable.tv 标记（CI LF 产物下稳定命中），确保跳过逻辑
+        不会误伤真实成人内容。"""
+        import adult_leak_check as alc
+        content = (
+            "时间：2026-10-09T00:40:18+08:00\n"          # 安全时间戳
+            "推荐源：https://jable.tv/api.php\n"          # 真实整源标记（jable.tv）
+        )
+        with tempfile.NamedTemporaryFile("wb", suffix=".md", delete=False) as f:
+            f.write(content.encode("utf-8"))
+            path = f.name
+        try:
+            hits = []
+            alc.scan_text(path, hits)
+            rules = [h.get("rule") for h in hits]
+            self.assertTrue(any("source_pattern" in (r or "") for r in rules),
+                            "时戳外的真实 jable.tv 标记未被捕获：%s" % hits)
+        finally:
+            os.unlink(path)
+
 
 class SweepWiringTest(unittest.TestCase):
     """接线回归：终扫必须发生在写主产物之前、且覆盖全部注入面。"""
