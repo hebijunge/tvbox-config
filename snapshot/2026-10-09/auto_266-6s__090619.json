@@ -1,0 +1,27 @@
+{
+  "spider": "./jar/shared.jar;00000000000000000000000000000000",
+  "wallpaper": "https://fixture.invalid/wall.jpg",
+  "flags": "youku,qq,iqiyi",
+  "parses": [{"name": "Json", "type": 1, "url": "https://fixture.invalid/parse?url="}],
+  "lives": [{"name": "fixture-live", "type": 0, "url": "https://fixture.invalid/live.txt"}],
+  "sites": [
+    {"key": "cms_json", "name": "CMS JSON", "type": 1,
+     "api": "https://fixture.invalid/cms/provide/vod/",
+     "searchable": 1, "quickSearch": 1, "filterable": 1,
+     "header": {"User-Agent": "okhttp/3.15"},
+     "timeout": 8, "changeable": 0, "danmaku": 0, "hide": 0, "indexs": 1,
+     "categories": ["电影", "电视剧"], "playUrl": "https://fixture.invalid/play?u=",
+     "click": "document.title", "style": {"type": "rect", "ratio": 1.33},
+     "vodPlayerBlacklist": "keep-me"},
+    {"key": "cms_xml", "name": "CMS XML", "type": 0,
+     "api": "https://fixture.invalid/cms/xml.php", "searchable": 2},
+    {"key": "js_remote", "name": "JS Remote", "type": 4,
+     "api": "https://fixture.invalid/js/site.js", "ext": "{\"cate\":\"all\"}"},
+    {"key": "py_remote", "name": "Python Remote", "type": 3,
+     "api": "https://fixture.invalid/py/site.py", "ext": "plain-text-ext"},
+    {"key": "jar_class", "name": "JAR Class", "type": 3, "api": "csp_Fixture"},
+    {"key": "jar_direct", "name": "JAR Direct", "type": 3,
+     "api": "https://fixture.invalid/jar/site.jar",
+     "jar": "https://fixture.invalid/jar/site.jar;11111111111111111111111111111111"}
+  ]
+}

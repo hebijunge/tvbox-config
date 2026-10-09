@@ -1,15 +1,15 @@
 # 每日健康日报（人读版）
 
-生成时间：2026-10-06T23:34:49
+生成时间：2026-10-09T01:49:28
 
 ## 总览
 
 | 类别 | 总量 | healthy | degraded | unknown | dead |
 |---|---|---|---|---|---|
-| 点播 | 8144 | 263 | 1738 | 5610 | 533 |
-| 直播 | 871 | 198 | 357 | 289 | 27 |
+| 点播 | 7724 | 250 | 1703 | 5240 | 531 |
+| 直播 | 899 | 230 | 349 | 293 | 27 |
 
-较上轮变化：新增 80｜掉线 125｜恢复 28｜移除 3（点播）；新增 162｜掉线 0｜恢复 0｜移除 0（直播）
+较上轮变化：新增 82｜掉线 100｜恢复 26｜移除 408（点播）；新增 28｜掉线 0｜恢复 0｜移除 0（直播）
 
 ## 点播掉线（前 10）
 
@@ -29,23 +29,23 @@
 - 苏苏🛰️臻享4K（dead → degraded）
 - [616ms|软件] 来看｜影视（dead → degraded）
 -  🌾在线电影(XP)（dead → degraded）
-- 🐰｜小贝｜儿歌（dead → degraded）
-- 🐰｜贝贝｜儿歌（dead → degraded）
 - 💢vo fl ix〔XB〕（dead → degraded）
 - 💥小小┃影视（dead → degraded）
 - 🔥短剧网[影视]_HK（dead → degraded）
 - DRPY┃AGE动漫（dead → degraded）
 - 💎蓝光影院（dead → degraded）
+- 💥音范丝4K（dead → degraded）
+- ❄冷曦影视（dead → degraded）
 
 ## 点播新增（前 10）
 
-- 饭后┃影视（unknown）
-- U酷88（unknown）
-- 🔥网飞NetFlix外剧（unknown）
-- 🔵量子源（unknown）
-- U酷（unknown）
-- 闪电资源（unknown）
+- 云播火狐电影（unknown）
 - 红牛（unknown）
-- 💠┃虎牙┃采集（unknown）
-- 黄色仓库[cj]（unknown）
-- U酷（unknown）
+- 火狐（unknown）
+- 天堂采集（unknown）
+- 辣椒影视（unknown）
+- 昊华影视（unknown）
+- 金鹰（unknown）
+- 光速（unknown）
+- 非凡资源（unknown）
+- 影视⑤（unknown）
