@@ -15,6 +15,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from unittest import mock
 
 _ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.join(_ROOT, "scripts"))
@@ -72,6 +73,39 @@ class TestResolveCollisions(unittest.TestCase):
         self.assertEqual(pathutil.resolve_case_collisions(paths),
                          {p: p for p in paths})
 
+    def test_loser_demoted_even_when_winner_absent(self):
+        """增量轮里胜者没被引用时也必须消解，否则原名把冲突复活。
+
+        2026-10-04 daily 就是这么把 raw/vod/box.json 以原名写回去的：树里于是
+        同时有 Box.json、box.json 和 10-02 迁移出的 box~5c82e9.json 三份。
+        """
+        both = pathutil.resolve_case_collisions(
+            ["deps/a/IPTV.m3u", "deps/a/iptv.m3u"])
+        absent = pathutil.resolve_case_collisions(
+            ["deps/a/iptv.m3u"], occupied=["deps/a/IPTV.m3u"])
+        self.assertEqual(absent["deps/a/iptv.m3u"], both["deps/a/iptv.m3u"],
+                         "胜者在不在场，同一条路径都得同一个落库名")
+        self.assertNotEqual(absent["deps/a/iptv.m3u"], "deps/a/iptv.m3u")
+
+    def test_reuses_existing_demoted_name_instead_of_new_suffix(self):
+        """仓库里已有那个消解名时沿用它的名字，不再另造后缀、不再分叉。"""
+        loser = "deps/a/iptv.m3u"
+        migrated = pathutil.demote_rel(loser)   # 名字由路径派生，别把 tag 写死
+        self.assertNotEqual(migrated, loser)
+        got = pathutil.resolve_case_collisions(
+            [loser], occupied=["deps/a/IPTV.m3u", migrated])
+        self.assertEqual(got[loser], migrated)
+
+    def test_winner_not_disturbed_by_absent_loser(self):
+        got = pathutil.resolve_case_collisions(
+            ["deps/a/IPTV.m3u"], occupied=["deps/a/iptv.m3u"])
+        self.assertEqual(got, {"deps/a/IPTV.m3u": "deps/a/IPTV.m3u"})
+
+    def test_occupied_empty_keeps_legacy_behaviour(self):
+        paths = ["deps/a/IPTV.m3u", "deps/a/iptv.m3u"]
+        self.assertEqual(pathutil.resolve_case_collisions(paths),
+                         pathutil.resolve_case_collisions(paths, occupied=[]))
+
 
 class TestResolveDepPaths(unittest.TestCase):
     def test_case_variants_get_distinct_locals(self):
@@ -95,6 +129,17 @@ class TestResolveDepPaths(unittest.TestCase):
         origin, url = "qist/jsm", "https://raw.githubusercontent.com/qist/tvbox/master/jar/spider.jar"
         self.assertEqual(fm.resolve_dep_paths([(origin, url)])[f"{origin}|{url}"],
                          fm.dep_local_path(origin, url))
+
+    def test_existing_ledger_names_carry_over_rounds(self):
+        """账本已登记的胜者名要参与判冲突——增量轮只来败者时不能落回原名。"""
+        big = ("wex/newwex", "https://a.example.com/x/IPTV.m3u")
+        small = ("wex/newwex", "https://b.example.com/x/iptv.m3u")
+        full = fm.resolve_dep_paths([big, small])
+        ledger = [v for v in full.values()]
+        partial = fm.resolve_dep_paths([small], existing=ledger)
+        self.assertEqual(partial[f"{small[0]}|{small[1]}"],
+                         full[f"{small[0]}|{small[1]}"],
+                         "本轮缺胜者时，落库名必须与两方都在场时一致")
 
 
 class TestRawStoreSettle(unittest.TestCase):
@@ -141,6 +186,29 @@ class TestRawStoreSettle(unittest.TestCase):
     def test_no_collision_untouched(self):
         m = {"k1": {"path": "other.m3u"}}
         self.assertEqual(self.settle(m, "k2", {}, "cn.m3u"), "cn.m3u")
+
+
+class TestIndexCollisionScan(unittest.TestCase):
+    """账本之外的索引冲突必须能被报出来——本轮它是靠人工 ls-tree 才看到的。"""
+
+    def _fake_run(self, returncode, stdout):
+        class R:
+            pass
+        r = R()
+        r.returncode, r.stdout = returncode, stdout
+        return lambda *a, **kw: r
+
+    def test_parses_nul_separated_paths(self):
+        # 必须走 -z 取原始字节：不带 -z 时 git 把非 ASCII 路径 C-引号化成
+        # `"\\347\\234\\213.js"`，与真路径不在同一命名空间，中文名整批漏报。
+        with mock.patch.object(wpc.subprocess, "run", self._fake_run(
+                0, b"raw/vod/Box.json\x00raw/vod/box.json\x00")):
+            self.assertEqual(wpc.check_index_collisions(),
+                             [["raw/vod/Box.json", "raw/vod/box.json"]])
+
+    def test_survives_missing_git(self):
+        with mock.patch.object(wpc.subprocess, "run", self._fake_run(128, b"")):
+            self.assertEqual(wpc.check_index_collisions(), [])
 
 
 class TestWindowsPathCheckGuard(unittest.TestCase):
