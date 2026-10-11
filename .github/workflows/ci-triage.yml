@@ -1,0 +1,47 @@
+name: ci-triage
+# 远端 CI 红了不必手动触发去发现：任一受监控 workflow 以 failure 结束时，
+# 抓出失败 job/步骤，按「workflow|job|步骤」指纹去重开 issue（同一失败只追加评论）。
+# 详见 scripts/ci_triage.py；不加 --apply 只试算，故本 workflow 是唯一的实际写入方。
+
+on:
+  workflow_run:
+    workflows:
+      - daily-fetch
+      - live-validate
+      - live-speedtest
+      - validate-sources
+      - adult-live-probe
+      - live-pool-prune
+      - radar-scan
+      - pages-deploy
+    types:
+      - completed
+
+permissions:
+  actions: read
+  issues: write
+
+concurrency:
+  group: ci-triage-${{ github.event.workflow_run.id }}
+  cancel-in-progress: true
+
+jobs:
+  report:
+    # 只报 main 上的失败，PR 检查红了由 PR 自身呈现，不重复开 issue
+    if: >-
+      github.event.workflow_run.conclusion == 'failure' &&
+      github.event.workflow_run.head_branch == 'main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 定位失败步骤并按指纹开/评 issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ github.event.workflow_run.id }}
+        run: python scripts/ci_triage.py --apply
