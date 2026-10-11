@@ -134,16 +134,23 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     ap.add_argument("--apply", action="store_true",
                     help="实际改名并改写账本（缺省只打印计划）")
+    ap.add_argument("--only", action="append", default=[], metavar="PREFIX",
+                    help="只迁移这些路径前缀下的冲突组（分批推进，避免一次动太多账本）")
     args = ap.parse_args()
 
     paths = tracked_paths()
     groups = pathutil.case_collisions(paths)
+    if args.only:
+        groups = [g for g in groups
+                  if any(p.startswith(pre) for p in g for pre in args.only)]
     if not groups:
         print("[fix_case_collisions] 无大小写冲突，无需迁移")
         return 0
 
+    # occupied 传全仓已跟踪路径：降级名若正是仓库里已有的那个消解名（同一派生
+    # 路径的新一代），就直接沿用，不再另造后缀，也不与 daily 现算的名字分叉。
     resolved = pathutil.resolve_case_collisions(
-        [p for g in groups for p in g])
+        [p for g in groups for p in g], occupied=paths)
     renames = {old: new for old, new in resolved.items() if old != new}
 
     print(f"[fix_case_collisions] 冲突组 {len(groups)}，需改名 {len(renames)}"

@@ -157,7 +157,7 @@ def demote_rel(rel: str, identity: str = None) -> str:
     return f"{d}/{base}~{tag}{ext}" if d else f"{base}~{tag}{ext}"
 
 
-def resolve_case_collisions(paths) -> dict:
+def resolve_case_collisions(paths, occupied=()) -> dict:
     """为大小写互撞的路径分配唯一名，返回 {原路径: 消解后路径}。
 
     落库路径由 URL 段原样派生，上游同名文件常只差大小写（``IPTV.m3u`` /
@@ -168,22 +168,31 @@ def resolve_case_collisions(paths) -> dict:
     消解规则必须与平台无关且可复现，否则本地与 CI 会各自造出不同文件名，
     账本再也对不上：组内按字节序取第一个为胜者保留原名，其余交给
     :func:`demote_rel` 降级，冲突时再追加序号。
+
+    ``occupied`` 传入**本轮视野之外**已存在的路径（账本已登记的落库名）。胜者判定
+    一旦依赖"本轮谁在场"就会漂移：增量轮里胜者没被引用，败者就成了组里唯一成员、
+    按原名落库，把上一轮迁移好的冲突原样复活（2026-10-04 daily 把
+    ``raw/vod/box.json`` 以原名写回，树里于是同时躺着 ``Box.json``、``box.json``
+    和 10-02 迁移出的 ``box~5c82e9.json`` 三份）。并入 occupied 后，同一条路径无论
+    哪轮、谁在场都得同一个名字；降级名撞上既有同名时直接沿用那个名字——该名字只能
+    由这条路径派生，写它等于更新同一文件的新一代，不是覆盖别人的内容。
     """
+    wanted = set(paths)
     out = {}
-    for group in case_collisions(paths):
-        claimed = set()
+    claimed = set()
+    for group in case_collisions(wanted | set(occupied)):
         for i, p in enumerate(group):
             if i == 0:
-                out[p] = p
-                claimed.add(p.lower())
-                continue
-            cand = demote_rel(p)
-            n = 0
-            while cand.lower() in claimed:
-                n += 1
-                cand = demote_rel(p, identity=f"{p}#{n}")
-            out[p] = cand
-            claimed.add(cand.lower())
-    for p in set(paths) - set(out):
+                target = group[0]
+            else:
+                target = demote_rel(p)
+                n = 0
+                while target.lower() in claimed:
+                    n += 1
+                    target = demote_rel(p, identity=f"{p}#{n}")
+            if p in wanted:
+                out[p] = target
+            claimed.add(target.lower())
+    for p in wanted - set(out):
         out[p] = p
     return out

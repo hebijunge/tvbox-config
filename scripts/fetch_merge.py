@@ -1802,61 +1802,22 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
-_OCCUPIED_LOCAL_LOWERS = None
-
-
-def _occupied_local_lowers():
-    """manifest 已登记 local 的大小写不敏感集合（进程内缓存一次）。
-
-    resolve_dep_paths 生成新落库名时，要避开「与既有仅大小写不同」的名字，
-    否则 daily 重写又造回大写名（如 IPTV.m3u vs 既有 iptv.m3u），
-    windows-path-check 每轮 FAIL（2026-10-07 复发）。
-    """
-    global _OCCUPIED_LOCAL_LOWERS
-    if _OCCUPIED_LOCAL_LOWERS is not None:
-        return _OCCUPIED_LOCAL_LOWERS
-    s = set()
-    try:
-        m = load_manifest()
-    except Exception:  # noqa: BLE001 —— 读不到账本就不挡主流程
-        return s
-    for v in m.values():
-        if isinstance(v, dict):
-            loc = v.get("local") or ""
-            if loc:
-                s.add(loc.lower())
-    _OCCUPIED_LOCAL_LOWERS = s
-    return s
-
-
-def resolve_dep_paths(pairs) -> dict:
+def resolve_dep_paths(pairs, existing=()) -> dict:
     """把 (origin, url) 批量解析为落库路径，并消解大小写冲突。
 
     返回 ``{"{origin}|{url}": 相对路径}``。路径本身由 :func:`dep_local_path`
     决定，这里只额外做一层平台无关的冲突消解，见
     :func:`pathutil.resolve_case_collisions`。
 
-    额外：当前批解析出的落库名若与「manifest 已登记的 local」仅大小写互撞
-    （典型：上游 URL 是大写 ``IPTV.m3u``，而同目录既有小写 ``iptv.m3u``），
-    则把当前批这个新名字降级为 ``<base>~<tag><ext>``，既有记录保持不动
-    （不动既有更安全，不破坏已落库文件）。否则 daily 每轮重写又造回大写名，
-    windows-path-check 每轮 FAIL（2026-10-07 复发）。
+    ``existing`` 传账本里已登记的落库名（``deps/manifest.json`` 各条的
+    ``local``）。增量轮里冲突组的胜者可能压根没被引用，缺了 existing 就判不出
+    冲突、按原名落库，把上一轮迁移好的名字再复活一次。
     """
     keys = {}
     for origin, url in pairs:
         keys.setdefault(f"{origin}|{url}", dep_local_path(origin, url))
-    resolved = pathutil.resolve_case_collisions(list(keys.values()))
-    occupied = _occupied_local_lowers()
-    out = {}
-    for k, v in keys.items():
-        rv = resolved.get(v, v)
-        if rv != rv.lower() and rv.lower() in occupied:
-            cand = pathutil.demote_rel(rv, identity=k)
-            while cand.lower() in occupied:
-                cand = pathutil.demote_rel(rv, identity=f"{k}#{cand}")
-            rv = cand
-        out[k] = rv
-    return out
+    resolved = pathutil.resolve_case_collisions(keys.values(), occupied=existing)
+    return {k: resolved.get(v, v) for k, v in keys.items()}
 
 
 # ---- codeload 整仓 tarball 兜底（2026-09-29）----
@@ -2496,7 +2457,11 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
     # ---- 2. 并发下载/校验/入库 ----
     # 先一次性算好全部落库路径：大小写冲突必须在并发下载前消解，否则两个线程
     # 各自 mkdir 同名不同大小写的目录/文件，Windows 上后写者直接盖掉前者。
-    _lp_map = resolve_dep_paths([(o, u) for _h, u, o in entries])
+    # existing 带上账本已登记的名字，让增量轮也能看见缺席的胜者（见 resolve_dep_paths）。
+    _lp_map = resolve_dep_paths(
+        [(o, u) for _h, u, o in entries],
+        existing=[e.get("local") for e in manifest.values()
+                  if isinstance(e, dict) and isinstance(e.get("local"), str)])
 
     def work(e):
         kind_hint, url, origin = e
