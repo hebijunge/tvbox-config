@@ -1,0 +1,47 @@
+{
+ "spider": "./jar/wuao.txt;md5;4c4f8a2ce645a5539405defe99d17fa3",
+ "logo": "./ext/app_icon.png",
+ "lives": [
+  {"name": "🍬移动🍬","type": 0,"url": "./ext/移动","playerType": 2,"ua": "okhttp/3.15","epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}"},
+  {"name": "🍬联通🍬","type": 0,"url": "./ext/联通","playerType": 2,"ua": "okhttp/3.15","epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}"},
+  {"name": "🍬电信🍬","type": 0,"url": "https://raw.githubusercontent.com/Kimentanm/aptv/master/m3u/iptv.m3u","playerType": 2,"ua": "okhttp/3.15","epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}"},
+  {"name": "🍬优选🍬","type": 0,"url": "./ext/live.txt","playerType": 2,"ua": "okhttp/3.15","epg": "https://epg.cdn.loc.cc/?ch={name}&date={date}"}
+ ],
+ "sites": [
+  {"key": "豆瓣","name": "🍬糖果影视🍬","type": 3,"api": "./js/豆瓣.js","searchable": 0,"changeable": 1},
+  {"key": "配置中心","name": "👨‍🍳‍配置┃中心","type": 3,"api": "csp_AAConfigAmns","searchable": 0,"changeable": 0,"indexs": 0,"style": {"type": "rect","ratio": 1.43}},
+  {"key": "哔站记录片","name": "🍬🅱哔站影视","type": 3,"api": "./js/哔哩纪录片.js","searchable": 1,"ext": ""},
+  {"key": "哔站教育","name": "🍬🅱哔站教育","type": 3,"api": "./js/哔站教育.js","searchable": 0,"changeable": 0,"ext": "","style": {"type": "rect","ratio": 1.43}},
+  {"name": "🚀瓜子┃秒播","key": "线路1","type": 3,"api": "csp_GuaziAmns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "Guazi"},
+  {"name": "🚀金牌┃秒播","key": "线路2","type": 3,"api": "csp_JinPaiAmns","searchable": 1,"quickSearch": 1,"changeable": 1},
+  {"name": "🚀秋天┃秒播","key": "线路3","type": 3,"api": "csp_NewGrV2Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "NewGrV2"},
+  {"name": "📦③线┃秒播","key": "线路6","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Zjdr"},
+  {"name": "📦④线┃秒播","key": "线路7","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Xyz"},
+  {"name": "📦⑥线┃秒播","key": "线路9","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Mtq"},
+  {"name": "📦⑦线┃秒播","key": "线路10","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Llq"},
+  {"name": "📦⑧线┃秒播","key": "线路11","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Xsz"},
+  {"name": "📦⑨线┃秒播","key": "线路12","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Xhr"},
+  {"name": "📦师兄┃秒播","key": "线路13","type": 3,"api": "csp_AppV7Amns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "AppV7Dsx"},
+  {"name": "⭐橘汁┃快速","key": "线路14","type": 3,"jar": "https://zl.wpscdn.cn/2026/09/11/space_img/0f5c235d-ee40-42a0-a19a-b7f29986c51c.png;md5;7a2cb30dc4937d27e57288b5c381e19c","api": "csp_Woshinidie","searchable": 1,"quickSearch": 1,"changeable": 1},
+  {"name": "⭐热播┃快速","key": "线路15","type": 3,"api": "csp_RbysAmns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "Rbys"},
+  {"name": "⭐杜北┃秒播","key": "线路16","type": 3,"api": "csp_DubkAmns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "Dubk"},
+  {"name": "⭐荐片┃快速","key": "线路17","type": 3,"api": "csp_JPianAmns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "JPian"},
+  {"name": "📽️嗷嗚┃短剧","key": "DjHggg","type": 3,"api": "csp_HgggAmns","searchable": 0,"quickSearch": 0,"changeable": 1,"genre": "shortdrama"},
+  {"name": "💥玩偶┃4K","key": "woWogg","type": 3,"api": "csp_WoggAmns","searchable": 1,"quickSearch": 1,"changeable": 1,"ext": "woWogg"},
+  {"key": "商店","name": "应用商店","type": 3,"api": "csp_Market","searchable": 0,"changeable": 0,"jar": "./jar/FM.jar","ext": "./ext/market.json"}
+ ],
+ "parses": [
+  {"name": "📦 Json聚合","type": 3,"url": "Demo"},
+  {"name": "🎬 影视聚合","type": 3,"url": "影视"},
+  {"name": "🐮 牛牛解析","type": 1,"url": "","ext": {"flag": ["QD4K","iyf","duanju","gzcj","GTV","GZYS","weggz","Ace"],"header": {"User-Agent": "okhttp/4.9.1"}}},
+  {"name": "🌃 夜幕解析","type": 0,"url": ""}
+ ],
+ "rules": [
+  {"name": "农民","hosts": ["toutiaovod.com"],"regex": ["video/tos/cn"]},
+  {"name": "火山","hosts": ["huoshan.com"],"regex": ["item_id="]},
+  {"name": "抖音","hosts": ["douyin.com"],"regex": ["is_play_url="]},
+  {"name": "磁力广告","hosts": ["magnet"],"regex": ["更多","请访问","example","社 區","x u u","直 播","更 新","社 区","有趣","有 趣","英皇体育","全中文AV在线","澳门皇冠赌场","哥哥快来","美女荷官","裸聊","新片首发","UUE29"]},
+  {"name": "饭团点击","hosts": ["dadagui","freeok","dadagui"],"script": ["document.querySelector(\"#playleftiframe\").contentWindow.document.querySelector(\"#start\").click();"]},
+  {"name": "毛驴点击","hosts": ["www.maolvys.com"],"script": ["document.getElementsByClassName('swal-buttonswal-button--confirm')[0].click()"]}
+ ]
+}

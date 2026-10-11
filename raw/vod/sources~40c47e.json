@@ -1,0 +1,78 @@
+{
+  "_comment": "源注册表 —— 你只需要维护这个文件。把 api 换成你自己有权使用的资源站点接口。",
+  "version": "1.0",
+  "spider": {
+    "url": "https://YOUR-DOMAIN.com/tvbox/spider.jar",
+    "md5": ""
+  },
+  "wallpaper": "https://YOUR-DOMAIN.com/tvbox/wallpaper.jpg",
+  "logo": "https://YOUR-DOMAIN.com/tvbox/logo.png",
+  "sites": [
+    {
+      "name": "我的自建媒体库",
+      "type": 1,
+      "api": "http://127.0.0.1:19999/api.php/provide/vod/",
+      "priority": 1,
+      "skipCheck": true,
+      "tags": [
+        "自建",
+        "自有版权"
+      ],
+      "enabled": true
+    },
+    {
+      "name": "示例源A（替换为你的自有源后再启用）",
+      "type": 1,
+      "api": "https://api-a.example.com/api.php/provide/vod/",
+      "priority": 1,
+      "tags": [
+        "点播"
+      ],
+      "enabled": false
+    },
+    {
+      "name": "示例源B（替换为你的自有源后再启用）",
+      "type": 1,
+      "api": "https://api-b.example.com/api.php/provide/vod/",
+      "priority": 2,
+      "tags": [
+        "点播"
+      ],
+      "enabled": false
+    },
+    {
+      "name": "示例蜘蛛源（替换为你的自有源后再启用）",
+      "type": 3,
+      "api": "csp_Example",
+      "ext": "https://api-c.example.com/",
+      "priority": 3,
+      "tags": [
+        "蜘蛛"
+      ],
+      "enabled": false
+    }
+  ],
+  "lives": [
+    {
+      "name": "自建直播源",
+      "type": 0,
+      "url": "https://YOUR-DOMAIN.com/tvbox/live.m3u",
+      "playerType": 1,
+      "enabled": false
+    }
+  ],
+  "parses": [
+    {
+      "name": "自建解析",
+      "type": 1,
+      "url": "https://YOUR-DOMAIN.com/tvbox/parse?url=",
+      "flag": [
+        "qq",
+        "youku",
+        "iqiyi",
+        "mgtv"
+      ],
+      "enabled": false
+    }
+  ]
+}

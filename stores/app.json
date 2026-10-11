@@ -1,5 +1,5 @@
 {
- "spider": "https://gh-proxy.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/deps/feishu-sync/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/XB%E5%8C%85jar/LIBVIO.jar;md5;da018b4f9e93e66d29be9ff5013a2059",
+ "spider": "https://v6.gh-proxy.org/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/deps/feishu-sync/%E4%B8%80%E6%9C%A8%E6%BA%90/JAR/XB%E5%8C%85jar/LIBVIO.jar;md5;da018b4f9e93e66d29be9ff5013a2059",
  "wallpaper": "https://t.alcy.cc/ys",
  "parses": [
   {
@@ -1389,6 +1389,64 @@
    "url": "https://h5.freejson.xyz/player/?url="
   },
   {
+   "name": "夜猫超聚合",
+   "type": 1,
+   "url": "https://hd.396pay.cn/lib/diy/?key=pFELnzclw6RdhxNlH6&url=",
+   "ext": {
+    "flag": [
+     "qq",
+     "腾讯",
+     "企鹅",
+     "IQiYi",
+     "qiyi",
+     "爱奇艺",
+     "奇艺",
+     "youku",
+     "YouKu",
+     "优酷",
+     "sohu",
+     "SoHu",
+     "搜狐",
+     "letv",
+     "LeShi",
+     "乐视",
+     "imgo",
+     "mgtv",
+     "MangGuo",
+     "芒果",
+     "SLYS4k",
+     "BYGA",
+     "luanzi",
+     "AliS",
+     "dxzy",
+     "bilibili",
+     "QEYSS",
+     "xigua",
+     "西瓜视频",
+     "腾讯视频",
+     "奇艺视频",
+     "优酷视频",
+     "芒果视频",
+     "乐视视频"
+    ],
+    "header": {
+     "User-Agent": "Dart/2.18 (dart:io)"
+    }
+   }
+  },
+  {
+   "name": "车哥",
+   "type": 1,
+   "url": "https://hd.396pay.cn/api/?key=WYfoc47cVuA6xeED4H&url=",
+   "ext": {
+    "flag": [
+     "JHA",
+     "JHB",
+     "mmal"
+    ]
+   }
+  },
+  {
    "name": "精选1",
    "type": 0,
    "url": "https://svip.ikumiao.icu/dm/?uid=4292751&key=dikpqruyBHLNQW0346&url=",
@@ -2580,6 +2638,11 @@
    "url": "https://www.administratorw.com/video.php?url="
   },
   {
+   "name": "TC",
+   "type": 1,
+   "url": "https://hd.396pay.cn/api/diy/?key=pFELnzclw6RdhxNlH6&url="
+  },
+  {
    "name": "自建解析",
    "type": 1,
    "url": "https://YOUR-DOMAIN.com/tvbox/parse?url=",
@@ -2604,10 +2667,12 @@
  ],
  "sites": [
   {
-   "key": "*美少女",
-   "name": "*美少女",
-   "type": 0,
-   "api": "https://www.msnii.com/api/xml.php",
+   "key": "小乐",
+   "name": "小乐｜星源",
+   "type": 1,
+   "api": "https://xy.183933.xyz/php/ls.php/vod",
+   "playUrl": "http://8.155.50.80/xiayexk.php?url=",
+   "changeable": 1,
    "searchable": 1,
    "quickSearch": 1,
    "filterable": 1,
@@ -2621,18 +2686,6 @@
    "searchable": 0,
    "quickSearch": 1,
    "ext": "proxy",
-   "group": "综合-直连点播"
-  },
-  {
-   "key": "小乐",
-   "name": "小乐｜星源",
-   "type": 1,
-   "api": "https://xy.183933.xyz/php/ls.php/vod",
-   "playUrl": "http://8.155.50.80/xiayexk.php?url=",
-   "changeable": 1,
-   "searchable": 1,
-   "quickSearch": 1,
-   "filterable": 1,
    "group": "综合-直连点播"
   },
   {
@@ -2654,15 +2707,13 @@
    "group": "综合-直连点播"
   },
   {
-   "key": "cctv-3",
-   "name": "CCTV",
-   "type": 1,
-   "api": "https://zhangqun19.serv00.net/cctv.php",
-   "style": {
-    "type": "rect",
-    "ratio": 1.33
-   },
-   "changeable": 1,
+   "key": "*美少女",
+   "name": "*美少女",
+   "type": 0,
+   "api": "https://www.msnii.com/api/xml.php",
+   "searchable": 1,
+   "quickSearch": 1,
+   "filterable": 1,
    "group": "综合-直连点播"
   },
   {
@@ -2685,6 +2736,18 @@
    "group": "综合-直连点播"
   },
   {
+   "key": "cctv-3",
+   "name": "CCTV",
+   "type": 1,
+   "api": "https://zhangqun19.serv00.net/cctv.php",
+   "style": {
+    "type": "rect",
+    "ratio": 1.33
+   },
+   "changeable": 1,
+   "group": "综合-直连点播"
+  },
+  {
    "key": "CNTV低分辨",
    "name": "CNTV低分辨",
    "type": 1,
@@ -2697,44 +2760,13 @@
    "group": "综合-直连点播"
   },
   {
-   "key": "d8_taopian",
-   "name": "🕹️淘片┃采集",
+   "key": "csp_xml_搬运工",
+   "name": "🐝搬运工资源",
    "type": 1,
-   "api": "https://taopianapi.com/cjapi/mc/vod/json.html",
+   "api": "https://cj.banyung.xyz/",
    "searchable": 1,
+   "quickSearch": 1,
    "filterable": 0,
-   "categories": [
-    "动漫/国产动漫",
-    "动漫/日本动漫",
-    "动漫/欧美动漫",
-    "动漫/海外动漫",
-    "综艺/大陆综艺",
-    "综艺/港台综艺",
-    "综艺/日韩综艺",
-    "综艺/欧美综艺",
-    "综艺/海外综艺",
-    "电视剧/国产剧",
-    "电视剧/香港剧",
-    "电视剧/欧美剧",
-    "电视剧/海外剧",
-    "电视剧/韩国剧",
-    "电视剧/日本剧",
-    "电视剧/泰国剧",
-    "电视剧/台湾剧",
-    "电影/战争片",
-    "电影/科幻片",
-    "电影/奇幻片",
-    "电影/冒险片",
-    "电影/动画片",
-    "电影/喜剧片",
-    "电影/动作片",
-    "电影/爱情片",
-    "电影/恐怖片",
-    "电影/惊悚片",
-    "电影/剧情片",
-    "电影/悬疑片",
-    "电影/纪录片"
-   ],
    "group": "综合-直连点播"
   }
  ]

@@ -1,5 +1,5 @@
 {
-  "spider": "https://qiniu.gongxueyun.com/upload/2075694/2026-10-10/report/474741801_2_1791669893528.jar;md5;7aa0b6d6048a6568e3a557c95b7aef77",
+   "spider": "https://qiniu.gongxueyun.com/upload/3459324/2026-10-11/leave/936060006_2_1791715004566.jar;md5;4dc223d1d15e775d86f297152333d1f5",
   "logo": "https://modelscope-resouces.oss-cn-zhangjiakou.aliyuncs.com/avatar%2Ff5309172-1af6-4c4f-a1c5-a4773a1cc718.gif",
   "wallpaper": "http://127.0.0.1:9978/proxy?do=wallpaper",
   "danmaku": "http://127.0.0.1:5266/danmu/webhtv?name={name}&episode={episode}",
