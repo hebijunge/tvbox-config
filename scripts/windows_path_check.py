@@ -21,6 +21,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import subprocess
 import sys
 from typing import List, Tuple
 
@@ -82,6 +83,22 @@ def check_case_collisions(paths: List[str]) -> List[Tuple[str, str]]:
             for g in pathutil.case_collisions(paths)]
 
 
+def check_index_collisions() -> List[List[str]]:
+    """扫描 git 索引里的同目录大小写冲突，作为账本之外的可见性补充。
+
+    账本只覆盖 ``local`` 落库路径，而 ``raw/vod`` 这类 store 实体里的冲突（本轮实测
+    存在 ``Box.json`` 与 ``box.json`` 并存、外加迁移出的 ``box~5c82e9.json``）不在
+    扫描面上，只能靠人工 ``ls-tree`` 才发现。这里先只报数不判死：存量清完再收紧。
+    """
+    out = subprocess.run(["git", "ls-files", "-z"], capture_output=True)
+    if out.returncode != 0:
+        print("[windows_path_check] git ls-files 失败，跳过索引冲突扫描",
+              file=sys.stderr)
+        return []
+    paths = [p for p in out.stdout.decode("utf-8", "replace").split("\0") if p]
+    return pathutil.case_collisions(paths)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Windows 路径兼容性检查")
     parser.add_argument(
@@ -99,6 +116,7 @@ def main() -> int:
     paths = collect_local_paths(manifest)
     problems = check_paths(paths)
     collisions = check_case_collisions(paths)
+    index_collisions = check_index_collisions()
 
     print(f"[windows_path_check] 共检查 {len(paths)} 条 local 路径，"
           f"问题 {len(problems)} 条，大小写冲突 {len(collisions)} 组")
@@ -114,6 +132,14 @@ def main() -> int:
         print("[windows_path_check] 大小写冲突组：")
         for i, (p, reason) in enumerate(collisions[:20], 1):
             print(f"  {i}. {p}  -- {reason}")
+
+    if index_collisions:
+        print(f"[windows_path_check] 账本外的索引冲突 {len(index_collisions)} 组"
+              f"（仅告警，不计入判定）：")
+        for i, group in enumerate(index_collisions[:20], 1):
+            print(f"  {i}. {'<->'.join(group)}")
+        if len(index_collisions) > 20:
+            print(f"  ... 其余 {len(index_collisions) - 20} 组省略")
 
     if problems or collisions:
         print("[windows_path_check] FAIL: 存在 Windows 不兼容路径")
