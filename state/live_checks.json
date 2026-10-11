@@ -32,8 +32,8 @@
     },
     {
      "stream": "http://31.43.191.125:8080/vip6821768502490/6c17bae55394/34904",
-     "ok": false,
-     "why": "http_502"
+     "ok": true,
+     "why": "ct:video/mp2t"
     },
     {
      "stream": "http://182.85.163.86:1234/952383261",
@@ -41,7 +41,7 @@
      "why": "ct:application/vnd.apple.mpegurl"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 3,
    "status": "ok",
    "ffprobe": [
     {
@@ -60,9 +60,19 @@
      }
     },
     {
-     "stream": "http://182.85.163.86:1234/952383261",
-     "ok": false,
-     "why": "probe_failed"
+     "stream": "http://31.43.191.125:8080/vip6821768502490/6c17bae55394/34904",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
     }
    ]
   }
