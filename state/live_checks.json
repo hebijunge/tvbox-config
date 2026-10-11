@@ -6,37 +6,37 @@
    "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 1120,
+   "channels": 1117,
    "groups": [
     "其他",
     "卫视",
     "央视",
     "港台"
    ],
-   "bytes": 88041,
+   "bytes": 88145,
    "stream_tests": [
     {
-     "stream": "http://[2409:8087:3c02:21:0:1:0:100a]:6410/shandong_cabletv.live.zte.com////CHANNEL00000350/index.m3u8?IASHttpSessionId=",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://api.mg.itv888.cn:8080/hls/11ef1dc70d8/index.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://0472.org/hls/cgtnx.m3u8",
-     "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl"
-    },
-    {
-     "stream": "https://smart.pendy.dpdns.org/Smart.php?id=ettvzhonghe",
+     "stream": "rtp://239.3.1.245:2000",
      "ok": false,
      "why": "no_response"
     },
     {
      "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://101.35.240.114:88/phenix.php?id=fhhk",
+     "ok": false,
+     "why": "http_404"
+    },
+    {
+     "stream": "http://31.43.191.125:8080/vip6821768502490/6c17bae55394/34904",
+     "ok": false,
+     "why": "http_502"
+    },
+    {
+     "stream": "http://182.85.163.86:1234/952383261",
      "ok": true,
      "why": "ct:application/vnd.apple.mpegurl"
     }
@@ -45,7 +45,7 @@
    "status": "ok",
    "ffprobe": [
     {
-     "stream": "https://0472.org/hls/cgtnx.m3u8",
+     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
      "ok": true,
      "info": {
       "codecs": [
@@ -60,19 +60,9 @@
      }
     },
     {
-     "stream": "http://38.75.136.137:98/gslb/dsdqpub/gefwq.m3u8?auth=testpub",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
-      }
-     }
+     "stream": "http://182.85.163.86:1234/952383261",
+     "ok": false,
+     "why": "probe_failed"
     }
    ]
   }
