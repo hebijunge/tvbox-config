@@ -1,0 +1,12 @@
+{
+  "spider": "./jar/shared.jar",
+  "sites": [
+    {"key": "rel_cms", "name": "Relative CMS", "type": 1,
+     "api": "https://fixture.invalid/rel/provide/vod/",
+     "ext": "./lib/site_ext.json", "playUrl": "./play/"},
+    {"key": "rel_js", "name": "Relative JS", "type": 4,
+     "api": "./js/rel_site.js", "ext": {"host": "./lib/host.json", "keep": 7}},
+    {"key": "rel_jar", "name": "Relative JAR", "type": 3,
+     "api": "csp_Relative", "jar": "./jar/site.jar;22222222222222222222222222222222"}
+  ]
+}
