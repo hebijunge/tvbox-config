@@ -180,14 +180,20 @@ class TestHeadSlim(unittest.TestCase):
         # dry-run 绝不能改索引
         self._init_repo()
         before = head_slim_deps.tracked_deps(self.tmp)
+        # --out 必须显式给到临时目录：脚本默认值是相对 cwd 的
+        # state/head_slim_candidates.json，而这个用例的 cwd 是仓库根——不传就会把
+        # 夹具清单写进生产状态文件（实测单跑本文件即改写该文件，2026-10-12），
+        # 再被 daily 的 git add -A 提交上去。
+        out = os.path.join(self.tmp, "candidates.json")
         old = sys.argv
-        sys.argv = ["head_slim_deps", "--repo", self.tmp]
+        sys.argv = ["head_slim_deps", "--repo", self.tmp, "--out", out]
         try:
             head_slim_deps.main()
         finally:
             sys.argv = old
         after = head_slim_deps.tracked_deps(self.tmp)
         self.assertEqual(before, after)
+        self.assertTrue(os.path.isfile(out), "dry-run 仍要把清单写到 --out")
 
     def test_refs_union_includes_adult_stores_and_manifest(self):
         # 覆盖 PR#36 三处口径统一后 head_slim 也应看到 adult.json / stores 的引用
