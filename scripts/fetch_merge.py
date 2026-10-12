@@ -1802,7 +1802,20 @@ def dep_local_path(origin: str, url: str) -> str:
     return pathutil.check_path_length(result)
 
 
-def resolve_dep_paths(pairs, existing=()) -> dict:
+def _ledger_locals() -> list:
+    """账本已登记的 local 落库名，供 :func:`resolve_dep_paths` 当 occupied 用。
+
+    读不到账本就不挡主流程（宁可不消解，也不让整轮依赖落库失败）。
+    """
+    try:
+        m = load_manifest()
+    except Exception:  # noqa: BLE001 —— 账本缺失/损坏时退回不消解
+        return []
+    return [e.get("local") for e in m.values()
+            if isinstance(e, dict) and isinstance(e.get("local"), str)]
+
+
+def resolve_dep_paths(pairs, existing=None) -> dict:
     """把 (origin, url) 批量解析为落库路径，并消解大小写冲突。
 
     返回 ``{"{origin}|{url}": 相对路径}``。路径本身由 :func:`dep_local_path`
@@ -1810,13 +1823,17 @@ def resolve_dep_paths(pairs, existing=()) -> dict:
     :func:`pathutil.resolve_case_collisions`。
 
     ``existing`` 传账本里已登记的落库名（``deps/manifest.json`` 各条的
-    ``local``）。增量轮里冲突组的胜者可能压根没被引用，缺了 existing 就判不出
-    冲突、按原名落库，把上一轮迁移好的名字再复活一次。
+    ``local``），省略时自动从账本读。它必须参与胜者判定，否则两种复发：增量轮里
+    冲突组的胜者没被引用就判不出冲突、按原名落库，把上一轮迁好的名字复活；本轮
+    派生名若只按字节序压过既有已落库名，就在同一目录开出仅大小写不同的第二个文件，
+    Windows 上互相覆盖。
     """
     keys = {}
     for origin, url in pairs:
         keys.setdefault(f"{origin}|{url}", dep_local_path(origin, url))
-    resolved = pathutil.resolve_case_collisions(keys.values(), occupied=existing)
+    if existing is None:
+        existing = _ledger_locals()
+    resolved = pathutil.resolve_case_collisions(list(keys.values()), occupied=existing)
     return {k: resolved.get(v, v) for k, v in keys.items()}
 
 

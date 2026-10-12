@@ -63,13 +63,11 @@ class TestRepoRef(unittest.TestCase):
         fake = {"wex/newwex|http://x/iptv.m3u": {"local": "deps/wex/newwex/iptv.m3u"}}
         orig_load = fm.load_manifest
         fm.load_manifest = lambda: fake
-        fm._OCCUPIED_LOCAL_LOWERS = None  # 重置缓存，强制读 mock
         key = "wex/newwex|https://gh.halonice.com/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u"
         try:
             out = fm.resolve_dep_paths([("wex/newwex", "https://gh.halonice.com/https://raw.githubusercontent.com/YueChan/Live/main/IPTV.m3u")])
         finally:
             fm.load_manifest = orig_load
-            fm._OCCUPIED_LOCAL_LOWERS = None  # 避免污染后续测试缓存
         got = out[key]
         self.assertNotEqual(got.lower(), "deps/wex/newwex/iptv.m3u",
                              "不应与既有仅大小写相同，否则 Windows 冲突：%s" % got)

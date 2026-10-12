@@ -96,10 +96,27 @@ class TestResolveCollisions(unittest.TestCase):
             [loser], occupied=["deps/a/IPTV.m3u", migrated])
         self.assertEqual(got[loser], migrated)
 
-    def test_winner_not_disturbed_by_absent_loser(self):
+    def test_occupied_name_wins_over_bytewise(self):
+        """已落库的名字优先于字节序胜者规则。
+
+        本条原名 test_winner_not_disturbed_by_absent_loser，断言大写 IPTV.m3u 保留
+        原名，与 test_deps_repo_backfill.test_resolve_dep_paths_avoids_case_clash_with_existing
+        对同一场景规定了相反结果——两条已提交的测试互相矛盾，是这个冲突修了六轮
+        还在复发的根源（2026-10-11 run#175 把矛盾摊开：后者 FAILED）。
+
+        occupied 是账本已登记、也就是树里真实存在的那个文件。让本轮派生名只按字节序
+        压过它，等于在同一目录开出仅大小写不同的第二份，正是 windows_path_check
+        判冲突的条件本身，所以这里选「已落库者优先」。
+        """
         got = pathutil.resolve_case_collisions(
             ["deps/a/IPTV.m3u"], occupied=["deps/a/iptv.m3u"])
-        self.assertEqual(got, {"deps/a/IPTV.m3u": "deps/a/IPTV.m3u"})
+        self.assertNotEqual(got["deps/a/IPTV.m3u"], "deps/a/IPTV.m3u",
+                            "既有小写已落库，本轮大写必须让位")
+        self.assertTrue(got["deps/a/IPTV.m3u"].startswith("deps/a/IPTV~"),
+                        got["deps/a/IPTV.m3u"])
+        # 同一场景重复求解必须得同一个名字，否则账本分叉
+        self.assertEqual(got, pathutil.resolve_case_collisions(
+            ["deps/a/IPTV.m3u"], occupied=["deps/a/iptv.m3u"]))
 
     def test_occupied_empty_keeps_legacy_behaviour(self):
         paths = ["deps/a/IPTV.m3u", "deps/a/iptv.m3u"]
