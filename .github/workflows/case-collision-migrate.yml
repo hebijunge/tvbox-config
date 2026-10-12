@@ -1,0 +1,94 @@
+name: case-collision-migrate
+# 一次性工装：迁移仓库内仅大小写不同的同目录路径（scripts/fix_case_collisions.py）。
+#
+# 为什么必须在这里跑而不是本地：Windows/macOS 检出下 ``IPTV.m3u`` 与 ``iptv.m3u`` 是
+# 同一个物理文件，本地一动就把两条 index 记录一起毁掉——这恰恰就是该 bug 的危害形态
+# （2026-10-12 实测：deps/wex/newwex/iptv~1f1e8f.m3u 里存的是 IPTV.m3u 的 blob e02b1571，
+# 而账本按 zbefine 登记的 md5 对应 b35757b5，内容与账本已经错位）。
+# ubuntu runner 区分大小写，工装能从各自 blob 分别还原两条，顺带把错位内容修回去。
+#
+# 默认 apply=false 只试算并上传报告；确认计划后再用 apply=true 开迁移 PR，不直接改 main。
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'false=只试算并上传报告；true=实际改名并开 PR'
+        type: boolean
+        default: false
+      only:
+        description: '只迁移这些路径前缀，逗号分隔（留空=全部冲突组）'
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      ONLY_ARG: ${{ inputs.only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: 试算迁移计划
+        shell: bash
+        run: |
+          set -euo pipefail
+          ONLY=()
+          if [ -n "${ONLY_ARG:-}" ]; then
+            IFS=',' read -ra PS <<< "$ONLY_ARG"
+            for p in "${PS[@]}"; do ONLY+=(--only "$p"); done
+          fi
+          python scripts/fix_case_collisions.py "${ONLY[@]}" | tee dryrun.txt
+
+      - name: 上传试算报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: case-collision-dryrun
+          path: dryrun.txt
+
+      - name: 实际迁移并开 PR
+        if: inputs.apply
+        shell: bash
+        run: |
+          set -euo pipefail
+          # runner 默认没有 git 身份，否则 commit 报 fatal: empty ident name
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          ONLY=()
+          if [ -n "${ONLY_ARG:-}" ]; then
+            IFS=',' read -ra PS <<< "$ONLY_ARG"
+            for p in "${PS[@]}"; do ONLY+=(--only "$p"); done
+          fi
+          python scripts/fix_case_collisions.py --apply "${ONLY[@]}"
+
+          git checkout -b "$BRANCH"
+          # 工装会把原文件备份到 .qoder-tmp/case_migration/，那份不能进提交
+          git add -A
+          git reset -q -- .qoder-tmp 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "没有需要提交的变更（无冲突，或已迁移完毕）"
+            exit 0
+          fi
+          git commit -m "chore(deps): 迁移仓库内仅大小写不同的同目录路径（Linux 侧 blob 还原）"
+          git push origin "$BRANCH"
+
+          # 浅克隆下取不到 HEAD~1，回滚点用触发时的 main sha
+          gh pr create --base main --head "$BRANCH" \
+            --title "chore(deps): 迁移大小写互撞路径，修正错位内容" \
+            --body "由 case-collision-migrate 工装（apply=true）生成，基线 ${BASE_SHA}。改名在区分大小写的文件系统上完成，同组两条记录各自从 index 的 blob 还原，因此 iptv.m3u 的内容会落回 iptv~1f1e8f.m3u（当前该文件存的是大写那条的 blob，与账本登记的 md5 错位）。回滚点就是基线 commit，revert 本 PR 即可。"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH: chore/case-collision-migrate-${{ github.run_id }}
+          BASE_SHA: ${{ github.sha }}
