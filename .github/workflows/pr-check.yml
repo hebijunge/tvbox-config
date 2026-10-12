@@ -5,8 +5,18 @@ name: pr-check
 #
 # 只跑 windows-path-check，不跑单元测试：daily 的 `python -m unittest discover -s tests`
 # 是在 actions/cache 恢复 deps/ lib/ js/ 之后执行的，PR 环境没有这批落库文件会假红。
-# 要纳入单测得先修缓存键——当前 key 用 hashFiles('deps/json/manifest.json')，而那个
-# 文件只有 2 字节（ "{}"，活账本其实是 deps/manifest.json 的 1.2MB），key 恒定不变。
+#
+# 更正（原先这里写"要纳入单测得先修缓存键"，判断错了）：纳入单测的前提是**测试不写
+# 生产文件**。tests/test_head_slim_deps.py 有个用例把夹具清单写进
+# state/head_slim_candidates.json（--out 默认相对 cwd），而 daily 步骤 27 用 git add -A
+# 提交，那份假数据就一路进了 main。这条已单独修掉，与缓存键无关。
+#
+# 缓存键恒定是另一件事：hashFiles('deps/json/manifest.json') 指向一个只有 2 字节的
+# 空壳（活账本其实是 deps/manifest.json 的 1.2MB），key 永不变，于是 deps 内容基线停在
+# 旧版；正确性由 fetch_merge 的 md5 校验兜住（不一致就重下），代价只是每轮重下差异。
+# 直接改成 hashFiles('deps/manifest.json') 会让每轮都 cache-miss 并重新 save 384MB，
+# 几轮就吃光缓存配额，所以不动——账本被缓存回滚这件事已由 daily.yml 里
+# 「账本以 git 检出为准」那一步挡掉。
 #
 # 绝不引入 fetch-merge job：它会提交并推送仓库，PR 上跑等于自动改 main。
 

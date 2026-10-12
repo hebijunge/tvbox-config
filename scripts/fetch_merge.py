@@ -1837,6 +1837,45 @@ def resolve_dep_paths(pairs, existing=None) -> dict:
     return {k: resolved.get(v, v) for k, v in keys.items()}
 
 
+def normalize_manifest_case_collisions(manifest) -> int:
+    """写盘前对**最终账本**再收口一次大小写冲突，返回改名条数。
+
+    为什么必须独立于 :func:`resolve_dep_paths`：后者只消解「本轮 entries 内部 +
+    它拿到的 existing」，而账本里总有些本轮不处理的历史陈旧条目——它们不在映射里，
+    会以原名一路被原样写回，与同目录的另一种写法互撞，``windows-path-check`` 每轮
+    FAIL。这里卡在唯一写盘点：不管加载进来的账本脏不脏（CI 缓存就曾经每轮把它回滚
+    成旧版，2026-10-12 实证），提交出去的账本永远零冲突。
+
+    胜者选取必须与 :func:`pathutil.resolve_case_collisions` 同一条规则（已落库优先、
+    字节序兜底），不能另立标准：本函数最初按「优先保留全小写名」选胜者，与 #62 相反，
+    同一个冲突于是算出两套降级名（``iptv~1f1e8f`` 与 ``IPTV~d9cba8``），账本从此分叉。
+    """
+    by_local = {}
+    for k, v in manifest.items():
+        if isinstance(v, dict) and isinstance(v.get("local"), str) and v["local"]:
+            by_local.setdefault(v["local"], []).append(k)
+    locals_ = list(by_local)
+    if not locals_:
+        return 0
+    resolved = pathutil.resolve_case_collisions(locals_, occupied=locals_)
+    changed = 0
+    for old, new in resolved.items():
+        if new == old:
+            continue
+        for k in by_local[old]:
+            manifest[k]["local"] = new
+        changed += len(by_local[old])   # 按账本条目计数，与工装「改写 N 条」同口径
+        # 优先复用仓库里已存在的降级文件（历史清理留下的同名新名），否则把败者文件
+        # 挪过去；两者都拿不到就不动磁盘，由下游「依赖完整性闸门」按账本 URL 补下。
+        if not os.path.isfile(new) and os.path.isfile(old):
+            try:
+                os.makedirs(os.path.dirname(new), exist_ok=True)
+                os.replace(old, new)
+            except OSError:  # 磁盘挪不动不该让整轮依赖落库失败
+                pass
+    return changed
+
+
 # ---- codeload 整仓 tarball 兜底（2026-09-29）----
 # 依赖收集是「每文件 × 镜像轮换」，同一个仓的几十个文件就是几十次握手；raw 被掐时成片
 # 失败（本地 deps 收集 878/2811 的根因之一）。实测 codeload.github.com 的整仓 tar.gz
@@ -2943,6 +2982,9 @@ def collect_and_rewrite_deps(tvbox: dict, site_origin: dict, spider_origin: dict
                                 "last_error": rec.get("last_error", ""),
                                 "ref_count": ref_counts.get(rec["local"], 0)}
     os.makedirs(DEPS_DIR, exist_ok=True)
+    _cc = normalize_manifest_case_collisions(manifest)
+    if _cc:
+        print(f"[deps] 写盘前收口大小写冲突：改名 {_cc} 条", flush=True)
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=1)
     print(f"[deps] 完成：收集 {stats['collected']}/{stats['total']}，改写 {stats['rewritten']} 处引用，"
@@ -3153,6 +3195,9 @@ def localize_external_refs(tvbox: dict) -> dict:
                                                "kind": rec["kind"], "size": rec["size"],
                                                "channel": rec.get("channel", ""), "updated_at": now}
     os.makedirs(DEPS_DIR, exist_ok=True)
+    _cc = normalize_manifest_case_collisions(manifest)
+    if _cc:
+        print(f"[deps-2] 写盘前收口大小写冲突：改名 {_cc} 条", flush=True)
     with open(MANIFEST_PATH, "w", encoding="utf-8") as f:
         json.dump(manifest, f, ensure_ascii=False, indent=1)
     print(f"[deps-2] 完成：落库 {stats['localized']}/{stats['candidates']}，改写 {stats['rewritten']} 个站点字段，"
