@@ -61,6 +61,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-deps-
 
+      # 缓存把 deps/manifest.json 一起盖回了缓存里那份远古版本。key 由
+      # hashFiles('deps/json/manifest.json') 派生，而那个文件只有 2 字节（"{}"；活账本
+      # 其实是 deps/manifest.json 的 1.2MB），key 恒定 ⇒ 这份 384MB 缓存自 2026-09-28
+      # 起从未更新（2026-10-12 run#177 实证：restore 后条目从 2562 涨回 2998，
+      # local 回退成 IPTV.m3u/iptv.m3u 原名，updated_at 全部钉在 09-28 10:11:58）。
+      # 账本是"该落库什么"的唯一事实源，每轮被回滚意味着派生逻辑怎么修都白修——
+      # 10-04/10-06/10-09 三次大小写迁移就是这样消失的。这里让账本以 git 检出为准，
+      # 缓存只保留 deps 内容文件；两者不匹配时由下游「依赖完整性闸门」按 manifest
+      # 里的 URL 补下，属一次性代价。
+      #
+      # key 本身不改：改成 hashFiles('deps/manifest.json') 会让每轮都 cache-miss 并
+      # 重新 save 384MB，几轮就把缓存配额吃光。
+      - name: 账本以 git 检出为准（缓存只该提供 deps 内容文件）
+        run: git checkout HEAD -- deps/manifest.json
+
       - name: 安装 pypinyin（频道拼音排序依赖，缺失时退回字典序）
         run: pip install pypinyin
 
