@@ -1,0 +1,46 @@
+name: pr-check
+# 给 PR 一个"绿"的载体：daily-fetch 只有 push(main)/schedule/dispatch 三种触发，
+# 仓库里 12 个 workflow 没有一个监听 pull_request，所以 PR 上永远不产生 check，
+# 合并前只能靠本地跑。这里补上只读的那一半。
+#
+# 只跑 windows-path-check，不跑单元测试：daily 的 `python -m unittest discover -s tests`
+# 是在 actions/cache 恢复 deps/ lib/ js/ 之后执行的，PR 环境没有这批落库文件会假红。
+# 要纳入单测得先修缓存键——当前 key 用 hashFiles('deps/json/manifest.json')，而那个
+# 文件只有 2 字节（ "{}"，活账本其实是 deps/manifest.json 的 1.2MB），key 恒定不变。
+#
+# 绝不引入 fetch-merge job：它会提交并推送仓库，PR 上跑等于自动改 main。
+
+on:
+  pull_request:
+    paths:
+      - deps/manifest.json
+      - scripts/pathutil.py
+      - scripts/fetch_merge.py
+      - scripts/raw_store.py
+      - scripts/windows_path_check.py
+      - scripts/fix_case_collisions.py
+      - .github/workflows/pr-check.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  windows-path-check:
+    # 与 daily.yml 同名 job 逐字一致，避免"PR 绿、main 红"来自检查器本身的分叉
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Windows 兼容性检查
+        run: python scripts/windows_path_check.py
