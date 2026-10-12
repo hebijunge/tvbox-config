@@ -206,6 +206,17 @@ jobs:
       - name: 依赖去重回收候选（dry-run）
         run: python scripts/dedup_prune.py || true
 
+      # 2026-10-12：state/head_slim_candidates.json 此前唯一的写入者是单元测试——
+      # test_head_slim_deps 有个用例没传 --out，把夹具清单（deps/old_orphan.js、
+      # refs_total=2）写进仓库，再被步骤 27 的 git add -A 提交进 main（该仓库
+      # .gitignore 里那句「daily 一次 git add -A 就会把几百 MB 输出卷进历史」说的
+      # 就是这条通道）。污染已在 #69 修掉，但 CI 并没有正式生产这份清单的步骤，
+      # 于是那份假数据会永远留在 main 上误导读它的人。补这一步把真实清单产出来：
+      # 只写 json、不 git rm，--execute 仍由人工在本地确认后跑。
+      - name: HEAD 瘦身候选（dry-run）
+        continue-on-error: true
+        run: python scripts/head_slim_deps.py || true
+
       - name: 直播死源剔除（P1-4：只剔 404 确定性死源，回写 tvbox/exports）
         # 读 DB lives 判级（store --probe-lives 产出），仅 HTTP 404/410 确定性证据才剔；
         # 连接失败/超时（unknown）一律保留。gh 镜像源剥前缀走镜像链复测，复活回写 healthy。
