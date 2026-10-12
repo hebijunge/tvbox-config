@@ -74,7 +74,9 @@ jobs:
           python scripts/fix_case_collisions.py --apply "${ONLY[@]}"
 
           git checkout -b "$BRANCH"
-          # 工装会把原文件备份到 .qoder-tmp/case_migration/，那份不能进提交
+          # 试算步骤 tee 出的 dryrun.txt 不是产物，别跟着进提交；
+          # 工装备份目录 .qoder-tmp/case_migration/ 同样排除
+          rm -f dryrun.txt
           git add -A
           git reset -q -- .qoder-tmp 2>/dev/null || true
           if git diff --cached --quiet; then
@@ -84,10 +86,15 @@ jobs:
           git commit -m "chore(deps): 迁移仓库内仅大小写不同的同目录路径（Linux 侧 blob 还原）"
           git push origin "$BRANCH"
 
-          # 浅克隆下取不到 HEAD~1，回滚点用触发时的 main sha
-          gh pr create --base main --head "$BRANCH" \
-            --title "chore(deps): 迁移大小写互撞路径，修正错位内容" \
-            --body "由 case-collision-migrate 工装（apply=true）生成，基线 ${BASE_SHA}。改名在区分大小写的文件系统上完成，同组两条记录各自从 index 的 blob 还原，因此 iptv.m3u 的内容会落回 iptv~1f1e8f.m3u（当前该文件存的是大写那条的 blob，与账本登记的 md5 错位）。回滚点就是基线 commit，revert 本 PR 即可。"
+          # 浅克隆下取不到 HEAD~1，回滚点用触发时的 main sha。
+          # 本仓未勾选 Settings→Actions→“Allow GitHub Actions to create and approve pull
+          # requests”，GITHUB_TOKEN 建 PR 会被 GraphQL 拒（2026-10-12 run#2 实证）。分支
+          # 推送成功即算工装完成，PR 交给外部用 REST 开——不该让这一步把整个 run 判红。
+          if ! gh pr create --base main --head "$BRANCH" \
+              --title "chore(deps): 迁移大小写互撞路径，修正错位内容" \
+              --body "由 case-collision-migrate 工装（apply=true）生成，基线 ${BASE_SHA}。改名在区分大小写的文件系统上完成，同组两条记录各自从 index 的 blob 还原，因此 iptv.m3u 的内容会落回 iptv~1f1e8f.m3u（此前该文件存的是大写那条的 blob，与账本登记的 md5 错位）。回滚点就是基线 commit，revert 本 PR 即可。"; then
+            echo "::warning::GITHUB_TOKEN 无权建 PR，分支已推送：$BRANCH"
+          fi
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           BRANCH: chore/case-collision-migrate-${{ github.run_id }}
