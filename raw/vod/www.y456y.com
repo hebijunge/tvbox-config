@@ -1,5 +1,5 @@
 {
-  "spider": "https://qiniu.gongxueyun.com/upload/1844926/2026-10-12/visa_free/975812142_4_1791838159815.jar;md5;86551759ce70e464817eb477b89e1282",
+  "spider": "https://qiniu.gongxueyun.com/upload/5556851/2026-10-13/noknow/439065876_1_1791894280503.jar;md5;e521e2cc4db0d7de7c8c001d51a0bfd3",
   "logo": "https://modelscope-resouces.oss-cn-zhangjiakou.aliyuncs.com/avatar%2Ff5309172-1af6-4c4f-a1c5-a4773a1cc718.gif",
   "wallpaper": "http://127.0.0.1:9978/proxy?do=wallpaper",
   "danmaku": "http://127.0.0.1:5266/danmu/webhtv?name={name}&episode={episode}",
@@ -107,14 +107,34 @@
       }
     },
     {
-      "key": "QingYing",
-      "name": "🌙┆清影┆4K",
+      "key": "KaiFan",
+      "name": "🍚┆开饭┆4K",
       "type": 3,
-      "api": "csp_QingYing",
+      "api": "csp_KaiFan",
       "searchable": 1,
       "quickSearch": 1,
       "filterable": 1,
-      "ext": "Ae4Ffk2jC6Sj0Lkg7sEC9r9k7IvT5Za46LxzNKyjLoBd9zXm9TSIgvcTWwV58ulpdTEjm8n17LRnaodWqRBwSXo="
+      "ext": "AfLGR2SW/7tjQA3K8Qgg5u7AG1NNWsCVAVxfMv/V44kP5aqzon5weT9IvX2w2KtBeMpAxc+Y0yRLN0eXf6oiuLw="
+    },
+    {
+      "key": "bandeng",
+      "name": "🤤┆板凳┆4K",
+      "type": 3,
+      "api": "csp_BanDeng",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "ext": "ASH3HkV5cxNhNR9+uQe0sWYxUWHzEywHT3rcYOx+wsK4Jx+sBd0qMO9kFic1Rc1osAMsAsTlMgabd1Ky2kmzQ/Y="
+    },
+    {
+      "key": "mandian",
+      "name": "🐢┆慢点┆4K",
+      "type": 3,
+      "api": "csp_ManDian",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "ext": "AU08qHcswQQ9GUNUYMdLgyq8HzPCy1gUxku0nrQgOwfSJrT0LgwdrXoWPVK+x4n+QQ8KbuVPdzA5/U2YL7fQmH8="
     },
     {
       "key": "bl",

@@ -1,5 +1,5 @@
 {
-   "spider": "https://qiniu.gongxueyun.com/upload/3459324/2026-10-11/leave/936060006_2_1791715004566.jar;md5;4dc223d1d15e775d86f297152333d1f5",
+  "spider": "https://qiniu.gongxueyun.com/upload/1844926/2026-10-12/visa_free/975812142_4_1791838159815.jar;md5;86551759ce70e464817eb477b89e1282",
   "logo": "https://modelscope-resouces.oss-cn-zhangjiakou.aliyuncs.com/avatar%2Ff5309172-1af6-4c4f-a1c5-a4773a1cc718.gif",
   "wallpaper": "http://127.0.0.1:9978/proxy?do=wallpaper",
   "danmaku": "http://127.0.0.1:5266/danmu/webhtv?name={name}&episode={episode}",
@@ -105,6 +105,16 @@
           "https://666.666291.xyz"
         ]
       }
+    },
+    {
+      "key": "QingYing",
+      "name": "🌙┆清影┆4K",
+      "type": 3,
+      "api": "csp_QingYing",
+      "searchable": 1,
+      "quickSearch": 1,
+      "filterable": 1,
+      "ext": "Ae4Ffk2jC6Sj0Lkg7sEC9r9k7IvT5Za46LxzNKyjLoBd9zXm9TSIgvcTWwV58ulpdTEjm8n17LRnaodWqRBwSXo="
     },
     {
       "key": "bl",
