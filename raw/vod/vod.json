@@ -1,0 +1,53 @@
+{
+  "spider": "./spider.jar;md5;abc",
+  "wallpaper": "./wallpaper.jpg",
+  "logo": "../logo.png",
+  "notice": "欢迎使用",
+  "sites": [
+    { "key": "cms_xml", "name": "CMS XML", "type": 0, "api": "https://cms.example.com/api.php/provide/vod/at/xml" },
+    {
+      "key": "cms_json",
+      "name": "CMS JSON",
+      "type": 1,
+      "api": "https://cms.example.com/api.php/provide/vod",
+      "searchable": 0,
+      "quickSearch": 0,
+      "timeout": 10,
+      "categories": ["电影", "电视剧"],
+      "header": { "User-Agent": "okhttp/4.12.0" },
+      "style": { "type": "rect", "ratio": 1.33 }
+    },
+    { "key": "js_site", "name": "JS", "type": 3, "api": "./lib/drpy.js?v=2", "ext": "./rules/site.js" },
+    { "key": "js_remote", "name": "JS Remote", "type": 3, "api": "https://js.example.com/spider.js", "ext": { "box": "TVBox", "nums": [1, 2] } },
+    { "key": "jar_site", "name": "JAR", "type": 3, "api": "csp_Bili", "jar": "./bili.jar" },
+    { "key": "py_site", "name": "Python", "type": 3, "api": "./py/site.py" },
+    { "key": "type4_site", "name": "Type4", "type": 4, "api": "https://t4.example.com/api" },
+    { "key": "cms_json", "name": "Duplicate", "type": 1, "api": "https://dup.example.com/" },
+    { "key": "hidden", "name": "Hidden", "hide": 1, "api": "https://cms.example.com/hidden" }
+  ],
+  "parses": [
+    { "name": "Json1", "type": 1, "url": "https://parse.example.com/?url=", "ext": { "flag": ["qq", "iqiyi"], "header": { "User-Agent": "Mozilla/5.0" } } },
+    { "name": "Web", "type": 0, "url": "https://web.example.com/?url=" },
+    { "name": "Web", "type": 0, "url": "https://web-dup.example.com/?url=" }
+  ],
+  "lives": [
+    { "name": "直播", "url": "./live/live.m3u", "epg": "https://epg.example.com/?ch={name}", "ua": "Mozilla/5.0", "timeout": 20, "boot": true },
+    {
+      "name": "Inline",
+      "groups": [
+        { "name": "新闻", "channel": [{ "name": "CCTV-1", "number": "1", "urls": ["http://cdn.example.com/cctv1.m3u8"] }] }
+      ],
+      "catchup": { "type": "append", "source": "?playseek={(b)yyyyMMddHHmmss}" }
+    }
+  ],
+  "flags": ["qq", "iqiyi", "youku"],
+  "rules": [
+    { "name": "ads", "hosts": ["video.example.com"], "regex": ["m3u8?token="], "exclude": ["preview.json"] },
+    "https://rules.example.com/rules.json"
+  ],
+  "doh": [{ "name": "Google", "url": "https://dns.google/dns-query", "ips": ["8.8.4.4", "8.8.8.8"] }],
+  "headers": [{ "host": "stream.example.com", "header": { "User-Agent": "okhttp/3.12.13" } }],
+  "proxy": [{ "name": "proxy", "hosts": ["googlevideo.com"], "urls": ["http://127.0.0.1:7890"] }],
+  "hosts": ["old.cdn.example.com=new.cdn.example.com"],
+  "ads": ["ads.example.com"]
+}

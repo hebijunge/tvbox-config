@@ -1,359 +1,983 @@
-{
-"spider":"./jar/pg.jar;md5;dffec63fb83a2b31b8606bd4bf6bead9",
-"lives":[{"name":"初秋语","type":0,"url":"./list.txt","playerType":2,"epg":"http://epg.112114.xyz/?ch={name}&date={date}","logo":"https://epg.112114.xyz/logo/{name}.png"},
-{"name":"Ray","type":0,"url":"https://github.moeyy.xyz/https://raw.githubusercontent.com/dxawi/0/main/tvlive.txt","playerType":1,"epg":"http://epg.112114.xyz/?ch={name}&date={date}","logo":"https://epg.112114.xyz/logo/{name}.png"}
-],
-"wallpaper":"https://jianbian.chuqiuyu.workers.dev",
-"sites":[
-{"key":"drpy_js_豆瓣","name":"搜索 | 豆瓣[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/drpy.js","searchable":1,"quickSearch":0,"changeable":0},
-{"key":"drpy_js_磁力熊搜索","name":"搜索 | 磁力熊[js]","type":3,"api":"./lib/drpy2.min.js","indexs":1,"ext":"./js/cilixiong.js","searchable":0,"quickSearch":0,"changeable":1},
-{"key":"lf_js_search","name":"搜索 | 路飞[js]","type":3,"searchable":0,"changeable":1,"quickSearch":0,"filterable":0,"api":"./lib/lf_search3_min.js"},
-{"key":"drpy_js_荐片","name":"影视 | 荐片[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":1,"ext":"./js/荐片.js", "timeout":30},
-{"key":"lf_js_p2p","name":"路飞 | 磁力[js]","type":3,"searchable":1,"changeable":1,"quickSearch":1,"filterable":1,"api":"./lib/lf_p2p2_min.js","timeout":30},
-{"key":"lf_js_lf_live","name":"电视 | 直播[js]","type":3,"api":"./lib/lf_live_min.js","style":{ "type":"oval"},"searchable":1,"changeable":0,"quickSearch":1,"filterable":1,"ext":"./js/lf_live.txt"},
 
-{"key":"豆瓣","name":"搜索 | 豆瓣[jar]","type":3,"api":"csp_Douban","indexs":1,"searchable":0,"changeable":1,"ext":"./json/douban.json"},
-{"key":"TGYunPanLocal","name":"搜索 | TG[jar]","type":3,"api":"csp_TGYunPanLocal","timeout":60, "ext":"./lib/token.json$$$https://t.me/$$$hao115,guaguale115,dianyingshare,XiangxiuNB,yunpanpan,kuakeyun,zaihuayun,Quark_Movies,alyp_4K_Movies,vip115hot,yunpanshare,ucwangpan,Quark_Share_Channel,Aliyundrive_Share_Channel,shareAliyun,ikiviyyp,wanwansubchat,wangpanziyuan2021,alyp_1,quanziyuanshe$$$socks5://127.0.0.1:10172$$$1"},
-{"key":"Youtube","name":"视频 | Youtube[jar]","type":3,"api": "csp_Youtube","searchable": 1,"quickSearch": 0,"changeable": 0,"ext":{"token":"./lib/token.json","json":"./json/youtube.json","type":"直播#新闻#剧集#电影#综艺#纪录片#音乐#体育#动物#风光#放松#4K#HDR#movie#music#documentary#bbc documentary#national geographic documentary","proxy":"socks5://127.0.0.1:10172","keywords":"排行榜,HOT,TRENDS,热门话题,热门趋势,热门综艺,热门电影,热门电视剧,小姐姐","codecs":"","danmu":true},"style": {"type": "rect","ratio": 1.77}},
-{"key": "FirstAid","name": "科普 | 急救[jar]","type": 3,"api": "csp_FirstAid","searchable": 0,"quickSearch": 0,"changeable": 0,"style": {"type": "rect","ratio": 3.8}},
-{"key":"配置中心","name":"配置 | 中心[jar]","type":3,"api":"csp_Config","searchable":0,"changeable":0,"style":{"type":"rect","ratio":1.5},"ext":"./lib/token.json"},
-{"key":"酷狗","name":"音频 | 酷狗[jar]","type":3,"api":"csp_Kugou","searchable":1,"changeable":0},
-{"key": "Iktv","name": "MV | KTV[jar]","type": 3,"api": "csp_Iktv","searchable": 1,"changeable": 0},
-{"key": "Yinyuetai","name": "MV | 音悦台[jar]","type": 3,"api": "csp_Yinyuetai","searchable": 1,"changeable": 0},
-{"key":"AliShareEBook","name":"书籍 | 分享[jar]","type":3,"api":"csp_AliShare","searchable":1,"quickSearch":0, "changeable":0, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/alishare.ebook.txt$$$db$$$1","style":{"type":"list"}},
-{"key":"荐片弹幕版","name":"弹幕 | 荐片[jar]","type":3,"api":"csp_Jianpian","searchable":1,"quickSearch":1,"filterable":1,"ext":"./json/jianpian.json$$$1", "timeout":60},
-{"key":"Bdys_spider","name":"弹幕 | 哔滴[jar]","api":"csp_Bdys01","type":3,"filterable":1,"quickSearch":1,"searchable":1,"ext":"./lib/token.json$$$https://www.bdys03.com/$$$null$$$1","timeout":30},
-{"key": "天天","name": "弹幕 | 天天[jar]","type": 3,"api": "csp_TTian","playerType": 1,"ext": "http://op.ysdqjs.cn$$$null$$$1"},
-{"key": "追剧","name": "弹幕 | 追剧[jar]","type": 3,"api": "csp_TTian","playerType": 1,"ext": "http://app.kzjtv.com$$$null$$$1"},
-{"key":"NanGua","name":"弹幕 | 南瓜[jar]","type":3,"api":"csp_NanGua","searchable":1,"changeable":1,"ext":"null$$$1"},
-{"key":"PushShare","name":"弹幕 | 资源分享[jar]","type":3, "api":"csp_PushShare","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/pushshare.txt$$$db$$$1","style": {"type": "list"}},
-{"key":"PikPakShare","name":"弹幕 | PikPak分享[jar]","type":3,"api":"csp_PikPakShare","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/pikpakclass.json$$$./json/pikpakclass.json.db.gz"},
-{"key":"AliShare","name":"弹幕 | 影视分享[jar]","type":3,"api":"csp_AliShare","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/alishare.txt$$$db$$$1"},
-{"key":"ThunderShare","name":"弹幕 | 迅雷分享[jar]","type":3,"api":"csp_ThunderShare","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/thundershare.txt"},
-{"key":"QuarkShare","name":"弹幕 | 夸克分享[jar]","type":3,"api":"csp_QuarkShare","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/quarkshare.txt"},
-{"key":"115Share","name":"弹幕 | 115分享[jar]","type":3,"api":"csp_P115Share","searchable":1,"quickSearch":0, "changeable":0, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/115share.txt$$$db$$$1","style": {"type": "list","ratio": 1.1}},
-{"key":"UCShare","name":"弹幕 | UC分享[jar]","type":3,"api":"csp_UCShare","searchable":1,"quickSearch":0, "changeable":0, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/ucshare.txt$$$db$$$1","style": {"type": "list","ratio": 1.1}},
-{"key":"SambaShare","name":"弹幕 | Samba分享[jar]","type":3,"api":"csp_SambaShare","searchable":0,"quickSearch":0, "changeable":0, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$./json/sambashare.txt"},
-{"key":"Wogg","name":"弹幕 | 玩偶[jar]","type":3,"api":"csp_Wogg","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://www.wogg.net/$$$null$$$1$$$./wogg.json"},
-{"key":"Wobg","name":"弹幕 | 表哥[jar]","type":3,"api":"csp_Wobg","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://wobge.run.goorm.io$$$null$$$1$$$./wogg.json"},
-{"key":"yydsys","name":"弹幕 | 老哥[jar]","type":3,"api":"csp_Wobg","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://tv.yydsys.top/$$$null$$$1$$$./wogg.json"},
-{"key":"蜡笔网盘","name":"弹幕 | 蜡笔[jar]","type":3,"api":"csp_Wobg","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://duopan.fun/$$$noproxy$$$1$$$./json/wogg.json$$$LABI"},
-{"key":"Mogg","name":"网盘 | 木偶哥哥[jar]","type":3,"api":"csp_Wobg","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$http://mogg.top/$$$noproxy$$$1$$$./lib/wogg.json$$$MOGG"},
-{"key": "土豆","name": "网盘 | 土豆[jar]","type": 3,"api": "csp_Wobg","searchable": 1,"filterable": 0,"changeable": 1, "timeout":60, "ext":"./lib/token.json$$$https://tudou.lvdoui.top/$$$proxy$$$1$$$./lib/wog.json$$$TUDOU"},
-{"key": "小米网盘","name": "网盘 | 小米[jar]","type": 3,"api": "csp_Wobg","quickSearch": 1,"changeable": 1,"filterable": 1,"timeout": 60,"ext": "./lib/token.json$$$https://mihdr.top/$$$noproxy$$$1$$$./lib/wogg.json$$$XIAOMI"},
-{"key":"Xinshijue","name":"弹幕 | 新视觉[jar]","type":3,"api":"csp_Xinshijue","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://www.80yy3.com/$$$1$$$./lib/wogg.json"},
-{"key":"Moli","name":"弹幕 | HDmoli[jar]","type":3,"api":"csp_Moli","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://www.hdmoli.pro/$$$null$$$1$$$./json/moli.json"},
-{"key":"Bt0","name":"弹幕 | 不太灵[jar]","type":3,"api":"csp_Bt0","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$null$$$null$$$1"},
-{"key":"ddys","name":"弹幕 | 低端[jar]","type":3,"api":"csp_Ddys","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://ddys.pro/$$$proxy$$$1$$$"},
-{"key":"美剧迷","name":"弹幕 | 美剧迷[jar]","type":3,"api":"csp_Meijumi", "quickSearch":1, "changeable":1, "filterable":1, "timeout":30,"ext":"./lib/token.json$$$https://www.meijumi.xyz/$$$null$$$1"},
-{"key":"Ppxzy","name":"弹幕 | 皮皮虾[jar]","type":3,"api":"csp_Ppxzy", "quickSearch":1, "changeable":1, "filterable":1, "ext":"./lib/token.json$$$https://ppxzy.net/$$$null", "timeout":30}, 
-{"key":"新6V","name":"弹幕 | 新6V[jar]","type":3,"api":"csp_Xb6v","searchable":1,"changeable":1,"timeout":60,"ext":"./lib/token.json$$$https://www.66ss.org$$$1"},
-{"key":"4KHDR","name":"弹幕 | 4KHDR[jar]","type":3,"api":"csp_FourKHDR","ext":"./lib/token.json$$$http://127.0.0.1:9978/file/TV/4khdr.txt","quickSearch":1,"changeable":1,"timeout":60},
-{"key":"校长影视","name":"弹幕 | 校长[jar]","type":3,"api":"csp_XiaoZhang","ext":"./lib/token.json","quickSearch":1,"changeable":1,"timeout":30},
-{"key":"团长资源","name":"弹幕 | 团长[jar]","type":3,"api":"csp_TZFile","ext":"./lib/token.json", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"Hdhive","name":"弹幕 | 影巢[jar]","type":3,"api":"csp_Hdh","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://hdhive.online$$$noproxy$$$1$$$http://127.0.0.1:9978/file/TV/hdhive.txt"},
-{"key":"Panta","name":"弹幕 | 盘Ta[jar]","type":3,"api":"csp_Panta","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json$$$https://www.91panta.cn/$$$null$$$1"},
-{"key":"YunPan","name":"弹幕 | 云盘[jar]","type":3,"api":"csp_YunPan","timeout":60, "ext":"./lib/token.json$$$null$$$proxy$$$1"},
-{"key":"Wo4k","name":"弹幕 | 玩偶4k[jar]","type":3,"api":"csp_Wo4k","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://www.wo4k.com/$$$proxy$$$1$$$./wogg.json"},
-{"key":"Xpanpan","name":"弹幕 | 小盘盘[jar]","type":3,"api":"csp_Xpanpan","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://xpanpan.site$$$null$$$1"},
-{"key":"Gaoqing","name":"弹幕 | 高清网[jar]","type":3,"api":"csp_Gaoqing","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://gaoqing.la/$$$proxy$$$1"},
-{"key":"音范丝","name":"弹幕 | 音范丝[jar]","type":3,"api":"csp_Gaoqing","quickSearch":1, "changeable":1, "filterable":1, "timeout":60, "ext":"./lib/token.json$$$https://www.yinfans.me/$$$proxy$$$1"},
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub Proxy - 免费 Git Clone 与文件下载加速</title>
+  <meta name="description" content="GitHubProxy.cc 为公开 GitHub 仓库提供只读 Git Clone、Release 附件、Raw 文件和 Archive 源码包下载加速，基于全球 CDN 边缘节点，完全免费、无需注册，不提供 GitHub 网页镜像。">
+  <meta name="keywords" content="github proxy, github 代理, github 加速, git proxy, ghproxy, git clone 加速, github release 下载加速, github 文件下载加速, github下载慢">
+  
+  <!-- Fast360 统计 -->
+  <script defer data-domain="githubproxy.cc" src="https://t.fast360.xyz/js/script.js"></script>
 
-{"key":"TGYunPan","name":"网盘 | TG搜索[jar]","type":3,"api":"csp_TGYunPan","timeout":60, "ext":"./lib/token.json$$$http://144.126.217.226:8000/$$$hao115,Aliyundrive_Share_Channel,kuakeyun$$$noproxy$$$1"},
-{"key":"YingSo","name":"磁力 | 影搜[jar]","type":3,"api":"csp_YingSo","timeout":60, "ext":"./lib/token.json$$$1"},
-{"key":"盘友圈","name":"网盘 | 盘友圈","type":3,"api":"csp_Panyq","timeout":60, "ext":"./lib/token.json"},
-{"key":"88Pan","name":"网盘 | 88网盘[jar]","type":3,"api":"csp_EightEight","timeout":30, "ext":"./lib/token.json$$$https://662688.xyz"},
-{"key":"PikaSo","name":"网盘 | 皮卡搜[jar]","type":3,"api":"csp_PikaSo","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json$$$https://www.pikaso.top/$$$null"},
-{"key":"csp_HunHePan","name":"网盘 | 混合盘[jar]","type":3,"api":"csp_HunHePan","searchable":1,"quickSearch":1, "changeable":1, "filterable":0, "timeout":60, "ext":"./lib/token.json$$$null$$$1"},
-{"key":"秒搜","name":"网盘 | 秒搜[jar]","type":3,"api":"csp_MiaoSou","timeout":30, "ext":"./lib/token.json"},
-{"key":"Libvio","name":"网盘 | LIBVIO[jar]","type":3,"api":"csp_Libvio","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json$$$https://www.libvio.fun$$$null"},
-{"key":"DaPanSo","name":"网盘 | 大盘搜[jar]","type":3,"api":"csp_DaPanSo","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json$$$https://dapanso.com$$$null"},
-{"key":"Qianfan","name":"网盘 | 千帆[jar]","type":3,"api":"csp_Qianfan","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json$$$https://pan.qianfan.app$$$null$$$QianFanID="},
-{"key":"YunSo","name":"网盘 | 小云[jar]","type":3,"api":"csp_YunSo","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json"},
-{"key":"YunPanOne","name":"网盘 | 云盘[jar]","type":3,"api":"csp_YunPanOne","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json"},
-{"key":"Gitcafe", "name": "阿里 | 纸条[jar]", "type": 3, "api": "csp_Gitcafe", "searchable": 1, "quickSearch": 1, "filterable": 0, "ext":"./lib/token.json", "timeout":30},
-{"key":"小紙條", "name": "阿里 | 小紙條[jar]", "type": 3, "api": "csp_XiaoZhiTiao", "searchable": 1, "quickSearch": 1, "filterable": 0, "ext":"./lib/token.json", "timeout":30},
-{"key":"七夜","name":"阿里 | 七夜[jar]","type":3,"api":"csp_Dovx","searchable":1,"changeable":0,"ext":"./lib/token.json", "timeout":30},
-{"key":"盤搜索","name":"阿里 | 盤搜索[jar]","type":3,"api":"csp_PanSearch","searchable":1,"changeable":0,"ext":"./lib/token.json", "timeout":30},
-{"key":"找資源","name":"阿里 | 找資源[jar]","type":3,"api":"csp_Zhaozy","searchable":1,"changeable":0,"ext":"./lib/token.json", "timeout":30},
-{"key":"易搜","name":"阿里 | 易搜[jar]","type":3,"api":"csp_YiSo","ext":"./lib/token.json", "timeout":30},
-{"key":"盘搜","name":"阿里 | 盘搜[jar]","type":3,"api":"csp_PanSou","ext":"./lib/token.json", "timeout":30},
-{"key":"UP云搜","name":"阿里 | up云搜[jar]","type":3,"api":"csp_UpYun","ext":"./lib/token.json", "timeout":30},
-{"key":"Funletu","name":"夸克  | 趣盘搜[jar]","type":3,"api":"csp_Funletu","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json"},
-{"key":"QuarkPanso","name":"夸克 | 盘搜[jar]","type":3,"api":"csp_QuarkPanso","quickSearch":1, "changeable":1, "filterable":1, "timeout":30, "ext":"./lib/token.json"},
+  <!-- 百度统计 -->
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?168e4856bb9c081d57d797f7cd9d453d";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+  </script>
 
-{"key":"drpy_js_酷云77","name":"影视 | 酷云77[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/酷云77.js"},
-{"key":"drpy_js_快看","name":"影视 | 快看[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/快看.js"},
-{"key":"drpy_js_爱看","name":"影视 | 爱看[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱看.js"},
-{"key":"drpy_js_低端","name":"影视 | 低端[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/ddys_d.js"},
-{"key":"drpy_js_南瓜影视","name":"影视 | 南瓜影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/南瓜影视.js"},
-{"key":"drpy_js_Auete","name":"影视 | Auete[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/Auete.js"},
-{"key":"drpy_js_cokemv","name":"影视 | cokemv[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/cokemv.js"},
-{"key":"drpy_js_LIBVIO","name":"影视 | LIBVIO[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/LIBVIO.js"},
-{"key":"drpy_js_voflix","name":"影视 | voflix[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/voflix.js"},
-{"key":"drpy_js_两个BT","name":"影视 | 两个BT[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/两个BT.js"},
-{"key":"drpy_js_量子影视","name":"影视 | 量子影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/量子影视.js"},
-{"key":"drpy_js_农民","name":"影视 | 农民影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/农民影视.js"},
-{"key":"drpy_js_在线之家","name":"影视 | 在线之家[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/在线之家.js"},
-{"key":"drpy_js_量子资源","name":"影视 | 量子资源[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/量子资源.js"},
-{"key":"drpy_js_369影视","name":"影视 | 369影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/369影视.js"},
+  <!-- Google广告 -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5357083224122554" crossorigin="anonymous"></script>
 
-{"key":"drpy_js_热播库","name":"影视 | 热播库[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/热播库.js"},
-{"key":"drpy_js_蛋蛋剧","name":"影视 | 蛋蛋剧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/蛋蛋剧.js"},
-{"key":"drpy_js_B站影视","name":"影视 | B站影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/B站影视.js"},
-{"key":"drpy_js_凌云影视","name":"影视 | 凌云影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/凌云影视.js"},
-{"key":"drpy_js_孜然影视","name":"影视 | 孜然影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/孜然影视.js"},
-{"key":"drpy_js_我爱跟剧","name":"影视 | 我爱跟剧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/我爱跟剧.js"},
-{"key":"drpy_js_干饭影视","name":"影视 | 干饭影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/干饭影视.js"},
-{"key":"drpy_js_秋霞影视","name":"影视 | 秋霞影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/秋霞影视.js"},
-{"key":"drpy_js_阿布影院","name":"影视 | 阿布影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/阿布影院.js"},
-{"key":"drpy_js_电影先生","name":"影视 | 电影先生[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/电影先生.js"},
-{"key":"drpy_js_落攻阁影视","name":"影视 | 落攻阁影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/落攻阁影视.js"},
-{"key":"drpy_js_69美剧","name":"影视 | 69美剧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/69美剧.js"},
-{"key":"drpy_js_兄弟影视","name":"影视 | 兄弟影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/兄弟影视.js"},
-{"key":"drpy_js_4k剧院","name":"影视 | 4k剧院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/4k剧院.js"},
-{"key":"drpy_js_爱迪影视","name":"影视 | 爱迪影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱迪影视.js"},
-{"key":"drpy_js_539影视","name":"影视 | 539影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/539影视.js"},
-{"key":"drpy_js_333影视","name":"影视 | 333影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/333影视.js"},
-{"key":"drpy_js_996影视","name":"影视 | 996影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/996影视.js"},
-{"key":"drpy_js_188影视","name":"影视 | 188影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/188影视.js"},
-{"key":"drpy_js_哔嘀影视","name":"影视 | 哔嘀影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/哔嘀影视.js"},
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D653RNFZXQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D653RNFZXQ');
+  </script>
 
-{"key":"drpy_js_7喜影院","name":"影视 | 7喜影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/7喜影院.js"},
-{"key":"drpy_js_18哈","name":"影视 | 18哈[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/18哈.js"},
-{"key":"drpy_js_567电影院","name":"影视 | 567电影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/567电影院.js"},
-{"key":"drpy_js_Fun4K","name":"影视 | Fun4K[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/Fun4K.js"},
-{"key":"drpy_js_KOK影院","name":"影视 | KOK影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/KOK影院.js"},
-{"key":"drpy_js_TVB云播","name":"影视 | TVB云播[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/TVB云播.js"},
-{"key":"drpy_js_UrleBird[飞]","name":"影视 | UrleBird[飞][js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/UrleBird[飞].js"},
-{"key":"drpy_js_爱看影院","name":"影视 | 爱看影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱看影院.js"},
-{"key":"drpy_js_北川影视","name":"影视 | 北川影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/北川影视.js"},
-{"key":"drpy_js_尘落影视","name":"影视 | 尘落影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/尘落影视.js"},
-{"key":"drpy_js_达达龟","name":"影视 | 达达龟[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/达达龟.js"},
-{"key":"drpy_js_蛋蛋赞","name":"影视 | 蛋蛋赞[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/蛋蛋赞.js"},
-{"key":"drpy_js_多瑙影视","name":"影视 | 多瑙影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/多瑙影视.js"},
-{"key":"drpy_js_剧迷su","name":"影视 | 剧迷su[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/剧迷su.js"},
-{"key":"drpy_js_看韩剧","name":"影视 | 看韩剧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/看韩剧.js"},
-{"key":"drpy_js_看了么","name":"影视 | 看了么[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/看了么.js"},
-{"key":"drpy_js_蓝光影院","name":"影视 | 蓝光影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/蓝光影院.js"},
-{"key":"drpy_js_首播影院","name":"影视 | 首播影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/首播影院.js"},
-{"key":"drpy_js_小白菜电影","name":"影视 | 小白菜电影[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/小白菜电影.js"},
-{"key":"drpy_js_影视工场","name":"影视 | 影视工场[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/影视工场.js"},
-{"key":"drpy_js_影视之家[V2]","name":"影视 | 影视之家[V2][js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/影视之家[V2].js"},
-{"key":"drpy_js_悠久影院","name":"影视 | 悠久影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/悠久影院.js"},
-{"key":"drpy_js_中国人线上看","name":"影视 | 中国人线上看[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/中国人线上看.js"},
+  <!-- 语言切换链接 -->
+  <link rel="alternate" hreflang="zh-CN" href="https://githubproxy.cc/">
+  <link rel="alternate" hreflang="en" href="https://githubproxy.cc/en">
 
-{"key":"drpy_js_555电影[V2]","name":"影视 | 555电影[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/555电影[V2].js"},
-{"key":"drpy_js_69美剧[V2]","name":"影视 | 69美剧[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/69美剧[V2].js"},
-{"key":"drpy_js_cokemv[V2]","name":"影视 | cokemv[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/cokemv[V2].js"},
-{"key":"drpy_js_UM电影[V2]","name":"影视 | UM电影[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/UM电影[V2].js"},
-{"key":"drpy_js_爱迪[V2]","name":"影视 | 爱迪[V2][js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱迪[V2].js"},
-{"key":"drpy_js_宝片[V2]","name":"影视 | 宝片[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/宝片[V2].js"},
-{"key":"drpy_js_刺桐[V2]","name":"影视 | 刺桐[V2][js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/刺桐[V2].js"},
-{"key":"drpy_js_咕噜[V2]","name":"影视 | 咕噜[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/咕噜[V2].js"},
-{"key":"drpy_js_吼吼[V2]","name":"影视 | 吼吼[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/吼吼[V2].js"},
-{"key":"drpy_js_曲奇影视[V2]","name":"影视 | 曲奇影视[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/曲奇影视[V2].js"},
-{"key":"drpy_js_影探[V2]","name":"影视 | 影探[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/影探[V2].js"},
-{"key":"drpy_js_北极狐[V2]","name":"影视 | 北极狐[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/北极狐[V2].js"},
-{"key":"drpy_js_大米星球[V2]","name":"影视 | 大米星球[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/大米星球[V2].js"},
-{"key":"drpy_js_奈飞狗[V2]","name":"影视 | 奈飞狗[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/奈飞狗[V2].js"},
-{"key":"drpy_js_思古影视[V2]","name":"影视 | 思古影视[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/思古影视[V2].js"},
-{"key":"drpy_js_映迷[V2]","name":"影视 | 映迷[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/映迷[V2].js"},
-{"key":"drpy_js_美益达[V2]","name":"影视 | 美益达[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/美益达[V2].js"},
-{"key":"drpy_js_落攻阁影视[V2]","name":"影视 | 落攻阁影视[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/落攻阁影视[V2].js"},
-{"key":"drpy_js_西门[V2]","name":"影视 | 西门[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/西门[V2].js"},
-{"key":"drpy_js_路人甲[V2]","name":"影视 | 路人甲[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/路人甲[V2].js"},
-{"key":"drpy_js_鑫鑫[V2]","name":"影视 | 鑫鑫[V2]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/鑫鑫[V2].js"},
 
-{"key":"drpy_js_360影视","name":"官源 | 360[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/360影视.js"},
-{"key":"drpy_js_百忙无果","name":"官源 | 芒果[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/百忙无果.js"},
-{"key":"drpy_js_腾云驾雾","name":"官源 | 腾讯[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/腾云驾雾.js"},
-{"key":"drpy_js_奇珍异兽","name":"官源 | 爱奇艺[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/奇珍异兽.js"},
-{"key":"drpy_js_菜狗","name":"官源 | 搜狗[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/菜狗.js"},
-{"key":"drpy_js_优酷","name":"官源 | 优酷[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/优酷.js"},
 
-{"key":"drpy_js_4KHDR","name":"磁力 | 4KHDR[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/4khdr.js","playerType":"1", "searchable":1, "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_极影网","name":"磁力 | 极影网[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/jiyingw.js","playerType":"1", "searchable":1, "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_MP4US","name":"磁力 | MP4电影[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/mp4us.js","playerType":"1", "searchable":1, "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_电影港","name":"磁力 | 电影港[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/dygang.js","playerType":"1", "searchable":1, "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_kuba","name":"磁力 | 酷吧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/kuba.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_xb6v","name":"磁力 | 新版6v[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/xb6v.js","playerType":"1", "searchable":1, "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_美剧迷","name":"磁力 | 美剧迷[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/meijumi.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_ddys","name":"影视 | 低端影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/ddys.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_libvio","name":"影视 | libvio[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/libvio.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_tzfile","name":"影视 | 团长影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/tzfile.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_dydhhy","name":"影视 | dydhhy[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/dydhhy.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_97tvs","name":"影视 | 97tvs[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/97tvs.js", "quickSearch":1, "changeable":1, "timeout":30}, 
-{"key":"drpy_js_rrdyw","name":"影视 | rrdyw[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/rrdyw.js", "quickSearch":1, "changeable":1, "timeout":30}, 
-{"key":"drpy_js_校长影视","name":"夸克 | 校长影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/xzys.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_yyets","name":"夸克 | 人人影视搜[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/yyets.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_奇妙搜[夸]","name":"夸克 | 奇妙搜[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/qimiao.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_愛盤搜","name":"夸克 | 爱盘搜[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/aipanso.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_趣盤搜","name":"夸克 | 趣盘搜[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/funletu.js", "quickSearch":1, "changeable":1, "timeout":30},
-{"key":"drpy_js_meow","name":"影视 | meow搜[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/meow.js", "quickSearch":1, "changeable":1, "timeout":30}, 
-{"key": "push_quark","name": "夸克 | 推送","type": 3,"api": "csp_Quark","changeable":0,"ext": "http://127.0.0.1:9978/file/TV/quark.txt", "timeout":30},
-{"key":"push_agent","name":"手机 | 推送[jar]","type":3,"api":"csp_Push","searchable":0,"quickSearch":0,"changeable":0,"ext":"./lib/token.json", "timeout":30},
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://githubproxy.cc/">
 
-{"key":"drpy_js_磁力熊[磁]","name":"磁力 | 磁力熊[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":0,"ext":"./js/磁力熊[磁].js", "timeout":30},
-{"key":"drpy_js_6V新版[磁]","name":"磁力 | 6V新版[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":0,"ext":"./js/6V新版[磁].js", "timeout":30},
-{"key":"drpy_js_童趣","name":"少儿 | 童趣[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1.597},"ext":"./js/童趣.js"},
-{"key":"drpy_js_兔小贝","name":"少儿 | 兔小贝[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/兔小贝.js"},
-{"key":"drpy_js_有声绘本网","name":"少儿 | 有声绘本[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/有声绘本网.js"},
-{"key":"drpy_js_我的哔哩","name":"弹幕 | 哔哩合集[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/我的哔哩.js"},
-{"key":"drpy_js_哔哩直播","name":"弹幕 | 哔哩直播[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/哔哩直播.js"},
-{"key":"drpy_js_哔哩影视","name":"弹幕 | 哔哩影视[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/哔哩影视.js"},
-{"key":"drpy_js_JustLive","name":"弹幕 | JustLive[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/JustLive.js"},
-{"key":"drpy_js_斗鱼直播","name":"直播 | 斗鱼[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/斗鱼直播.js"},
-{"key":"drpy_js_虎牙直播","name":"直播 | 虎牙[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.597},"changeable":0,"ext":"./js/虎牙直播.js"},
-{"key":"drpy_js_310直播","name":"体育 | 310直播[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/310直播.js"},
-{"key":"drpy_js_88看球","name":"体育 | 88看球[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/88看球.js"},
-{"key":"drpy_js_JRKAN直播","name":"体育 | JRKAN直播[js]","type":3,"api":"./lib/drpy.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/JRKAN直播.js"},
-{"key":"drpy_js_抓饭体育","name":"体育 | 抓饭体育[js]","type":3,"api":"./lib/drpy.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/抓饭体育.js"},
-{"key":"drpy_js_好趣网","name":"电视 | 好趣网[js]","type":3,"api":"./lib/drpy2.min.js","style":{"type":"rect","ratio":1.333},"changeable":0,"ext":"./js/好趣网.js"},
-{"key":"drpy_js_相声随身听","name":"相声 | 相声随身听[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/相声随身听.js"},
-{"key":"drpy_js_评书随身听","name":"评书 | 评书随身听[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/评书随身听.js"},
-{"key":"drpy_js_武享吧","name":"格斗 | 武享吧[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/武享吧.js"},
-{"key":"drpy_js_Alist","name":"网盘 | Alist[js]","type":3,"api":"./lib/alist.min.js","changeable":0,"ext":"./js/alist.json"},
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://githubproxy.cc/">
+  <meta property="og:title" content="GitHub Proxy - 免费 Git Clone 与文件下载加速">
+  <meta property="og:description" content="GitHubProxy.cc 为公开 GitHub 仓库提供只读 Git Clone、Release 附件、Raw 文件和 Archive 源码包下载加速，基于全球 CDN 边缘节点，完全免费、无需注册，不提供 GitHub 网页镜像。">
+  <meta property="og:image" content="https://img.githubproxy.cc/og-image.png">
 
-{"key":"drpy_js_58动漫","name":"动漫 | 58动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/58动漫.js"},
-{"key":"drpy_js_AGE动漫","name":"动漫 | AGE动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/AGE动漫.js"},
-{"key":"drpy_js_AnFuns","name":"动漫 | AnFuns[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/AnFuns.js"},
-{"key":"drpy_js_Anime1动畫","name":"动漫 | Anime1动畫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/Anime1动畫.js"},
-{"key":"drpy_js_NT动漫","name":"动漫 | NT动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/NT动漫.js"},
-{"key":"drpy_js_NyaFun","name":"动漫 | NyaFun[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/NyaFun.js"},
-{"key":"drpy_js_爱弹幕","name":"动漫 | 爱弹幕[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱弹幕.js"},
-{"key":"drpy_js_动漫岛","name":"动漫 | 动漫岛[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/动漫岛.js"},
-{"key":"drpy_js_路漫漫","name":"动漫 | 路漫漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/路漫漫.js"},
-{"key":"drpy_js_喵次元","name":"影视 | 喵次元[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/喵次元.js"},
-{"key":"drpy_js_奇米动漫","name":"动漫 | 奇米动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/奇米动漫.js"},
-{"key":"drpy_js_去看吧","name":"动漫 | 去看吧[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/去看吧.js"},
-{"key":"drpy_js_曲奇动漫","name":"动漫 | 曲奇动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/曲奇动漫.js"},
-{"key":"drpy_js_异世界动漫漫","name":"动漫 | 异世界动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/异世界动漫.js"},
-{"key":"drpy_js_怡萱动漫","name":"动漫 | 怡萱动漫[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/怡萱动漫.js"},
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image">
+  <meta property="twitter:url" content="https://githubproxy.cc/">
+  <meta property="twitter:title" content="GitHub Proxy - 免费 Git Clone 与文件下载加速">
+  <meta property="twitter:description" content="GitHubProxy.cc 为公开 GitHub 仓库提供只读 Git Clone、Release 附件、Raw 文件和 Archive 源码包下载加速，基于全球 CDN 边缘节点，完全免费、无需注册，不提供 GitHub 网页镜像。">
+  <meta property="twitter:image" content="https://img.githubproxy.cc/og-image.png">
+  <meta property="twitter:site" content="@githubproxy">
 
-{"key":"drpy_js_A8音乐","name":"音频 | A8音乐[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/A8音乐.js"},
-{"key":"drpy_js_DJ音乐","name":"音频 | DJ音乐[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/DJ音乐.js"},
-{"key":"drpy_js_啦啦DJ","name":"音频 | 啦啦DJ[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/啦啦DJ.js"},
-{"key":"drpy_js_清风DJ","name":"音频 | 清风DJ[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/清风DJ.js"},
-{"key":"drpy_js_广播迷FM","name":"广播 | 广播迷FM[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/广播迷FM.js"},
-{"key":"drpy_js_蜻蜓FM","name":"广播 | 蜻蜓FM[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/蜻蜓FM.js"},
-{"key":"drpy_js_i275听书","name":"听书 | i275听书[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/i275听书.js"},
-{"key":"drpy_js_爱上你听书网","name":"听书 | 爱上你听书[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/爱上你听书网.js"},
-{"key":"drpy_js_博看听书","name":"听书 | 博看听书[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/博看听书.js"},
-{"key":"drpy_js_海洋听书","name":"听书 | 海洋听书[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/海洋听书.js"},
-{"key":"drpy_js_六月听书","name":"听书 | 六月听书[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/六月听书.js"},
-{"key":"drpy_js_有声小说","name":"听书 | 有声小说[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/有声小说吧.js"},
-{"key":"drpy_js_播客","name":"聚合 | 播客[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/播客.js"},
-{"key":"drpy_js_短视频","name":"聚合 | 短视频[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/短视频.js"},
-{"key":"drpy_js_酷6网","name":"聚合 | 酷6网[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"ext":"./js/酷6网.js"},
-{"key":"drpy_js_网易公版影像","name":"聚合 | 网易公版[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1.597},"ext":"./js/网易公版影像.js"},
-{"key":"drpy_js_爱车MV","name":"MV | 爱车MV[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/爱车MV.js"},
-{"key":"drpy_js_酷奇MV","name":"MV | 酷奇[js]","type":3,"api":"./lib/drpy2.min.js","changeable":0,"style":{"type":"rect","ratio":1},"ext":"./js/酷奇MV.js"},
+  
+  <!-- WebApplication 结构化数据 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "GitHub Proxy - GitHub 克隆与文件下载加速服务",
+    "description": "GitHubProxy.cc 为公开 GitHub 仓库提供只读 Git Clone、Release 附件、Raw 文件和 Archive 源码包下载加速，基于全球 CDN 边缘节点，完全免费、无需注册。",
+    "url": "https://githubproxy.cc/",
+    "applicationCategory": "DeveloperApplication",
+    "operatingSystem": "Any",
+    "browserRequirements": "Requires JavaScript. Requires HTML5.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "CNY",
+      "availability": "https://schema.org/InStock"
+    },
+    "featureList": ["Git Clone 只读克隆加速","GitHub Release 附件下载加速","Raw 文件（raw.githubusercontent.com）下载加速","Archive 源码包（zip / tar.gz）下载加速","支持大文件流式下载","全球 CDN 边缘加速","完全免费无需注册","HTTPS 加密传输","pip 与 go mod 代理配置支持"],
+    "screenshot": "https://img.githubproxy.cc/og-image.png",
+    "author": {
+      "@type": "Organization",
+      "name": "GitHub Proxy"
+    },
+    "provider": {
+      "@type": "Organization",
+      "name": "GitHub Proxy",
+      "url": "https://githubproxy.cc/"
+    },
+    "keywords": "github proxy, github 代理, github 加速, git proxy, ghproxy, git clone 加速, github release 下载加速, github 文件下载加速",
+    "inLanguage": "zh-CN",
+    "isAccessibleForFree": true,
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": "https://githubproxy.cc/"
+    }
+  }
+  </script>
 
-{"key":"drpy_js_爱看机器人","name":"影视 | 爱看机器人[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":1,"ext":"./js/爱看机器人.js"},
-{"key":"drpy_js_ikanbot2","name":"影视 | 爱看机器人2[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":1,"ext":"./js/ikanbot2.js"},
-{"key":"drpy_js_ikanbot3","name":"影视 | 爱看机器人3[js]","type":3,"api":"./lib/drpy2.min.js","searchable":1,"quickSearch":1,"changeable":1,"ext":"./js/ikanbot3.js"},
-{"key":"drpy_js_jsapi2","name":"影视 | 百度测试[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/jsapi2.js"},
-{"key":"drpy_js_139影视","name":"影视 | 139影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/139影视.js"},
-{"key":"drpy_js_348电影网","name":"影视 | 348电影网[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/348电影网.js"},
-{"key":"drpy_js_4K电影网","name":"影视 | 4K电影网[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/4K电影网.js"},
-{"key":"drpy_js_8号影院","name":"影视 | 8号影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/8号影院.js"},
-{"key":"drpy_js_JangoIndex","name":"影视 | JangoIndex[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/JangoIndex.js"},
-{"key":"drpy_js_NY影院","name":"影视 | NY影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/NY影院.js"},
-{"key":"drpy_js_被窝电影","name":"影视 | 被窝电影[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/被窝电影.js"},
-{"key":"drpy_js_厂长资源","name":"影视 | 厂长资源[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/厂长资源.js"},
-{"key":"drpy_js_楚门影院","name":"影视 | 楚门影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/楚门影院.js"},
-{"key":"drpy_js_大米星球","name":"影视 | 大米星球[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/大米星球.js"},
-{"key":"drpy_js_飞兔影视","name":"影视 | 飞兔影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/飞兔影视.js"},
-{"key":"drpy_js_海兔影院","name":"影视 | 海兔影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/海兔影院.js"},
-{"key":"drpy_js_花猫TV","name":"影视 | 花猫TV[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/花猫TV.js"},
-{"key":"drpy_js_花屋影院","name":"影视 | 花屋影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/花屋影院.js"},
-{"key":"drpy_js_开眼视频","name":"影视 | 开眼视频[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/开眼视频.js"},
-{"key":"drpy_js_看了么","name":"影视 | 看了么[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/看了么.js"},
-{"key":"drpy_js_徕米TV","name":"影视 | 徕米TV[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/徕米TV.js"},
-{"key":"drpy_js_乐鱼影视","name":"影视 | 乐鱼影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/乐鱼影视.js"},
-{"key":"drpy_js_美剧网","name":"影视 | 美剧网[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/美剧网.js"},
-{"key":"drpy_js_美视网","name":"影视 | 美视网[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/美视网.js"},
-{"key":"drpy_js_米爱影视","name":"影视 | 米爱影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/米爱影视.js"},
-{"key":"drpy_js_免费看","name":"影视 | 免费看[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/免费看.js"},
-{"key":"drpy_js_奈飞中文","name":"影视 | 奈飞中文[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/奈飞中文.js"},
-{"key":"drpy_js_欧帝影院","name":"影视 | 欧帝影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/欧帝影院.js"},
-{"key":"drpy_js_皮皮鸭","name":"影视 | 皮皮鸭[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/皮皮鸭.js"},
-{"key":"drpy_js_朴樱影视","name":"影视 | 朴樱影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/朴樱影视.js"},
-{"key":"drpy_js_秋霞影院","name":"影视 | 秋霞影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/秋霞.js"},
-{"key":"drpy_js_热播之家","name":"影视 | 热播之家[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/热播之家.js"},
-{"key":"drpy_js_人人影视","name":"影视 | 人人影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/人人影视.js"},
-{"key":"drpy_js_骚火电影","name":"影视 | 骚火电影[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/骚火电影.js"},
-{"key":"drpy_js_时光影视","name":"影视 | 时光影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/时光影视.js"},
-{"key":"drpy_js_思古影视","name":"影视 | 思古影视","type":3,"api":"./lib/drpy2.min.js","ext":"./js/思古影视.js"},
-{"key":"drpy_js_私人影院","name":"影视 | 私人影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/私人影院.js"},
-{"key":"drpy_js_素白白","name":"影视 | 素白白[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/素白白.js"},
-{"key":"drpy_js_网飞.TV","name":"影视 | 网飞.TV[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/网飞.TV.js"},
-{"key":"drpy_js_西瓜影院","name":"影视 | 西瓜影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/西瓜影院.js"},
-{"key":"drpy_js_蜥蜴影视","name":"影视 | 蜥蜴影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/蜥蜴影视.js"},
-{"key":"drpy_js_小狗影院","name":"影视 | 小狗影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/小狗影院.js"},
-{"key":"drpy_js_新视觉影视","name":"影视 | 新视觉影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/新视觉影视.js"},
-{"key":"drpy_js_星辰影院","name":"影视 | 星辰影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/星辰.js"},
-{"key":"drpy_js_玄天","name":"影视 | 玄天[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/玄天.js"},
-{"key":"drpy_js_映迷影院","name":"影视 | 映迷影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/映迷影院.js"},
-{"key":"drpy_js_中国人","name":"影视 | 中国人[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/中国人.js"},
-{"key":"drpy_js_追剧迷","name":"影视 | 追剧迷[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/追剧迷.js"},
-{"key":"drpy_js_子子影视","name":"影视 | 子子影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/子子影视.js"},
+  <!-- FAQPage 结构化数据 -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "支持哪些类型的GitHub链接？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "支持公开GitHub仓库的只读克隆、Release 附件、Raw 文件以及 Archive 源码包下载。GitHub 网页、API 和私有仓库不代理。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "服务收费吗？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "完全免费，无需注册账户。为保障稳定性和防止滥用，异常请求可能受到限制。"
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "是否支持Push和私有仓库？",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "不支持。服务严格只读，仅用于公开仓库的Clone、Fetch、Pull与文件下载，不接收GitHub凭据。"
+        }
+      }
+    ]
+  }
+  </script>
 
-{"key":"drpy_js_大师兄影视","name":"起飞 | 大师兄影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/大师兄影视.js"},
-{"key":"drpy_js_华乐影院","name":"起飞 | 华乐影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/华乐影院[飞].js"},
-{"key":"drpy_js_天天视频","name":"起飞 | 天天视频[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/天天视频[飞].js"},
-{"key":"drpy_js_起飞影院","name":"起飞 | 起飞影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/起飞影院.js"},
-{"key":"drpy_js_兰花影院","name":"起飞 | 兰花影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/兰花影院.js"},
-{"key":"drpy_js_胖虎","name":"起飞 | 胖虎[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/胖虎.js"},
-{"key":"drpy_js_555影视[飞]","name":"起飞 | 555影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/555影视[飞].js"},
-{"key":"drpy_js_if101[飞]","name":"起飞 | if101[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/if101[飞].js"},
-{"key":"drpy_js_KUBO影视[飞]","name":"起飞 | KUBO影视[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/KUBO影视[飞].js"},
-{"key":"drpy_js_爱壹帆[飞]","name":"起飞 | 爱壹帆[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/爱壹帆[飞].js"},
-{"key":"drpy_js_独播库[飞]","name":"起飞 | 独播库[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/独播库[飞].js"},
-{"key":"drpy_js_欧乐影院[飞]","name":"起飞 | 欧乐影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/欧乐影院[飞].js"},
-{"key":"drpy_js_小宝影院[飞]","name":"起飞 | 小宝影院[js]","type":3,"api":"./lib/drpy2.min.js","ext":"./js/小宝影院[飞].js"},
+  <!-- Robots -->
+  <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
 
-{"key":"應用商店","name":"應用商店","type":3,"api":"csp_Market","searchable":0,"changeable":0,"ext": "./json/market.json"},
-{"key":"bb","name":"配置接口完全免费","type":3,"api":"./lib/drpy2.min.js","ext":"./js/drpy.js"},
-{"key":"cc","name":"请勿相信视频中任何广告","type":3,"api":"./lib/drpy2.min.js","ext":"./js/drpy.js"}
-],
-"parses":[
-{"name":"Json聚合","type":3,"url":"Demo"},
-{"name":"虾米","type":0,"url":"https://jx.xmflv.com/?url=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","sohu","搜狐","letv","乐视","mgtv","芒果","imgo","rx","ltnb","bilibili","1905","xigua"]}},
-{"name":"PM","url":"https://www.playm3u8.cn/jiexi.php?url=","type":0,"ext":{"flag":["qiyi","imgo","爱奇艺","奇艺","qq","腾讯","youku","优酷","pptv","PPTV","letv","乐视","leshi","bilibili","哔哩哔哩","哔哩","mgtv","芒果","sohu","xigua","fun","风行"],"header":{"User-Agent":"Mozilla/5.0"}},"header":{"User-Agent":"Mozilla/5.0"}},
-{"name":"m3u8","type":0,"url":"https://jx.m3u8.tv/jiexi/?url="},
-{"name":"8090","url":"https://www.8090.la/8090/?url=","type":0,"ext":{"flag":["qiyi","imgo","爱奇艺","奇艺","qq","腾讯","youku","优酷","pptv","PPTV","letv","乐视","leshi","bilibili","哔哩哔哩","哔哩","mgtv","芒果","sohu","xigua","fun","风行"],"header":{"User-Agent":"Mozilla/5.0"}},"header":{"User-Agent":"Mozilla/5.0"}},
-{"name":"看看","type":0,"url":"https://jx.m3u8.pw/?url="},
-{"name":"咸鱼","type":0,"url":"https://jx.xyflv.cc/?url=","ext":{"header":{"user-agent":"Mozilla/5.0(Linux;Android13;V2049ABuild/TP1A.220624.014;wv)AppleWebKit/537.36(KHTML,likeGecko)Version/4.0Chrome/116.0.0.0MobileSafari/537.36","referer":"https://www.xyflv.cc/"}}},
-{"name":"云解析","type":0,"url":"https://jx.yparse.com/index.php?url=","ext":{"header":{"user-agent":"Mozilla/5.0(Linux;Android13;V2049ABuild/TP1A.220624.014;wv)AppleWebKit/537.36(KHTML,likeGecko)Version/4.0Chrome/116.0.0.0MobileSafari/537.36"}}},
-{"name":"爱豆","type":0,"url":"https://jx.aidouer.net/?url=","ext":{"header":{"user-agent":"Mozilla/5.0(Linux;Android13;V2049ABuild/TP1A.220624.014;wv)AppleWebKit/537.36(KHTML,likeGecko)Version/4.0Chrome/116.0.0.0MobileSafari/537.36","referer":"https://jiejie.uk/"}}},
-{"name":"巧技","type":1,"url":"http://pan.qiaoji8.com/tvbox/neibu.php?url=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","sohu","搜狐","letv","乐视","mgtv","芒果","tnmb","seven","bilibili","1905"],"header":{"User-Agent":"okhttp/4.9.1"}}},
-{"name":"巧技二","type":1,"url":"http://pan.qiaoji8.com/tvbox/gouzi.php?url=","ext":{"flag":["qq","腾讯","qiyi","爱奇艺","奇艺","youku","优酷","sohu","搜狐","letv","乐视","mgtv","芒果","tnmb","seven","bilibili","1905","NetFilx"],"header":{"User-Agent":"okhttp/4.9.1"}}}
-],
-"flags":["youku","优酷","优 酷","优酷视频", "qq","腾讯","腾 讯","腾讯视频", "iqiyi", "qiyi","奇艺","爱奇艺","爱 奇 艺", "m1905", "xigua", "letv","leshi","乐视","乐 视", "sohu","搜狐","搜 狐","搜狐视频", "tudou","mgtv","芒果","imgo","芒果TV","芒 果 T V", "bilibili","哔 哩","哔 哩 哔 哩","SPA","YuMi-vip","pptv","PPTV","ltnb","rx","SLYS4k","tucheng","BYGA","luanzi","dxzy","QEYSS","aliyun","AliS","122","chuangying","CL4K","xfyun","wuduzy","wasu","renrenmi","ppayun","haiwaikan","cool","dbm3u8","xmm","funshion","ruyi1080","ruyib1080"],
-"doh":[
-{"name":"Google","url":"https://dns.google/dns-query","ips":["8.8.4.4","8.8.8.8"]},
-{"name":"Cloudflare","url":"https://cloudflare-dns.com/dns-query","ips":["1.1.1.1","1.0.0.1","2606:4700:4700::1111","2606:4700:4700::1001"]},
-{"name":"AdGuard","url":"https://dns.adguard.com/dns-query","ips":["94.140.14.140","94.140.14.141"]},
-{"name":"DNSWatch","url":"https://resolver2.dns.watch/dns-query","ips":["84.200.69.80","84.200.70.40"]},
-{"name":"Quad9","url":"https://dns.quad9.net/dns-quer","ips":["9.9.9.9","149.112.112.112"]}
-],
-"rules":[
-{"name":"proxy","hosts":["mypikpak.com",".*workers.dev","www.cilixiong.com","*.t4tv.hz.cz","kuba222.com","mp4us.com","dydhhy.com","magicalsearch.top","api123.adys.app","raw.githubusercontent.com","googlevideo.com","cdn.v82u1l.com","cdn.iz8qkg.com","cdn.kin6c1.com","c.biggggg.com","c.olddddd.com","haiwaikan.com","www.histar.tv","youtube.com","uhibo.com",".*boku.*",".*nivod.*",".*ulivetv.*"]},
-{"name":"磁力廣告","hosts":["magnet"],"regex":["更多","社區","xuu","最新","最新","直播","更新","社区","有趣","有趣","英皇体育","全中文AV在线","澳门皇冠赌场","哥哥快来","美女荷官","裸聊","新片首发","UUE29"]},
-{"name":"海外看","hosts":["haiwaikan"],"regex":["8.16","8.1748","10.0099","10.3333","10.85","12.33","16.0599"]},
-{"name":"索尼","hosts":["suonizy"],"regex":["15.1666","15.2666"]},
-{"name":"暴風","hosts":["bfzy"],"regex":["#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:3,[\\s\\S]*?#EXT-X-DISCONTINUITY"]},
-{"name":"星星","hosts":["aws.ulivetv.net"],"regex":["#EXT-X-DISCONTINUITY\\r*\\n*#EXTINF:8,[\\s\\S]*?#EXT-X-DISCONTINUITY"]},
-{"name":"量子","hosts":["vip.lz","hd.lz","v.cdnlz"],"regex":["18.5333"]},
-{"name":"非凡","hosts":["vip.ffzy","hd.ffzy"],"regex":["25.1"]},
-{"name":"火山嗅探","hosts":["huoshan.com"],"regex":["item_id="]},
-{"name":"抖音嗅探","hosts":["douyin.com"],"regex":["is_play_url="]},
-{"name":"農民嗅探","hosts":["toutiaovod.com"],"regex":["video/tos/cn"]},
-{"name":"七新嗅探","hosts":["api.52wyb.com"],"regex":["m3u8?pt=m3u8"]},
-{"name":"夜市點擊","hosts":["yeslivetv.com"],"script":["document.getElementsByClassName('vjs-big-play-button')[0].click()"]},
-{"name":"毛驢點擊","hosts":["www.maolvys.com"],"script":["document.getElementsByClassName('swal-buttonswal-button--confirm')[0].click()"]}
-],
-"ads":["static-mozai.4gtv.tv","s3t3d2y8.afcdn.net"]
-}
+  
+  <!-- Fast360 统计 -->
+  <script defer data-domain="githubproxy.cc" src="https://t.fast360.xyz/js/script.js"></script>
+
+  <!-- 百度统计 -->
+  <script>
+  var _hmt = _hmt || [];
+  (function() {
+    var hm = document.createElement("script");
+    hm.src = "https://hm.baidu.com/hm.js?168e4856bb9c081d57d797f7cd9d453d";
+    var s = document.getElementsByTagName("script")[0];
+    s.parentNode.insertBefore(hm, s);
+  })();
+  </script>
+
+  <!-- Google广告 -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-5357083224122554" crossorigin="anonymous"></script>
+
+  <!-- Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-D653RNFZXQ"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-D653RNFZXQ');
+  </script>
+
+
+  <!-- 图标 -->
+  <link rel="apple-touch-icon" sizes="180x180" href="https://img.githubproxy.cc/icon.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="https://img.githubproxy.cc/icon.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="https://img.githubproxy.cc/icon.png">
+  <link rel="shortcut icon" href="https://img.githubproxy.cc/icon.png">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    .loading-spinner {
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    }
+    .gradient-bg {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+    .feature-card {
+      transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    }
+    .feature-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* 移动端优化 */
+    @media (max-width: 768px) {
+      .mobile-stack {
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      .mobile-full {
+        width: 100%;
+      }
+      .mobile-text-sm {
+        font-size: 0.875rem;
+      }
+      .mobile-px-4 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+      .mobile-py-2 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+      }
+      /* 确保最小44px点击区域 */
+      .touch-target {
+        min-height: 44px;
+        min-width: 44px;
+      }
+      /* 移动端导航隐藏 */
+      .mobile-hidden {
+        display: none;
+      }
+      /* 移动端字体大小调整 */
+      .mobile-title {
+        font-size: 1.875rem; /* 3xl -> text-3xl */
+        line-height: 2.25rem;
+      }
+      .mobile-subtitle {
+        font-size: 1rem; /* lg -> text-base */
+        line-height: 1.5rem;
+      }
+    }
+
+    /* 小屏幕优化 320px */
+    @media (max-width: 480px) {
+      .small-mobile-title {
+        font-size: 1.5rem; /* 2xl */
+        line-height: 2rem;
+      }
+      .small-mobile-subtitle {
+        font-size: 0.875rem; /* sm */
+        line-height: 1.25rem;
+      }
+      .small-mobile-padding {
+        padding-left: 0.75rem;
+        padding-right: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body class="min-h-screen bg-gray-50">
+
+  <!-- Header -->
+  <header class="gradient-bg text-white sticky top-0 z-50 shadow-lg">
+    <div class="container mx-auto px-4 py-6 small-mobile-padding">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <img src="https://img.githubproxy.cc/icon.png" alt="GitHub加速器" class="w-8 h-8">
+          <div>
+            <h1 class="text-xl font-bold md:text-xl sm:text-lg">GitHub Proxy 加速器</h1>
+            <p class="text-blue-100 text-sm small-mobile-subtitle">公开GitHub仓库克隆与文件下载加速服务</p>
+          </div>
+        </div>
+
+        <!-- 桌面端导航和语言切换 -->
+        <div class="hidden md:flex items-center space-x-6">
+          <nav class="flex space-x-6">
+            <a href="#features" class="hover:text-blue-200 transition-colors touch-target flex items-center">功能特色</a>
+            <a href="#supported-resources" class="hover:text-blue-200 transition-colors touch-target flex items-center">支持资源</a>
+            <a href="#usage" class="hover:text-blue-200 transition-colors touch-target flex items-center">使用说明</a>
+            <a href="#technical-principles" class="hover:text-blue-200 transition-colors touch-target flex items-center">技术原理</a>
+            <a href="#use-cases" class="hover:text-blue-200 transition-colors touch-target flex items-center">使用场景</a>
+            <a href="#comparison" class="hover:text-blue-200 transition-colors touch-target flex items-center">方案对比</a>
+            <a href="#faq" class="hover:text-blue-200 transition-colors touch-target flex items-center">常见问题</a>
+          </nav>
+          <!-- 语言切换按钮 -->
+          <a href="/en" class="text-blue-100 hover:text-white text-sm bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded transition-colors touch-target">
+            English
+          </a>
+        </div>
+
+        <!-- 移动端菜单按钮 -->
+        <button class="md:hidden touch-target flex items-center justify-center" onclick="toggleMobileMenu()">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- 移动端导航菜单 -->
+      <div id="mobileMenu" class="hidden md:hidden mt-4 border-t border-blue-300 pt-4">
+        <div class="flex flex-col space-y-2">
+          <a href="#features" class="text-blue-100 hover:text-white py-2 touch-target">功能特色</a>
+          <a href="#supported-resources" class="text-blue-100 hover:text-white py-2 touch-target">支持资源</a>
+          <a href="#usage" class="text-blue-100 hover:text-white py-2 touch-target">使用说明</a>
+          <a href="#technical-principles" class="text-blue-100 hover:text-white py-2 touch-target">技术原理</a>
+          <a href="#use-cases" class="text-blue-100 hover:text-white py-2 touch-target">使用场景</a>
+          <a href="#comparison" class="text-blue-100 hover:text-white py-2 touch-target">方案对比</a>
+          <a href="#faq" class="text-blue-100 hover:text-white py-2 touch-target">常见问题</a>
+          <!-- 移动端语言切换 -->
+          <a href="/en" class="text-blue-100 hover:text-white py-2 touch-target bg-blue-700 hover:bg-blue-800 px-3 rounded mt-2">
+            English
+          </a>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="container mx-auto px-4 py-8 max-w-6xl small-mobile-padding" x-data="githubProxy()" x-init="init()">
+
+    <!-- 主要功能区域 -->
+    <div class="bg-white rounded-xl shadow-lg p-6 md:p-8 mb-8">
+      <div class="text-center mb-6 md:mb-8">
+        <h2 class="text-2xl md:text-3xl font-bold text-gray-900 mb-4 mobile-title small-mobile-title">
+          GitHub 加速命令生成
+        </h2>
+        <p class="text-base md:text-lg text-gray-600 mobile-subtitle small-mobile-subtitle">
+          为公开GitHub仓库生成克隆、压缩包、pip、Go 模块与 Raw 文件的加速命令
+        </p>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-sm font-medium text-gray-700 mb-2">
+          GitHub 仓库地址
+        </label>
+        <input
+          type="url"
+          x-model="inputUrl"
+          @keyup.enter="generateLink()"
+          placeholder="https://github.com/user/repository"
+          class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm touch-target"
+        />
+        <p class="text-xs text-gray-500 mt-1">
+          仅支持公开仓库主页或以 .git 结尾的HTTPS地址
+        </p>
+      </div>
+
+      <div class="text-center mb-6">
+        <button
+          @click="generateLink()"
+          :disabled="loading"
+          :class="loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'"
+          class="bg-blue-600 text-white font-semibold px-6 md:px-8 py-3 rounded-lg transition-colors touch-target w-full sm:w-auto"
+        >
+          <span x-text="loading ? '转换中...' : '⚡ 转换链接'"></span>
+        </button>
+      </div>
+
+      <!-- 结果展示区域 -->
+      <div x-show="result.show" class="mt-6">
+        <div x-show="result.success" class="p-4 md:p-6 rounded-lg bg-green-50 border border-green-200">
+          <h3 class="text-lg font-semibold text-green-800 mb-3 md:mb-4 flex items-center">
+            <span class="mr-2">✅</span>
+            <span x-text="'转换成功！'"></span>
+          </h3>
+
+          <div class="bg-white rounded-lg border mb-4">
+            <div class="px-3 pt-3 md:px-4 md:pt-4">
+              <p class="text-sm font-semibold text-gray-800">多场景加速命令</p>
+              <p class="text-xs text-gray-500 mt-1">输入仓库地址后，切换标签复制对应命令</p>
+            </div>
+
+            <!-- 场景 Tabs -->
+            <div class="flex flex-wrap gap-2 px-3 md:px-4 pt-3">
+              <template x-for="tab in getTabList()" :key="tab.id">
+                <button @click="activeTab = tab.id"
+                        :class="activeTab === tab.id ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
+                        class="px-3 py-2 rounded-lg text-xs md:text-sm font-medium transition-colors touch-target whitespace-nowrap"
+                        x-text="tab.label"></button>
+              </template>
+            </div>
+
+            <!-- Raw 文件分支与路径输入 -->
+            <div x-show="activeTab === 'raw'" class="px-3 md:px-4 pt-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">分支</label>
+                <input type="text" x-model="rawBranch" placeholder="main"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm touch-target" />
+              </div>
+              <div>
+                <label class="block text-xs text-gray-600 mb-1">文件路径</label>
+                <input type="text" x-model="rawPath" :placeholder="'README.md'"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm touch-target" />
+              </div>
+            </div>
+
+            <div class="p-3 md:p-4">
+              <div class="font-mono text-xs md:text-sm break-all bg-gray-50 p-3 rounded mobile-text-sm" x-text="getActiveCommand()"></div>
+              <p class="text-xs text-gray-500 mt-2" x-text="getActiveHint()"></p>
+              <div class="flex flex-wrap gap-2 mt-3 mobile-stack">
+                <button @click="copyToClipboard(getActiveCommand(), $event)"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors inline-flex items-center touch-target mobile-full justify-center">
+                  <span class="mr-2">📋</span>
+                  <span x-text="'复制命令'"></span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div x-show="result.show && !result.success" class="p-4 rounded-lg bg-red-50 border border-red-200">
+          <h3 class="text-lg font-semibold text-red-800 mb-2" x-text="'❌ 转换失败'"></h3>
+          <p class="text-red-700" x-text="result.error"></p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 功能特色 -->
+    <section id="features" class="mb-8 md:mb-12">
+      <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 text-center mobile-title small-mobile-title">🌟 GitHub Proxy 功能特色</h2>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">⚡</div>
+            <h3 class="font-bold text-lg">Git Clone 加速</h3>
+          </div>
+          <p class="text-gray-600 text-sm">通过Cloudflare全球网络转发Git Smart HTTP克隆流量，加速公开仓库克隆</p>
+        </div>
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">📁</div>
+            <h3 class="font-bold text-lg">Release 附件下载加速</h3>
+          </div>
+          <p class="text-gray-600 text-sm">GitHub Release 附件与构建产物直链加速，复制原始链接即可下载</p>
+        </div>
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">🔧</div>
+            <h3 class="font-bold text-lg">Raw 文件加速</h3>
+          </div>
+          <p class="text-gray-600 text-sm">加速 raw.githubusercontent.com 上的源码与配置文件下载</p>
+        </div>
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">💰</div>
+            <h3 class="font-bold text-lg">Archive 源码包下载</h3>
+          </div>
+          <p class="text-gray-600 text-sm">支持 zip / tar.gz 源码压缩包加速下载，便于离线阅读与构建</p>
+        </div>
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">🔒</div>
+            <h3 class="font-bold text-lg">完全免费无需注册</h3>
+          </div>
+          <p class="text-gray-600 text-sm">无需注册或安装客户端，全程 HTTPS 加密传输，复制命令即可使用</p>
+        </div>
+        <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+          <div class="flex items-center mb-3">
+            <div class="text-3xl mr-3">📦</div>
+            <h3 class="font-bold text-lg">大文件流式下载</h3>
+          </div>
+          <p class="text-gray-600 text-sm">文件内容全程流式转发，支持大文件下载，不在服务端存储内容</p>
+        </div>
+      </div>
+
+      <!-- 支持的资源类型 -->
+      <div id="supported-resources" class="mt-12">
+        <h3 class="text-lg md:text-xl font-bold text-gray-900 mb-4 text-center">📖 支持的代理类型</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">📥</span>
+              <h4 class="font-semibold text-blue-800">Git Clone / Fetch / Pull</h4>
+            </div>
+            <p class="text-blue-600 text-sm">只读克隆公开GitHub仓库并拉取更新</p>
+          </div>
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">📄</span>
+              <h4 class="font-semibold text-green-800">Release 附件</h4>
+            </div>
+            <p class="text-green-600 text-sm">加速 github.com/.../releases/download 下的发布文件</p>
+          </div>
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">📁</span>
+              <h4 class="font-semibold text-purple-800">Raw 文件</h4>
+            </div>
+            <p class="text-purple-600 text-sm">加速 raw.githubusercontent.com 上的单个文件内容</p>
+          </div>
+          <div class="bg-indigo-50 border border-indigo-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">💎</span>
+              <h4 class="font-semibold text-indigo-800">Archive 源码包</h4>
+            </div>
+            <p class="text-indigo-600 text-sm">加速仓库 zip / tar.gz 源码压缩包下载</p>
+          </div>
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">📝</span>
+              <h4 class="font-semibold text-orange-800">浅克隆与 CI/CD</h4>
+            </div>
+            <p class="text-orange-600 text-sm">支持 git clone --depth 与自动化构建中的只读拉取</p>
+          </div>
+          <div class="bg-pink-50 border border-pink-200 rounded-lg p-4">
+            <div class="flex items-center mb-2">
+              <span class="text-2xl mr-2">🔗</span>
+              <h4 class="font-semibold text-pink-800">公开仓库</h4>
+            </div>
+            <p class="text-pink-600 text-sm">仅代理无需登录即可访问的GitHub仓库，不代理网页与私有仓库</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 技术原理 -->
+    <section id="technical-principles" class="mb-8 md:mb-12">
+      <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center mobile-title small-mobile-title">⚙️ GitHub Proxy 技术原理</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🌐</div>
+              <h3 class="font-bold text-lg">全球 CDN 边缘加速</h3>
+            </div>
+            <p class="text-gray-600 text-sm">GitHub Proxy基于Cloudflare全球边缘网络，将请求转发至GitHub官方服务器</p>
+          </div>
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🔄</div>
+              <h3 class="font-bold text-lg">GitHub 代理流式传输</h3>
+            </div>
+            <p class="text-gray-600 text-sm">采用ReadableStream流式转发Git pack数据与文件内容，不在服务端缓存或解析仓库内容</p>
+          </div>
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🎯</div>
+              <h3 class="font-bold text-lg">GitHub Proxy 智能路由</h3>
+            </div>
+            <p class="text-gray-600 text-sm">严格校验Git协议方法、路径和内容类型，仅放行克隆、Release、Raw和Archive资源</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用场景 -->
+    <section id="use-cases" class="mb-8 md:mb-12">
+      <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center mobile-title small-mobile-title">🎯 GitHub 代理使用场景</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">👨‍💻</div>
+              <h3 class="font-bold text-lg">开发者场景</h3>
+            </div>
+            <p class="text-gray-600 text-sm">Git Proxy克隆大型仓库：使用GitHub Proxy加速TensorFlow、Linux Kernel等大型项目克隆，GitHub 代理解决网络超时问题</p>
+          </div>
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🏢</div>
+              <h3 class="font-bold text-lg">企业场景</h3>
+            </div>
+            <p class="text-gray-600 text-sm">CI/CD流程使用永久Git Clone地址拉取公开源码仓库</p>
+          </div>
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🎓</div>
+              <h3 class="font-bold text-lg">学习场景</h3>
+            </div>
+            <p class="text-gray-600 text-sm">学生和开发者通过Git Clone获取开源教程与代码示例</p>
+          </div>
+          <div class="feature-card bg-white rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🔧</div>
+              <h3 class="font-bold text-lg">自动化脚本</h3>
+            </div>
+            <p class="text-gray-600 text-sm">把永久代理地址写入安装脚本和项目文档，便于团队复用</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 方案对比 -->
+    <section id="comparison" class="mb-8 md:mb-12">
+      <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center mobile-title small-mobile-title">🆚 GitHub Proxy vs 其他方案对比</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div class="feature-card bg-red-50 border border-red-200 rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🔴</div>
+              <h3 class="font-bold text-lg text-red-800">传统VPN方案</h3>
+            </div>
+            <p class="text-red-700 text-sm">劣势：需要付费订阅，配置复杂，速度不稳定，可能影响其他网络访问</p>
+          </div>
+          <div class="feature-card bg-yellow-50 border border-yellow-200 rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🟡</div>
+              <h3 class="font-bold text-lg text-yellow-800">其他GitHub镜像加速</h3>
+            </div>
+            <p class="text-yellow-700 text-sm">差异：部分镜像开放网页和文件代理，功能更多但内容安全风险更高</p>
+          </div>
+          <div class="feature-card bg-green-50 border border-green-200 rounded-xl shadow-lg p-6 touch-target">
+            <div class="flex items-center mb-3">
+              <div class="text-3xl mr-3">🟢</div>
+              <h3 class="font-bold text-lg text-green-800">我们的GitHub Proxy</h3>
+            </div>
+            <p class="text-green-700 text-sm">优势：聚焦只读Git协议，地址永久可分享，同时避免GitHub网页镜像风险</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 使用说明 -->
+    <section id="usage" class="mb-8 md:mb-12">
+      <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 text-center mobile-title small-mobile-title">📖 使用说明</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+          <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 touch-target">
+              <span class="text-2xl">1️⃣</span>
+            </div>
+            <h3 class="font-semibold text-lg mb-2">获取链接</h3>
+            <p class="text-gray-600 text-sm">复制公开GitHub仓库主页或.git地址</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 touch-target">
+              <span class="text-2xl">2️⃣</span>
+            </div>
+            <h3 class="font-semibold text-lg mb-2">生成加速命令</h3>
+            <p class="text-gray-600 text-sm">粘贴到输入框，一键生成克隆、压缩包、pip、Go 与 Raw 命令</p>
+          </div>
+          <div class="text-center">
+            <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 touch-target">
+              <span class="text-2xl">3️⃣</span>
+            </div>
+            <h3 class="font-semibold text-lg mb-2">执行命令</h3>
+            <p class="text-gray-600 text-sm">在终端或 CI 中执行生成的命令，即可加速下载</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 常见问题 -->
+    <section id="faq" class="mb-8 md:mb-12">
+      <div class="bg-white rounded-xl shadow-lg p-6 md:p-8">
+        <h2 class="text-xl md:text-2xl font-bold text-gray-900 mb-6 md:mb-8 text-center mobile-title small-mobile-title">❓ 常见问题</h2>
+        <div class="space-y-6">
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">🤔 支持哪些类型的GitHub链接？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed" style="white-space: pre-line;">支持公开GitHub仓库的只读克隆（https://github.com/user/repo 或 .git 地址）、Release 附件（/releases/download/...）、Raw 文件（raw.githubusercontent.com）以及 Archive 源码包（/archive/refs/heads/...）。GitHub 网页、API 和私有仓库不代理。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">⚡ 为什么下载速度会更快？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">请求通过Cloudflare全球边缘网络转发到GitHub，可改善部分网络环境下连接GitHub不稳定或超时的问题。实际速度取决于用户网络、文件大小和GitHub响应。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">🔒 服务是否安全可靠？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">服务直接连接GitHub官方服务器，采用HTTPS加密传输，不修改或存储仓库内容，也不提供GitHub网页镜像。恶意软件等滥用内容可通过 /report 页面举报。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">💰 服务收费吗？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">当前服务完全免费，无需注册账户。为保障稳定性和防止滥用，异常请求可能受到限制。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">🛠️ 如何使用生成的命令？</h3>
+            <div class="text-gray-600 text-sm leading-relaxed" style="white-space: pre-line;">复制生成结果，在终端执行对应的 git clone、wget 或 curl 命令。克隆后可以继续使用 git fetch 和 git pull，pip 与 go get 也可直接走代理地址。</div>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">🔧 是否支持Push和私有仓库？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">不支持。服务严格只读，仅用于公开仓库的Clone、Fetch、Pull与文件下载，不接收GitHub凭据，也不代理GitHub网页。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">🆚 GitHub Proxy vs 传统VPN有什么优势？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">与传统VPN相比，GitHub 代理无需安装客户端，完全免费，专门针对GitHub克隆与文件下载优化。Git Proxy不会影响其他网络访问，GitHub Proxy更加专业和高效，是专业的GitHub加速网站。</p>
+          </div>
+
+          <div class="border-b border-gray-200 pb-6">
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">📋 支持哪些GitHub代理使用方式？</h3>
+            <p class="text-gray-600 text-sm leading-relaxed">支持Git命令行只读Clone/Fetch/Pull、Release 附件下载、Raw 文件下载、Archive 源码包下载，以及基于 git+https 的 pip 安装和 go mod 代理配置。不支持GitHub网页访问。</p>
+          </div>
+
+          <div>
+            <h3 class="font-semibold text-base md:text-lg mb-2 text-gray-800">❗ 遇到下载失败怎么办？</h3>
+            <div class="text-gray-600 text-sm leading-relaxed" style="white-space: pre-line;">请确认仓库公开存在、地址格式正确，并重新执行命令。私有、已删除或被服务封禁（返回 451）的仓库无法使用。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-800 text-white mt-8 md:mt-16">
+    <div class="container mx-auto px-4 py-6 md:py-8 small-mobile-padding">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+        <div class="text-center md:text-left">
+          <div class="flex items-center justify-center md:justify-start space-x-2 mb-4">
+            <span class="text-2xl">🚀</span>
+            <span class="font-bold text-lg">GitHub Proxy 加速器</span>
+          </div>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            公开GitHub仓库只读Git Clone加速服务。
+          </p>
+        </div>
+        <div class="text-center md:text-left">
+          <h4 class="font-semibold mb-4">友情链接</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li><a href="https://sora2watermarkremover.net" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Sora Watermark Remover</a></li><li><a href="https://aifasthub.com" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• HuggingFace Mirror</a></li><li><a href="https://vibevoice.info" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• VibeVoice</a></li><li><a href="https://voxcpm.net" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• VoxCPM</a></li><li><a href="https://githubproxy.cc" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Github Proxy</a></li><li><a href="https://pixeldrainbypass.org" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Pixeldrainbypass</a></li><li><a href="https://zimage.run/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Z-image</a></li><li><a href="https://qwen-image-2512.com" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Qwen-Image-2512</a></li><li><a href="https://qwen-image-layered.net" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Qwen-Image-Layered</a></li><li><a href="https://ltx-2.run/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• LTX-2</a></li><li><a href="https://blurphoto.net/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• Blur Photo Online</a></li><li><a href="https://minimaxh3.info/" target="_blank" rel="noopener noreferrer" class="hover:text-white transition-colors">• MiniMax H3</a></li>
+          </ul>
+        </div>
+        <div class="text-center md:text-left">
+          <h4 class="font-semibold mb-4">服务特点</h4>
+          <ul class="text-gray-400 text-sm space-y-2">
+            <li>• 免费使用</li><li>• 无需注册</li><li>• 全球 CDN 边缘加速</li><li>• 支持大文件流式下载</li>
+          </ul>
+        </div>
+        <div class="text-center md:text-left">
+          <h4 class="font-semibold mb-4">技术支持</h4>
+          <p class="text-gray-400 text-sm mb-2 leading-relaxed">
+            基于 全球CDN边缘网络 构建
+          </p>
+          <p class="text-gray-400 text-sm leading-relaxed">
+            遇到问题？检查链接格式或稍后重试
+          </p>
+        </div>
+      </div>
+      <div class="border-t border-gray-700 mt-6 md:mt-8 pt-6 text-center">
+        <a href="/report" class="text-gray-400 hover:text-white text-sm transition-colors inline-flex items-center touch-target">
+          <span class="mr-2">🛡️</span>举报滥用 / DMCA
+        </a>
+      </div>
+      <div class="border-t border-gray-700 mt-6 pt-6 md:pt-8 text-center">
+        <p class="text-gray-400 text-sm leading-relaxed">
+          © 2026 GitHub 加速器. 本服务仅代理公开仓库的只读Git克隆与文件下载，不提供GitHub网页镜像.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // 移动端菜单切换
+    function toggleMobileMenu() {
+      const mobileMenu = document.getElementById('mobileMenu');
+      if (mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.remove('hidden');
+      } else {
+        mobileMenu.classList.add('hidden');
+      }
+    }
+
+    function githubProxy() {
+      return {
+        inputUrl: '',
+        loading: false,
+        activeTab: 'clone',
+        owner: '',
+        repository: '',
+        rawBranch: 'main',
+        rawPath: 'README.md',
+        result: {
+          show: false,
+          success: false,
+          proxyUrl: '',
+          error: ''
+        },
+
+        // 初始化方法
+        init() {
+          console.log('GitHub Proxy initialized');
+          // 确保初始状态完全重置
+          this.loading = false;
+          this.activeTab = 'clone';
+          this.owner = '';
+          this.repository = '';
+          this.rawBranch = 'main';
+          this.rawPath = 'README.md';
+          this.result = {
+            show: false,
+            success: false,
+            proxyUrl: '',
+            error: ''
+          };
+        },
+
+        getLangTexts() {
+          const texts = {
+            zh: {
+              gitCloneLabel: '永久 Git Clone 命令',
+              invalidRepository: '请输入有效的 GitHub 公开仓库地址，例如 https://github.com/user/repo',
+              tabClone: 'Git Clone',
+              tabArchive: 'Archive 源码包',
+              tabPip: 'pip 安装',
+              tabGo: 'Go 模块代理',
+              tabRaw: 'Raw 文件',
+              hintArchive: '提示：将 main 替换为仓库默认分支。',
+              hintRaw: '提示：将 main 与文件路径替换为实际分支与文件路径。'
+            },
+            en: {
+              gitCloneLabel: 'Permanent Git Clone Command',
+              invalidRepository: 'Enter a valid public GitHub repository URL, for example https://github.com/user/repo',
+              tabClone: 'Git Clone',
+              tabArchive: 'Source Archive',
+              tabPip: 'pip Install',
+              tabGo: 'Go Module Proxy',
+              tabRaw: 'Raw File',
+              hintArchive: 'Tip: replace main with the repository\'s default branch.',
+              hintRaw: 'Tip: replace main and the file path with the actual branch and file path.'
+            }
+          };
+          const lang = window.location.pathname === '/en' ? 'en' : 'zh';
+          return texts[lang];
+        },
+
+        getTabList() {
+          const t = this.getLangTexts();
+          return [
+            { id: 'clone', label: t.tabClone },
+            { id: 'archive', label: t.tabArchive },
+            { id: 'pip', label: t.tabPip },
+            { id: 'go', label: t.tabGo },
+            { id: 'raw', label: t.tabRaw }
+          ];
+        },
+
+        getOutputLabel() {
+          return this.getLangTexts().gitCloneLabel;
+        },
+
+        getProxyRepoUrl() {
+          return window.location.origin + '/https://github.com/' + this.owner + '/' + this.repository;
+        },
+
+        getOutputCommand() {
+          return 'git clone ' + this.getProxyRepoUrl() + '.git';
+        },
+
+        getActiveCommand() {
+          if (!this.result.success) {
+            return '';
+          }
+          const origin = window.location.origin;
+          const o = this.owner;
+          const r = this.repository;
+          const branch = (this.rawBranch || 'main').trim() || 'main';
+          const path = (this.rawPath || '').trim() || 'README.md';
+
+          switch (this.activeTab) {
+            case 'archive':
+              return 'wget ' + origin + '/https://github.com/' + o + '/' + r + '/archive/refs/heads/' + encodeURIComponent(branch) + '.zip';
+            case 'pip':
+              return 'pip install git+' + origin + '/https://github.com/' + o + '/' + r + '.git';
+            case 'go':
+              return 'git config --global url."' + origin + '/https://github.com/".insteadOf "https://github.com/"';
+            case 'raw':
+              return 'curl -L ' + origin + '/https://raw.githubusercontent.com/' + o + '/' + r + '/' + encodeURIComponent(branch) + '/' + path.split('/').map(encodeURIComponent).join('/');
+            case 'clone':
+            default:
+              return this.getOutputCommand();
+          }
+        },
+
+        getActiveHint() {
+          const t = this.getLangTexts();
+          if (this.activeTab === 'archive') {
+            return t.hintArchive;
+          }
+          if (this.activeTab === 'raw') {
+            return t.hintRaw;
+          }
+          return '';
+        },
+
+        async generateLink() {
+          this.loading = true;
+
+          try {
+            const url = new URL(this.inputUrl.trim());
+            const pathParts = url.pathname.replace(/\/$/, '').split('/').filter(Boolean);
+
+            if (
+              url.protocol !== 'https:' ||
+              url.hostname !== 'github.com' ||
+              url.username ||
+              url.password ||
+              url.search ||
+              url.hash ||
+              pathParts.length !== 2
+            ) {
+              throw new Error('invalid repository');
+            }
+
+            const owner = pathParts[0];
+            const repository = pathParts[1].replace(/\.git$/, '');
+            if (
+              !/^[A-Za-z0-9][A-Za-z0-9-]{0,38}$/.test(owner) ||
+              !/^[A-Za-z0-9._-]{1,100}$/.test(repository) ||
+              repository === '.' ||
+              repository === '..'
+            ) {
+              throw new Error('invalid repository');
+            }
+
+            this.owner = owner;
+            this.repository = repository;
+            const proxyUrl = window.location.origin + '/https://github.com/' + owner + '/' + repository + '.git';
+            this.showSuccess(proxyUrl);
+          } catch {
+            this.showError(this.getLangTexts().invalidRepository);
+          } finally {
+            this.loading = false;
+          }
+        },
+
+        showSuccess(proxyUrl) {
+          this.activeTab = 'clone';
+          this.result = {
+            show: true,
+            success: true,
+            proxyUrl: proxyUrl,
+            error: ''
+          };
+        },
+
+        showError(message) {
+          this.result = {
+            show: true,
+            success: false,
+            proxyUrl: '',
+            error: message
+          };
+        },
+
+        async copyToClipboard(text, event) {
+          try {
+            await navigator.clipboard.writeText(text);
+
+            // 获取按钮元素
+            const button = event.target.closest('button');
+            if (button) {
+              // 保存原始内容
+              const originalHTML = button.innerHTML;
+
+              // 更新按钮状态为成功
+              button.innerHTML = '<span class="mr-2">✅</span>复制成功';
+              button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+              button.classList.add('bg-green-600', 'hover:bg-green-700');
+
+              // 2秒后恢复原状
+              setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-green-600', 'hover:bg-green-700');
+                button.classList.add('bg-gray-600', 'hover:bg-gray-700');
+              }, 2000);
+            }
+          } catch (error) {
+            console.error('复制失败:', error);
+
+            // 获取按钮元素
+            const button = event.target.closest('button');
+            if (button) {
+              // 保存原始内容
+              const originalHTML = button.innerHTML;
+
+              // 更新按钮状态为失败
+              button.innerHTML = '<span class="mr-2">❌</span>复制失败';
+              button.classList.remove('bg-gray-600', 'hover:bg-gray-700');
+              button.classList.add('bg-red-600', 'hover:bg-red-700');
+
+              // 2秒后恢复原状
+              setTimeout(() => {
+                button.innerHTML = originalHTML;
+                button.classList.remove('bg-red-600', 'hover:bg-red-700');
+                button.classList.add('bg-gray-600', 'hover:bg-gray-700');
+              }, 2000);
+            }
+          }
+        }
+      };
+    }
+  </script>
+
+</body>
+</html>
+  
