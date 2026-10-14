@@ -21,9 +21,9 @@
      "why": "no_response"
     },
     {
-     "stream": "https://live.264788.xyz/channel/cctv15?streamid=6d7a6859e22aa51e7c09b29a9f1848d7&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZd",
+     "stream": "http://101.66.195.243:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
      "ok": true,
-     "why": "ct:video/mp4"
+     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
     },
     {
      "stream": "rtsp://115.153.247.80/PLTV/88888888/224/3221226990/86128784.smil",
@@ -31,19 +31,34 @@
      "why": "no_response"
     },
     {
-     "stream": "https://stream1.freetv.fun/san-li-xin-wen-3.m3u8",
-     "ok": false,
-     "why": "no_response"
+     "stream": "https://live.264788.xyz/channel/cctv15?streamid=6d7a6859e22aa51e7c09b29a9f1848d7&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZd",
+     "ok": true,
+     "why": "ct:video/mp4"
     },
     {
-     "stream": "http://101.66.195.243:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
+     "stream": "https://stream1.freetv.fun/san-li-xin-wen-3.m3u8",
      "ok": false,
      "why": "no_response"
     }
    ],
-   "streams_ok": 1,
+   "streams_ok": 2,
    "status": "ok",
    "ffprobe": [
+    {
+     "stream": "http://101.66.195.243:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "mp2"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1920,
+       "h": 1080
+      }
+     }
+    },
     {
      "stream": "https://live.264788.xyz/channel/cctv15?streamid=6d7a6859e22aa51e7c09b29a9f1848d7&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZd",
      "ok": true,
