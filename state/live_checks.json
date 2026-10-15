@@ -6,61 +6,61 @@
    "url": "https://gh.halonice.com/https://raw.githubusercontent.com/hebijunge/tvbox-config/main/lives/live.txt",
    "epg": "https://epg.pw/api/v1/getEpgInfo?token=tvbox",
    "ua": "TVBox",
-   "channels": 651,
+   "channels": 1174,
    "groups": [
     "其他",
     "卫视",
     "央视",
     "港台"
    ],
-   "bytes": 57793,
+   "bytes": 108274,
    "stream_tests": [
     {
-     "stream": "http://[2409:8087:8:21::18]:6610/otttv.bj.chinamobile.com/PLTV/88888888/224/3221226542/1.m3u8",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "http://101.66.195.243:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
+     "stream": "http://69.30.245.50/live/cctv6.m3u8",
      "ok": true,
-     "why": "ct:application/vnd.apple.mpegurl; charset=utf-8"
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
-     "stream": "rtsp://115.153.247.80/PLTV/88888888/224/3221226990/86128784.smil",
-     "ok": false,
-     "why": "no_response"
-    },
-    {
-     "stream": "https://live.264788.xyz/channel/cctv15?streamid=6d7a6859e22aa51e7c09b29a9f1848d7&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZd",
+     "stream": "https://live.264788.xyz/channel/cctv1?streamid=cccb6b9cad34d95eaf06a39fcf6acd9e&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZdx",
      "ok": true,
      "why": "ct:video/mp4"
     },
     {
-     "stream": "https://stream1.freetv.fun/san-li-xin-wen-3.m3u8",
+     "stream": "https://test1.live.sdetv.com.cn/live/dianshizhibo/playlist.m3u8",
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
+    },
+    {
+     "stream": "http://kkk.jjjj.jiduo.me/api.php?n=tttt&id=2562&tk=e640d0a1bf70",
+     "ok": false,
+     "why": "html_or_xml_page"
+    },
+    {
+     "stream": "http://31.43.191.125:8080/restream/restream/34895",
      "ok": false,
      "why": "no_response"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 3,
    "status": "ok",
    "ffprobe": [
     {
-     "stream": "http://101.66.195.243:9901/tsfile/live/0001_1.m3u8?key=txiptv&playlive=0&authid=0",
+     "stream": "http://69.30.245.50/live/cctv6.m3u8",
      "ok": true,
      "info": {
       "codecs": [
        "h264",
-       "mp2"
+       "aac"
       ],
       "video": {
        "codec": "h264",
-       "w": 1920,
-       "h": 1080
+       "w": 1280,
+       "h": 720
       }
      }
     },
     {
-     "stream": "https://live.264788.xyz/channel/cctv15?streamid=6d7a6859e22aa51e7c09b29a9f1848d7&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZd",
+     "stream": "https://live.264788.xyz/channel/cctv1?streamid=cccb6b9cad34d95eaf06a39fcf6acd9e&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZdx",
      "ok": true,
      "info": {
       "codecs": [
