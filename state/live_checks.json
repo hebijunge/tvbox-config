@@ -17,8 +17,8 @@
    "stream_tests": [
     {
      "stream": "http://69.30.245.50/live/cctv6.m3u8",
-     "ok": false,
-     "why": "html_content_type"
+     "ok": true,
+     "why": "ct:application/vnd.apple.mpegurl"
     },
     {
      "stream": "http://31.43.191.125:8080/restream/restream/34895",
@@ -41,9 +41,24 @@
      "why": "html_or_xml_page"
     }
    ],
-   "streams_ok": 2,
+   "streams_ok": 3,
    "status": "ok",
    "ffprobe": [
+    {
+     "stream": "http://69.30.245.50/live/cctv6.m3u8",
+     "ok": true,
+     "info": {
+      "codecs": [
+       "h264",
+       "aac"
+      ],
+      "video": {
+       "codec": "h264",
+       "w": 1280,
+       "h": 720
+      }
+     }
+    },
     {
      "stream": "https://live.264788.xyz/channel/cctv1?streamid=cccb6b9cad34d95eaf06a39fcf6acd9e&livekey=01WgOR41rriMmMkzNsd0UoaxJRwetZdx",
      "ok": true,
@@ -56,21 +71,6 @@
        "codec": "h264",
        "w": 1920,
        "h": 1080
-      }
-     }
-    },
-    {
-     "stream": "https://test1.live.sdetv.com.cn/live/dianshizhibo/playlist.m3u8",
-     "ok": true,
-     "info": {
-      "codecs": [
-       "h264",
-       "aac"
-      ],
-      "video": {
-       "codec": "h264",
-       "w": 1280,
-       "h": 720
       }
      }
     }
